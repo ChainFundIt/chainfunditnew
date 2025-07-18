@@ -59,97 +59,40 @@ export function SignupForm({
     e.preventDefault();
     setIsLoading(true);
     setError("");
-    try {
-      const res = await fetch("/api/auth/[...betterauth]", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "request_email_otp",
-          email,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to send OTP");
-      setStep("email-otp");
-      setOtpTimer(60);
-    } catch (err: any) {
-      setError(err.message || "Failed to send OTP");
-    } finally {
-      setIsLoading(false);
-    }
+    // TODO: Call Better Auth API to send email OTP
+    // await fetch('/api/auth/[...betterauth]', { ... })
+    setStep("email-otp");
+    setOtpTimer(60);
+    setIsLoading(false);
   };
 
   const handleEmailOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-    try {
-      const res = await fetch("/api/auth/[...betterauth]", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "verify_email_otp",
-          email,
-          otp: emailOtp,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Invalid OTP");
-      setStep("phone");
-    } catch (err: any) {
-      setError(err.message || "Invalid OTP");
-    } finally {
-      setIsLoading(false);
-    }
+    // TODO: Call Better Auth API to verify email OTP
+    // If success:
+    setStep("phone");
+    setIsLoading(false);
   };
 
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-    try {
-      const res = await fetch("/api/auth/[...betterauth]", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "request_phone_otp",
-          phone,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to send OTP");
-      setStep("phone-otp");
-      setOtpTimer(60);
-    } catch (err: any) {
-      setError(err.message || "Failed to send OTP");
-    } finally {
-      setIsLoading(false);
-    }
+    // TODO: Call Better Auth API to send phone OTP
+    setStep("phone-otp");
+    setOtpTimer(60);
+    setIsLoading(false);
   };
 
   const handlePhoneOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-    try {
-      const res = await fetch("/api/auth/[...betterauth]", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "verify_phone_otp",
-          phone,
-          otp: phoneOtp,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Invalid OTP");
-      // Success: redirect or show success message
-      // window.location.href = "/dashboard";
-    } catch (err: any) {
-      setError(err.message || "Invalid OTP");
-    } finally {
-      setIsLoading(false);
-    }
+    // TODO: Call Better Auth API to verify phone OTP
+    // If success: redirect or show success
+    setIsLoading(false);
   };
 
   // UI for each step
@@ -244,4 +187,4 @@ export function SignupForm({
       {error && <p className="text-center text-red-500">{error}</p>}
     </form>
   );
-} 
+}
