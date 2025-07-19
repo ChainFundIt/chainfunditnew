@@ -41,6 +41,19 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+@keyframes marquee {
+  0% {
+    transform: translateY(0%);
+  }
+  100% {
+    transform: translateY(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 20s linear infinite;
+}
 /* 
 @media (prefers-color-scheme: dark) {
   html {

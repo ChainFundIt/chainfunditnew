@@ -7,15 +7,56 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { ArrowRight, Smartphone } from "lucide-react";
 import { FaGoogle } from "react-icons/fa";
-import { BsApple } from "react-icons/bs";
+import { FaFacebook } from "react-icons/fa";
 import React from "react";
 
 function OtpInput({ value, onChange, length = 6, ...props }: { value: string; onChange: (val: string) => void; length?: number }) {
+  const inputRefs = React.useRef<(HTMLInputElement | null)[]>([]);
+
+  const focusNext = (index: number) => {
+    if (index < length - 1) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const focusPrev = (index: number) => {
+    if (index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleChange = (index: number, val: string) => {
+    const newValue = value.substring(0, index) + val + value.substring(index + 1);
+    onChange(newValue.padEnd(length, ""));
+    
+    if (val && index < length - 1) {
+      focusNext(index);
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !value[index] && index > 0) {
+      focusPrev(index);
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text/plain').replace(/\D/g, '').slice(0, length);
+    if (pastedData.length === length) {
+      onChange(pastedData);
+      inputRefs.current[length - 1]?.focus();
+    }
+  };
+
   return (
     <div className="flex gap-2 justify-center">
       {Array.from({ length }).map((_, idx) => (
         <Input
           key={idx}
+          ref={(el) => {
+            inputRefs.current[idx] = el;
+          }}
           type="text"
           inputMode="numeric"
           maxLength={1}
@@ -24,10 +65,12 @@ function OtpInput({ value, onChange, length = 6, ...props }: { value: string; on
           onChange={e => {
             const val = e.target.value.replace(/\D/g, "");
             if (val.length <= 1) {
-              const newValue = value.substring(0, idx) + val + value.substring(idx + 1);
-              onChange(newValue.padEnd(length, ""));
+              handleChange(idx, val);
             }
           }}
+          onKeyDown={(e) => handleKeyDown(idx, e)}
+          onPaste={handlePaste}
+          autoFocus={idx === 0}
           {...props}
         />
       ))}
@@ -156,11 +199,11 @@ export function LoginForm({
             <div className="w-1/3 border-b border-[#C0BFC4]"></div>
           </div>
           <div className="flex gap-5">
-            <Button className="w-[236px] h-16 bg-[#D9D9DC] border-[#8E8C95] text-[#474553] font-medium text-2xl" type="button">
+            <Button className="w-[236px] h-16 bg-[#D9D9DC] border-[#8E8C95] text-[#474553] font-medium text-2xl" type="button" onClick={() => window.location.href = '/api/auth/[...betterauth]?provider=google'}>
               <FaGoogle color="#474553" size={32} /> Google
             </Button>
-            <Button className="w-[236px] h-16 bg-[#8E8C95] border-[#2C2C2C] font-semibold text-2xl text-[#F5F5F6]" type="button">
-              <BsApple size={24} /> Apple
+            <Button className="w-[236px] h-16 bg-[#D9D9DC] border-[#8E8C95] text-[#474553] font-semibold text-2xl" type="button" onClick={() => window.location.href = '/api/auth/[...betterauth]?provider=facebook'}>
+              <FaFacebook size={24} /> Facebook
             </Button>
           </div>
         </div>

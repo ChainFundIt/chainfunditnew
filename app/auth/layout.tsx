@@ -45,25 +45,6 @@ function Carousel() {
     return () => clearInterval(interval);
   }, [emblaApi, isPlaying]);
 
-  useEffect(() => {
-    progressRefs.current.forEach((bar, i) => {
-      if (!bar) return;
-
-      bar.style.transition = "none";
-
-      if (i < selectedIndex) {
-        bar.style.width = "100%";
-      } else if (i === selectedIndex) {
-        bar.style.width = "0%";
-        void bar.offsetWidth; // trigger reflow
-        bar.style.transition = "width 5s linear";
-        bar.style.width = "100%";
-      } else {
-        bar.style.width = "0%";
-      }
-    });
-  }, [selectedIndex]);
-
   return (
     <div
       className="w-full h-screen overflow-y-auto relative"
@@ -98,8 +79,14 @@ function Carousel() {
               ref={(el) => {
                 progressRefs.current[barIdx] = el;
               }}
-              className="h-1 bg-white/70 rounded w-full"
-            />
+              className={`h-1 bg-white/70 rounded w-full overflow-hidden`}
+            >
+              <div
+                className={`h-full bg-white ${
+                  selectedIndex === barIdx ? "animate-fill-bar" : "w-0"
+                }`}
+              />
+            </div>
           ))}
         </div>
         <div>

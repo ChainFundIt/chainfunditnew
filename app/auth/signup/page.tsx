@@ -5,23 +5,21 @@ import Image from "next/image";
 
 export default function SignupPage() {
   return (
-    <div className="w-full flex flex-col font-source h-screen">
-      <div className="flex flex-col gap-2 items-center justify-center">
-        <Image
-          src="/images/logo.svg"
-          alt="Chainfundit Logo"
-          width={82}
-          height={80}
-        />
+    <div className="flex flex-col gap-2 items-center justify-center">
+      <Image
+        src="/images/logo.svg"
+        alt="Chainfundit Logo"
+        width={82}
+        height={80}
+      />
 
-        <h2 className="font-semibold text-4xl text-[#104901] text-center">
-          Create life-changing <br /> experiences on Chainfundit
-        </h2>
-        <p className="font-normal text-xl text-[#104901]">
-          Please sign in or sign up below.
-        </p>
-      </div>
-      <div className="flex flex-1 items-center justify-center">
+      <h2 className="font-semibold text-4xl text-[#104901] text-center">
+        Create life-changing <br /> experiences on Chainfundit
+      </h2>
+      <p className="font-normal text-xl text-[#104901]">
+        Please sign in or sign up below.
+      </p>
+      <div className="flex flex-1 items-center justify-center w-full">
         <div className="w-full max-w-lg pt-6">
           <SignupForm />
         </div>
