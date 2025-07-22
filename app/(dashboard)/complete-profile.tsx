@@ -36,7 +36,7 @@ const CompleteProfile = (props: Props) => {
             style={{
               backgroundImage: preview
                 ? `url(${preview})`
-                : `url('/images/avatar.svg') w-[100px] h-[100px]`,
+                : `url('/images/avatar.svg')`,
             }}
             title="Upload profile image"
           >
@@ -50,7 +50,7 @@ const CompleteProfile = (props: Props) => {
         </div>
         <div className='flex flex-col gap-2'>
             <label htmlFor="Name" className='font-normal text-xl text-[#104901]'>Name</label>
-          <input type="text" placeholder='firstname lastname' className='w-[370px] h-16 px-5 py-2.5 placeholder:font-normal placeholder:text-2xl placeholder:text-[#767676] border border-[#D9D9DC] rounded-lg outline-none' />
+          <input type="text" placeholder='firstname lastname' className='w-[370px] px-5 py-2.5 placeholder:font-normal placeholder:text-2xl placeholder:text-[#767676] border border-[#D9D9DC] rounded-lg outline-none' />
         </div>
       </form>
     </div>

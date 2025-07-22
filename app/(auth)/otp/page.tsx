@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowRight, Clipboard } from "lucide-react";
@@ -74,7 +74,7 @@ function OtpInput({ value, onChange, length = 6 }: { value: string; onChange: (v
   );
 }
 
-export default function OtpPage() {
+function OtpPageInner() {
   const [otp, setOtp] = useState("");
   const [otpTimer, setOtpTimer] = useState(40);
   const [isLoading, setIsLoading] = useState(false);
@@ -246,6 +246,14 @@ export default function OtpPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function OtpPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <OtpPageInner />
+    </Suspense>
   );
 }
 

@@ -77,7 +77,7 @@ export default function DashboardPage() {
           </div>
           <DialogFooter>
             <DialogClose asChild>
-              <Button onClick={() => {router.push('/settings')}} className="w-full h-[72px] flex justify-between items-center font-semibold text-2xl">Here we go! <ArrowRight size={24} /></Button>
+              <Button onClick={() => {router.push('/campaigns')}} className="w-full h-[72px] flex justify-between items-center font-semibold text-2xl">Here we go! <ArrowRight size={24} /></Button>
             </DialogClose>
           </DialogFooter>
         </DialogContent>
