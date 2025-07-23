@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS phone_otps (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  phone VARCHAR(20) NOT NULL,
+  otp VARCHAR(10) NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW() NOT NULL
+); 

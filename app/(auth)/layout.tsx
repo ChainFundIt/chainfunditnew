@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { Button } from "@/components/ui/button";
@@ -113,15 +114,60 @@ function Carousel() {
 
 const layout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="w-full flex gap-5 md:p-5 p-2 font-source h-screen">
+    <div className="w-full flex gap-5 md:p-5 p-2 font-source h-screen overflow-y-hidden">
       <div
-        className="w-full md:w-2/5 flex flex-col gap-3 pt-5"
+        className="w-full md:w-2/5 flex flex-col gap-2 items-center justify-between"
         style={{
           background:
-            "linear-gradient(180deg, #F2F1E9 75%, rgba(255, 255, 255, 0.5) 100%)",
+            "linear-gradient(180deg, #F2F1E9 80%, #FFF 85%, #F2F1E9 100%)",
         }}
       >
-        {children}
+        <div className="w-full flex flex-col gap-3 py-3">{children}</div>
+        {/* lower section */}
+        <div className="flex flex-col md:flex-row gap-2 md:gap-4 items-center px-2 py-6 md:py-8 mt-6 md:mt-10 w-full">
+          <ul className="flex items-center mb-2 md:mb-0">
+            <li className="w-10 h-10 rounded-full border-2 border-[#104901]">
+              <Image
+                src="/images/avatar-3.png"
+                alt="avatar"
+                width={40}
+                height={40}
+              />
+            </li>
+            <li className="w-10 h-10 rounded-full border-2 border-[#104901] -ml-3">
+              <Image
+                src="/images/avatar-4.png"
+                alt="avatar"
+                width={40}
+                height={40}
+              />
+            </li>
+            <li className="w-10 h-10 rounded-full border-2 border-[#104901] -ml-3">
+              <Image
+                src="/images/avatar-5.png"
+                alt="avatar"
+                width={40}
+                height={40}
+              />
+            </li>
+            <li className="w-10 h-10 rounded-full border-2 border-[#104901] -ml-3">
+              <Image
+                src="/images/avatar-6.png"
+                alt="avatar"
+                width={40}
+                height={40}
+              />
+            </li>
+          </ul>
+          <div className="text-center md:text-left">
+            <p className="font-source font-semibold text-xs md:text-sm text-black">
+              Over 100 Chainfunders can't be wrong
+            </p>
+            <span className="font-light text-xs md:text-sm text-black">
+              Start fundraising today!
+            </span>
+          </div>
+        </div>
       </div>
 
       <div className="md:w-3/5 relative hidden lg:block">

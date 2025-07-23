@@ -7,27 +7,35 @@ import { Label } from "@/components/ui/label";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import { parseCookies } from 'nookies';
+import { useSearchParams } from 'next/navigation';
+import { toast } from "sonner";
 
 export default function PhonePage() {
   const [phone, setPhone] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const searchParams = useSearchParams();
+
+  // Get email from query string if present
+  const emailFromQuery = searchParams.get("email") || "";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
     try {
-      // Get email from cookie (JWT) if available
-      let email = "";
-      try {
-        const cookies = parseCookies();
-        const token = cookies['auth_token'];
-        if (token) {
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          email = payload.email;
-        }
-      } catch {}
+      // Prefer email from query string, fallback to cookie
+      let email = emailFromQuery;
+      if (!email) {
+        try {
+          const cookies = parseCookies();
+          const token = cookies['auth_token'];
+          if (token) {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            email = payload.email;
+          }
+        } catch {}
+      }
       // Call API to send phone OTP here
       const res = await fetch('/api/auth/link-phone', {
         method: 'POST',
@@ -40,11 +48,14 @@ export default function PhonePage() {
       });
       const data = await res.json();
       if (data.success) {
+        toast.success('OTP sent successfully!');
         window.location.href = `/phone-otp?phone=${encodeURIComponent(phone)}&email=${encodeURIComponent(email)}`;
       } else {
+        toast.error(data.error || 'Failed to send OTP');
         setError(data.error || 'Failed to send OTP');
       }
     } catch (err: any) {
+      toast.error(err.message || "Failed to send OTP");
       setError(err.message || "Failed to send OTP");
     } finally {
       setIsLoading(false);
@@ -100,7 +111,7 @@ export default function PhonePage() {
                   Skip
                 </Button>
               </div>
-              {error && <p className="text-center text-red-500">{error}</p>}
+              {/* {error && <p className="text-center text-red-500">{error}</p>} */}
             </form>
           </div>
         </div>

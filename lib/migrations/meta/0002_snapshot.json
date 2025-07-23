@@ -1,0 +1,10 @@
+{
+  "table": "phone_otps",
+  "columns": [
+    { "name": "id", "type": "UUID", "primaryKey": true },
+    { "name": "phone", "type": "VARCHAR(20)", "notNull": true },
+    { "name": "otp", "type": "VARCHAR(10)", "notNull": true },
+    { "name": "expires_at", "type": "TIMESTAMP", "notNull": true },
+    { "name": "created_at", "type": "TIMESTAMP", "notNull": true, "default": "NOW()" }
+  ]
+} 

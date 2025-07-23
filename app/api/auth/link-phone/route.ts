@@ -2,14 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
 import { db } from '@/lib/db';
 import { users } from '@/lib/schema/users';
-import { eq } from 'drizzle-orm';
+import { phoneOtps } from '@/lib/schema';
+import { eq, and, desc, gt } from 'drizzle-orm';
 
 function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
-
-// In-memory OTP store (replace with persistent store in production)
-const otpStore = new Map<string, { otp: string; expires: number }>();
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,8 +22,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: false, error: 'WhatsApp OTP service not configured.' }, { status: 503 });
       }
       const generatedOtp = generateOtp();
-      const expires = Date.now() + 10 * 60 * 1000; // 10 minutes
-      otpStore.set(phone, { otp: generatedOtp, expires });
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      // Store OTP in DB
+      await db.insert(phoneOtps).values({ phone, otp: generatedOtp, expiresAt });
       try {
         const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
         // Log parameters for debugging
@@ -50,19 +49,18 @@ export async function POST(request: NextRequest) {
       if (!phone || !otp || !email) {
         return NextResponse.json({ success: false, error: 'Phone, OTP, and email are required' }, { status: 400 });
       }
-      const storedData = otpStore.get(phone);
-      if (!storedData) {
+      // Find the most recent, unexpired OTP for this phone
+      const now = new Date();
+      const [record] = await db.select().from(phoneOtps)
+        .where(and(eq(phoneOtps.phone, phone), eq(phoneOtps.otp, otp), gt(phoneOtps.expiresAt, now)))
+        .orderBy(desc(phoneOtps.createdAt))
+        .limit(1);
+      if (!record) {
         return NextResponse.json({ success: false, error: 'No OTP found for this phone number' }, { status: 400 });
       }
-      if (Date.now() > storedData.expires) {
-        otpStore.delete(phone);
-        return NextResponse.json({ success: false, error: 'OTP has expired' }, { status: 400 });
-      }
-      if (storedData.otp !== otp) {
-        return NextResponse.json({ success: false, error: 'Invalid OTP' }, { status: 400 });
-      }
+      // Invalidate OTP after use
+      await db.delete(phoneOtps).where(eq(phoneOtps.id, record.id));
       // OTP is valid - link phone to user
-      otpStore.delete(phone);
       const result = await db.update(users)
         .set({ phone })
         .where(eq(users.email, email));

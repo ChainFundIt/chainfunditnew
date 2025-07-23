@@ -3,7 +3,10 @@ import { neon } from '@neondatabase/serverless';
 import * as schema from './schema';
 
 // You should set DATABASE_URL in your .env file
-const sql = neon(process.env.DATABASE_URL || 'postgresql://placeholder:placeholder@placeholder:5432/placeholder');
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL environment variable is not set');
+}
+const sql = neon(process.env.DATABASE_URL);
 
 export const db = drizzle(sql, { schema });
 

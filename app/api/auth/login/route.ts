@@ -4,6 +4,7 @@ import twilio from 'twilio';
 import { db } from '@/lib/db';
 import { emailOtps } from '@/lib/schema/email-otps';
 import { eq, and, desc, gt } from 'drizzle-orm';
+import { users } from '@/lib/schema/users';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -27,7 +28,9 @@ export async function POST(request: NextRequest) {
       const generatedOtp = generateOtp();
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
       // Store OTP in DB
+      console.log('Inserting email OTP into DB:', { email, otp: generatedOtp, expiresAt });
       await db.insert(emailOtps).values({ email, otp: generatedOtp, expiresAt });
+      console.log('Inserted email OTP into DB');
       // Send OTP email using Resend
       try {
         await resend.emails.send({
@@ -84,22 +87,26 @@ export async function POST(request: NextRequest) {
       }
       // Find the most recent, unexpired OTP for this email
       const now = new Date();
+      console.log('Selecting email OTP from DB:', { email, otp });
       const [record] = await db.select().from(emailOtps)
         .where(and(eq(emailOtps.email, email), eq(emailOtps.otp, otp), gt(emailOtps.expiresAt, now)))
         .orderBy(desc(emailOtps.createdAt))
         .limit(1);
+      console.log('Selected email OTP record:', record);
       if (!record) {
         return NextResponse.json({ success: false, error: 'No OTP found for this email or OTP expired/invalid' }, { status: 400 });
       }
       // Optionally, delete or invalidate the OTP after use
+      console.log('Deleting email OTP from DB:', record.id);
       await db.delete(emailOtps).where(eq(emailOtps.id, record.id));
+      console.log('Deleted email OTP from DB');
       // TODO: Create user session/token here
       return NextResponse.json({ success: true, message: 'Email OTP verified successfully' });
     }
 
     if (action === 'verify_phone_otp') {
-      if (!phone || !otp) {
-        return NextResponse.json({ success: false, error: 'Phone number and OTP are required' }, { status: 400 });
+      if (!phone || !otp || !email) {
+        return NextResponse.json({ success: false, error: 'Phone number, email, and OTP are required' }, { status: 400 });
       }
       const storedData = otpStore.get(phone);
       if (!storedData) {
@@ -113,8 +120,12 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: false, error: 'Invalid OTP' }, { status: 400 });
       }
       otpStore.delete(phone);
-      // TODO: Create user session/token here
-      return NextResponse.json({ success: true, message: 'Phone OTP verified successfully' });
+      // Update user's phone in the database
+      console.log('Updating user phone in DB:', { email, phone });
+      const updateResult = await db.update(users).set({ phone }).where(eq(users.email, email));
+      console.log('User phone update result:', updateResult);
+      // TODO: Create user session/token here if needed
+      return NextResponse.json({ success: true, message: 'Phone OTP verified and user phone updated successfully' });
     }
 
     return NextResponse.json({ success: false, error: 'Invalid action' }, { status: 400 });

@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
       await db
         .insert(emailOtps)
         .values({ email, otp: generatedOtp, expiresAt });
+      console.log("Inserted email OTP record");
       try {
         await resend.emails.send({
           from: process.env.RESEND_FROM_EMAIL || "noreply@example.com",
@@ -41,6 +42,7 @@ export async function POST(request: NextRequest) {
             <p>If you didn't request this code, please ignore this email.</p>
           `,
         });
+        console.log("Email OTP sent successfully");
         return NextResponse.json({
           success: true,
           message: "Email OTP sent successfully",
@@ -74,6 +76,7 @@ export async function POST(request: NextRequest) {
         )
         .orderBy(desc(emailOtps.createdAt))
         .limit(1);
+      console.log("Fetched OTP record for verification");
       if (!record) {
         return NextResponse.json(
           {
@@ -85,6 +88,7 @@ export async function POST(request: NextRequest) {
       }
       // Invalidate OTP
       await db.delete(emailOtps).where(eq(emailOtps.id, record.id));
+      console.log("Invalidated OTP record");
       // Check if user exists
       let [user] = await db
         .select()
@@ -95,6 +99,7 @@ export async function POST(request: NextRequest) {
         // Create user (require fullName, or use email as fallback)
         const name = fullName || email.split("@")[0];
         await db.insert(users).values({ email, fullName: name });
+        console.log("Created new user record");
         [user] = await db
           .select()
           .from(users)

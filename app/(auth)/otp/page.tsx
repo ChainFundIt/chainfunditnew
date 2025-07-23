@@ -1,14 +1,22 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowRight, Clipboard } from "lucide-react";
 import Image from "next/image";
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
-function OtpInput({ value, onChange, length = 6 }: { value: string; onChange: (val: string) => void; length?: number }) {
+function OtpInput({
+  value,
+  onChange,
+  length = 6,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  length?: number;
+}) {
   const inputRefs = React.useRef<(HTMLInputElement | null)[]>([]);
 
   const focusNext = (index: number) => {
@@ -24,22 +32,29 @@ function OtpInput({ value, onChange, length = 6 }: { value: string; onChange: (v
   };
 
   const handleChange = (index: number, val: string) => {
-    const newValue = value.substring(0, index) + val + value.substring(index + 1);
+    const newValue =
+      value.substring(0, index) + val + value.substring(index + 1);
     onChange(newValue.padEnd(length, ""));
     if (val && index < length - 1) {
       focusNext(index);
     }
   };
 
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !value[index] && index > 0) {
+  const handleKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (e.key === "Backspace" && !value[index] && index > 0) {
       focusPrev(index);
     }
   };
 
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
-    const pastedData = e.clipboardData.getData('text/plain').replace(/\D/g, '').slice(0, length);
+    const pastedData = e.clipboardData
+      .getData("text/plain")
+      .replace(/\D/g, "")
+      .slice(0, length);
     if (pastedData.length === length) {
       onChange(pastedData);
       inputRefs.current[length - 1]?.focus();
@@ -59,7 +74,7 @@ function OtpInput({ value, onChange, length = 6 }: { value: string; onChange: (v
           maxLength={1}
           className="w-16 h-16 text-center text-2xl bg-white border border-[#D9D9DC] rounded"
           value={value[idx] || ""}
-          onChange={e => {
+          onChange={(e) => {
             const val = e.target.value.replace(/\D/g, "");
             if (val.length <= 1) {
               handleChange(idx, val);
@@ -91,9 +106,11 @@ function OtpPageInner() {
     if (email) {
       setIdentifier(email);
       setLoginType("email");
+      console.log('OTP Page: identifier set from email param:', email);
     } else if (phone) {
       setIdentifier(phone);
       setLoginType("phone");
+      console.log('OTP Page: identifier set from phone param:', phone);
     } else {
       // fallback to login localStorage
       const t = localStorage.getItem("otp_login_type");
@@ -101,9 +118,13 @@ function OtpPageInner() {
       if (t === "email" || t === "phone") {
         setLoginType(t);
         setIdentifier(id);
+        console.log('OTP Page: identifier set from localStorage:', { t, id });
       }
     }
   }, [searchParams]);
+
+  // Determine mode (login or signup)
+  const mode = searchParams.get("mode") || "login";
 
   // Timer for resend code
   useEffect(() => {
@@ -116,10 +137,11 @@ function OtpPageInner() {
   // Resend OTP handler
   const handleResendOtp = async () => {
     if (!identifier || !loginType) {
-      toast.error('Missing identifier or login type.');
+      toast.error("Missing identifier or login type.");
       return;
     }
     setIsLoading(true);
+    console.log('OTP Page: Resending OTP for', { identifier, loginType });
     try {
       // Use /api/auth/login for both login and signup OTP resend
       const payload =
@@ -135,12 +157,12 @@ function OtpPageInner() {
       if (data.success) {
         setOtp("");
         setOtpTimer(40);
-        toast.success('OTP resent!');
+        toast.success("OTP resent!");
       } else {
-        toast.error(data.error || 'Failed to resend OTP');
+        toast.error(data.error || "Failed to resend OTP");
       }
     } catch (err: any) {
-      toast.error(err.message || 'Failed to resend OTP');
+      toast.error(err.message || "Failed to resend OTP");
     } finally {
       setIsLoading(false);
     }
@@ -158,13 +180,19 @@ function OtpPageInner() {
     if (otp.length !== 6 || isLoading || !identifier || !loginType) return;
     setIsLoading(true);
     setError("");
+    console.log('OTP Page: Submitting OTP', { otp, identifier, loginType, mode });
     try {
-      // Use /api/auth/login for both login and signup OTP verification
-      const payload =
-        loginType === "email"
-          ? { action: "verify_email_otp", email: identifier, otp }
-          : { action: "verify_phone_otp", phone: identifier, otp };
-      const res = await fetch("/api/auth/login", {
+      let payload, endpoint;
+      if (loginType === "email") {
+        payload = { action: "verify_email_otp", email: identifier, otp };
+        endpoint = mode === "signup" ? "/api/auth/signup" : "/api/auth/login";
+      } else {
+        // For phone, also send the email from query params if available
+        const email = searchParams.get("email");
+        payload = { action: "verify_phone_otp", phone: identifier, otp, email };
+        endpoint = "/api/auth/login";
+      }
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -175,9 +203,9 @@ function OtpPageInner() {
       localStorage.removeItem("otp_login_type");
       localStorage.removeItem("otp_login_identifier");
       toast.success("OTP verified! Redirecting...");
-      // Redirect to dashboard or next step
-      if (searchParams.get("email")) {
-        router.push("/phone");
+      // Redirect logic based on mode and loginType
+      if (mode === "signup" && loginType === "email") {
+        router.push(`/phone?email=${encodeURIComponent(identifier ?? "")}&mode=signup`);
       } else {
         router.push("/dashboard");
       }
@@ -192,7 +220,8 @@ function OtpPageInner() {
   const handlePasteCode = async () => {
     try {
       const text = await navigator.clipboard.readText();
-      const code = text.replace(/\D/g, '').slice(0, 6);
+      const code = text.replace(/\D/g, "").slice(0, 6);
+      console.log('OTP Page: Pasted code from clipboard:', code);
       if (code.length === 6) setOtp(code);
       else toast.error("Clipboard does not contain a valid 6-digit code.");
     } catch {
@@ -201,95 +230,66 @@ function OtpPageInner() {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex flex-col gap-2 items-center justify-center flex-1 p-2 md:p-0">
-        <div className="flex justify-center w-full">
-          <div className="w-full max-w-lg pt-6">
-            <form className="flex flex-col gap-6 w-full pt-5">
-              <div className="grid gap-6">
-                <div className="flex flex-col gap-5">
-                  <h2 className="font-normal text-2xl text-[#104901]">Enter Code</h2>
-                  <p className="text-base">
-                    Please enter the 6 digit code we sent to:<br />
-                    <span className="font-semibold text-[#104901]">
-                      {identifier ? identifier : <span className="text-red-600">No identifier found. Please go back and enter your email or phone.</span>}
-                    </span>
-                  </p>
-                  <OtpInput value={otp} onChange={setOtp} length={6} />
-                  <hr />
-                  <div className="flex justify-between mt-2">
-                    <Button type="button" variant="outline" className="px-4" onClick={handlePasteCode}><Clipboard/> Paste code</Button>
-                    {otpTimer > 0 ? (
-                      <span className="text-sm text-gray-500">Resend code in {otpTimer}s</span>
+    <div className="flex flex-col gap-6 h-[calc(100vh-200px)] overflow-y-hidden">
+      <div className="h-full flex flex-col gap-2 items-center justify-center flex-1 px-3 md:p-0">
+        <div className="w-full max-w-sm md:max-w-lg pt-6">
+          <form className="flex flex-col gap-6 w-full pt-5 px-2">
+            <div className="grid gap-8">
+              <div className="flex flex-col gap-6">
+                <h2 className="font-normal text-2xl text-[#104901]">
+                  Enter Code
+                </h2>
+                <p className="text-base">
+                  Please enter the 6 digit code we sent to:
+                  <br />
+                  <span className="font-semibold text-[#104901]">
+                    {identifier ? (
+                      identifier
                     ) : (
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        className="px-4 ml-2"
-                        onClick={handleResendOtp}
-                        disabled={isLoading}
-                      >
-                        Resend OTP
-                      </Button>
+                      <span className="text-red-600">
+                        No identifier found. Please go back and enter your email
+                        or phone.
+                      </span>
                     )}
-                  </div>
+                  </span>
+                </p>
+                <OtpInput value={otp} onChange={setOtp} length={6} />
+                <hr />
+                <div className="flex justify-between mt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="px-4"
+                    onClick={handlePasteCode}
+                  >
+                    <Clipboard /> Paste code
+                  </Button>
+                  {otpTimer > 0 ? (
+                    <span className="text-sm text-[#8E8C95]">
+                      Resend code in {otpTimer}s
+                    </span>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      className="px-4 ml-2 text-white"
+                      onClick={handleResendOtp}
+                      disabled={isLoading}
+                    >
+                      Resend OTP
+                    </Button>
+                  )}
                 </div>
               </div>
-              {error && <p className="text-center text-red-500">{error}</p>}
-              {isLoading && <p className="text-center text-[#104901]">Verifying...</p>}
-            </form>
-          </div>
+            </div>
+            {/* {error && <p className="text-center text-red-500">{error}</p>} */}
+            {isLoading && (
+              <p className="text-center text-[#104901]">Verifying...</p>
+            )}
+          </form>
         </div>
       </div>
-      <div
-        className="flex gap-4 items-center px-5 py-8 w-full"
-        style={{
-          background: "linear-gradient(0deg, #F2F1E9 0%, #FFFFFF 75%)",
-        }}
-      >
-        <ul className="flex items-center">
-          <li className="w-10 h-10 rounded-full border-2 border-[#104901]">
-            <Image
-              src="/images/avatar-3.png"
-              alt="avatar"
-              width={40}
-              height={40}
-            />
-          </li>
-          <li className="w-10 h-10 rounded-full border-2 border-[#104901] -ml-3">
-            <Image
-              src="/images/avatar-4.png"
-              alt="avatar"
-              width={40}
-              height={40}
-            />
-          </li>
-          <li className="w-10 h-10 rounded-full border-2 border-[#104901] -ml-3">
-            <Image
-              src="/images/avatar-5.png"
-              alt="avatar"
-              width={40}
-              height={40}
-            />
-          </li>
-          <li className="w-10 h-10 rounded-full border-2 border-[#104901] -ml-3">
-            <Image
-              src="/images/avatar-6.png"
-              alt="avatar"
-              width={40}
-              height={40}
-            />
-          </li>
-        </ul>
-        <div>
-          <p className="font-source font-semibold text-xs text-black">
-            Over 100 Chainfunders can't be wrong
-          </p>
-          <span className="font-light text-sm text-black">
-            Start fundraising today!
-          </span>
-        </div>
-      </div>
+      
     </div>
   );
 }
@@ -301,4 +301,3 @@ export default function OtpPage() {
     </Suspense>
   );
 }
-
