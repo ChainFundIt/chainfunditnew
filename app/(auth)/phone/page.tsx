@@ -9,8 +9,17 @@ import Image from "next/image";
 import { parseCookies } from 'nookies';
 import { useSearchParams } from 'next/navigation';
 import { toast } from "sonner";
+import { Suspense } from 'react';
 
-export default function PhonePage() {
+export default function PhonePageWrapper() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PhonePage />
+    </Suspense>
+  );
+}
+
+function PhonePage() {
   const [phone, setPhone] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
