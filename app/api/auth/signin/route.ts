@@ -36,9 +36,9 @@ export async function POST(request: NextRequest) {
         await resend.emails.send({
           from: process.env.RESEND_FROM_EMAIL || 'noreply@example.com',
           to: email,
-          subject: 'Login OTP - ChainFundIt',
+          subject: 'Sign in OTP - ChainFundIt',
           html: `
-            <h2>Your Login OTP</h2>
+            <h2>Your Sign in OTP</h2>
             <p>Your verification code is: <strong>${generatedOtp}</strong></p>
             <p>This code will expire in 10 minutes.</p>
             <p>If you didn't request this code, please ignore this email.</p>
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
         await twilioClient.messages.create({
           from: process.env.TWILIO_WHATSAPP_FROM,
           to: `whatsapp:${phone}`,
-          body: `Your ChainFundIt login verification code is: ${generatedOtp}. This code will expire in 10 minutes.`
+          body: `Your ChainFundIt sign in verification code is: ${generatedOtp}. This code will expire in 10 minutes.`
         });
         return NextResponse.json({ success: true, message: 'WhatsApp OTP sent successfully' });
       } catch (error) {
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: false, error: 'Invalid action' }, { status: 400 });
   } catch (error) {
-    console.error('Login API error:', error);
+    console.error('Sign in API error:', error);
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
 } 

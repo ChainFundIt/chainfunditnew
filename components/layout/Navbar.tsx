@@ -49,8 +49,12 @@ const Navbar = (props: Props) => {
           </li>
         </ul>
         <section className="hidden md:flex items-center gap-3">
-          <Link href='/login' className="font-medium text-base text-black">Login</Link>
-          <Button className="px-4 py-3 border-2 border-white text-base font-semibold rounded-none">Create Campaign</Button>
+          <Link href='/signin' className="font-medium text-base text-black">Sign in</Link>
+          <Button className="px-4 py-3 border-2 border-white text-base font-semibold rounded-none">
+            <Link href="/create-campaign" className="w-full h-full flex items-center justify-center">
+              Create Campaign
+            </Link>
+          </Button>
         </section>
       </div>
       {/* Mobile menu */}
@@ -71,7 +75,7 @@ const Navbar = (props: Props) => {
             </li>
           </ul>
           <div className="flex flex-col gap-2">
-            <Link href='/login' className="font-medium text-base text-black">Login</Link>
+            <Link href='/signin' className="font-medium text-base text-black">Signin</Link>
             <Button className="w-full px-4 py-3 border-2 border-white text-base font-semibold rounded-none">Create Campaign</Button>
           </div>
         </div>

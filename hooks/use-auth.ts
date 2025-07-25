@@ -20,7 +20,7 @@ export function useAuth() {
 
   const login = async (email: string, password: string) => {
     // TODO: Implement login logic
-    console.log("Login:", { email, password });
+    console.log("Sign in:", { email, password });
   };
 
   const logout = async () => {

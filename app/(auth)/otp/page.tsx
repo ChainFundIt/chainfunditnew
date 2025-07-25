@@ -124,7 +124,7 @@ function OtpPageInner() {
   }, [searchParams]);
 
   // Determine mode (login or signup)
-  const mode = searchParams.get("mode") || "login";
+  const mode = searchParams.get("mode") || "signin";
 
   // Timer for resend code
   useEffect(() => {
@@ -137,7 +137,7 @@ function OtpPageInner() {
   // Resend OTP handler
   const handleResendOtp = async () => {
     if (!identifier || !loginType) {
-      toast.error("Missing identifier or login type.");
+      toast.error("Missing identifier or sign in type.");
       return;
     }
     setIsLoading(true);
@@ -148,7 +148,7 @@ function OtpPageInner() {
         loginType === "email"
           ? { action: "request_email_otp", email: identifier }
           : { action: "request_phone_otp", phone: identifier };
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("/api/auth/signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -185,12 +185,12 @@ function OtpPageInner() {
       let payload, endpoint;
       if (loginType === "email") {
         payload = { action: "verify_email_otp", email: identifier, otp };
-        endpoint = mode === "signup" ? "/api/auth/signup" : "/api/auth/login";
+        endpoint = mode === "signup" ? "/api/auth/signup" : "/api/auth/signin";
       } else {
         // For phone, also send the email from query params if available
         const email = searchParams.get("email");
         payload = { action: "verify_phone_otp", phone: identifier, otp, email };
-        endpoint = "/api/auth/login";
+        endpoint = "/api/auth/signin";
       }
       const res = await fetch(endpoint, {
         method: "POST",

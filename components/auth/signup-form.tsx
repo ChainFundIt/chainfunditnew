@@ -9,6 +9,7 @@ import { ArrowRight } from "lucide-react";
 import { FaGoogle } from "react-icons/fa";
 import { FaFacebook } from "react-icons/fa";
 import { toast } from "sonner";
+import Link from "next/link";
 
 export function SignupForm({
   className,
@@ -91,6 +92,8 @@ export function SignupForm({
           </Button>
         </div>
       </div>
+      <p className="text-center text-sm font-normal text-[#104901] mt-4">Already have an account? <Link href='/signin' className="font-medium text-base underline">Sign in</Link></p>
+
       <p className="text-center text-sm font-normal text-[#104901] mt-4">
         By continuing with Google, Apple, Email or Phone number, you agree to
         Chainfundit <span className="font-bold">Terms of Service</span> as well

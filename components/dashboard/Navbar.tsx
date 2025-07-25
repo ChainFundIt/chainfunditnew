@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -51,26 +51,47 @@ const Navbar = (props: Props) => {
         </li>
       </ul>
       <section className="hidden md:flex gap-5 items-center">
-        <Button className="">Create Campaign</Button>
+        <Button className="">
+          <Link
+            href="/create-campaign"
+            className="w-full h-full flex items-center justify-center"
+          >
+            Create Campaign
+          </Link>
+        </Button>
         <Search color="#757575" size={24} />
         <Bell color="#757575" size={24} />
-        <Image src='/images/user.png' alt="User" width={32} height={32} className="md:w-[48px] md:h-[48px] w-8 h-8" />
+        <Image
+          src="/images/user.png"
+          alt="User"
+          width={32}
+          height={32}
+          className="md:w-[48px] md:h-[48px] w-8 h-8"
+        />
       </section>
       {/* Mobile menu */}
       {menuOpen && (
         <div className="md:hidden mt-4 flex flex-col gap-4 w-full animate-fade-in">
           <ul className="flex flex-col gap-2 font-semibold text-base text-black">
             <li>
-              <Link href="#" onClick={() => setMenuOpen(false)}>For Individuals</Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                For Individuals
+              </Link>
             </li>
             <li>
-              <Link href="#" onClick={() => setMenuOpen(false)}>For Charities</Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                For Charities
+              </Link>
             </li>
             <li>
-              <Link href="#" onClick={() => setMenuOpen(false)}>Virtual Giving Mall</Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                Virtual Giving Mall
+              </Link>
             </li>
             <li>
-              <Link href="#" onClick={() => setMenuOpen(false)}>FAQs</Link>
+              <Link href="#" onClick={() => setMenuOpen(false)}>
+                FAQs
+              </Link>
             </li>
           </ul>
           <div className="flex flex-col gap-2">
@@ -78,7 +99,13 @@ const Navbar = (props: Props) => {
             <div className="flex gap-3 items-center justify-center">
               <Search color="#757575" size={24} />
               <Bell color="#757575" size={24} />
-              <Image src='/images/user.png' alt="User" width={32} height={32} className="w-8 h-8" />
+              <Image
+                src="/images/user.png"
+                alt="User"
+                width={32}
+                height={32}
+                className="w-8 h-8"
+              />
             </div>
           </div>
         </div>
