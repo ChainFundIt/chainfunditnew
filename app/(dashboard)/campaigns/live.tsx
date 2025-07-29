@@ -1,11 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Edit, Eye, Link, Plus, PlusSquare, Users } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 
 type Campaign = {
   id: number;
   title: string;
+  description: string;
   amountRaised: number;
   goal: number;
   donors: number;
@@ -50,31 +51,72 @@ const LiveCampaigns = ({ campaigns }: Props) => {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 font-source">
       {campaigns.map((campaign) => (
         <div
           key={campaign.id}
-          className="border rounded-lg bg-white shadow-sm p-4 flex gap-4 items-start"
+          className="border border-[#D9D9D9] bg-white py-4 pl-4 pr-6 flex justify-between items-start"
+          style={{ boxShadow: "0px 4px 8px 0px #0000001A" }}
         >
           <Image
             src={campaign.image}
             alt={campaign.title}
-            width={160}
-            height={100}
-            className="rounded object-cover"
+            width={270}
+            height={190}
+            className="object-cover"
           />
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold">{campaign.title}</h3>
-            <p className="text-sm mt-1 text-[#4B4B4B]">
-              ₦{campaign.amountRaised.toLocaleString()} raised of ₦{campaign.goal.toLocaleString()} goal
-            </p>
-            <p className="text-xs text-gray-500">
-              {campaign.donors} donors • {campaign.chains} chains
-            </p>
+          <div className="flex flex-col justify-end">
+            <h3 className="text-2xl font-medium">{campaign.title}</h3>
+            <span className="font-normal text-base">
+              {campaign.description.slice(0, 60)}...
+            </span>
+            <section className="flex justify-between">
+              <p className="text-lg font-medium my-1 text-black">
+                ₦{campaign.amountRaised.toLocaleString()} raised
+              </p>
+              <p className="font-medium text-lg text-[#757575] my-1">
+                ₦{campaign.goal.toLocaleString()} total
+              </p>
+            </section>
+            <div className="w-full bg-[#D9D9D9] h-2 my-1">
+              <div
+                className="bg-[#104901] h-full transition-all duration-500"
+                style={{
+                  width: `${Math.min(
+                    100,
+                    Math.round((campaign.amountRaised / campaign.goal) * 100)
+                  )}%`,
+                }}
+              ></div>
+            </div>
+            <section className="flex justify-between items-center">
+              <p className="text-lg text-[#868686] flex gap-1 items-center">
+                <Users size={20} />
+                {campaign.donors} donors
+              </p>
+              <p className="text-lg text-[#868686] flex gap-1 items-center">
+                <Link size={20} /> {campaign.chains} chains
+              </p>
+            </section>
             <div className="mt-3 flex gap-2">
-              <Button variant="outline" className="text-green-700 border-green-700">Edit</Button>
-              <Button variant="outline">View</Button>
-              <Button variant="outline" className="text-yellow-700 border-yellow-500">Add Update</Button>
+              <Button variant="default" className="text-lg font-medium">
+                Edit
+                <Edit />
+              </Button>
+              <Button
+                className="bg-[#F2F1E9] font-medium text-lg text-[#474553] border-[#474553]"
+                variant="outline"
+              >
+                View
+                <Eye />
+              </Button>
+              <Button
+                variant="default"
+                className="bg-[#D4B108] font-medium text-lg text-white border-white"
+              >
+                Add Update
+                <PlusSquare />
+              </Button>
             </div>
           </div>
         </div>

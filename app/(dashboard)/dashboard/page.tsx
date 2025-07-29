@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Dialog,
@@ -20,6 +20,7 @@ export default function DashboardPage() {
   const [showCompleteProfile, setShowCompleteProfile] = useState(false);
   const [profileChecked, setProfileChecked] = useState(false);
   const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null) as React.RefObject<HTMLFormElement>;
 
   useEffect(() => {
     async function checkProfile() {
@@ -89,7 +90,7 @@ export default function DashboardPage() {
             </p>
           </DialogHeader>
           <div className="py-4 md:py-5">
-            <CompleteProfile />
+            <CompleteProfile formRef={formRef} />
           </div>
           <DialogFooter>
             <DialogClose asChild>

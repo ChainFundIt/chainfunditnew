@@ -1,13 +1,13 @@
 "use client";
-import React, { useRef, useState, ChangeEvent } from "react";
-import Image from "next/image";
+import React, { useRef, useState, ChangeEvent, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Activity,
   Airplay,
   AlertTriangle,
   Ambulance,
-  Archive,
   BookOpen,
+  Briefcase,
   Cat,
   ChevronsLeft,
   ChevronsRight,
@@ -46,7 +46,7 @@ import { Button } from "@/components/ui/button";
 import { LuImage } from "react-icons/lu";
 
 const reasons = [
-  { text: "Business", icon: <ShoppingCart /> },
+  { text: "Business", icon: <Briefcase /> },
   { text: "Charity", icon: <Gift /> },
   { text: "Community", icon: <Users /> },
   { text: "Creative", icon: <Feather /> },
@@ -106,6 +106,20 @@ export default function CreateCampaignPage() {
   const [step, setStep] = useState(1);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const router = useRouter();
+
+  // Replace this with your actual authentication logic
+  const isAuthenticated = false; // e.g., get from context or cookies
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace("/signin");
+    }
+  }, [isAuthenticated, router]);
+
+  if (!isAuthenticated) {
+    return null; // Or a loading spinner
+  }
 
   const [formData, setFormData] = useState<CampaignFormData>({
     title: "",
@@ -305,7 +319,7 @@ export default function CreateCampaignPage() {
                         className="flex gap-2 items-center font-normal text-2xl text-[#5F8555]"
                       >
                         <section className="flex items-center gap-2">
-                          <Archive />
+                          <Lock />
                           Private
                         </section>
                       </SelectItem>

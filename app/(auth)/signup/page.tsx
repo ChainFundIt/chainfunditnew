@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { SignupForm } from "@/components/auth/signup-form";
 import Image from "next/image";
 
@@ -23,9 +24,9 @@ export default function SignupPage() {
             Please sign up below.
           </p>
         </div>
-        <div className="w-full max-w-sm md:max-w-lg">
-          <SignupForm />
-        </div>
+         <Suspense fallback={<div className="w-full text-center py-8">Loading...</div>}>
+            <SignupForm />
+          </Suspense>
       </div>
       
     </div>

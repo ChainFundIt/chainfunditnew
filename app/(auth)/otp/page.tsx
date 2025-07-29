@@ -8,6 +8,11 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
+function isSafeRedirect(url: string | null): boolean {
+  // Only allow relative paths, not protocol-relative or absolute URLs
+  return !!url && url.startsWith("/") && !url.startsWith("//") && !url.startsWith("/\\");
+}
+
 function OtpInput({
   value,
   onChange,
@@ -98,6 +103,7 @@ function OtpPageInner() {
   const [loginType, setLoginType] = useState<"email" | "phone" | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect");
 
   // Determine identifier and type (signup: query, login: localStorage)
   useEffect(() => {
@@ -205,9 +211,17 @@ function OtpPageInner() {
       toast.success("OTP verified! Redirecting...");
       // Redirect logic based on mode and loginType
       if (mode === "signup" && loginType === "email") {
-        router.push(`/phone?email=${encodeURIComponent(identifier ?? "")}&mode=signup`);
+        if (redirect && isSafeRedirect(redirect)) {
+          router.replace(redirect);
+        } else {
+          router.push(`/phone?email=${encodeURIComponent(identifier ?? "")}&mode=signup`);
+        }
       } else {
-        router.push("/dashboard");
+        if (redirect && isSafeRedirect(redirect)) {
+          router.replace(redirect);
+        } else {
+          router.push("/dashboard");
+        }
       }
     } catch (err: any) {
       setError(err.message || "Invalid OTP");

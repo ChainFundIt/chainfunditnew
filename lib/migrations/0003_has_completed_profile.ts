@@ -1,3 +1,4 @@
+// drizzle/migrations/xxxx_add_has_completed_profile_to_users.ts
 import { sql } from 'drizzle-orm';
 
 export async function up(db: any): Promise<void> {

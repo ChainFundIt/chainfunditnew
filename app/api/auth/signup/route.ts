@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
         .limit(1);
       if (user) {
         return NextResponse.json(
-          { success: false, error: "User already exists. Please log in." },
+          { success: false, error: "You already have an account. Please log in." },
           { status: 409 }
         );
       }

@@ -1,10 +1,11 @@
 "use client";
 
-import { LifeBuoy, Share } from "lucide-react";
+import { Share } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
+import { LifeBuoy } from "react-feather";
 
 type Props = {};
 
@@ -48,7 +49,7 @@ const Sidebar = (props: Props) => {
             }`}
           >
             <section
-              className={` ${pathname === link.href ? "bg-[#5F8555]" : ""}`}
+              className={` ${pathname === link.href ? "fill-[#5F8555] text-[#5F8555]" : ""}`}
             >
               {link.icon}
             </section>

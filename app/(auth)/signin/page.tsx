@@ -1,5 +1,6 @@
 import { LoginForm } from "@/components/auth/login-form";
 import Image from "next/image";
+import { Suspense } from "react";
 
 export default function LoginPage() {
   return (
@@ -21,10 +22,11 @@ export default function LoginPage() {
         </p>
       </div>
 
-      <div className="w-full max-w-sm md:max-w-lg pt-4 md:pt-6">
-        <LoginForm />
-      </div>
-      
+      <Suspense fallback={<></>}>
+        <div className="w-full max-w-sm md:max-w-lg pt-4 md:pt-6">
+          <LoginForm />
+        </div>
+      </Suspense>
     </div>
   );
 }

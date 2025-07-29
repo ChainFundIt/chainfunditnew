@@ -4,11 +4,24 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 
 type Props = {};
 
 const Navbar = (props: Props) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const router = useRouter();
+  // TODO: Replace with your real auth logic
+  const isAuthenticated = false;
+
+  const handleCreateCampaign = () => {
+    if (isAuthenticated) {
+      router.push("/create-campaign");
+    } else {
+      router.push("/signup?redirect=/create-campaign");
+    }
+  };
+
   return (
     <nav className="w-full bg-white shadow font-source px-4 py-4 md:px-12 md:py-10">
       <div className="flex justify-between items-center">
@@ -50,10 +63,11 @@ const Navbar = (props: Props) => {
         </ul>
         <section className="hidden md:flex items-center gap-3">
           <Link href='/signin' className="font-medium text-base text-black">Sign in</Link>
-          <Button className="px-4 py-3 border-2 border-white text-base font-semibold rounded-none">
-            <Link href="/create-campaign" className="w-full h-full flex items-center justify-center">
-              Create Campaign
-            </Link>
+          <Button
+            className="px-4 py-3 border-2 border-white text-base font-semibold rounded-none"
+            onClick={handleCreateCampaign}
+          >
+            Create Campaign
           </Button>
         </section>
       </div>

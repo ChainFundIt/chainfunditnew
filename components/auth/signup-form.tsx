@@ -10,6 +10,7 @@ import { FaGoogle } from "react-icons/fa";
 import { FaFacebook } from "react-icons/fa";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 export function SignupForm({
   className,
@@ -18,6 +19,8 @@ export function SignupForm({
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +42,9 @@ export function SignupForm({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to send OTP");
       toast.success("OTP sent successfully!");
-      window.location.href = `/otp?email=${encodeURIComponent(email)}&mode=signup`;
+      let otpUrl = `/otp?email=${encodeURIComponent(email)}&mode=signup`;
+      if (redirect) otpUrl += `&redirect=${encodeURIComponent(redirect)}`;
+      window.location.href = otpUrl;
     } catch (err: any) {
       setError(err.message || "Failed to send OTP");
       toast.error(err.message || "Failed to send OTP");

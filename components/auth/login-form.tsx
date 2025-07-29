@@ -10,6 +10,7 @@ import { FaGoogle } from "react-icons/fa";
 import { FaFacebook } from "react-icons/fa";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 export function LoginForm({
   className,
@@ -20,6 +21,8 @@ export function LoginForm({
   const [phone, setPhone] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +53,10 @@ export function LoginForm({
         localStorage.setItem("otp_login_type", "email");
         localStorage.setItem("otp_login_identifier", email);
       }
-      window.location.href = "/otp";
+      // --- Correction: Pass redirect param to OTP page ---
+      let otpUrl = "/otp?mode=signin";
+      if (redirect) otpUrl += `&redirect=${encodeURIComponent(redirect)}`;
+      window.location.href = otpUrl;
     } catch (err: any) {
       setError(err.message || "Failed to send OTP");
       toast.error(err.message || "Failed to send OTP");

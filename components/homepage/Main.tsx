@@ -153,13 +153,16 @@ const Main = (props: Props) => {
               </span>
               <div className="w-full bg-[#FBFBFB] h-2">
                 <div
-                  className={
-                    idx === 0
-                      ? "w-[60%] bg-[#104901] h-full"
+                  className="bg-[#104901] h-full transition-all duration-500"
+                  style={{
+                    width: card.percentage
+                      ? card.percentage
+                      : idx === 0
+                      ? "60%"
                       : idx === 1
-                      ? "w-[93%] bg-[#104901] h-full"
-                      : "w-[13%] bg-[#104901] h-full"
-                  }
+                      ? "93%"
+                      : "13%",
+                  }}
                 ></div>
               </div>
             </section>
