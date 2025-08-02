@@ -175,7 +175,7 @@ function PhonePage() {
         </ul>
         <div>
           <p className="font-source font-semibold text-xs text-black">
-            Over 100 Chainfunders can't be wrong
+            Over 100 Chainfunders can&apos;t be wrong
           </p>
           <span className="font-light text-sm text-black">
             Start fundraising today!
