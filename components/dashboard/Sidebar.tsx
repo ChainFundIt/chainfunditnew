@@ -1,33 +1,33 @@
 "use client";
 
-import { Share } from "lucide-react";
-import Image from "next/image";
+import { Share, PiggyBank } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
 import { LifeBuoy } from "react-feather";
+import { BiDonateHeart } from "react-icons/bi";
 
 type Props = {};
 
 const links = [
   {
     href: "/campaigns",
-    icon: <Image src="/images/piggy.svg" alt="" width={40} height={40} />,
+    icon: <PiggyBank size={40} />,
     label: "Campaigns",
   },
   {
     href: "/donations",
-    icon: <Image src="/images/donate.svg" alt="" width={40} height={40} />,
+    icon: <BiDonateHeart size={40} />,
     label: "Donations",
   },
   {
     href: "/payouts",
-    icon: <Share size={40} color="black" />,
+    icon: <Share size={40} />,
     label: "Payouts",
   },
   {
     href: "/settings",
-    icon: <LifeBuoy size={40} color="black" />,
+    icon: <LifeBuoy size={40} />,
     label: "Settings",
   },
 ];
@@ -49,7 +49,7 @@ const Sidebar = (props: Props) => {
             }`}
           >
             <section
-              className={` ${pathname === link.href ? "fill-[#5F8555] text-[#5F8555]" : ""}`}
+              className={` ${pathname === link.href ? " text-[#5F8555]" : "text-black"}`}
             >
               {link.icon}
             </section>
