@@ -105,6 +105,9 @@ export function LoginForm({
           Continue with {isPhone ? "Phone" : "Email"}
           <ArrowRight />
         </Button>
+        {error && (
+          <p className="text-center text-red-500 text-sm mt-2">{error}</p>
+        )}
         <div className="flex gap-3 items-center w-full">
           <div className="w-1/3 border-b border-[#C0BFC4]"></div>
           <span className="relative z-10 font-medium md:text-xl text-xs text-black">
