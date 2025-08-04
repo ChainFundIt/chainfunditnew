@@ -185,8 +185,6 @@ export default function CreateCampaignPage() {
     }));
   };
 
-  // No-op: old handler not used, logic will move to modal in future
-
   const generateAiSuggestion = async () => {
     const prompt = aiInstruction.trim();
     const length =
