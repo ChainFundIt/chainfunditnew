@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { Edit, Eye, Link, Plus, PlusSquare, Users } from "lucide-react";
+import { Edit, Eye, Link as LinkIcon, Plus, PlusSquare, Users } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import React from "react";
 
 type Campaign = {
@@ -95,7 +96,7 @@ const LiveCampaigns = ({ campaigns }: Props) => {
                 {campaign.donors} donors
               </p>
               <p className="text-lg text-[#868686] flex gap-1 items-center">
-                <Link size={20} /> {campaign.chains} chains
+                <LinkIcon size={20} /> {campaign.chains} chains
               </p>
             </section>
             <div className="mt-3 flex gap-2">
@@ -103,13 +104,15 @@ const LiveCampaigns = ({ campaigns }: Props) => {
                 Edit
                 <Edit />
               </Button>
-              <Button
-                className="bg-[#F2F1E9] font-medium text-lg text-[#474553] border-[#474553]"
-                variant="outline"
-              >
-                View
-                <Eye />
-              </Button>
+              <Link href={`/campaign/${campaign.id}`}>
+                <Button
+                  className="bg-[#F2F1E9] font-medium text-lg text-[#474553] border-[#474553]"
+                  variant="outline"
+                >
+                  View
+                  <Eye />
+                </Button>
+              </Link>
               <Button
                 variant="default"
                 className="bg-[#D4B108] font-medium text-lg text-white border-white"

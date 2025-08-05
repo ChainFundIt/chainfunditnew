@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
 interface CardDetails {
   title: string;
@@ -39,12 +40,20 @@ interface CardDetailsDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   card: CardDetails | null;
+  currentIndex: number;
+  totalCards: number;
+  onPrevious: () => void;
+  onNext: () => void;
 }
 
 const CardDetailsDrawer: React.FC<CardDetailsDrawerProps> = ({
   open,
   onOpenChange,
   card,
+  currentIndex,
+  totalCards,
+  onPrevious,
+  onNext,
 }) => {
   return (
     <Drawer open={open} onOpenChange={onOpenChange} direction="right">
@@ -73,10 +82,20 @@ const CardDetailsDrawer: React.FC<CardDetailsDrawerProps> = ({
             </Button>
           </section>
           <section className=" flex gap-3 justify-end">
-            <Button className="w-8 h-8 text-white" variant="secondary">
+            <Button 
+              className="w-8 h-8 text-white" 
+              variant="secondary"
+              onClick={onPrevious}
+              disabled={currentIndex === 0}
+            >
               <ArrowLeft />
             </Button>
-            <Button className="w-8 h-8 text-white" variant="secondary">
+            <Button 
+              className="w-8 h-8 text-white" 
+              variant="secondary"
+              onClick={onNext}
+              disabled={currentIndex === totalCards - 1}
+            >
               <ArrowRight />
             </Button>
           </section>

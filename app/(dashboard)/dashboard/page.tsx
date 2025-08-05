@@ -12,12 +12,48 @@ import {
 import { Button } from "@/components/ui/button";
 import CompleteProfile from "../complete-profile";
 import Image from "next/image";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, TrendingUp, Users, DollarSign, Share2, Calendar, Eye } from "lucide-react";
+
+interface DashboardStats {
+  totalCampaigns: number;
+  activeCampaigns: number;
+  totalDonations: number;
+  totalDonors: number;
+  totalChained: number;
+  totalEarnings: number;
+  recentDonations: Array<{
+    id: string;
+    amount: number;
+    currency: string;
+    message: string;
+    donorName: string;
+    campaignTitle: string;
+    createdAt: string;
+  }>;
+}
+
+interface Campaign {
+  id: string;
+  title: string;
+  subtitle: string;
+  goalAmount: number;
+  currentAmount: number;
+  currency: string;
+  status: string;
+  isActive: boolean;
+  coverImageUrl: string;
+  progressPercentage: number;
+  donationCount: number;
+  createdAt: string;
+}
 
 export default function DashboardPage() {
   const [showWelcome, setShowWelcome] = useState(false);
   const [showCompleteProfile, setShowCompleteProfile] = useState(false);
   const [profileChecked, setProfileChecked] = useState(false);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null) as React.RefObject<HTMLFormElement>;
 
@@ -39,7 +75,50 @@ export default function DashboardPage() {
     checkProfile();
   }, []);
 
-  if (!profileChecked) return null;
+  useEffect(() => {
+    async function loadDashboardData() {
+      if (!profileChecked) return;
+      
+      try {
+        setLoading(true);
+        
+        // Load dashboard stats
+        const statsRes = await fetch('/api/dashboard/stats');
+        const statsData = await statsRes.json();
+        if (statsData.success) {
+          setStats(statsData.stats);
+        }
+
+        // Load user campaigns
+        const campaignsRes = await fetch('/api/dashboard/campaigns');
+        const campaignsData = await campaignsRes.json();
+        if (campaignsData.success) {
+          setCampaigns(campaignsData.campaigns);
+        }
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadDashboardData();
+  }, [profileChecked]);
+
+  if (!profileChecked || loading) {
+    return (
+      <div className="w-full 2xl:container 2xl:mx-auto p-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-24 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // When closing the welcome modal, mark as seen in backend
   const handleCloseWelcome = async () => {
@@ -54,8 +133,23 @@ export default function DashboardPage() {
     } catch {}
   };
 
+  const formatCurrency = (amount: number, currency: string) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency || 'USD',
+    }).format(amount);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
   return (
-    <div className="w-full 2xl:container 2xl:mx-auto">
+    <div className="w-full 2xl:container 2xl:mx-auto p-6">
       {/* Welcome Modal */}
       <Dialog open={showWelcome} onOpenChange={setShowWelcome}>
         <DialogContent className='w-[80%] max-w-md md:max-w-xl bg-[url("/images/piggy-bank.png")] bg-cover h-[400px] md:h-[600px] px-4 md:px-10 bg-no-repeat rounded-none outline-none font-source'>
@@ -86,6 +180,7 @@ export default function DashboardPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
       {/* Complete Profile Modal */}
       <Dialog open={showCompleteProfile} onOpenChange={setShowCompleteProfile}>
         <DialogContent className="bg-[#F5F5F5] max-w-md md:max-w-xl rounded-none font-source">
@@ -114,7 +209,196 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
 
-      
+      {/* Dashboard Content */}
+      <div className="space-y-8">
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
+          <p className="text-gray-600">Welcome back! Here's what's happening with your campaigns.</p>
+        </div>
+
+        {/* Stats Cards */}
+        {stats && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-white p-6 rounded-lg shadow-sm border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Campaigns</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.totalCampaigns}</p>
+                </div>
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <TrendingUp className="h-6 w-6 text-blue-600" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow-sm border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Active Campaigns</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.activeCampaigns}</p>
+                </div>
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <Calendar className="h-6 w-6 text-green-600" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow-sm border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Donations</p>
+                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalDonations, 'USD')}</p>
+                </div>
+                <div className="p-2 bg-yellow-100 rounded-lg">
+                  <DollarSign className="h-6 w-6 text-yellow-600" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow-sm border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Donors</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.totalDonors}</p>
+                </div>
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <Users className="h-6 w-6 text-purple-600" />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Recent Campaigns */}
+        <div className="bg-white rounded-lg shadow-sm border">
+          <div className="p-6 border-b">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-900">Recent Campaigns</h2>
+              <Button 
+                variant="outline" 
+                onClick={() => router.push('/campaigns')}
+                className="text-[#104901] border-[#104901] hover:bg-[#104901] hover:text-white"
+              >
+                View All
+              </Button>
+            </div>
+          </div>
+          <div className="p-6">
+            {campaigns.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {campaigns.slice(0, 6).map((campaign) => (
+                  <div key={campaign.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                    <div className="relative h-48 bg-gray-200">
+                      {campaign.coverImageUrl && (
+                        <Image
+                          src={campaign.coverImageUrl}
+                          alt={campaign.title}
+                          fill
+                          className="object-cover"
+                        />
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-semibold text-gray-900 mb-2">{campaign.title}</h3>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Raised</span>
+                          <span className="font-medium">
+                            {formatCurrency(campaign.currentAmount, campaign.currency)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Goal</span>
+                          <span className="font-medium">
+                            {formatCurrency(campaign.goalAmount, campaign.currency)}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-[#104901] h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${campaign.progressPercentage}%` }}
+                          ></div>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>{campaign.progressPercentage}% complete</span>
+                          <span>{campaign.donationCount} donors</span>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        className="w-full mt-4 text-[#104901] border-[#104901] hover:bg-[#104901] hover:text-white"
+                        onClick={() => router.push(`/campaign/${campaign.id}`)}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        View Campaign
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Share2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No campaigns yet</h3>
+                <p className="text-gray-600 mb-4">Start your first fundraising campaign to make a difference.</p>
+                <Button 
+                  onClick={() => router.push('/create-campaign')}
+                  className="bg-[#104901] text-white hover:bg-[#0a3a0a]"
+                >
+                  Create Campaign
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Recent Donations */}
+        {stats && stats.recentDonations.length > 0 && (
+          <div className="bg-white rounded-lg shadow-sm border">
+            <div className="p-6 border-b">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-gray-900">Recent Donations</h2>
+                <Button 
+                  variant="outline" 
+                  onClick={() => router.push('/donations')}
+                  className="text-[#104901] border-[#104901] hover:bg-[#104901] hover:text-white"
+                >
+                  View All
+                </Button>
+              </div>
+            </div>
+            <div className="p-6">
+              <div className="space-y-4">
+                {stats.recentDonations.map((donation) => (
+                  <div key={donation.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-10 h-10 bg-[#104901] rounded-full flex items-center justify-center">
+                        <span className="text-white font-semibold">
+                          {donation.donorName.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">{donation.donorName}</p>
+                        <p className="text-sm text-gray-600">{donation.campaignTitle}</p>
+                        {donation.message && (
+                          <p className="text-sm text-gray-500 mt-1">"{donation.message}"</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-gray-900">
+                        {formatCurrency(donation.amount, donation.currency)}
+                      </p>
+                      <p className="text-sm text-gray-500">{formatDate(donation.createdAt)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

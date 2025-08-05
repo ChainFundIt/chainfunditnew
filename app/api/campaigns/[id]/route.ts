@@ -1,32 +1,105 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { campaigns } from '@/lib/schema/campaigns';
-import { eq } from 'drizzle-orm';
+import { campaigns, users, donations } from '@/lib/schema';
+import { eq, and, count, sum } from 'drizzle-orm';
+import { parse } from 'cookie';
+import { verifyUserJWT } from '@/lib/auth';
 
-// GET /api/campaigns/[id] - Get a specific campaign
+async function getUserFromRequest(request: NextRequest) {
+  const cookie = request.headers.get('cookie') || '';
+  const cookies = parse(cookie);
+  const token = cookies['auth_token'];
+  if (!token) return null;
+  const userPayload = verifyUserJWT(token);
+  if (!userPayload || !userPayload.email) return null;
+  return userPayload.email;
+}
+
+// GET /api/campaigns/[id] - Get campaign by ID with detailed stats
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    
-    const campaign = await db
-      .select()
+    const { id: campaignId } = await params;
+
+    // Get campaign with creator details
+    const campaignData = await db
+      .select({
+        id: campaigns.id,
+        title: campaigns.title,
+        subtitle: campaigns.subtitle,
+        description: campaigns.description,
+        reason: campaigns.reason,
+        fundraisingFor: campaigns.fundraisingFor,
+        duration: campaigns.duration,
+        videoUrl: campaigns.videoUrl,
+        coverImageUrl: campaigns.coverImageUrl,
+        galleryImages: campaigns.galleryImages,
+        documents: campaigns.documents,
+        goalAmount: campaigns.goalAmount,
+        currency: campaigns.currency,
+        minimumDonation: campaigns.minimumDonation,
+        chainerCommissionRate: campaigns.chainerCommissionRate,
+        currentAmount: campaigns.currentAmount,
+        status: campaigns.status,
+        isActive: campaigns.isActive,
+        createdAt: campaigns.createdAt,
+        updatedAt: campaigns.updatedAt,
+        closedAt: campaigns.closedAt,
+        creatorId: campaigns.creatorId,
+        creatorName: users.fullName,
+        creatorAvatar: users.avatar,
+      })
       .from(campaigns)
-      .where(eq(campaigns.id, id))
+      .leftJoin(users, eq(campaigns.creatorId, users.id))
+      .where(eq(campaigns.id, campaignId))
       .limit(1);
 
-    if (!campaign.length) {
+    if (!campaignData.length) {
       return NextResponse.json(
         { success: false, error: 'Campaign not found' },
         { status: 404 }
       );
     }
 
+    const campaign = campaignData[0];
+
+    // Get donation statistics
+    const donationStats = await db
+      .select({
+        totalDonations: count(donations.id),
+        totalAmount: sum(donations.amount),
+        uniqueDonors: count(donations.donorId),
+      })
+      .from(donations)
+      .where(and(
+        eq(donations.campaignId, campaignId),
+        eq(donations.paymentStatus, 'completed')
+      ));
+
+    const stats = {
+      totalDonations: Number(donationStats[0]?.totalDonations || 0),
+      totalAmount: Number(donationStats[0]?.totalAmount || 0),
+      uniqueDonors: Number(donationStats[0]?.uniqueDonors || 0),
+      progressPercentage: Math.min(100, Math.round((Number(campaign.currentAmount) / Number(campaign.goalAmount)) * 100)),
+    };
+
+    // Parse JSON fields
+    const campaignWithStats = {
+      ...campaign,
+      goalAmount: Number(campaign.goalAmount),
+      currentAmount: Number(campaign.currentAmount),
+      minimumDonation: Number(campaign.minimumDonation),
+      chainerCommissionRate: Number(campaign.chainerCommissionRate),
+      galleryImages: campaign.galleryImages ? JSON.parse(campaign.galleryImages) : [],
+      documents: campaign.documents ? JSON.parse(campaign.documents) : [],
+      stats,
+    };
+
     return NextResponse.json({
       success: true,
-      data: campaign[0],
+      data: campaignWithStats,
     });
   } catch (error) {
     console.error('Error fetching campaign:', error);
@@ -37,52 +110,54 @@ export async function GET(
   }
 }
 
-// PUT /api/campaigns/[id] - Update a campaign
+// PUT /api/campaigns/[id] - Update campaign
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    const body = await request.json();
-    const {
-      title,
-      description,
-      goalAmount,
-      minimumDonation,
-      chainerCommissionRate,
-      status,
-    } = body;
-
-    // Validate commission rate if provided
-    if (chainerCommissionRate && (chainerCommissionRate < 1 || chainerCommissionRate > 10)) {
-      return NextResponse.json(
-        { success: false, error: 'Commission rate must be between 1% and 10%' },
-        { status: 400 }
-      );
+    const email = await getUserFromRequest(request);
+    if (!email) {
+      return NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
     }
 
-    const updateData: any = {};
-    if (title) updateData.title = title;
-    if (description) updateData.description = description;
-    if (goalAmount) updateData.goalAmount = goalAmount.toString();
-    if (minimumDonation) updateData.minimumDonation = minimumDonation.toString();
-    if (chainerCommissionRate) updateData.chainerCommissionRate = chainerCommissionRate.toString();
-    if (status) updateData.status = status;
-    updateData.updatedAt = new Date();
+    const { id: campaignId } = await params;
+    const body = await request.json();
+
+    // Get user
+    const user = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    if (!user.length) {
+      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
+    }
+
+    // Check if user owns the campaign
+    const campaign = await db.select().from(campaigns).where(eq(campaigns.id, campaignId)).limit(1);
+    if (!campaign.length) {
+      return NextResponse.json({ success: false, error: 'Campaign not found' }, { status: 404 });
+    }
+
+    if (campaign[0].creatorId !== user[0].id) {
+      return NextResponse.json({ success: false, error: 'Not authorized to update this campaign' }, { status: 403 });
+    }
+
+    // Update campaign
+    const updateData: any = {
+      updatedAt: new Date(),
+    };
+
+    // Only allow updating certain fields
+    const allowedFields = ['title', 'subtitle', 'description', 'videoUrl', 'status', 'isActive'];
+    allowedFields.forEach(field => {
+      if (body[field] !== undefined) {
+        updateData[field] = body[field];
+      }
+    });
 
     const updatedCampaign = await db
       .update(campaigns)
       .set(updateData)
-      .where(eq(campaigns.id, id))
+      .where(eq(campaigns.id, campaignId))
       .returning();
-
-    if (!updatedCampaign.length) {
-      return NextResponse.json(
-        { success: false, error: 'Campaign not found' },
-        { status: 404 }
-      );
-    }
 
     return NextResponse.json({
       success: true,
@@ -97,29 +172,50 @@ export async function PUT(
   }
 }
 
-// DELETE /api/campaigns/[id] - Delete a campaign
+// DELETE /api/campaigns/[id] - Delete campaign (soft delete)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    
-    const deletedCampaign = await db
-      .delete(campaigns)
-      .where(eq(campaigns.id, id))
-      .returning();
-
-    if (!deletedCampaign.length) {
-      return NextResponse.json(
-        { success: false, error: 'Campaign not found' },
-        { status: 404 }
-      );
+    const email = await getUserFromRequest(request);
+    if (!email) {
+      return NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
     }
+
+    const { id: campaignId } = await params;
+
+    // Get user
+    const user = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    if (!user.length) {
+      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
+    }
+
+    // Check if user owns the campaign
+    const campaign = await db.select().from(campaigns).where(eq(campaigns.id, campaignId)).limit(1);
+    if (!campaign.length) {
+      return NextResponse.json({ success: false, error: 'Campaign not found' }, { status: 404 });
+    }
+
+    if (campaign[0].creatorId !== user[0].id) {
+      return NextResponse.json({ success: false, error: 'Not authorized to delete this campaign' }, { status: 403 });
+    }
+
+    // Soft delete by setting isActive to false
+    const deletedCampaign = await db
+      .update(campaigns)
+      .set({
+        isActive: false,
+        status: 'closed',
+        closedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(campaigns.id, campaignId))
+      .returning();
 
     return NextResponse.json({
       success: true,
-      message: 'Campaign deleted successfully',
+      data: deletedCampaign[0],
     });
   } catch (error) {
     console.error('Error deleting campaign:', error);

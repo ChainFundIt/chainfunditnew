@@ -115,7 +115,7 @@ function Carousel() {
 
 const layout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="w-full flex gap-5 md:p-5 p-2 font-source h-screen overflow-y-hidden 2xl:container 2xl:mx-auto">
+    <div className="w-full flex gap-5 md:p-5 p-2 font-source h-screen overflow-y-hidden max-w-[1440px] mx-auto">
       <div
         className="w-full md:w-2/5 flex flex-col gap-2 items-center"
         style={{

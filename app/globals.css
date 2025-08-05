@@ -63,6 +63,17 @@ a {
 .animate-marquee {
   animation: marquee 20s linear infinite;
 }
+
+/* Hide scrollbar for webkit browsers */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
 /* 
 @media (prefers-color-scheme: dark) {
   html {

@@ -1,23 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { campaigns } from '@/lib/schema/campaigns';
+import { campaigns, users } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
+import { parse } from 'cookie';
+import { verifyUserJWT } from '@/lib/auth';
 
-// GET /api/campaigns - Get all campaigns
+async function getUserFromRequest(request: NextRequest) {
+  const cookie = request.headers.get('cookie') || '';
+  const cookies = parse(cookie);
+  const token = cookies['auth_token'];
+  if (!token) return null;
+  const userPayload = verifyUserJWT(token);
+  if (!userPayload || !userPayload.email) return null;
+  return userPayload.email;
+}
+
+// GET /api/campaigns - Get all campaigns with filtering
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
+    const reason = searchParams.get('reason');
     const limit = parseInt(searchParams.get('limit') || '10');
     const offset = parseInt(searchParams.get('offset') || '0');
+    const creatorId = searchParams.get('creatorId');
 
-    let allCampaigns;
-    
+    // Build query with filters
+    let conditions = [];
     if (status) {
-      allCampaigns = await db.select().from(campaigns).where(eq(campaigns.status, status)).limit(limit).offset(offset);
-    } else {
-      allCampaigns = await db.select().from(campaigns).limit(limit).offset(offset);
+      conditions.push(eq(campaigns.status, status));
     }
+    if (reason) {
+      conditions.push(eq(campaigns.reason, reason));
+    }
+    if (creatorId) {
+      conditions.push(eq(campaigns.creatorId, creatorId));
+    }
+    
+    const allCampaigns = await db
+      .select()
+      .from(campaigns)
+      .where(conditions.length > 0 ? conditions.reduce((acc, condition) => acc && condition) : undefined)
+      .limit(limit)
+      .offset(offset);
     
     return NextResponse.json({
       success: true,
@@ -40,9 +65,21 @@ export async function GET(request: NextRequest) {
 // POST /api/campaigns - Create a new campaign
 export async function POST(request: NextRequest) {
   try {
+    // Authenticate user
+    const email = await getUserFromRequest(request);
+    if (!email) {
+      return NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
+    }
+
+    // Get user ID
+    const user = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    if (!user.length) {
+      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
+    }
+
+    const creatorId = user[0].id;
     const formData = await request.formData();
 
-    const creatorId = '8f63c466-782a-4d09-a2ae-bd5bced60d10'; // TODO: Replace with auth-derived user ID
     const title = formData.get('title') as string;
     const subtitle = formData.get('subtitle') as string;
     const reason = formData.get('reason') as string;
@@ -84,25 +121,48 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file types
+    // Validate file types and sizes
     const validImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
     const validDocTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    const maxImageSize = 1024 * 1024; // 1MB
+    const maxDocSize = 10 * 1024 * 1024; // 10MB
 
-    const isValidImage = (file: File) => validImageTypes.includes(file.type);
-    const isValidDoc = (file: File) => validDocTypes.includes(file.type);
+    const isValidImage = (file: File) => validImageTypes.includes(file.type) && file.size <= maxImageSize;
+    const isValidDoc = (file: File) => validDocTypes.includes(file.type) && file.size <= maxDocSize;
 
     if (imageFiles.length > 0 && !imageFiles.every(isValidImage)) {
-      return NextResponse.json({ success: false, error: 'Invalid image file type' }, { status: 400 });
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Invalid image file type or size (max 1MB per image)' 
+      }, { status: 400 });
     }
 
     if (documentFiles.length > 0 && !documentFiles.every(isValidDoc)) {
-      return NextResponse.json({ success: false, error: 'Invalid document file type' }, { status: 400 });
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Invalid document file type or size (max 10MB per document)' 
+      }, { status: 400 });
     }
 
-    // Generate file paths (in production, you'd upload to cloud storage)
-    const imagePaths = imageFiles.map((file) => `/uploads/${file.name}`);
-    const documentPaths = documentFiles.map((file) => `/uploads/${file.name}`);
-    const coverImagePath = coverImageFile ? `/uploads/${coverImageFile.name}` : null;
+    if (imageFiles.length > 5) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Maximum 5 images allowed' 
+      }, { status: 400 });
+    }
+
+    if (documentFiles.length > 3) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Maximum 3 documents allowed' 
+      }, { status: 400 });
+    }
+
+    // TODO: In production, upload files to cloud storage (AWS S3, Cloudinary, etc.)
+    // For now, we'll store file paths
+    const imagePaths = imageFiles.map((file) => `/uploads/campaigns/${Date.now()}_${file.name}`);
+    const documentPaths = documentFiles.map((file) => `/uploads/campaigns/${Date.now()}_${file.name}`);
+    const coverImagePath = coverImageFile ? `/uploads/campaigns/${Date.now()}_${coverImageFile.name}` : null;
 
     // Log uploaded files for debugging
     console.log('Uploaded images:', imageFiles.map(f => f.name));
@@ -113,7 +173,7 @@ export async function POST(request: NextRequest) {
       creatorId,
       title,
       subtitle: subtitle || null,
-      description: story, // Using story as description
+      description: story,
       reason: reason || null,
       fundraisingFor: fundraisingFor || null,
       duration: duration || null,
@@ -123,8 +183,8 @@ export async function POST(request: NextRequest) {
       documents: documentPaths.length > 0 ? JSON.stringify(documentPaths) : null,
       goalAmount: goalAmount.toString(),
       currency,
-      minimumDonation: '0', // Default minimum donation
-      chainerCommissionRate: '5.0', // Default commission rate
+      minimumDonation: '0',
+      chainerCommissionRate: '5.0',
       currentAmount: '0',
       status: 'active',
       isActive: true,

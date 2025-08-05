@@ -17,6 +17,7 @@ import BenefitsCarousel from "./BenefitsCarousel";
 type Props = {};
 
 const Main = (props: Props) => {
+  
   const images = [
     "/images/main-3.png", // Image 1: multi-currency
     "/images/teamwork.png", // Image 2: two people lifting
@@ -25,6 +26,18 @@ const Main = (props: Props) => {
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [openCard, setOpenCard] = useState<number | null>(null);
+
+  const handlePreviousCard = () => {
+    if (openCard !== null && openCard > 0) {
+      setOpenCard(openCard - 1);
+    }
+  };
+
+  const handleNextCard = () => {
+    if (openCard !== null && openCard < cardDetails.length - 1) {
+      setOpenCard(openCard + 1);
+    }
+  };
 
   const cardDetails = [
     {
@@ -171,6 +184,10 @@ const Main = (props: Props) => {
             open={openCard !== null}
             onOpenChange={(open) => !open && setOpenCard(null)}
             card={openCard !== null ? cardDetails[openCard] : null}
+            currentIndex={openCard !== null ? openCard : 0}
+            totalCards={cardDetails.length}
+            onPrevious={handlePreviousCard}
+            onNext={handleNextCard}
           />
         </div>
       </div>
@@ -183,7 +200,7 @@ const Main = (props: Props) => {
           Modern, powerful tools to help your fundraisers reach their goals
           quick
         </p>
-        <div className="flex flex-col md:flex-row gap-4 md:gap-5 w-full h-fit my-5">
+        <div className="flex flex-col md:flex-row gap-24 md:gap-5 w-full h-fit my-5">
           <section className="bg-[url('/images/main-1.png')] bg-cover bg-no-repeat w-full md:w-2/3 h-60 md:h-[500px]">
             <section className="bg-[linear-gradient(180deg,rgba(255,255,255,0)_70%,#fff_100%)] h-full px-2 md:px-4 py-4 md:py-6 flex flex-col gap-2 md:gap-3">
               <div className="w-full md:w-[365px] h-fit p-2 md:p-4 rounded-xl bg-white flex items-start gap-2 md:gap-3 font-dm">
@@ -220,7 +237,7 @@ const Main = (props: Props) => {
                 />
               </div>
 
-              <div className="flex flex-col gap-1 justify-end mt-auto">
+              <div className="flex flex-col gap-1 justify-end mt-4 mb-5 md:my-0 md:mt-auto">
                 <p className="font-dm font-medium text-lg md:text-xl text-black">
                   AI-powered writing
                 </p>
