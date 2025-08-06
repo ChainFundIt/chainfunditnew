@@ -11,15 +11,9 @@ type Props = {};
 const Navbar = (props: Props) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
-  // TODO: Replace with your real auth logic
-  const isAuthenticated = false;
 
   const handleCreateCampaign = () => {
-    if (isAuthenticated) {
-      router.push("/create-campaign");
-    } else {
-      router.push("/signup?redirect=/create-campaign");
-    }
+    router.push("/create-campaign");
   };
 
   return (

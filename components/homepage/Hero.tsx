@@ -2,10 +2,17 @@ import React from "react";
 import { ArrowRight, Headphones } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 type Props = {};
 
 const Hero = (props: Props) => {
+  const router = useRouter();
+
+  const handleCreateCampaign = () => {
+    router.push("/create-campaign");
+  };
+
   return (
     <div className="mt-24 md:mt-36 mb-6 font-source px-4 md:px-12">
       <div className="flex flex-col md:flex-row gap-5 w-full h-fit my-5">
@@ -86,7 +93,10 @@ const Hero = (props: Props) => {
           <span className="font-source font-medium text-base text-black">
             Support causes you love with fundraisers built on modern tools
           </span>
-          <Button className="h-12 md:h-16 flex justify-between font-source font-semibold text-lg md:text-2xl">
+          <Button 
+            className="h-12 md:h-16 flex justify-between font-source font-semibold text-lg md:text-2xl"
+            onClick={handleCreateCampaign}
+          >
             Create Campaign <ArrowRight size={24} className="md:text-3xl" />{" "}
           </Button>
         </section>
