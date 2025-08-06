@@ -18,8 +18,24 @@ async function getUserFromRequest(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // TODO: Re-enable authentication later
-    // For now, use a mock user ID for testing
-    const userId = 'mock-user-id-123';
+    // For now, get or create a mock user for testing
+    const mockUserEmail = 'mock-user@example.com';
+    const mockUserName = 'Mock User';
+    
+    // Check if mock user exists, create if not
+    let [existingUser] = await db.select().from(users).where(eq(users.email, mockUserEmail)).limit(1);
+    let userId: string;
+    
+    if (!existingUser) {
+      const [newUser] = await db.insert(users).values({
+        email: mockUserEmail,
+        fullName: mockUserName,
+        hasCompletedProfile: true,
+      }).returning();
+      userId = newUser.id;
+    } else {
+      userId = existingUser.id;
+    }
 
     // Get user's campaigns with donation stats
     const userCampaigns = await db

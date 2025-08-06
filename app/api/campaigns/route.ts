@@ -66,8 +66,25 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // TODO: Re-enable authentication later
-    // For now, use a mock user ID for testing
-    const creatorId = 'mock-user-id-123';
+    // For now, create or get a mock user for testing
+    const mockUserEmail = 'mock-user@example.com';
+    const mockUserName = 'Mock User';
+    
+    // Check if mock user exists, create if not
+    let [existingUser] = await db.select().from(users).where(eq(users.email, mockUserEmail)).limit(1);
+    let creatorId: string;
+    
+    if (!existingUser) {
+      const [newUser] = await db.insert(users).values({
+        email: mockUserEmail,
+        fullName: mockUserName,
+        hasCompletedProfile: true,
+      }).returning();
+      creatorId = newUser.id;
+    } else {
+      creatorId = existingUser.id;
+    }
+    
     const formData = await request.formData();
 
     const title = formData.get('title') as string;

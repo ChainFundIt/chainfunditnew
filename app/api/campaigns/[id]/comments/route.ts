@@ -93,6 +93,24 @@ export async function POST(
       return NextResponse.json({ success: false, error: 'Campaign not found' }, { status: 404 });
     }
 
+    // Get or create mock user for comments
+    const mockUserEmail = 'mock-user@example.com';
+    const mockUserName = 'Mock User';
+    
+    let [existingUser] = await db.select().from(users).where(eq(users.email, mockUserEmail)).limit(1);
+    let userId: string;
+    
+    if (!existingUser) {
+      const [newUser] = await db.insert(users).values({
+        email: mockUserEmail,
+        fullName: mockUserName,
+        hasCompletedProfile: true,
+      }).returning();
+      userId = newUser.id;
+    } else {
+      userId = existingUser.id;
+    }
+
     const { content } = body;
 
     // Validate required fields
@@ -113,7 +131,7 @@ export async function POST(
     // Create comment
     const newComment = await db.insert(campaignComments).values({
       campaignId,
-      userId: 'mock-user-id-123', // TODO: Use real user ID when authentication is re-enabled
+      userId: userId, // TODO: Use real user ID when authentication is re-enabled
       content: content.trim(),
       createdAt: new Date(),
       updatedAt: new Date(),
