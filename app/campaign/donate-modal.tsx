@@ -1,19 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, Copy, Facebook, Instagram, Twitter, Linkedin, Send, HandCoins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
+import { useShortenLink } from "@/hooks/use-shorten-link";
+
+interface Campaign {
+  id: string;
+  title: string;
+  shortUrl?: string;
+}
 
 interface DonateModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  campaign?: Campaign;
 }
 
-const DonateModal: React.FC<DonateModalProps> = ({ open, onOpenChange }) => {
+const DonateModal: React.FC<DonateModalProps> = ({ open, onOpenChange, campaign }) => {
   const [step, setStep] = useState<"donate" | "share" | "thankyou">("donate");
   const [period, setPeriod] = useState("one-time");
   const [amount, setAmount] = useState("");
@@ -24,15 +32,35 @@ const DonateModal: React.FC<DonateModalProps> = ({ open, onOpenChange }) => {
   const [anonymous, setAnonymous] = useState(false);
   const [comments, setComments] = useState("");
   const [copied, setCopied] = useState(false);
+  const [campaignUrl, setCampaignUrl] = useState("");
+  const { shortenLink, isLoading } = useShortenLink();
+
+  useEffect(() => {
+    if (campaign && open) {
+      const longUrl = `${window.location.origin}/campaign/${campaign.id}`;
+      
+      // If campaign already has a short URL, use it
+      if (campaign.shortUrl) {
+        setCampaignUrl(campaign.shortUrl);
+      } else {
+        // Otherwise, try to shorten the URL
+        shortenLink(longUrl).then((shortUrl) => {
+          setCampaignUrl(shortUrl || longUrl);
+        });
+      }
+    }
+  }, [campaign, open, shortenLink]);
 
   const handleDonate = () => {
     setStep("share");
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText("chainfund.it/d1R3lly");
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (campaignUrl) {
+      navigator.clipboard.writeText(campaignUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   const handleShare = () => {
@@ -232,12 +260,13 @@ const DonateModal: React.FC<DonateModalProps> = ({ open, onOpenChange }) => {
                 </Label>
                 <div className="flex items-center space-x-2">
                   <Input
-                    value="chainfund.it/d1R3lly"
+                    value={isLoading ? "Generating link..." : campaignUrl}
                     readOnly
                     className="flex-1"
                   />
                   <Button
                     onClick={handleCopyLink}
+                    disabled={!campaignUrl || isLoading}
                     variant="outline"
                     className="text-[#104901] border-[#104901] hover:bg-[#104901] hover:text-white"
                   >

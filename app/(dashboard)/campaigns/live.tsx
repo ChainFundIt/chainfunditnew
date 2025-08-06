@@ -44,9 +44,11 @@ const LiveCampaigns = ({ campaigns }: Props) => {
           </p>
         </section>
 
+      <Link href="/create-campaign">
         <Button className="w-[300px] h-16 flex justify-between font-semibold text-2xl items-center">
           Create a Campaign <Plus size={24} />
         </Button>
+      </Link>
       </div>
     );
   }
@@ -125,9 +127,11 @@ const LiveCampaigns = ({ campaigns }: Props) => {
         </div>
       ))}
 
-      <Button className="w-[300px] h-16 flex justify-between font-semibold text-2xl items-center mt-6">
-        Create a Campaign <Plus size={24} />
-      </Button>
+      <Link href="/create-campaign">
+        <Button className="w-[300px] h-16 flex justify-between font-semibold text-2xl items-center mt-6">
+          Create a Campaign <Plus size={24} />
+        </Button>
+      </Link>
     </div>
   );
 };

@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import {
   Drawer,
@@ -19,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { useShortenLink } from "@/hooks/use-shorten-link";
 
 interface CardDetails {
   title: string;
@@ -34,6 +37,7 @@ interface CardDetails {
   percentage: string;
   total: string;
   donors: number;
+  id: string;
 }
 
 interface CardDetailsDrawerProps {
@@ -55,6 +59,45 @@ const CardDetailsDrawer: React.FC<CardDetailsDrawerProps> = ({
   onPrevious,
   onNext,
 }) => {
+  const [copied, setCopied] = useState(false);
+  const [campaignUrl, setCampaignUrl] = useState("");
+  const { shortenLink, isLoading } = useShortenLink();
+
+  useEffect(() => {
+    if (card && open) {
+      const longUrl = `${window.location.origin}/campaign/${card.id}`;
+      setCampaignUrl(longUrl);
+      
+      // Try to shorten the URL
+      shortenLink(longUrl).then((shortUrl) => {
+        if (shortUrl) {
+          setCampaignUrl(shortUrl);
+        }
+      });
+    }
+  }, [card, open, shortenLink]);
+
+  const handleCopyLink = async () => {
+    if (campaignUrl) {
+      try {
+        await navigator.clipboard.writeText(campaignUrl);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        console.error('Failed to copy link:', err);
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = campaignUrl;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
+    }
+  };
+
   return (
     <Drawer open={open} onOpenChange={onOpenChange} direction="right">
       <DrawerContent
@@ -73,13 +116,20 @@ const CardDetailsDrawer: React.FC<CardDetailsDrawerProps> = ({
                 <ChevronsRight size={32} />
               </Button>
             </DrawerClose>
-            <Button variant="secondary" className="text-white">
+            <Button 
+              variant="secondary" 
+              className="text-white"
+              onClick={handleCopyLink}
+              disabled={!campaignUrl || isLoading}
+            >
               <Copy />
-              Copy Link
+              {copied ? "Copied!" : isLoading ? "Generating..." : "Copy Link"}
             </Button>
-            <Button className="text-white" variant="secondary">
-              Campaign Page <ExternalLink />
-            </Button>
+            <Link href={`/campaign/${card?.id}`}>
+              <Button className="text-white" variant="secondary">
+                Campaign Page <ExternalLink />
+              </Button>
+            </Link>
           </section>
           <section className=" flex gap-3 justify-end">
             <Button 

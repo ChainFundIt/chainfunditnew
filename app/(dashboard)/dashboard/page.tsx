@@ -344,7 +344,7 @@ export default function DashboardPage() {
                 <p className="text-gray-600 mb-4">Start your first fundraising campaign to make a difference.</p>
                 <Button 
                   onClick={() => router.push('/create-campaign')}
-                  className="bg-[#104901] text-white hover:bg-[#0a3a0a]"
+                  className="bg-[#104901] text-white"
                 >
                   Create Campaign
                 </Button>

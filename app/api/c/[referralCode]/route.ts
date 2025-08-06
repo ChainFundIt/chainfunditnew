@@ -50,7 +50,7 @@ export async function GET(
       .where(eq(chainers.id, chainer[0].id));
 
     // Redirect to the campaign page
-    const campaignUrl = `/campaigns/${chainer[0].campaignId}?ref=${referralCode}`;
+    const campaignUrl = `/campaign/${chainer[0].campaignId}?ref=${referralCode}`;
     
     return NextResponse.redirect(new URL(campaignUrl, request.url));
   } catch (error) {

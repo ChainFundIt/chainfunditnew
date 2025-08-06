@@ -5,6 +5,12 @@ import { eq, and, count, sum } from 'drizzle-orm';
 import { parse } from 'cookie';
 import { verifyUserJWT } from '@/lib/auth';
 
+// Helper function to validate UUID format
+function isValidUUID(uuid: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(uuid);
+}
+
 async function getUserFromRequest(request: NextRequest) {
   const cookie = request.headers.get('cookie') || '';
   const cookies = parse(cookie);
@@ -22,6 +28,15 @@ export async function GET(
 ) {
   try {
     const { id: campaignId } = await params;
+    
+    // Validate UUID format
+    if (!isValidUUID(campaignId)) {
+      console.log('Invalid UUID format:', campaignId);
+      return NextResponse.json(
+        { success: false, error: 'Invalid campaign ID format' },
+        { status: 400 }
+      );
+    }
 
     // Get campaign with creator details
     const campaignData = await db
@@ -118,6 +133,14 @@ export async function PUT(
   try {
     // TODO: Re-enable authentication later
     const { id: campaignId } = await params;
+    
+    // Validate UUID format
+    if (!isValidUUID(campaignId)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid campaign ID format' },
+        { status: 400 }
+      );
+    }
     const body = await request.json();
 
     // Check if campaign exists
@@ -166,6 +189,14 @@ export async function DELETE(
   try {
     // TODO: Re-enable authentication later
     const { id: campaignId } = await params;
+    
+    // Validate UUID format
+    if (!isValidUUID(campaignId)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid campaign ID format' },
+        { status: 400 }
+      );
+    }
 
     // Check if campaign exists
     const campaign = await db.select().from(campaigns).where(eq(campaigns.id, campaignId)).limit(1);

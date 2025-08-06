@@ -1,22 +1,77 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, Copy, Facebook, Instagram, Twitter, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useShortenLink } from "@/hooks/use-shorten-link";
+
+interface Campaign {
+  id: string;
+  title: string;
+  shortUrl?: string;
+}
 
 interface ShareModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  campaign?: Campaign;
 }
 
-const ShareModal: React.FC<ShareModalProps> = ({ open, onOpenChange }) => {
+const ShareModal: React.FC<ShareModalProps> = ({ open, onOpenChange, campaign }) => {
   const [copied, setCopied] = useState(false);
+  const [campaignUrl, setCampaignUrl] = useState("");
+  const { shortenLink, isLoading } = useShortenLink();
+
+  useEffect(() => {
+    if (campaign && open) {
+      const longUrl = `${window.location.origin}/campaign/${campaign.id}`;
+      
+      // If campaign already has a short URL, use it
+      if (campaign.shortUrl) {
+        setCampaignUrl(campaign.shortUrl);
+      } else {
+        // Otherwise, try to shorten the URL
+        shortenLink(longUrl).then((shortUrl) => {
+          setCampaignUrl(shortUrl || longUrl);
+        });
+      }
+    }
+  }, [campaign, open, shortenLink]);
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText("chainfund.it/d1R3lly");
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (campaignUrl) {
+      navigator.clipboard.writeText(campaignUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleShare = (platform: string) => {
+    if (!campaignUrl || !campaign) return;
+
+    const shareText = `Check out this campaign: ${campaign.title}`;
+    let shareUrl = "";
+
+    switch (platform) {
+      case "facebook":
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(campaignUrl)}`;
+        break;
+      case "twitter":
+        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(campaignUrl)}`;
+        break;
+      case "linkedin":
+        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(campaignUrl)}`;
+        break;
+      case "instagram":
+        // Instagram doesn't support direct sharing via URL, copy to clipboard
+        navigator.clipboard.writeText(`${shareText} ${campaignUrl}`);
+        return;
+    }
+
+    if (shareUrl) {
+      window.open(shareUrl, "_blank");
+    }
   };
 
   const handleClose = () => {
@@ -54,12 +109,13 @@ const ShareModal: React.FC<ShareModalProps> = ({ open, onOpenChange }) => {
           <div>
             <div className="flex items-center space-x-2">
               <Input
-                value="chainfund.it/d1R3lly"
+                value={isLoading ? "Generating link..." : campaignUrl}
                 readOnly
                 className="flex-1 border-[#104901] bg-white text-[#104901] font-medium"
               />
               <Button
                 onClick={handleCopyLink}
+                disabled={!campaignUrl || isLoading}
                 className="bg-[#104901] text-white hover:bg-[#0a3a0a] border-[#104901]"
               >
                 <Copy size={16} className="mr-1" />
@@ -78,6 +134,8 @@ const ShareModal: React.FC<ShareModalProps> = ({ open, onOpenChange }) => {
                 <Button 
                   variant="outline" 
                   size="sm" 
+                  onClick={() => handleShare("facebook")}
+                  disabled={!campaignUrl || isLoading}
                   className="text-[#104901] border-[#104901] hover:bg-[#104901] hover:text-white w-10 h-10 p-0"
                 >
                   <Facebook size={20} />
@@ -85,6 +143,8 @@ const ShareModal: React.FC<ShareModalProps> = ({ open, onOpenChange }) => {
                 <Button 
                   variant="outline" 
                   size="sm" 
+                  onClick={() => handleShare("instagram")}
+                  disabled={!campaignUrl || isLoading}
                   className="text-[#104901] border-[#104901] hover:bg-[#104901] hover:text-white w-10 h-10 p-0"
                 >
                   <Instagram size={20} />
@@ -92,6 +152,8 @@ const ShareModal: React.FC<ShareModalProps> = ({ open, onOpenChange }) => {
                 <Button 
                   variant="outline" 
                   size="sm" 
+                  onClick={() => handleShare("twitter")}
+                  disabled={!campaignUrl || isLoading}
                   className="text-[#104901] border-[#104901] hover:bg-[#104901] hover:text-white w-10 h-10 p-0"
                 >
                   <Twitter size={20} />
@@ -99,6 +161,8 @@ const ShareModal: React.FC<ShareModalProps> = ({ open, onOpenChange }) => {
                 <Button 
                   variant="outline" 
                   size="sm" 
+                  onClick={() => handleShare("linkedin")}
+                  disabled={!campaignUrl || isLoading}
                   className="text-[#104901] border-[#104901] hover:bg-[#104901] hover:text-white w-10 h-10 p-0"
                 >
                   <Linkedin size={20} />

@@ -53,7 +53,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { LuImage } from "react-icons/lu";
 import Image from "next/image";
-import { shortenLink } from "@/lib/shorten-link";
+import { useShortenLink } from "@/hooks/use-shorten-link";
 
 const reasons = [
   { text: "Business", icon: <Briefcase /> },
@@ -118,6 +118,7 @@ export default function CreateCampaignPage() {
   const [preview, setPreview] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(1);
+  const { shortenLink } = useShortenLink();
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showAiModal, setShowAiModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -240,7 +241,7 @@ export default function CreateCampaignPage() {
       }
 
       console.log("Success:", data);
-      const campaignUrl = `${window.location.origin}/campaigns/${data.data.id}`;
+      const campaignUrl = `${window.location.origin}/campaign/${data.data.id}`;
       let shortUrl = null;
       try {
         shortUrl = await shortenLink(campaignUrl);
@@ -276,7 +277,7 @@ export default function CreateCampaignPage() {
 
   const handleViewCampaign = () => {
     if (createdCampaign?.id) {
-      router.push(`/campaigns/${createdCampaign.id}`);
+      router.push(`/campaign/${createdCampaign.id}`);
     }
   };
 
@@ -876,6 +877,11 @@ export default function CreateCampaignPage() {
             className="bg-[#F5F5F5] p-8 w-[600px] max-w-full shadow-lg space-y-6"
             style={{ boxShadow: "0px 0px 70px 0px #00000033" }}
           >
+            <div className="flex justify-end">
+              <button onClick={() => setShowSuccessModal(false)}>
+                <XCircle />
+              </button>
+            </div>
             <div className="text-left">
               <h2 className="text-[#104901] text-3xl font-semibold mb-4">
                 Campaign created successfully
