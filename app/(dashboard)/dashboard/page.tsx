@@ -263,7 +263,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-3xl font-bold text-[#104901] mb-2">Dashboard</h1>
           <p className="text-[#104901]">
-            Welcome back! Here's what's happening with your campaigns.
+            Welcome back! Here&apos;s what&apos;s happening with your campaigns.
           </p>
         </div>
 
@@ -475,7 +475,7 @@ export default function DashboardPage() {
                         </p>
                         {donation.message && (
                           <p className="text-sm text-gray-500 mt-1">
-                            "{donation.message}"
+                            &quot;{donation.message}&quot;
                           </p>
                         )}
                       </div>

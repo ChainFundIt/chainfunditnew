@@ -469,7 +469,7 @@ const Main = ({ campaignId }: MainProps) => {
                   <h3 className="mb-2">Connect with TODAY Online!</h3>
                   <div className="space-y-1">
                     <p>
-                      Visit TODAY's Website:{" "}
+                      Visit TODAY&apos;s Website:{" "}
                       <a
                         href="http://on.today.com/ReadTODAY"
                         className="underline hover:text-[#0A3A0A]"

@@ -4,6 +4,7 @@ import React from "react";
 import Cards from '../cards';
 import Footer from '@/components/layout/Footer';
 import { Suspense } from 'react';
+import Link from 'next/link';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -40,14 +41,14 @@ const CampaignError = ({ error }: { error: string }) => (
           Campaign Not Found
         </h1>
         <p className="text-gray-600 mb-6">
-          {error || "The campaign you're looking for doesn't exist or has been removed."}
+          {error || "The campaign you&apos;re looking for doesn&apos;t exist or has been removed."}
         </p>
-        <a 
+        <Link
           href="/"
           className="px-6 py-3 bg-[#104901] text-white rounded-lg hover:bg-[#0a3a01] transition-colors"
         >
           Go Back Home
-        </a>
+        </Link>
       </div>
     </div>
     <Footer />
