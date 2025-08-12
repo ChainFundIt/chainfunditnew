@@ -49,7 +49,7 @@ function Carousel() {
 
   return (
     <div
-      className="w-full relative"
+      className="w-full h-screen overflow-y-auto"
       onMouseEnter={() => setIsPlaying(false)}
       onMouseLeave={() => setIsPlaying(true)}
     >
@@ -117,13 +117,14 @@ const layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="w-full flex gap-5 md:p-5 p-2 font-source min-h-screen overflow-y-hidden max-w-[1440px] mx-auto">
       <div
-        className="w-full md:w-2/5 flex flex-col justify-between items-center"
+        className="w-full md:w-2/5 flex flex-col gap-5 justify-between items-center"
         style={{
           background:
             "linear-gradient(180deg, #F2F1E9 80%, #FFF 85%, #F2F1E9 100%)",
         }}
       >
         <div className="w-full flex flex-col gap-3 py-3">{children}</div>
+
         {/* lower section */}
         <div className="flex flex-col md:flex-row gap-2 md:gap-4 items-center px-2 py-6 md:py-8 mt-6 md:mt-10 w-full">
           <ul className="flex items-center mb-2 md:mb-0">
@@ -169,12 +170,6 @@ const layout = ({ children }: { children: React.ReactNode }) => {
             </span>
           </div>
         </div>
-        <p className="text-center text-sm text-gray-600">
-          Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-blue-600 hover:text-blue-800">
-            Sign up
-          </Link>
-        </p>
       </div>
 {/* right */}
       <div className="md:w-3/5 relative hidden lg:block">
