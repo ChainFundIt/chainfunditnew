@@ -146,7 +146,7 @@ const BenefitsCarousel = () => {
                 Maximise your fundraising efforts
               </h4>
               <p className="font-source font-normal text-xl text-black">
-                We'll handle the grueling campaign management, so you can do what
+                We&apos;ll handle the grueling campaign management, so you can do what
                 matters most - getting donations
               </p>
             </section>
