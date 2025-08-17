@@ -61,28 +61,38 @@ function PhonePage() {
         let userMessage = data.error;
         if (data.error?.includes("Phone number is required")) {
           userMessage = "Please enter your phone number to continue.";
-        } else if (data.error?.includes("WhatsApp OTP service not configured")) {
-          userMessage = "Phone verification is temporarily unavailable. Please contact support or try again later.";
+        } else if (
+          data.error?.includes("WhatsApp OTP service not configured")
+        ) {
+          userMessage =
+            "Phone verification is temporarily unavailable. Please contact support or try again later.";
         } else if (data.error?.includes("Failed to send")) {
-          userMessage = "Unable to send verification code to your phone. Please check the number and try again.";
+          userMessage =
+            "Unable to send verification code to your phone. Please check the number and try again.";
         }
-        throw new Error(userMessage || "Unable to send verification code. Please try again.");
+        throw new Error(
+          userMessage || "Unable to send verification code. Please try again."
+        );
       }
-      
+
       // Handle success with method information
-      if (data.method === 'sms' && data.fallback) {
+      if (data.method === "sms" && data.fallback) {
         toast.success("Verification code sent via SMS! (WhatsApp unavailable)");
-      } else if (data.method === 'whatsapp') {
+      } else if (data.method === "whatsapp") {
         toast.success("Verification code sent! Check your WhatsApp.");
       } else {
         toast.success("Verification code sent! Check your WhatsApp.");
       }
       window.location.href = `/phone-otp?phone=${encodeURIComponent(
-          phone
-        )}&email=${encodeURIComponent(email)}`;
+        phone
+      )}&email=${encodeURIComponent(email)}`;
     } catch (err: any) {
-      toast.error("Unable to connect to our servers. Please check your internet connection and try again.");
-      setError("Unable to connect to our servers. Please check your internet connection and try again.");
+      toast.error(
+        "Unable to connect to our servers. Please check your internet connection and try again."
+      );
+      setError(
+        "Unable to connect to our servers. Please check your internet connection and try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -153,56 +163,6 @@ function PhonePage() {
           </div>
         </div>
       </div>
-
-      <div
-        className="flex gap-4 items-center px-5 py-8 w-full"
-        style={{
-          background: "linear-gradient(0deg, #F2F1E9 0%, #FFFFFF 75%)",
-        }}
-      >
-        <ul className="flex items-center">
-          <li className="w-10 h-10 rounded-full border-2 border-[#104901]">
-            <Image
-              src="/images/avatar-3.png"
-              alt="avatar"
-              width={40}
-              height={40}
-            />
-          </li>
-          <li className="w-10 h-10 rounded-full border-2 border-[#104901] -ml-3">
-            <Image
-              src="/images/avatar-4.png"
-              alt="avatar"
-              width={40}
-              height={40}
-            />
-          </li>
-          <li className="w-10 h-10 rounded-full border-2 border-[#104901] -ml-3">
-            <Image
-              src="/images/avatar-5.png"
-              alt="avatar"
-              width={40}
-              height={40}
-            />
-          </li>
-          <li className="w-10 h-10 rounded-full border-2 border-[#104901] -ml-3">
-            <Image
-              src="/images/avatar-6.png"
-              alt="avatar"
-              width={40}
-              height={40}
-            />
-          </li>
-        </ul>
-        <div>
-          <p className="font-source font-semibold text-xs text-black">
-            Over 100 Chainfunders can&apos;t be wrong
-          </p>
-          <span className="font-light text-sm text-black">
-            Start fundraising today!
-          </span>
-        </div>
-      </div>
-    </div>
+</div>
   );
 }
