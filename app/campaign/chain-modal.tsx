@@ -33,7 +33,16 @@ const ChainModal: React.FC<ChainModalProps> = ({ open, onOpenChange, campaign })
   const { createChain, loading, error } = useChain();
 
   const handleChainCampaign = async () => {
-    if (!user || !campaign) return;
+    console.log('🔗 handleChainCampaign called');
+    console.log('User:', user);
+    console.log('Campaign:', campaign);
+    console.log('Why chain:', whyChain);
+    console.log('Proceeds option:', proceedsOption);
+    
+    if (!user || !campaign) {
+      console.log('❌ Missing user or campaign');
+      return;
+    }
 
     // Map the proceeds option to the API format
     const commissionDestinationMap = {
@@ -49,11 +58,21 @@ const ChainModal: React.FC<ChainModalProps> = ({ open, onOpenChange, campaign })
       charityChoiceId: proceedsOption === 'donate-charity' ? undefined : undefined, // TODO: Add charity selection
     };
 
-    const result = await createChain(chainData);
-    
-    if (result.success && result.data) {
-      setReferralCode(result.data.referralCode);
-      setStep("success");
+    console.log('📤 Sending chain data:', chainData);
+
+    try {
+      const result = await createChain(chainData);
+      console.log('📥 Chain result:', result);
+      
+      if (result.success && result.data) {
+        setReferralCode(result.data.referralCode);
+        setStep("success");
+        console.log('✅ Chain created successfully');
+      } else {
+        console.log('❌ Chain creation failed:', result.error);
+      }
+    } catch (error) {
+      console.error('💥 Error in handleChainCampaign:', error);
     }
   };
 
@@ -155,22 +174,28 @@ const ChainModal: React.FC<ChainModalProps> = ({ open, onOpenChange, campaign })
                 </div>
               )}
 
-              <Button
-                onClick={handleChainCampaign}
-                disabled={loading || !whyChain.trim()}
-                className="w-[300px] h-16 font-medium text-2xl flex justify-between items-center"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-                    Creating chain...
-                  </>
-                ) : (
-                  <>
-                    Chain campaign <LinkIcon size={24} />
-                  </>
-                )}
-              </Button>
+              <div className="space-y-2">
+                <div className="text-sm text-gray-600">
+                  Debug: whyChain="{whyChain}" | length: {whyChain.length} | loading: {loading.toString()}
+                </div>
+                <Button
+                  onClick={handleChainCampaign}
+                  disabled={loading || !whyChain.trim()}
+                  className="w-[300px] h-16 font-medium text-2xl flex justify-between items-center"
+                  type="button"
+                >
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                      Creating chain...
+                    </>
+                  ) : (
+                    <>
+                      Chain campaign <LinkIcon size={24} />
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="space-y-6">

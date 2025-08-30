@@ -1,31 +1,50 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
-import useEmblaCarousel from "embla-carousel-react";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-
-type Props = {};
+import useEmblaCarousel from "embla-carousel-react";
 
 const carouselData = [
   {
-    image: "/images/plant.jpg",
-    buttonText: "Fundraise",
-    text: "Start raising funds for causes you love on the Chainfundit platform, using modern tools for fundraising like Stripe, PayPal, Paystack and more to get your funds quickly.",
+    image: "/images/signin-1.jpg",
+    buttonText: "Create campaigns",
+    text: "Start raising funds for causes you love on the Chainfundit platform, using modern tools for fundraising  like Stripe, PayPal, Paystack and more to get your funds quickly.",
   },
   {
-    image: "/images/signin-2.png",
+    image: "/images/signin-2.jpg",
     buttonText: "Chain campaigns",
     text: "Start raising funds for causes you love on the Chainfundit platform, using modern tools for fundraising  like Stripe, PayPal, Paystack and more to get your funds quickly.",
   },
   {
-    image: "/images/signin-3.png",
+    image: "/images/signin-3.jpg",
     buttonText: "Activate tax incentives",
     text: "Start raising funds for causes you love on the Chainfundit platform, using modern tools for fundraising  like Stripe, PayPal, Paystack and more to get your funds quickly.",
   },
 ];
+
+// Optimized carousel slide component
+const CarouselSlide = React.memo(({ item, index, isActive }: { 
+  item: typeof carouselData[0]; 
+  index: number; 
+  isActive: boolean; 
+}) => (
+  <div className="embla__slide flex-[0_0_100%] relative h-screen overflow-hidden">
+    <Image
+      src={item.image}
+      alt={`Carousel slide ${index + 1}`}
+      fill
+      className="object-cover object-center"
+      priority={index === 0} // Prioritize first image
+      loading={index === 0 ? "eager" : "lazy"}
+      placeholder="blur"
+      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
+      sizes="100vw"
+    />
+  </div>
+));
+
+CarouselSlide.displayName = 'CarouselSlide';
 
 function Carousel() {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
@@ -33,6 +52,7 @@ function Carousel() {
   const [isPlaying, setIsPlaying] = useState(true);
   const progressRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  // Optimized interval management
   useEffect(() => {
     if (!emblaApi) return;
 
@@ -40,11 +60,16 @@ function Carousel() {
       if (isPlaying) emblaApi.scrollNext();
     }, 5000);
 
-    emblaApi.on("select", () => {
+    const handleSelect = () => {
       setSelectedIndex(emblaApi.selectedScrollSnap());
-    });
+    };
 
-    return () => clearInterval(interval);
+    emblaApi.on("select", handleSelect);
+
+    return () => {
+      clearInterval(interval);
+      emblaApi.off("select", handleSelect);
+    };
   }, [emblaApi, isPlaying]);
 
   return (
@@ -56,23 +81,17 @@ function Carousel() {
       <div className="embla" ref={emblaRef}>
         <div className="embla__container flex">
           {carouselData.map((item, index) => (
-            <div
-              className="embla__slide flex-[0_0_100%] relative h-screen overflow-hidden"
-              key={index}
-            >
-              <div
-                className="absolute inset-0 bg-cover bg-center z-0"
-                style={{
-                  backgroundImage: `url(${item.image})`,
-                  height: "100%",
-                  backgroundRepeat: "no-repeat",
-                  backgroundPosition: "contain",
-                }}
-              ></div>
-            </div>
+            <CarouselSlide
+              key={item.image} // Use image path as key for better React performance
+              item={item}
+              index={index}
+              isActive={selectedIndex === index}
+            />
           ))}
         </div>
       </div>
+      
+      {/* Progress indicators and content */}
       <div className="absolute bottom-8 left-8 right-8 bg-[#56864D] text-white rounded-xl p-6 flex flex-col gap-4 z-10">
         <div className="flex gap-2">
           {[0, 1, 2].map((barIdx) => (
@@ -84,13 +103,14 @@ function Carousel() {
               className={`h-1 bg-white/70 rounded w-full overflow-hidden`}
             >
               <div
-                className={`h-full bg-white ${
-                  selectedIndex === barIdx ? "animate-fill-bar" : "w-0"
+                className={`h-full bg-white transition-all duration-500 ease-out ${
+                  selectedIndex === barIdx ? "w-full" : "w-0"
                 }`}
               />
             </div>
           ))}
         </div>
+        
         <div className="flex items-center">
           <div className="flex -space-x-3">
             {[...Array(selectedIndex + 1)].map((_, i) => (
@@ -101,13 +121,16 @@ function Carousel() {
             ))}
           </div>
           <Button
-            className="rounded-[30px] -ml-3 border-[3px] border-white hover:text-white hover:bg-transparent px-10 py-3 bg-transparent"
+            className="rounded-[30px] -ml-3 border-[3px] border-white hover:text-white hover:bg-transparent px-10 py-3 bg-transparent transition-all duration-300"
             variant="outline"
           >
             {carouselData[selectedIndex].buttonText}
           </Button>
         </div>
-        <div className="text-sm">{carouselData[selectedIndex].text}</div>
+        
+        <div className="text-sm leading-relaxed">
+          {carouselData[selectedIndex].text}
+        </div>
       </div>
     </div>
   );

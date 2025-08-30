@@ -115,7 +115,7 @@ export async function GET(request: NextRequest) {
     
     console.log('API: GET /api/campaigns - Returning campaigns with stats:', campaignsWithStats.length);
     
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       data: campaignsWithStats,
       pagination: {
@@ -124,6 +124,13 @@ export async function GET(request: NextRequest) {
         total: campaignsWithStats.length,
       },
     });
+
+    // Add performance headers
+    response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+    response.headers.set('CDN-Cache-Control', 'public, max-age=60');
+    response.headers.set('Vary', 'Accept-Encoding');
+    
+    return response;
   } catch (error) {
     console.error('API: GET /api/campaigns - Error:', error);
     return NextResponse.json(
@@ -159,12 +166,12 @@ export async function POST(request: NextRequest) {
       }, { status: 404 });
     }
 
-    if (!user.hasCompletedProfile) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Please complete your profile before creating a campaign' 
-      }, { status: 400 });
-    }
+    // if (!user.hasCompletedProfile) {
+    //   return NextResponse.json({ 
+    //     success: false, 
+    //     error: 'Please complete your profile before creating a campaign' 
+    //   }, { status: 400 });
+    // }
 
     const creatorId = user.id;
     const creatorName = user.fullName;

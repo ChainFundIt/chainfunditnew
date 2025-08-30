@@ -1,27 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// List of protected routes (add more as needed)
-const protectedRoutes = [
-  "/dashboard/:path*",
-  "/create-campaign",
-  "/settings/:path*",
-  // add other protected routes here
-];
-
 export function middleware(request: NextRequest) {
-  const { pathname, search, hash } = request.nextUrl;
-
+  const { pathname } = request.nextUrl;
+  
   // Check if the route is protected
-  const isProtected = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
-  );
+  const isProtected = 
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/campaigns') ||
+    pathname.startsWith('/donations') ||
+    pathname.startsWith('/payouts') ||
+    pathname.startsWith('/settings') ||
+    pathname.startsWith('/create-campaign') ||
+    pathname === '/complete-profile';
 
   if (isProtected) {
     const token = request.cookies.get("auth_token");
     if (!token) {
       // Redirect to signin, preserving the original destination
       const signinUrl = new URL("/signin", request.url);
-      signinUrl.searchParams.set("redirect", pathname + search + hash);
+      signinUrl.searchParams.set("redirect", pathname);
       return NextResponse.redirect(signinUrl);
     }
   }
@@ -29,11 +26,15 @@ export function middleware(request: NextRequest) {
   return NextResponse.next();
 }
 
-// Optionally, limit middleware to only certain paths for performance
 export const config = {
   matcher: [
     '/dashboard/:path*',
-    '/create-campaign',
-    '/settings/:path*'
+    '/campaigns/:path*',
+    '/donations/:path*',
+    '/payouts/:path*',
+    '/settings/:path*',
+    '/create-campaign/:path*',
+    '/complete-profile'
   ],
 };
+

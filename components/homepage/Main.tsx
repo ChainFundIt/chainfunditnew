@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Image from "next/image";
 import { PiYoutubeLogoLight } from "react-icons/pi";
 import CardDetailsDrawer from "@/components/homepage/CardDetailsDrawer";
@@ -13,8 +13,123 @@ import {
 } from "@/components/ui/select";
 import { NotificationsList } from "@/components/homepage/notifications-list";
 import BenefitsCarousel from "./BenefitsCarousel";
+import { useCampaigns } from "@/hooks/use-campaigns";
 
 type Props = {};
+
+// Skeleton loading component for campaign cards
+const CampaignCardSkeleton = () => (
+  <div className="w-full md:w-1/3 p-2 animate-pulse">
+    <div className="w-full h-40 md:h-60 bg-gray-200 rounded-lg"></div>
+    <div className="h-5 bg-gray-200 rounded mt-3 w-3/4"></div>
+    <div className="h-4 bg-gray-200 rounded mt-2 w-full"></div>
+    <div className="h-4 bg-gray-200 rounded mt-2 w-1/2"></div>
+    <div className="w-full bg-gray-200 h-2 mt-3 rounded"></div>
+  </div>
+);
+
+// Optimized campaign card component
+const CampaignCard = React.memo(({ card, idx, onClick }: { 
+  card: any; 
+  idx: number; 
+  onClick: () => void; 
+}) => (
+  <div
+    className="w-full md:w-80 lg:w-96 cursor-pointer"
+    onClick={onClick}
+  >
+    {/* Main Card Container */}
+    <div className="bg-white border-2 border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 h-[500px]">
+      {/* Image Section */}
+      <div className="relative overflow-hidden h-48">
+        <Image
+          src={card.image}
+          alt={card.title}
+          width={400}
+          height={300}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          priority={idx < 3}
+          loading={idx < 3 ? "eager" : "lazy"}
+          placeholder="blur"
+          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
+        />
+        
+        {/* Progress Badge Overlay */}
+        <div className="absolute top-4 right-4">
+          <div className="bg-[#104901] text-white px-3 py-1.5 rounded-full text-sm font-semibold shadow-lg">
+            {card.percentage}
+          </div>
+        </div>
+        
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      </div>
+      
+      {/* Content Section */}
+      <div className="p-5 space-y-3 flex flex-col h-[calc(500px-192px)]">
+        {/* Title */}
+        <h3 className="font-source font-bold text-xl text-gray-900 line-clamp-2 group-hover:text-[#104901] transition-colors duration-300">
+          {card.title}
+        </h3>
+        
+        {/* Description */}
+        <p className="font-source text-gray-600 line-clamp-2 text-sm leading-relaxed flex-1">
+          {card.description.slice(0, 80)}...
+        </p>
+        
+        {/* Progress Bar */}
+        <div className="space-y-2">
+          <div className="flex justify-between items-center text-sm">
+            <span className="font-medium text-gray-700">Progress</span>
+            <span className="font-semibold text-[#104901]">{card.percentage}</span>
+          </div>
+          <div className="w-full bg-gray-200 h-3 rounded-full overflow-hidden">
+            <div
+              className="bg-gradient-to-r from-[#104901] to-green-600 h-full rounded-full transition-all duration-700 ease-out shadow-sm"
+              style={{
+                width: card.percentage || "0%"
+              }}
+            />
+          </div>
+        </div>
+        
+        {/* Amount and Donors */}
+        <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+          <div className="text-left">
+            <p className="font-bold text-2xl text-[#104901]">
+              {card.raised.split(' ')[0]}
+            </p>
+            <p className="text-xs text-gray-500">raised</p>
+          </div>
+          <div className="text-right">
+            <p className="font-semibold text-lg text-gray-700">
+              {card.donors}
+            </p>
+            <p className="text-xs text-gray-500">donors</p>
+          </div>
+        </div>
+        
+        {/* Creator Info */}
+        <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
+          <div className="w-8 h-8 bg-gradient-to-br from-[#104901] to-green-600 rounded-full flex items-center justify-center">
+            <span className="text-white text-sm font-bold">
+              {card.creator.charAt(0).toUpperCase()}
+            </span>
+          </div>
+          <div className="flex-1">
+            <p className="font-medium text-gray-900 text-sm">by {card.creator}</p>
+            <p className="text-xs text-gray-500">{card.createdFor}</p>
+          </div>
+        </div>
+      </div>
+      
+      {/* Hover Effect Border */}
+      <div className="absolute inset-0 border-2 border-[#104901] rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+    </div>
+  </div>
+));
+
+CampaignCard.displayName = 'CampaignCard';
 
 const Main = (props: Props) => {
   
@@ -26,6 +141,9 @@ const Main = (props: Props) => {
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [openCard, setOpenCard] = useState<number | null>(null);
+  
+  // Fetch real campaigns from database with performance optimizations
+  const { campaigns, loading: campaignsLoading, error: campaignsError } = useCampaigns();
 
   const handlePreviousCard = () => {
     if (openCard !== null && openCard > 0) {
@@ -34,72 +152,91 @@ const Main = (props: Props) => {
   };
 
   const handleNextCard = () => {
-    if (openCard !== null && openCard < cardDetails.length - 1) {
+    if (openCard !== null && openCard < Math.min(campaigns.length, 3) - 1) {
       setOpenCard(openCard + 1);
     }
   };
 
-  const cardDetails = [
-    {
-      id: "kindness-challenge",
-      title: "91 Days of Kindness Challenge",
-      description:
-        "Nigeria is a nation built on resilience, unity, and a love for community. This campaign aims to spread kindness across the country, one act at a time. Join us in making a difference!",
-      raised: "₦1,201,000 raised",
-      image: "/images/card-img1.png",
-      extra: "Goal: ₦2,000,000. Over 500 acts of kindness completed so far!",
-      date: "March 24, 2025",
-      timeLeft: "5 days left",
-      avatar: "/images/avatar-7.png",
-      creator: "Adebola Ajani",
-      createdFor: "Ajegunle Children's Charity",
-      percentage: "40%",
-      total: "₦3,000,000 total",
-      donors: 64,
-    },
-    {
-      id: "jeffrey-streets",
-      title: "Let's Help Get Jeffrey off the Streets",
-      description:
-        "Jeffrey has been a recognisable face in Brunswick village. This campaign is dedicated to helping him find a home and a new start. Your support can change a life.",
-      raised: "$121,500 raised",
-      image: "/images/card-img2.png",
-      extra: "Goal: $150,000. Housing secured, now raising for job training.",
-      date: "April 28, 2025",
-      timeLeft: "12 days left",
-      avatar: "/images/avatar-7.png",
-      creator: "Adebola Ajani",
-      createdFor: "Ajegunle Children's Charity",
-      percentage: "93%",
-      total: "₦3,000,000 total",
-      donors: 64,
-    },
-    {
-      id: "kamala-tuition",
-      title: "Support Kamala's Tuition at West End Primary",
-      description:
-        "Kamala, our first daughter, won a part-scholarship to attend West End Primary. Help us cover the remaining tuition and give her the education she deserves!",
-      raised: "£2,000 raised",
-      image: "/images/card-img3.png",
-      extra: "Goal: £5,000. 40% funded. Every bit helps Kamala stay in school!",
-      date: "June 4, 2025",
-      timeLeft: "7 days left",
-      avatar: "/images/avatar-7.png",
-      creator: "Adebola Ajani",
-      createdFor: "Ajegunle Children's Charity",
-      percentage: "13%",
-      total: "₦3,000,000 total",
-      donors: 64,
-    },
-  ];
+  // Memoized campaign transformation to prevent unnecessary recalculations
+  const cardDetails = React.useMemo(() => {
+    // Only take the first 3 campaigns
+    return campaigns.slice(0, 3).map((campaign) => {
+      const currencySymbol = campaign.currency === 'NGN' ? '₦' : 
+                            campaign.currency === 'USD' ? '$' : 
+                            campaign.currency === 'EUR' ? '€' : 
+                            campaign.currency === 'GBP' ? '£' : campaign.currency;
+      
+      const progressPercentage = Math.min(100, Math.round((campaign.currentAmount / campaign.goalAmount) * 100));
+      
+      return {
+        id: campaign.id,
+        title: campaign.title,
+        description: campaign.description,
+        raised: `${currencySymbol}${campaign.currentAmount.toLocaleString()} raised`,
+        image: campaign.coverImageUrl || "/images/card-img1.png",
+        extra: `Goal: ${currencySymbol}${campaign.goalAmount.toLocaleString()}. ${progressPercentage}% funded!`,
+        date: new Date(campaign.createdAt).toLocaleDateString(),
+        timeLeft: "Active", // You can calculate actual time left if needed
+        avatar: campaign.creatorAvatar || "/images/avatar-7.png",
+        creator: campaign.creatorName || "Unknown Creator",
+        createdFor: campaign.fundraisingFor || "Charity",
+        percentage: `${progressPercentage}%`,
+        total: `${currencySymbol}${campaign.goalAmount.toLocaleString()} total`,
+        donors: campaign.stats?.uniqueDonors || 0,
+      };
+    });
+  }, [campaigns]);
 
+  // Optimized image rotation effect
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
-    }, 3000);
+    }, 5000); // Increased to 5 seconds for better performance
 
     return () => clearInterval(interval);
   }, [images.length]);
+
+  // Show loading state while campaigns are being fetched
+  if (campaignsLoading) {
+    return (
+      <div className="min-h-screen bg-[#E5ECDE] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#104901] mx-auto mb-4"></div>
+          <p className="text-lg text-[#104901]">Loading campaigns...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if campaigns failed to load
+  if (campaignsError) {
+    return (
+      <div className="min-h-screen bg-[#E5ECDE] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg text-red-600 mb-4">Failed to load campaigns</p>
+          <p className="text-sm text-gray-600">{campaignsError}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 bg-[#104901] text-white px-6 py-3 rounded-lg hover:bg-[#0d3a01] transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show empty state if no campaigns
+  if (campaigns.length === 0 && !campaignsLoading) {
+    return (
+      <div className="min-h-screen bg-[#E5ECDE] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg text-[#104901] mb-4">No campaigns available</p>
+          <p className="text-sm text-gray-600">Check back later for new campaigns</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="my-6">
@@ -144,54 +281,33 @@ const Main = (props: Props) => {
           </Select>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-3 w-full">
-          {cardDetails.map((card, idx) => (
-            <section
-              key={idx}
-              className="w-full md:w-1/3 p-2 flex flex-col gap-2 cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => setOpenCard(idx)}
-            >
-              <Image
-                src={card.image}
-                alt={card.title}
-                width={400}
-                height={300}
-                className="w-full h-40 md:h-60 object-cover"
+        <div className="flex flex-col md:flex-row gap-6 w-full justify-center">
+          {cardDetails.length > 0 ? (
+            <>
+              {cardDetails.map((card, idx) => (
+                <CampaignCard
+                  key={card.id} // Use campaign ID instead of index for better React performance
+                  card={card}
+                  idx={idx}
+                  onClick={() => setOpenCard(idx)}
+                />
+              ))}
+              <CardDetailsDrawer
+                open={openCard !== null}
+                onOpenChange={(open) => !open && setOpenCard(null)}
+                card={openCard !== null ? cardDetails[openCard] : null}
+                currentIndex={openCard !== null ? openCard : 0}
+                totalCards={Math.min(cardDetails.length, 3)}
+                onPrevious={handlePreviousCard}
+                onNext={handleNextCard}
               />
-              <p className="font-source font-medium text-lg md:text-xl text-black">
-                {card.title}
-              </p>
-              <span className="font-source font-normal text-sm md:text-base text-black">
-                {card.description.slice(0, 60)}...
-              </span>
-              <span className="font-medium text-base md:text-lg text-black">
-                {card.raised}
-              </span>
-              <div className="w-full bg-[#FBFBFB] h-2">
-                <div
-                  className="bg-[#104901] h-full transition-all duration-500"
-                  style={{
-                    width: card.percentage
-                      ? card.percentage
-                      : idx === 0
-                      ? "60%"
-                      : idx === 1
-                      ? "93%"
-                      : "13%",
-                  }}
-                ></div>
-              </div>
-            </section>
-          ))}
-          <CardDetailsDrawer
-            open={openCard !== null}
-            onOpenChange={(open) => !open && setOpenCard(null)}
-            card={openCard !== null ? cardDetails[openCard] : null}
-            currentIndex={openCard !== null ? openCard : 0}
-            totalCards={cardDetails.length}
-            onPrevious={handlePreviousCard}
-            onNext={handleNextCard}
-          />
+            </>
+          ) : (
+            <div className="w-full text-center py-8">
+              <p className="text-lg text-[#104901]">No campaigns available</p>
+              <p className="text-sm text-gray-600">Check back later for new campaigns</p>
+            </div>
+          )}
         </div>
       </div>
       {/* features*/}

@@ -206,16 +206,13 @@ const CardDetailsDrawer: React.FC<CardDetailsDrawerProps> = ({
                   {card ? card.total : ""}
                 </span>
               </section>
-              {/* Progress bar section from Main.tsx */}
+              {/* Progress bar section */}
               <div className="w-full bg-[#B5C7B0] h-2 mt-2">
                 <div
-                  className={
-                    card?.title === "91 Days of Kindness Challenge"
-                      ? "w-[60%] bg-[#104901] h-full"
-                      : card?.title === "Let’s Help Get Jeffrey off the Streets"
-                      ? "w-[93%] bg-[#104901] h-full"
-                      : "w-[13%] bg-[#104901] h-full"
-                  }
+                  className="bg-[#104901] h-full transition-all duration-500"
+                  style={{
+                    width: card?.percentage || "0%"
+                  }}
                 ></div>
               </div>
               <span className="font-medium text-lg text-[#868686] my-2 flex justify-end">
@@ -257,10 +254,12 @@ const CardDetailsDrawer: React.FC<CardDetailsDrawerProps> = ({
                 </li>
               </ul>
             </div>
-            <Button variant='default' className="w-full h-20 flex justify-between font-semibold text-2xl">
-              Donate
-              <ArrowRight size={32} />
-            </Button>
+            <Link href={`/campaign/${card?.id}`}>
+              <Button className="w-full h-20 flex justify-between font-semibold text-2xl">
+                Donate
+                <ArrowRight size={32} />
+              </Button>
+            </Link>
           </div>
         )}
       </DrawerContent>

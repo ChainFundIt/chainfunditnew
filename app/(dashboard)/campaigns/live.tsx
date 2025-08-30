@@ -55,7 +55,7 @@ const LiveCampaigns = ({ campaigns }: Props) => {
         </div>
 
         <Link href="/create-campaign">
-          <Button className="bg-gradient-to-r from-green-600 to-[#104901] text-white rounded-xl px-8 py-4 hover:shadow-lg transition-all duration-300 flex items-center gap-3 font-semibold text-xl">
+          <Button className="bg-gradient-to-r from-green-600 to-[#104901] text-white hover:from-green-600 hover:to-[#104901] hover:text-white rounded-xl px-8 py-4 hover:shadow-lg transition-all duration-300 flex items-center gap-3 font-semibold text-xl">
             Create a Campaign <Plus size={24} />
           </Button>
         </Link>
@@ -205,7 +205,7 @@ const LiveCampaigns = ({ campaigns }: Props) => {
 
       <div className="flex justify-center mt-8">
         <Link href="/create-campaign">
-          <Button className="bg-gradient-to-r from-green-600 to-[#104901] hover:from-green-600 hover:to-[#104901] hover:text-white text-white rounded-xl px-8 py-4 hover:shadow-lg transition-all duration-300 flex items-center gap-3 font-semibold text-xl">
+          <Button className="bg-gradient-to-r from-green-600 to-[#104901] hover:from-green-600 hover:to-[#104901] hover:text-white rounded-xl px-8 py-4 hover:shadow-lg transition-all duration-300 flex items-center gap-3 font-semibold text-xl">
             Create a Campaign <Plus size={24} />
           </Button>
         </Link>

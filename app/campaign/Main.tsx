@@ -20,6 +20,7 @@ import ShareModal from "./share-modal";
 import UpdateModal from "./update-modal";
 import CommentModal from "./comment-modal";
 import { useCampaignDonations } from "@/hooks/use-campaign-donations";
+import { ClientToaster } from "@/components/ui/client-toaster";
 
 interface CampaignData {
   id: string;
@@ -674,21 +675,6 @@ const Main = ({ campaignId }: MainProps) => {
 
         {/* Right side */}
         <div className="w-full md:w-1/4 space-y-10">
-          {/* Update Button for Campaign Creator */}
-          {campaign?.canEdit && (
-            <div className="mb-5 py-3 px-2 bg-white rounded-2xl border border-[#C0BFC4]">
-              <Button
-                className="w-full h-12 px-4 py-2 font-semibold text-lg text-white rounded-xl bg-gradient-to-r from-green-600 to-[#104901] hover:from-green-600 hover:to-[#104901] transition-all duration-300"
-                onClick={() => setUpdateModalOpen(true)}
-              >
-                <PlusSquare className="h-5 w-5 mr-2" />
-                Add Update
-              </Button>
-            </div>
-          )}
-
-         
-          
           <div className="mb-5 py-3 px-2 bg-[#E7EDE6] rounded-2xl">
             <section className="w-full flex gap-3 mb-5">
               <Button
@@ -968,6 +954,7 @@ const Main = ({ campaignId }: MainProps) => {
         campaignId={campaignId}
         onCommentCreated={fetchComments}
       />
+      <ClientToaster />
     </div>
   );
 };

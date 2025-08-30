@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface Campaign {
   id: string;
@@ -36,17 +36,15 @@ interface Campaign {
 interface CampaignFormData {
   title: string;
   subtitle: string;
-  visibility: "public" | "private";
+  description: string;
   reason: string;
   fundraisingFor: string;
-  currency: string;
-  goal: number;
   duration: string;
-  video: string;
-  documents: File[];
-  images: File[];
-  coverImage: File | null;
-  story: string;
+  videoUrl: string;
+  goalAmount: number;
+  currency: string;
+  minimumDonation: number;
+  chainerCommissionRate: number;
 }
 
 interface CampaignUpdate {
@@ -64,86 +62,163 @@ interface CampaignUpdate {
 interface CampaignComment {
   id: string;
   campaignId: string;
-  userId: string;
   content: string;
   createdAt: string;
-  updatedAt: string;
+  userId: string;
   userName: string;
   userAvatar: string;
+}
+
+// Cache for campaigns data
+const campaignsCache = new Map<string, { data: Campaign[]; timestamp: number; ttl: number }>();
+
+// Debounce function for search/filtering
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
 }
 
 export function useCampaigns() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const fetchCampaigns = useCallback(async (filters?: {
+  const [filters, setFilters] = useState<{
     status?: string;
     reason?: string;
     creatorId?: string;
     limit?: number;
     offset?: number;
-  }) => {
-    try {
-      console.log('useCampaigns: fetchCampaigns - Starting fetch');
-      setLoading(true);
-      setError(null);
+  }>({ limit: 12, offset: 0 });
+  
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(true);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
+  const fetchCampaigns = useCallback(async (newFilters?: typeof filters) => {
+    try {
+      // Cancel previous request if it exists
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      
+      // Create new abort controller
+      abortControllerRef.current = new AbortController();
+      
+      const currentFilters = newFilters || filters;
+      const cacheKey = JSON.stringify(currentFilters);
+      
+      // Check cache first
+      const cached = campaignsCache.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < cached.ttl) {
+        if (isMountedRef.current) {
+          setCampaigns(cached.data);
+          setLoading(false);
+          setError(null);
+        }
+        return;
+      }
+
+      if (isMountedRef.current) {
+        setLoading(true);
+        setError(null);
+      }
+
+      console.log('useCampaigns: fetchCampaigns - Starting fetch');
+      
       const params = new URLSearchParams();
-      if (filters?.status) params.append('status', filters.status);
-      if (filters?.reason) params.append('reason', filters.reason);
-      if (filters?.creatorId) params.append('creatorId', filters.creatorId);
-      if (filters?.limit) params.append('limit', filters.limit.toString());
-      if (filters?.offset) params.append('offset', filters.offset.toString());
+      if (currentFilters?.status) params.append('status', currentFilters.status);
+      if (currentFilters?.reason) params.append('reason', currentFilters.reason);
+      if (currentFilters?.creatorId) params.append('creatorId', currentFilters.creatorId);
+      if (currentFilters?.limit) params.append('limit', currentFilters.limit.toString());
+      if (currentFilters?.offset) params.append('offset', currentFilters.offset.toString());
 
       const url = `/api/campaigns?${params}`;
       console.log('useCampaigns: fetchCampaigns - Fetching URL:', url);
 
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        signal: abortControllerRef.current.signal,
+        headers: {
+          'Cache-Control': 'max-age=60', // 1 minute cache
+        },
+      });
+      
       console.log('useCampaigns: fetchCampaigns - Response status:', response.status);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const data = await response.json();
       console.log('useCampaigns: fetchCampaigns - Response data:', data);
 
-      if (data.success) {
+      if (data.success && isMountedRef.current) {
         console.log('useCampaigns: fetchCampaigns - Setting campaigns:', data.data.length);
         setCampaigns(data.data);
-      } else {
+        
+        // Cache the result (5 minutes TTL)
+        campaignsCache.set(cacheKey, {
+          data: data.data,
+          timestamp: Date.now(),
+          ttl: 5 * 60 * 1000
+        });
+      } else if (isMountedRef.current) {
         console.log('useCampaigns: fetchCampaigns - API error:', data.error);
         setError(data.error || 'Failed to load campaigns');
       }
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        // Request was cancelled, don't update state
+        return;
+      }
+      
       console.error('useCampaigns: fetchCampaigns - Error:', error);
-      setError('Failed to load campaigns');
+      if (isMountedRef.current) {
+        setError('Failed to load campaigns');
+      }
     } finally {
-      console.log('useCampaigns: fetchCampaigns - Setting loading to false');
-      setLoading(false);
+      if (isMountedRef.current) {
+        console.log('useCampaigns: fetchCampaigns - Setting loading to false');
+        setLoading(false);
+      }
     }
-  }, []);
+  }, [filters]);
 
-  const createCampaign = useCallback(async (formData: CampaignFormData): Promise<Campaign | null> => {
+  // Debounced version for search/filtering
+  const debouncedFetch = useCallback(
+    debounce((newFilters: typeof filters) => {
+      fetchCampaigns(newFilters);
+    }, 300),
+    [fetchCampaigns]
+  );
+
+  const createCampaign = useCallback(async (campaignData: CampaignFormData): Promise<Campaign | null> => {
     try {
       setLoading(true);
       setError(null);
 
-      const payload = new FormData();
-      
-      // Add safety check for formData
-      if (formData && typeof formData === 'object') {
-        Object.entries(formData).forEach(([key, value]) => {
-          if (key === "images" || key === "documents") {
-            (value as File[]).forEach((file) => payload.append(key, file));
-          } else if (key === "coverImage" && value) {
-            payload.append("coverImage", value as File);
-          } else {
-            payload.append(key, value as string);
-          }
-        });
-      }
+      const formData = new FormData();
+      Object.entries(campaignData).forEach(([key, value]) => {
+        formData.append(key, value.toString());
+      });
 
       const response = await fetch('/api/campaigns', {
         method: 'POST',
-        body: payload,
+        body: formData,
       });
 
       const data = await response.json();
@@ -151,6 +226,12 @@ export function useCampaigns() {
       if (!response.ok) {
         throw new Error(data.error || 'Failed to create campaign');
       }
+
+      // Clear cache to force refresh
+      campaignsCache.clear();
+      
+      // Update local state
+      setCampaigns(prev => [data.data, ...prev]);
 
       return data.data;
     } catch (error) {
@@ -180,6 +261,9 @@ export function useCampaigns() {
       if (!response.ok) {
         throw new Error(data.error || 'Failed to update campaign');
       }
+
+      // Clear cache to force refresh
+      campaignsCache.clear();
 
       // Update local state
       setCampaigns(prev => prev.map(campaign => 
@@ -211,6 +295,9 @@ export function useCampaigns() {
         throw new Error(data.error || 'Failed to delete campaign');
       }
 
+      // Clear cache to force refresh
+      campaignsCache.clear();
+
       // Remove from local state
       setCampaigns(prev => prev.filter(campaign => campaign.id !== campaignId));
 
@@ -224,6 +311,18 @@ export function useCampaigns() {
     }
   }, []);
 
+  // Update filters and refetch
+  const updateFilters = useCallback((newFilters: Partial<typeof filters>) => {
+    const updatedFilters = { ...filters, ...newFilters, offset: 0 }; // Reset offset when filters change
+    setFilters(updatedFilters);
+    debouncedFetch(updatedFilters);
+  }, [filters, debouncedFetch]);
+
+  // Clear cache manually
+  const clearCache = useCallback(() => {
+    campaignsCache.clear();
+  }, []);
+
   useEffect(() => {
     fetchCampaigns();
   }, [fetchCampaigns]);
@@ -232,10 +331,14 @@ export function useCampaigns() {
     campaigns,
     loading,
     error,
+    filters,
     fetchCampaigns,
+    updateFilters,
     createCampaign,
     updateCampaign,
     deleteCampaign,
+    clearCache,
+    refetch: () => fetchCampaigns(),
   };
 }
 
