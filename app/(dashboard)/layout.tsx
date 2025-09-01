@@ -1,6 +1,9 @@
+"use client";
+
 import React from "react";
 import Navbar from "@/components/dashboard/Navbar";
 import Sidebar from "@/components/dashboard/Sidebar";
+import ClientToaster from "@/components/ui/client-toaster";
 
 type Props = {};
 
@@ -15,6 +18,8 @@ const layout = ({ children }: { children: React.ReactNode }) => {
         </div>
         <div className="w-full md:w-4/5 px-10">{children}</div>
       </div>
+     
+     
     </div>
   );
 };

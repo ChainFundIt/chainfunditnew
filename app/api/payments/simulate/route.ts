@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getUserFromRequest } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { donations } from '@/lib/schema/donations';
 import { eq } from 'drizzle-orm';
@@ -16,9 +16,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get authenticated user
-    const userPayload = await auth.api.getSession({ headers: request.headers });
-    if (!userPayload?.user?.email) {
+    // Get authenticated user using the same method as other APIs
+    const userEmail = await getUserFromRequest(request);
+    if (!userEmail) {
       return NextResponse.json(
         { success: false, error: 'Not authenticated' },
         { status: 401 }

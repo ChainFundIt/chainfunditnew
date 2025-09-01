@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import useEmblaCarousel from "embla-carousel-react";
+import ClientToaster from "@/components/ui/client-toaster";
 
 const carouselData = [
   {
@@ -147,6 +148,7 @@ const layout = ({ children }: { children: React.ReactNode }) => {
         }}
       >
         <div className="w-full flex flex-col gap-3 py-3">{children}</div>
+        <ClientToaster />
 
         {/* lower section */}
         <div className="flex flex-col md:flex-row gap-2 md:gap-4 items-center px-2 py-6 md:py-8 mt-6 md:mt-10 w-full">

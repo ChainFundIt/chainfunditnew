@@ -170,7 +170,7 @@ export function CampaignCard({ campaign, viewMode }: CampaignCardProps) {
                 </Button>
               </div>
               <Link href={`/campaign/${campaign.id}`}>
-                <Button className="bg-green-600 hover:bg-green-700">
+                <Button className="">
                   <Eye className="h-4 w-4 mr-2" />
                   View Campaign
                 </Button>
@@ -251,7 +251,7 @@ export function CampaignCard({ campaign, viewMode }: CampaignCardProps) {
 
         {/* Action Button */}
         <Link href={`/campaign/${campaign.id}`} className="block">
-          <Button className="w-full bg-green-600 hover:bg-green-700">
+          <Button className="w-full">
             View Campaign
           </Button>
         </Link>

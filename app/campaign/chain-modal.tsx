@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import Link from "next/link";
 import { useChain } from "@/hooks/use-chain";
 import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
 
 interface Campaign {
   id: string;
@@ -39,8 +40,21 @@ const ChainModal: React.FC<ChainModalProps> = ({ open, onOpenChange, campaign })
     console.log('Why chain:', whyChain);
     console.log('Proceeds option:', proceedsOption);
     
-    if (!user || !campaign) {
-      console.log('❌ Missing user or campaign');
+    if (!user) {
+      console.log('❌ No user found - user is:', user);
+      toast.error('Please sign in to chain this campaign');
+      return;
+    }
+    
+    if (!campaign) {
+      console.log('❌ No campaign found - campaign is:', campaign);
+      toast.error('Campaign information is missing');
+      return;
+    }
+
+    if (!whyChain.trim()) {
+      console.log('❌ Why chain is empty');
+      toast.error('Please explain why you want to chain this campaign');
       return;
     }
 
@@ -68,11 +82,14 @@ const ChainModal: React.FC<ChainModalProps> = ({ open, onOpenChange, campaign })
         setReferralCode(result.data.referralCode);
         setStep("success");
         console.log('✅ Chain created successfully');
+        toast.success('Campaign chained successfully!');
       } else {
         console.log('❌ Chain creation failed:', result.error);
+        toast.error(`Failed to chain campaign: ${result.error}`);
       }
     } catch (error) {
       console.error('💥 Error in handleChainCampaign:', error);
+      toast.error('An unexpected error occurred while chaining the campaign');
     }
   };
 
@@ -175,9 +192,6 @@ const ChainModal: React.FC<ChainModalProps> = ({ open, onOpenChange, campaign })
               )}
 
               <div className="space-y-2">
-                <div className="text-sm text-gray-600">
-                  Debug: whyChain="{whyChain}" | length: {whyChain.length} | loading: {loading.toString()}
-                </div>
                 <Button
                   onClick={handleChainCampaign}
                   disabled={loading || !whyChain.trim()}

@@ -9,72 +9,86 @@ interface User {
 }
 
 export function useAuth() {
-  console.log('useAuth: Starting hook initialization');
-  
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  console.log('useAuth: State initialized');
-
-  useEffect(() => {
-    console.log('useAuth: useEffect running');
+  // Get current user from auth token
+  const getCurrentUser = useCallback(async () => {
     try {
-      // TODO: Implement actual auth logic
-      // This is a placeholder for the auth hook
-      console.log('useAuth: Setting loading to false');
-      setLoading(false);
-    } catch (error) {
-      console.error('useAuth: Error in useEffect:', error);
-      setLoading(false);
-    }
-  }, []);
+      setLoading(true);
+      
+      // Use the same endpoint as the user profile system
+      const response = await fetch('/api/user/profile', {
+        credentials: 'include', // Include cookies for authentication
+      });
 
-  const login = useCallback(async (email: string, password: string) => {
-    console.log('useAuth: login called');
-    try {
-      // TODO: Implement login logic
-      console.log("Sign in:", { email, password });
-    } catch (error) {
-      console.error('useAuth: Error in login:', error);
-    }
-  }, []);
-
-  const logout = useCallback(async () => {
-    console.log('useAuth: logout called');
-    try {
-      // TODO: Implement logout logic
-      console.log('useAuth: Setting user to null');
-      setUser(null);
-      // Clear any stored tokens or session data
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('auth_token');
-        sessionStorage.clear();
+      if (response.ok) {
+        const userData = await response.json();
+        if (userData.success && userData.user) {
+          setUser(userData.user);
+          console.log('User authenticated:', userData.user);
+        } else {
+          setUser(null);
+          console.log('Failed to get user data');
+        }
+      } else {
+        setUser(null);
+        console.log('Auth token invalid or expired');
       }
     } catch (error) {
-      console.error('useAuth: Error during logout:', error);
-      // Ensure user state is cleared even if logout fails
+      console.error('Error getting current user:', error);
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    getCurrentUser();
+  }, [getCurrentUser]);
+
+  const login = useCallback(async (email: string, password: string) => {
+    try {
+      // This would typically call the Better Auth login endpoint
+      console.log("Sign in:", { email, password });
+      // After successful login, refresh user data
+      await getCurrentUser();
+    } catch (error) {
+      console.error('Error in login:', error);
+    }
+  }, [getCurrentUser]);
+
+  const logout = useCallback(async () => {
+    try {
+      // Clear user state
+      setUser(null);
+      console.log('User logged out');
+      
+      // Redirect to signin page
+      window.location.href = '/signin';
+    } catch (error) {
+      console.error('Error during logout:', error);
       setUser(null);
     }
   }, []);
 
   const signup = useCallback(async (email: string, password: string, fullName: string) => {
-    console.log('useAuth: signup called');
     try {
-      // TODO: Implement signup logic
+      // This would typically call the Better Auth signup endpoint
       console.log("Signup:", { email, password, fullName });
+      // After successful signup, refresh user data
+      await getCurrentUser();
     } catch (error) {
-      console.error('useAuth: Error in signup:', error);
+      console.error('Error in signup:', error);
     }
-  }, []);
+  }, [getCurrentUser]);
 
-  const result = {
+  return {
     user,
     loading,
     login,
     logout,
     signup,
+    refreshUser: getCurrentUser,
   };
-
-  console.log('useAuth: Returning result:', result);
-  return result;
 } 

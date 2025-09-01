@@ -14,6 +14,7 @@ import {
 import { NotificationsList } from "@/components/homepage/notifications-list";
 import BenefitsCarousel from "./BenefitsCarousel";
 import { useCampaigns } from "@/hooks/use-campaigns";
+import ClientToaster from "@/components/ui/client-toaster";
 
 type Props = {};
 
@@ -159,8 +160,10 @@ const Main = (props: Props) => {
 
   // Memoized campaign transformation to prevent unnecessary recalculations
   const cardDetails = React.useMemo(() => {
-    // Only take the first 3 campaigns
-    return campaigns.slice(0, 3).map((campaign) => {
+    console.log('Campaigns at render:', campaigns);
+    // console.log('Campaigns type:', typeof campaigns);
+    console.log('Campaigns isArray:', Array.isArray(campaigns));
+    return (campaigns && campaigns.length > 0) ? campaigns.slice(0, 3).map((campaign) => {
       const currencySymbol = campaign.currency === 'NGN' ? '₦' : 
                             campaign.currency === 'USD' ? '$' : 
                             campaign.currency === 'EUR' ? '€' : 
@@ -178,13 +181,13 @@ const Main = (props: Props) => {
         date: new Date(campaign.createdAt).toLocaleDateString(),
         timeLeft: "Active", // You can calculate actual time left if needed
         avatar: campaign.creatorAvatar || "/images/avatar-7.png",
-        creator: campaign.creatorName || "Unknown Creator",
+        creator: campaign.creatorName || "",
         createdFor: campaign.fundraisingFor || "Charity",
         percentage: `${progressPercentage}%`,
         total: `${currencySymbol}${campaign.goalAmount.toLocaleString()} total`,
         donors: campaign.stats?.uniqueDonors || 0,
       };
-    });
+    }) : null;
   }, [campaigns]);
 
   // Optimized image rotation effect
@@ -225,19 +228,6 @@ const Main = (props: Props) => {
       </div>
     );
   }
-
-  // Show empty state if no campaigns
-  if (campaigns.length === 0 && !campaignsLoading) {
-    return (
-      <div className="min-h-screen bg-[#E5ECDE] flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg text-[#104901] mb-4">No campaigns available</p>
-          <p className="text-sm text-gray-600">Check back later for new campaigns</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="my-6">
       {/* benefits */}
@@ -282,7 +272,7 @@ const Main = (props: Props) => {
         </div>
 
         <div className="flex flex-col md:flex-row gap-6 w-full justify-center">
-          {cardDetails.length > 0 ? (
+          {cardDetails && cardDetails.length > 0 ? (
             <>
               {cardDetails.map((card, idx) => (
                 <CampaignCard
@@ -429,6 +419,7 @@ const Main = (props: Props) => {
           </section>
         </section>
       </div>
+      <ClientToaster />
     </div>
   );
 };

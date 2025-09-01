@@ -226,7 +226,7 @@ export function LoginForm({
           disabled={isLoading || !(isPhone ? phone.trim() : email.trim())}
         >
           {isLoading
-            ? "Sending..."
+            ? "Sending OTP"
             : `Continue with ${isPhone ? "Phone" : "Email"}`}
           <ArrowRight className={isLoading ? "animate-pulse" : ""} />
         </Button>

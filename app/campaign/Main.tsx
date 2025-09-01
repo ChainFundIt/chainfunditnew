@@ -20,7 +20,7 @@ import ShareModal from "./share-modal";
 import UpdateModal from "./update-modal";
 import CommentModal from "./comment-modal";
 import { useCampaignDonations } from "@/hooks/use-campaign-donations";
-import { ClientToaster } from "@/components/ui/client-toaster";
+import ClientToaster from "@/components/ui/client-toaster";
 
 interface CampaignData {
   id: string;
@@ -80,10 +80,6 @@ interface CampaignComment {
 interface MainProps {
   campaignId: string;
 }
-
-
-
-
 
 const chainers = [
   {

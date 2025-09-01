@@ -99,9 +99,8 @@ export default function DashboardPage() {
 
         // Load dashboard stats
         const statsRes = await fetch("/api/dashboard/stats");
-        console.log("Stats API status:", statsRes.status);
+      
         const statsData = await statsRes.json();
-        console.log("Stats API response:", statsData);
         if (statsData.success) {
           setStats(statsData.stats);
         } else {
@@ -110,18 +109,14 @@ export default function DashboardPage() {
 
         // Load user campaigns
         const campaignsRes = await fetch("/api/dashboard/campaigns");
-        console.log("Campaigns API status:", campaignsRes.status);
         const campaignsData = await campaignsRes.json();
-        console.log("Campaigns API response:", campaignsData);
         if (campaignsData.success) {
           setCampaigns(campaignsData.campaigns);
-          console.log("Campaigns set:", campaignsData.campaigns);
         } else {
           console.error("Campaigns API error:", campaignsData.error);
         }
               } catch (error) {
-          console.error("Error loading dashboard data:", error);
-          // Don't set fallback data - let the user see the actual state
+         
         } finally {
           setLoading(false);
         }

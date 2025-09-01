@@ -5,6 +5,7 @@ import { db } from '@/lib/db';
 import { emailOtps } from '@/lib/schema/email-otps';
 import { eq, and, desc, gt, lt } from 'drizzle-orm';
 import { users } from '@/lib/schema/users';
+import { generateUserJWT } from '@/lib/auth';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -195,8 +196,37 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: false, error: 'Verification code has expired or is invalid. Please request a new code.' }, { status: 400 });
       }
 
-      // TODO: Create user session/token here
-      return NextResponse.json({ success: true, message: 'Email OTP verified successfully' });
+      // Get user details and create JWT token
+      const [user] = await db
+        .select({ id: users.id, email: users.email, fullName: users.fullName })
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+
+      if (!user) {
+        return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
+      }
+
+      // Generate JWT token
+      const token = generateUserJWT({ id: user.id, email: user.email });
+
+      // Create response with success message
+      const response = NextResponse.json({ 
+        success: true, 
+        message: 'Email OTP verified successfully',
+        user: { id: user.id, email: user.email, fullName: user.fullName }
+      });
+
+      // Set auth cookie
+      response.cookies.set("auth_token", token, {
+        httpOnly: true,
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+      });
+
+      return response;
     }
 
     if (action === 'verify_phone_otp') {
@@ -228,8 +258,37 @@ export async function POST(request: NextRequest) {
       // Update user's phone in the database
       await db.update(users).set({ phone }).where(eq(users.email, email));
       
-      // TODO: Create user session/token here if needed
-      return NextResponse.json({ success: true, message: 'Phone OTP verified and user phone updated successfully' });
+      // Get user details and create JWT token
+      const [user] = await db
+        .select({ id: users.id, email: users.email, fullName: users.fullName })
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+
+      if (!user) {
+        return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
+      }
+
+      // Generate JWT token
+      const token = generateUserJWT({ id: user.id, email: user.email });
+
+      // Create response with success message
+      const response = NextResponse.json({ 
+        success: true, 
+        message: 'Phone OTP verified and user phone updated successfully',
+        user: { id: user.id, email: user.email, fullName: user.fullName }
+      });
+
+      // Set auth cookie
+      response.cookies.set("auth_token", token, {
+        httpOnly: true,
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+      });
+
+      return response;
     }
 
     return NextResponse.json({ success: false, error: 'Invalid action' }, { status: 400 });

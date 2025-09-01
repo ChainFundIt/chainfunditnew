@@ -1,33 +1,38 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useAuth } from './use-auth';
 
 interface SessionTimeoutConfig {
-  timeoutMinutes?: number; // Default: 30 minutes
-  warningMinutes?: number; // Default: 5 minutes before expiry
+  timeoutMinutes?: number; // Default: 120 minutes (2 hours)
+  warningMinutes?: number; // Default: 15 minutes before expiry
   checkInterval?: number; // Default: 1 minute
+  enabled?: boolean; // Default: true - set to false to disable session timeout
+  user?: any; // User object from auth
+  logout?: () => Promise<void>; // Logout function from auth
 }
 
 export const useSessionTimeout = (config: SessionTimeoutConfig = {}) => {
   console.log('useSessionTimeout: Starting hook initialization');
   
   const {
-    timeoutMinutes = 30,
-    warningMinutes = 5,
+    timeoutMinutes = 120, // Default: 120 minutes (2 hours)
+    warningMinutes = 15, // Default: 15 minutes before expiry
     checkInterval = 60000, // 1 minute in milliseconds
+    enabled = true, // Default: true - set to false to disable session timeout
+    user = null,
+    logout = () => Promise.resolve(),
   } = config;
 
-  console.log('useSessionTimeout: Config loaded:', { timeoutMinutes, warningMinutes, checkInterval });
+  console.log('useSessionTimeout: Config loaded:', { timeoutMinutes, warningMinutes, checkInterval, enabled, user: !!user });
 
   // Hooks must be called at the top level - no try-catch around hook calls
   console.log('useSessionTimeout: About to call useAuth');
-  const authData = useAuth();
-  console.log('useSessionTimeout: Auth data loaded successfully:', authData);
+  // const authData = useAuth(); // This line is removed as per the edit hint
+  // console.log('useSessionTimeout: Auth data loaded successfully:', authData); // This line is removed as per the edit hint
 
   // Safely destructure auth data with fallbacks
-  const user = authData?.user || null;
-  const logout = authData?.logout || (() => Promise.resolve());
+  // const user = authData?.user || null; // This line is removed as per the edit hint
+  // const logout = authData?.logout || (() => Promise.resolve()); // This line is removed as per the edit hint
   
   console.log('useSessionTimeout: User and logout extracted:', { user: !!user, logout: typeof logout });
   
@@ -123,8 +128,8 @@ export const useSessionTimeout = (config: SessionTimeoutConfig = {}) => {
   // Set up activity listeners
   useEffect(() => {
     console.log('useSessionTimeout: Setting up activity listeners');
-    if (!user) {
-      // Clear timers if no user
+    if (!user || !enabled) {
+      // Clear timers if no user or if session timeout is disabled
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       if (warningRef.current) clearTimeout(warningRef.current);
       setShowTimeoutModal(false);
@@ -158,13 +163,17 @@ export const useSessionTimeout = (config: SessionTimeoutConfig = {}) => {
         const timeSinceLastActivity = now - lastActivityRef.current;
         const sessionDuration = now - sessionStartRef.current;
         
-        // Check if session should expire
+        // Only expire session if there's been no activity for the timeout period
         if (timeSinceLastActivity > timeoutMinutes * 60 * 1000) {
+          console.log('Session expired due to inactivity:', {
+            timeSinceLastActivity: Math.round(timeSinceLastActivity / 1000 / 60),
+            timeoutMinutes
+          });
           handleSessionExpired();
-        } else if (sessionDuration > (timeoutMinutes - warningMinutes) * 60 * 1000) {
+        } else if (timeSinceLastActivity > (timeoutMinutes - warningMinutes) * 60 * 1000) {
           // Show warning if approaching expiry
-          const remaining = Math.max(0, timeoutMinutes * 60 - timeSinceLastActivity / 1000);
-          setTimeRemaining(Math.floor(remaining));
+          const remaining = Math.max(0, timeoutMinutes * 60 - timeSinceLastActivity);
+          setTimeRemaining(Math.floor(remaining / 1000));
         }
       }
     }, checkInterval);

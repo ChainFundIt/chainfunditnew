@@ -125,7 +125,7 @@ export function SignupForm({
           className="w-[360px] md:w-full h-16 flex justify-between font-semibold text-2xl"
           disabled={isLoading || !email.trim()}
         >
-          {isLoading ? "Sending..." : "Continue with Email"}
+          {isLoading ? "Sending OTP" : "Continue with Email"}
           <ArrowRight className={isLoading ? "animate-pulse" : ""} />
         </Button>
         <OAuthButtons mode="signup" />

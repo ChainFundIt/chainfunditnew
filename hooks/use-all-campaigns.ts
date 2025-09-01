@@ -123,20 +123,93 @@ export function useAllCampaigns() {
 
   // Update filters and reset campaigns
   const updateFilters = useCallback((newFilters: Partial<UseAllCampaignsFilters>) => {
-    setFilters(prev => ({ ...prev, ...newFilters, offset: 0 }));
+    setFilters(prev => {
+      const updatedFilters = { ...prev, ...newFilters, offset: 0 };
+      // Only update if there is a change
+      if (JSON.stringify(updatedFilters) !== JSON.stringify(prev)) {
+        return updatedFilters;
+      }
+      return prev;
+    });
   }, []);
 
   // Initial fetch
   useEffect(() => {
     fetchCampaigns(true);
+  }, []); // Only run once on mount
+
+  // Debug logging for filter changes
+  useEffect(() => {
+    console.log('Filters changed:', filters);
+  }, [filters]);
+
+  // Debug logging for fetchCampaigns calls
+  useEffect(() => {
+    console.log('fetchCampaigns called with reset:', true);
   }, [fetchCampaigns]);
 
-  // Fetch more when filters change
+  // Fetch more when offset changes - but don't depend on fetchCampaigns
   useEffect(() => {
-    if (filters.offset && filters.offset > 0) {
-      fetchCampaigns(false);
+    const currentOffset = filters.offset;
+    if (currentOffset && currentOffset > 0) {
+      // Use a local function to avoid dependency issues
+      const fetchMore = async () => {
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
+
+        abortControllerRef.current = new AbortController();
+        
+        try {
+          console.log('Fetching more campaigns with offset:', currentOffset);
+          setLoading(true);
+          setError(null);
+
+          // Build query parameters
+          const params = new URLSearchParams();
+          if (filters.status) params.append('status', filters.status);
+          if (filters.reason) params.append('reason', filters.reason);
+          params.append('limit', filters.limit?.toString() || '20');
+          params.append('offset', currentOffset.toString());
+
+          const url = `/api/campaigns?${params.toString()}`;
+          console.log('Fetching more from URL:', url);
+
+          const response = await fetch(url, {
+            signal: abortControllerRef.current.signal,
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to fetch campaigns: ${response.status}`);
+          }
+
+          const data = await response.json();
+          
+          if (!isMountedRef.current) return;
+
+          const campaignsData = data.data || [];
+          console.log('More campaigns data:', campaignsData);
+          
+          setCampaigns(prev => [...prev, ...campaignsData]);
+          setHasMore(campaignsData.length === (filters.limit || 20));
+          
+        } catch (err: any) {
+          if (err.name === 'AbortError') return;
+          
+          if (!isMountedRef.current) return;
+          
+          console.error('Error fetching more campaigns:', err);
+          setError(err.message || 'Failed to fetch more campaigns');
+        } finally {
+          if (isMountedRef.current) {
+            setLoading(false);
+          }
+        }
+      };
+
+      fetchMore();
     }
-  }, [filters.offset, fetchCampaigns]);
+  }, [filters.offset, filters.status, filters.reason, filters.limit]); // Only depend on filter values, not the function
 
   // Cleanup on unmount
   useEffect(() => {

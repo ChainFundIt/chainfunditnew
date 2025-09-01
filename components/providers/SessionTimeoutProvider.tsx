@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSessionTimeout } from '@/hooks/use-session-timeout';
+import { useAuth } from '@/hooks/use-auth';
 import SessionWarningModal from '@/components/auth/SessionWarningModal';
 import SessionTimeoutModal from '@/components/auth/SessionTimeoutModal';
 
@@ -18,6 +19,14 @@ const SessionTimeoutProvider: React.FC<SessionTimeoutProviderProps> = ({
   config = {},
 }) => {
   const [isClient, setIsClient] = useState(false);
+  const { user, logout } = useAuth();
+
+  // Call the hook before any conditional returns to follow React Hook rules
+  const sessionTimeoutData = useSessionTimeout({
+    ...config,
+    user,
+    logout,
+  });
 
   // Only render on client side to prevent SSR issues
   useEffect(() => {
@@ -31,9 +40,6 @@ const SessionTimeoutProvider: React.FC<SessionTimeoutProviderProps> = ({
 
   console.log('SessionTimeoutProvider: Starting component initialization');
   console.log('SessionTimeoutProvider: Config received:', config);
-  
-  // Call the hook directly without try-catch to avoid potential issues
-  const sessionTimeoutData = useSessionTimeout(config);
   
   console.log('SessionTimeoutProvider: useSessionTimeout called successfully:', sessionTimeoutData);
 

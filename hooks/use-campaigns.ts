@@ -147,7 +147,7 @@ export function useCampaigns() {
       if (currentFilters?.limit) params.append('limit', currentFilters.limit.toString());
       if (currentFilters?.offset) params.append('offset', currentFilters.offset.toString());
 
-      const url = `/api/campaigns?${params}`;
+      const url = `/api/dashboard/campaigns?${params}`;
       console.log('useCampaigns: fetchCampaigns - Fetching URL:', url);
 
       const response = await fetch(url, {
@@ -157,17 +157,14 @@ export function useCampaigns() {
         },
       });
       
-      console.log('useCampaigns: fetchCampaigns - Response status:', response.status);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('useCampaigns: fetchCampaigns - Response data:', data);
 
       if (data.success && isMountedRef.current) {
-        console.log('useCampaigns: fetchCampaigns - Setting campaigns:', data.data.length);
         setCampaigns(data.data);
         
         // Cache the result (5 minutes TTL)
@@ -176,8 +173,7 @@ export function useCampaigns() {
           timestamp: Date.now(),
           ttl: 5 * 60 * 1000
         });
-      } else if (isMountedRef.current) {
-        console.log('useCampaigns: fetchCampaigns - API error:', data.error);
+      } else if (isMountedRef.current) {  
         setError(data.error || 'Failed to load campaigns');
       }
     } catch (error) {
@@ -186,13 +182,12 @@ export function useCampaigns() {
         return;
       }
       
-      console.error('useCampaigns: fetchCampaigns - Error:', error);
+      console.error('Error:', error);
       if (isMountedRef.current) {
         setError('Failed to load campaigns');
       }
     } finally {
       if (isMountedRef.current) {
-        console.log('useCampaigns: fetchCampaigns - Setting loading to false');
         setLoading(false);
       }
     }
@@ -216,7 +211,7 @@ export function useCampaigns() {
         formData.append(key, value.toString());
       });
 
-      const response = await fetch('/api/campaigns', {
+      const response = await fetch('/api/dashboard/campaigns', {
         method: 'POST',
         body: formData,
       });
@@ -248,7 +243,7 @@ export function useCampaigns() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/campaigns/${campaignId}`, {
+      const response = await fetch(`//api/dashboard/campaigns/${campaignId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -285,7 +280,7 @@ export function useCampaigns() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/campaigns/${campaignId}`, {
+      const response = await fetch(`//api/dashboard/campaigns/${campaignId}`, {
         method: 'DELETE',
       });
 
@@ -352,7 +347,7 @@ export function useCampaign(campaignId: string) {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/campaigns/${campaignId}`);
+      const response = await fetch(`/api/dashboard/campaigns`);
       const data = await response.json();
 
       if (data.success) {
@@ -392,7 +387,7 @@ export function useCampaignUpdates(campaignId: string) {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/campaigns/${campaignId}/updates`);
+      const response = await fetch(`//api/dashboard/campaigns/${campaignId}/updates`);
       const data = await response.json();
 
       if (data.success) {
@@ -413,7 +408,7 @@ export function useCampaignUpdates(campaignId: string) {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/campaigns/${campaignId}/updates`, {
+      const response = await fetch(`//api/dashboard/campaigns/${campaignId}/updates`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -471,7 +466,7 @@ export function useCampaignComments(campaignId: string) {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/campaigns/${campaignId}/comments?page=${page}&limit=10`);
+      const response = await fetch(`//api/dashboard/campaigns/${campaignId}/comments?page=${page}&limit=10`);
       const data = await response.json();
 
       if (data.success) {
@@ -493,7 +488,7 @@ export function useCampaignComments(campaignId: string) {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/campaigns/${campaignId}/comments`, {
+      const response = await fetch(`//api/dashboard/campaigns/${campaignId}/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

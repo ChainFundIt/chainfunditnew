@@ -56,6 +56,7 @@ import Image from "next/image";
 import { useShortenLink } from "@/hooks/use-shorten-link";
 import { toast } from "sonner";
 import { Upload } from '@/components/ui/upload';
+import ClientToaster from "@/components/ui/client-toaster";
 
 const reasons = [
   { text: "Business", icon: <Briefcase /> },
@@ -1012,6 +1013,7 @@ export default function CreateCampaignPage() {
           </div>
         </div>
       )}
+      <ClientToaster />
     </div>
   );
 }

@@ -26,8 +26,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        {children}
-        <PerformanceMonitor />
+        <div className="app-root">
+          {children}
+          <PerformanceMonitor />
+        </div>
       </body>
     </html>
   );

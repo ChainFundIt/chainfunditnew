@@ -6,25 +6,43 @@ import { CampaignCard } from "@/components/campaign/CampaignCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Search, Filter, Grid3X3, List, Heart, Share2, Eye } from "lucide-react";
+import {
+  Search,
+  Filter,
+  Grid3X3,
+  List,
+  Heart,
+  Share2,
+  Eye,
+} from "lucide-react";
 import { toast } from "sonner";
+import ClientToaster from "@/components/ui/client-toaster";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const campaignReasons = [
-  "Medical Emergencies",
+  "Emergency",
   "Business",
-  "Memorials", 
-  "Events & Weddings",
+  "Memorials",
   "Education",
   "Sports",
-  "Charity"
+  "Religion",
+  "Family",
+  "Medical",
+  "Welfare",
+  "Charity",
+  "Community",
+  "Creative",
+  "Uncategorized",
 ];
 
-const campaignStatuses = [
-  "active",
-  "completed",
-  "paused",
-  "cancelled"
-];
+const campaignStatuses = ["active", "completed", "paused", "cancelled"];
 
 export default function AllCampaignsPage() {
   const [activeTab, setActiveTab] = useState("All");
@@ -32,64 +50,129 @@ export default function AllCampaignsPage() {
   const [selectedReason, setSelectedReason] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "amount" | "popular">("newest");
-  
-  const { campaigns, loading, error, fetchCampaigns, hasMore, loadMore } = useAllCampaigns();
+  const [sortBy, setSortBy] = useState<
+    "newest" | "oldest" | "amount" | "popular"
+  >("newest");
+  const [timeoutError, setTimeoutError] = useState(false);
+
+  const { campaigns, loading, error, fetchCampaigns, hasMore, loadMore } =
+    useAllCampaigns();
+
+  // Add timeout for loading
+  useEffect(() => {
+    if (loading) {
+      const timer = setTimeout(() => {
+        if (loading) {
+          setTimeoutError(true);
+          console.warn(
+            "Campaigns loading timeout - taking longer than expected"
+          );
+        }
+      }, 10000); // 10 seconds timeout
+
+      return () => clearTimeout(timer);
+    } else {
+      setTimeoutError(false);
+    }
+  }, [loading]);
 
   // Filter and sort campaigns
   const filteredCampaigns = useMemo(() => {
     let filtered = campaigns;
 
+    console.log("Starting filtering with:", {
+      totalCampaigns: campaigns.length,
+      searchQuery,
+      selectedReason,
+      selectedStatus,
+      activeTab,
+      sortBy,
+    });
+
     // Filter by search query
     if (searchQuery) {
-      filtered = filtered.filter(campaign =>
-        campaign.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        campaign.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        campaign.creatorName.toLowerCase().includes(searchQuery.toLowerCase())
+      filtered = filtered.filter(
+        (campaign) =>
+          campaign.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          campaign.description
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          campaign.creatorName.toLowerCase().includes(searchQuery.toLowerCase())
       );
+      console.log("After search filter:", filtered.length);
     }
 
     // Filter by reason
     if (selectedReason) {
-      filtered = filtered.filter(campaign => campaign.reason === selectedReason);
+      filtered = filtered.filter(
+        (campaign) => campaign.reason === selectedReason
+      );
+      console.log("After reason filter:", filtered.length);
     }
 
     // Filter by status
     if (selectedStatus) {
-      filtered = filtered.filter(campaign => campaign.status === selectedStatus);
+      filtered = filtered.filter(
+        (campaign) => campaign.status === selectedStatus
+      );
+      console.log("After status filter:", filtered.length);
     }
 
     // Filter by active tab
     if (activeTab === "Live") {
-      filtered = filtered.filter(campaign => campaign.status === "active");
+      filtered = filtered.filter((campaign) => campaign.status === "active");
+      console.log("After Live tab filter:", filtered.length);
     } else if (activeTab === "Completed") {
-      filtered = filtered.filter(campaign => campaign.status === "completed");
+      filtered = filtered.filter((campaign) => campaign.status === "completed");
+      console.log("After Completed tab filter:", filtered.length);
     } else if (activeTab === "Trending") {
       // Show campaigns with high engagement (you can customize this logic)
-      filtered = filtered.filter(campaign => 
-        campaign.status === "active" && 
-        (campaign.stats?.totalDonations || 0) > 10
+      filtered = filtered.filter(
+        (campaign) =>
+          campaign.status === "active" &&
+          (campaign.stats?.totalDonations || 0) > 10
       );
+      console.log("After Trending tab filter:", filtered.length);
     }
+
+    console.log("Final filtered campaigns:", filtered.length);
 
     // Sort campaigns
     switch (sortBy) {
       case "newest":
-        filtered = filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        filtered = filtered.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
         break;
       case "oldest":
-        filtered = filtered.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        filtered = filtered.sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
         break;
       case "amount":
-        filtered = filtered.sort((a, b) => (b.stats?.totalAmount || 0) - (a.stats?.totalAmount || 0));
+        filtered = filtered.sort(
+          (a, b) => (b.stats?.totalAmount || 0) - (a.stats?.totalAmount || 0)
+        );
         break;
       case "popular":
-        filtered = filtered.sort((a, b) => (b.stats?.totalDonations || 0) - (a.stats?.totalDonations || 0));
+        filtered = filtered.sort(
+          (a, b) =>
+            (b.stats?.totalDonations || 0) - (a.stats?.totalDonations || 0)
+        );
         break;
     }
 
     return filtered;
-  }, [campaigns, searchQuery, selectedReason, selectedStatus, activeTab, sortBy]);
+  }, [
+    campaigns,
+    searchQuery,
+    selectedReason,
+    selectedStatus,
+    activeTab,
+    sortBy,
+  ]);
 
   // Handle search with debouncing
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,23 +190,58 @@ export default function AllCampaignsPage() {
   // Handle errors
   useEffect(() => {
     if (error) {
-      toast.error("Failed to load campaigns. Please try again.");
+      console.error("Campaigns error:", error);
+      toast.error(`Failed to load campaigns: ${error}`);
     }
   }, [error]);
+
+  // Debug logging
+  useEffect(() => {
+    console.log("Campaigns state:", {
+      loading,
+      error,
+      campaignsCount: campaigns.length,
+      filteredCount: filteredCampaigns.length,
+      hasMore,
+      activeTab,
+      selectedReason,
+      selectedStatus,
+      sortBy,
+    });
+
+    // Log individual campaigns to see their structure
+    if (campaigns.length > 0) {
+      console.log("First campaign:", campaigns[0]);
+      console.log(
+        "All campaign statuses:",
+        campaigns.map((c) => ({ id: c.id, status: c.status, reason: c.reason }))
+      );
+    }
+  }, [
+    loading,
+    error,
+    campaigns.length,
+    filteredCampaigns.length,
+    hasMore,
+    activeTab,
+    selectedReason,
+    selectedStatus,
+    sortBy,
+  ]);
 
   const tabs = ["All", "Live", "Completed", "Trending"];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50">
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-r from-green-600 to-green-800 text-white py-16">
-        <div className="absolute inset-0 bg-black/20"></div>
+      <div className="relative bg-gradient-to-r from-green-600 to-[#104901] text-white py-16">
         <div className="relative container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-4">
             Discover Amazing Campaigns
           </h1>
-          <p className="text-xl md:text-2xl text-green-100 max-w-3xl mx-auto">
-            Support causes you care about and make a difference in people's lives
+          <p className="text-xl md:text-2xl text-white max-w-3xl mx-auto">
+            Support causes you care about and make a difference in people's
+            lives
           </p>
         </div>
       </div>
@@ -134,7 +252,10 @@ export default function AllCampaignsPage() {
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Search */}
             <div className="flex-1">
-              <Label htmlFor="search" className="text-sm font-medium text-gray-700 mb-2 block">
+              <Label
+                htmlFor="search"
+                className="text-sm font-medium text-gray-700 mb-2 block"
+              >
                 Search Campaigns
               </Label>
               <div className="relative">
@@ -151,56 +272,82 @@ export default function AllCampaignsPage() {
 
             {/* Reason Filter */}
             <div className="lg:w-48">
-              <Label htmlFor="reason" className="text-sm font-medium text-gray-700 mb-2 block">
+              <Label
+                htmlFor="reason"
+                className="text-sm font-medium text-gray-700 mb-2 block"
+              >
                 Category
               </Label>
-              <select
-                id="reason"
+              <Select
                 value={selectedReason}
-                onChange={(e) => setSelectedReason(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                onValueChange={(value) => setSelectedReason(value)}
               >
-                <option value="">All Categories</option>
-                {campaignReasons.map((reason) => (
-                  <option key={reason} value={reason}>{reason}</option>
-                ))}
-              </select>
+                <SelectTrigger className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {campaignReasons.map((reason) => (
+                      <SelectItem key={reason} value={reason}>
+                        {reason}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Status Filter */}
             <div className="lg:w-48">
-              <Label htmlFor="status" className="text-sm font-medium text-gray-700 mb-2 block">
+              <Label
+                htmlFor="status"
+                className="text-sm font-medium text-gray-700 mb-2 block"
+              >
                 Status
               </Label>
-              <select
-                id="status"
+              <Select
                 value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                onValueChange={(value) => setSelectedStatus(value)}
               >
-                <option value="">All Statuses</option>
-                {campaignStatuses.map((status) => (
-                  <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>
-                ))}
-              </select>
+                <SelectTrigger className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {campaignStatuses.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Sort */}
             <div className="lg:w-48">
-              <Label htmlFor="sort" className="text-sm font-medium text-gray-700 mb-2 block">
+              <Label
+                htmlFor="sort"
+                className="text-sm font-medium text-gray-700 mb-2 block"
+              >
                 Sort By
               </Label>
-              <select
-                id="sort"
+              <Select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                onValueChange={(value) => setSortBy(value as any)}
               >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-                <option value="amount">Highest Amount</option>
-                <option value="popular">Most Popular</option>
-              </select>
+                <SelectTrigger className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="newest">Newest First</SelectItem>
+                    <SelectItem value="oldest">Oldest First</SelectItem>
+                    <SelectItem value="amount">Highest Amount</SelectItem>
+                    <SelectItem value="popular">Most Popular</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -227,7 +374,7 @@ export default function AllCampaignsPage() {
                 onClick={() => setActiveTab(tab)}
                 className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
                   activeTab === tab
-                    ? "bg-green-600 text-white shadow-lg"
+                    ? "bg-[#104901] text-white shadow-lg"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
@@ -241,15 +388,18 @@ export default function AllCampaignsPage() {
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-4">
             <span className="text-gray-600">
-              {filteredCampaigns.length} campaign{filteredCampaigns.length !== 1 ? 's' : ''} found
+              {filteredCampaigns.length} campaign
+              {filteredCampaigns.length !== 1 ? "s" : ""} found
             </span>
           </div>
-          
+
           <div className="flex items-center gap-2 bg-white rounded-lg p-1 shadow-sm">
             <button
               onClick={() => setViewMode("grid")}
               className={`p-2 rounded-md transition-colors ${
-                viewMode === "grid" ? "bg-green-100 text-green-600" : "text-gray-400 hover:text-gray-600"
+                viewMode === "grid"
+                  ? "bg-[#5F8555] text-white"
+                  : "text-[#104901]"
               }`}
             >
               <Grid3X3 className="h-5 w-5" />
@@ -257,7 +407,9 @@ export default function AllCampaignsPage() {
             <button
               onClick={() => setViewMode("list")}
               className={`p-2 rounded-md transition-colors ${
-                viewMode === "list" ? "bg-green-100 text-green-600" : "text-gray-400 hover:text-gray-600"
+                viewMode === "list"
+                  ? "bg-[#5F8555] text-white"
+                  : "text-[#104901]"
               }`}
             >
               <List className="h-5 w-5" />
@@ -267,26 +419,57 @@ export default function AllCampaignsPage() {
 
         {/* Campaigns Grid/List */}
         {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+          <div className="flex flex-col justify-center items-center py-20">
+            {timeoutError ? (
+              <>
+                <div className="text-orange-500 mb-4">
+                  <Search className="h-16 w-16 mx-auto" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-600 mb-2">
+                  Loading is taking longer than expected
+                </h3>
+                <p className="text-gray-500 mb-4">
+                  This might be due to a slow database connection or network
+                  issue
+                </p>
+                <Button
+                  onClick={() => {
+                    setTimeoutError(false);
+                    fetchCampaigns();
+                  }}
+                  className="bg-[#5F8555] hover:bg-[#104901] text-white"
+                >
+                  Retry Loading
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5F8555] mb-4"></div>
+                <p className="text-gray-600">Loading campaigns...</p>
+              </>
+            )}
           </div>
         ) : filteredCampaigns.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-gray-400 mb-4">
               <Search className="h-16 w-16 mx-auto" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">No campaigns found</h3>
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">
+              No campaigns found
+            </h3>
             <p className="text-gray-500">
               Try adjusting your search criteria or filters
             </p>
           </div>
         ) : (
           <>
-            <div className={`${
-              viewMode === "grid" 
-                ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-                : "space-y-4"
-            }`}>
+            <div
+              className={`${
+                viewMode === "grid"
+                  ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                  : "space-y-4"
+              }`}
+            >
               {filteredCampaigns.map((campaign) => (
                 <CampaignCard
                   key={campaign.id}
@@ -301,7 +484,7 @@ export default function AllCampaignsPage() {
               <div className="text-center mt-8">
                 <Button
                   onClick={loadMore}
-                  className="bg-green-600 hover:bg-green-700 text-white px-8 py-3"
+                  className="bg-[#5F8555] hover:bg-[#104901] text-white px-8 py-3"
                 >
                   Load More Campaigns
                 </Button>
@@ -310,6 +493,7 @@ export default function AllCampaignsPage() {
           </>
         )}
       </div>
+      <ClientToaster />
     </div>
   );
 }

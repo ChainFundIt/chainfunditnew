@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getUserFromRequest } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { donations } from '@/lib/schema/donations';
 import { campaigns } from '@/lib/schema/campaigns';
@@ -39,9 +39,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get authenticated user
-    const userPayload = await auth.api.getSession({ headers: request.headers });
-    if (!userPayload?.user?.email) {
+    // Get authenticated user using the same method as other APIs
+    const userEmail = await getUserFromRequest(request);
+    if (!userEmail) {
       return NextResponse.json(
         { success: false, error: 'Not authenticated' },
         { status: 401 }
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     const user = await db
       .select()
       .from(users)
-      .where(eq(users.email, userPayload.user.email))
+      .where(eq(users.email, userEmail))
       .limit(1);
 
     if (!user.length) {

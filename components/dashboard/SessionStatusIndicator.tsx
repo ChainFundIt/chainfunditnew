@@ -5,7 +5,14 @@ import { Clock, Shield, AlertTriangle } from 'lucide-react';
 import { useSessionTimeout } from '@/hooks/use-session-timeout';
 
 const SessionStatusIndicator: React.FC = () => {
-  const { timeRemaining, showWarningModal } = useSessionTimeout();
+  // Set this to false to disable session timeout entirely
+  const SESSION_TIMEOUT_ENABLED = true;
+  
+  const { timeRemaining, showWarningModal } = useSessionTimeout({
+    timeoutMinutes: 120, // 2 hours
+    warningMinutes: 15, // 15 minutes warning
+    enabled: SESSION_TIMEOUT_ENABLED,
+  });
   const [showDetails, setShowDetails] = useState(false);
 
   const formatTime = (seconds: number): string => {
@@ -78,7 +85,10 @@ const SessionStatusIndicator: React.FC = () => {
             <div className="pt-2 border-t border-gray-100">
               <p className="text-xs text-gray-500 leading-relaxed">
                 💡 <strong>Tip:</strong> Move your mouse or click anywhere to extend your session. 
-                Sessions automatically expire after 30 minutes of inactivity.
+                Sessions automatically expire after 2 hours of inactivity.
+                {!SESSION_TIMEOUT_ENABLED && (
+                  <span className="text-green-600 font-medium"> Session timeout is currently disabled.</span>
+                )}
               </p>
             </div>
           </div>

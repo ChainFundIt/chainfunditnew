@@ -255,7 +255,7 @@ const CardDetailsDrawer: React.FC<CardDetailsDrawerProps> = ({
               </ul>
             </div>
             <Link href={`/campaign/${card?.id}`}>
-              <Button className="w-full h-20 flex justify-between font-semibold text-2xl">
+              <Button className="w-[500px] h-20 flex justify-between font-semibold text-2xl">
                 Donate
                 <ArrowRight size={32} />
               </Button>
