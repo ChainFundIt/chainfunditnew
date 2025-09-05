@@ -141,7 +141,7 @@ const layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="w-full flex gap-5 md:p-5 p-2 font-source min-h-screen overflow-y-hidden max-w-[1440px] mx-auto">
       <div
-        className="w-full md:w-2/5 flex flex-col gap-5 justify-between items-center"
+        className="w-full md:w-2/5 flex flex-col justify-between items-center"
         style={{
           background:
             "linear-gradient(180deg, #F2F1E9 80%, #FFF 85%, #F2F1E9 100%)",

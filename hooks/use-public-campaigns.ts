@@ -45,7 +45,7 @@ export function usePublicCampaigns() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<PublicCampaignFilters>({ 
-    limit: 3, 
+    limit: 5, 
     offset: 0 
   });
 

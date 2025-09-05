@@ -165,7 +165,7 @@ export default function CampaignsPage() {
             {activeTab === "Past" && <PastCampaigns campaigns={filteredCampaigns} />}
             {activeTab === "Chains" && <Chains campaigns={filteredCampaigns} />}
             {activeTab === "Favourites" && <Favourites campaigns={filteredCampaigns} />}
-            {activeTab === "Comments" && <Comments />}
+            {activeTab === "Comments" && <Comments campaigns={userCampaigns} />}
           </div>
         )}
       </div>
