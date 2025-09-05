@@ -227,7 +227,7 @@ const Main = (props: Props) => {
                   className="group relative overflow-hidden rounded-2xl hover:shadow-2xl transition-all duration-500 cursor-pointer"
                   onClick={() => setOpenCard(idx)}
                 >
-                  <div className="relative h-[400px] bg-white/90 backdrop-blur-sm rounded-2xl overflow-hidden">
+                  <div className="relative h-[500px] bg-white/90 backdrop-blur-sm rounded-2xl overflow-hidden">
                     <div className="relative h-[200px] bg-gradient-to-br from-gray-100 to-gray-200">
                       <Image
                         src={card.image}
