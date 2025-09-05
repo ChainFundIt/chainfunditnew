@@ -7,7 +7,6 @@ import Chains from "./chains";
 import Favourites from "./favourites";
 import Comments from "./comments";
 import { useAuth } from "@/hooks/use-auth";
-import { useCampaigns } from "@/hooks/use-campaigns";
 import { Campaign } from "./types";
 import { isLiveCampaign, isPastCampaign } from "@/lib/utils/campaign-status";
 
@@ -16,7 +15,8 @@ const tabs = ["Live", "Past", "Chains", "Favourites", "Comments"];
 export default function CampaignsPage() {
   const [activeTab, setActiveTab] = useState("Live");
   const { user, loading: authLoading } = useAuth();
-  const { campaigns, loading: campaignsLoading, error: campaignsError } = useCampaigns();
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [campaignsLoading, setCampaignsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Filter campaigns to only show those created by the current user
@@ -51,6 +51,7 @@ export default function CampaignsPage() {
     if (!user?.id) return;
     
     try {
+      setCampaignsLoading(true);
       setError(null);
       
       const params = new URLSearchParams();
@@ -61,7 +62,7 @@ export default function CampaignsPage() {
       const data = await response.json();
       
       if (data.success) {
-        useCampaigns();
+        setCampaigns(data.campaigns || []);
       } else {
         setError(data.error || 'Failed to load campaigns');
       }
@@ -69,6 +70,7 @@ export default function CampaignsPage() {
       console.error('Error fetching campaigns:', error);
       setError('Failed to load campaigns');
     } finally {
+      setCampaignsLoading(false);
     }
   };
 
