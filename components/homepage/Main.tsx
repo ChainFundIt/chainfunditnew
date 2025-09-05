@@ -30,6 +30,7 @@ const Main = (props: Props) => {
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [openCard, setOpenCard] = useState<number | null>(null);
+  const [selectedFilter, setSelectedFilter] = useState<string>("live campaigns");
   
   // Fetch public campaigns
   const { campaigns, loading: campaignsLoading, error: campaignsError, updateFilters } = usePublicCampaigns();
@@ -46,8 +47,24 @@ const Main = (props: Props) => {
     }
   };
 
+  // Filter campaigns based on selected filter
+  const filteredCampaigns = campaigns.filter(campaign => {
+    const progressPercentage = campaign.stats.progressPercentage;
+    
+    switch (selectedFilter) {
+      case "live campaigns":
+        return campaign.status === 'active';
+      case "need momentum":
+        return campaign.status === 'active' && progressPercentage >= 0 && progressPercentage <= 10;
+      case "close to target":
+        return campaign.status === 'active' && progressPercentage >= 90;
+      default:
+        return true;
+    }
+  });
+
   // Transform campaigns data to match the expected format
-  const cardDetails = campaigns.map(campaign => {
+  const cardDetails = filteredCampaigns.map(campaign => {
     console.log('Campaign currency:', campaign.currency, 'Amount:', campaign.currentAmount);
     return {
       id: campaign.id,
@@ -104,19 +121,19 @@ const Main = (props: Props) => {
                 value="live campaigns"
                 className="capitalize cursor-pointer"
               >
-                live campaigns anywhere (worldwide)
+                Live campaigns anywhere (worldwide)
               </SelectItem>
               <SelectItem
                 value="need momentum"
                 className="capitalize cursor-pointer"
               >
-                need momentum (campaigns between 0-10%)
+                Need momentum (campaigns between 0-10%)
               </SelectItem>
               <SelectItem
                 value="close to target"
                 className="capitalize cursor-pointer"
               >
-                close to target (campaigns above 90%)
+                Close to target (campaigns above 90%)
               </SelectItem>
             </SelectContent>
           </Select>
