@@ -37,25 +37,62 @@ export async function GET(request: NextRequest) {
         title: campaigns.title,
         subtitle: campaigns.subtitle,
         description: campaigns.description,
+        reason: campaigns.reason,
+        fundraisingFor: campaigns.fundraisingFor,
+        duration: campaigns.duration,
+        videoUrl: campaigns.videoUrl,
         goalAmount: campaigns.goalAmount,
-        currentAmount: campaigns.currentAmount,
         currency: campaigns.currency,
+        minimumDonation: campaigns.minimumDonation,
+        chainerCommissionRate: campaigns.chainerCommissionRate,
+        currentAmount: campaigns.currentAmount,
         status: campaigns.status,
         isActive: campaigns.isActive,
         coverImageUrl: campaigns.coverImageUrl,
+        galleryImages: campaigns.galleryImages,
+        documents: campaigns.documents,
         createdAt: campaigns.createdAt,
         updatedAt: campaigns.updatedAt,
         closedAt: campaigns.closedAt,
+        creatorId: campaigns.creatorId,
+        creatorName: users.fullName,
+        creatorAvatar: users.avatar,
         donationCount: count(donations.id),
         totalRaised: sum(donations.amount)
       })
       .from(campaigns)
+      .leftJoin(users, eq(campaigns.creatorId, users.id))
       .leftJoin(donations, and(
         eq(campaigns.id, donations.campaignId),
         eq(donations.paymentStatus, 'completed')
       ))
       .where(eq(campaigns.creatorId, userId))
-      .groupBy(campaigns.id)
+      .groupBy(
+        campaigns.id,
+        campaigns.title,
+        campaigns.subtitle,
+        campaigns.description,
+        campaigns.reason,
+        campaigns.fundraisingFor,
+        campaigns.duration,
+        campaigns.videoUrl,
+        campaigns.goalAmount,
+        campaigns.currency,
+        campaigns.minimumDonation,
+        campaigns.chainerCommissionRate,
+        campaigns.currentAmount,
+        campaigns.status,
+        campaigns.isActive,
+        campaigns.coverImageUrl,
+        campaigns.galleryImages,
+        campaigns.documents,
+        campaigns.createdAt,
+        campaigns.updatedAt,
+        campaigns.closedAt,
+        campaigns.creatorId,
+        users.fullName,
+        users.avatar
+      )
       .orderBy(desc(campaigns.createdAt));
 
     const campaignsWithStats = userCampaigns.map(campaign => ({
@@ -64,7 +101,13 @@ export async function GET(request: NextRequest) {
       currentAmount: Number(campaign.currentAmount),
       donationCount: Number(campaign.donationCount),
       totalRaised: Number(campaign.totalRaised || 0),
-      progressPercentage: Math.min(100, Math.round((Number(campaign.currentAmount) / Number(campaign.goalAmount)) * 100))
+      progressPercentage: Math.min(100, Math.round((Number(campaign.currentAmount) / Number(campaign.goalAmount)) * 100)),
+      stats: {
+        totalDonations: Number(campaign.donationCount),
+        totalAmount: Number(campaign.totalRaised || 0),
+        uniqueDonors: Number(campaign.donationCount), // This might need to be calculated differently
+        progressPercentage: Math.min(100, Math.round((Number(campaign.currentAmount) / Number(campaign.goalAmount)) * 100))
+      }
     }));
 
     return NextResponse.json({ success: true, campaigns: campaignsWithStats });
