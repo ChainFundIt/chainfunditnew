@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
     const campaignIds = userCampaigns.map(c => c.id);
     let totalDonations = 0;
     let totalDonors = 0;
+    let primaryCurrency = 'USD'; // Default fallback
 
     if (campaignIds.length > 0) {
       const donationsResult = await db
@@ -52,6 +53,24 @@ export async function GET(request: NextRequest) {
 
       totalDonations = Number(donationsResult[0]?.totalAmount || 0);
       totalDonors = Number(donationsResult[0]?.donorCount || 0);
+
+      // Get the most common currency from donations
+      const currencyResult = await db
+        .select({
+          currency: donations.currency,
+          count: count(donations.currency)
+        })
+        .from(donations)
+        .where(and(
+          inArray(donations.campaignId, campaignIds),
+          eq(donations.paymentStatus, 'completed')
+        ))
+        .groupBy(donations.currency)
+        .orderBy(desc(count(donations.currency)));
+
+      if (currencyResult.length > 0) {
+        primaryCurrency = currencyResult[0].currency;
+      }
     }
 
     // Get user's chaining activity
@@ -110,10 +129,12 @@ export async function GET(request: NextRequest) {
       totalDonors: totalDonors,
       totalChained: Number(chainerStats[0]?.totalChained || 0),
       totalEarnings: Number(chainerStats[0]?.totalEarnings || 0),
+      primaryCurrency: primaryCurrency,
       recentDonations: recentDonations.map(d => ({
         ...d,
         amount: Number(d.amount),
-        donorName: d.isAnonymous ? 'Anonymous' : d.donorName
+        donorName: d.isAnonymous ? 'Anonymous' : d.donorName,
+        donorAvatar: d.isAnonymous ? null : d.donorAvatar
       }))
     };
 

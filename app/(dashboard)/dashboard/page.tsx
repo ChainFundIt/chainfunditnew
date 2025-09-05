@@ -29,12 +29,14 @@ interface DashboardStats {
   totalDonors: number;
   totalChained: number;
   totalEarnings: number;
+  primaryCurrency: string;
   recentDonations: Array<{
     id: string;
     amount: number;
     currency: string;
     message: string;
     donorName: string;
+    donorAvatar: string | null;
     campaignTitle: string;
     createdAt: string;
   }>;
@@ -307,7 +309,7 @@ export default function DashboardPage() {
                       Total Donations
                     </p>
                     <p className="text-3xl font-bold text-[#104901]">
-                      {formatCurrency(stats.totalDonations, "USD")}
+                      {formatCurrency(stats.totalDonations, stats.primaryCurrency)}
                     </p>
                   </div>
                   <div className="p-3 bg-gradient-to-br from-[#104901] to-green-500 rounded-xl">
@@ -489,10 +491,22 @@ export default function DashboardPage() {
                           <div className="flex items-center space-x-4">
                             <div className="relative">
                               <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-[#104901] rounded-full blur opacity-20"></div>
-                              <div className="relative w-12 h-12 bg-gradient-to-r from-green-600 to-[#104901] rounded-full flex items-center justify-center">
-                                <span className="text-white font-bold text-lg">
-                                  {donation.donorName.charAt(0).toUpperCase()}
-                                </span>
+                              <div className="relative w-12 h-12 rounded-full overflow-hidden">
+                                {donation.donorAvatar ? (
+                                  <Image
+                                    src={donation.donorAvatar}
+                                    alt={donation.donorName}
+                                    width={48}
+                                    height={48}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-gradient-to-r from-green-600 to-[#104901] flex items-center justify-center">
+                                    <span className="text-white font-bold text-lg">
+                                      {donation.donorName.charAt(0).toUpperCase()}
+                                    </span>
+                                  </div>
+                                )}
                               </div>
                             </div>
                             <div>

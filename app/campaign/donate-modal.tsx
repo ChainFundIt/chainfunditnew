@@ -14,6 +14,7 @@ import {
   ArrowRight,
   CreditCard,
   Smartphone,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,6 +58,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
   const [paymentProvider, setPaymentProvider] = useState<PaymentProvider>("stripe");
   const [supportedProviders, setSupportedProviders] = useState<PaymentProvider[]>([]);
   const [testMode, setTestMode] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   
   const { loading: donationLoading, error: donationError, processTestDonation, processDonation } = useDonations();
 
@@ -155,7 +157,89 @@ const DonateModal: React.FC<DonateModalProps> = ({
     setAnonymous(false);
     setComments("");
     setTestMode(false);
+    setLinkCopied(false);
     onOpenChange(false);
+  };
+
+  const handleViewDashboard = () => {
+    // Navigate to user's dashboard
+    window.open('/dashboard', '_blank');
+  };
+
+  const handleCopyLink = async () => {
+    if (!campaign) return;
+    
+    const campaignUrl = campaign.shortUrl 
+      ? `https://chainfundit.com/c/${campaign.shortUrl}`
+      : `https://chainfundit.com/campaign/${campaign.id}`;
+    
+    try {
+      await navigator.clipboard.writeText(campaignUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy link:', err);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = campaignUrl;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    }
+  };
+
+  const generateShareUrl = (platform: string) => {
+    if (!campaign) return '#';
+    
+    const campaignUrl = campaign.shortUrl 
+      ? `https://chainfundit.com/c/${campaign.shortUrl}`
+      : `https://chainfundit.com/campaign/${campaign.id}`;
+    
+    const shareText = `I just donated ${selectedCurrency} ${amount} to "${campaign.title}"! Help support this cause: `;
+    
+    const encodedUrl = encodeURIComponent(campaignUrl);
+    const encodedText = encodeURIComponent(shareText);
+    
+    switch (platform) {
+      case 'facebook':
+        return `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`;
+      case 'twitter':
+        return `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`;
+      case 'linkedin':
+        return `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+      case 'instagram':
+        // Instagram doesn't support direct URL sharing, so we'll copy the text
+        return '#';
+      default:
+        return '#';
+    }
+  };
+
+  const handleInstagramShare = () => {
+    if (!campaign) return;
+    
+    const campaignUrl = campaign.shortUrl 
+      ? `https://chainfundit.com/c/${campaign.shortUrl}`
+      : `https://chainfundit.com/campaign/${campaign.id}`;
+    
+    const shareText = `I just donated ${selectedCurrency} ${amount} to "${campaign.title}"! Help support this cause: ${campaignUrl}`;
+    
+    // Copy text for Instagram (since Instagram doesn't support direct URL sharing)
+    navigator.clipboard.writeText(shareText).then(() => {
+      alert('Share text copied! Paste it in your Instagram story or post.');
+    }).catch(() => {
+      // Fallback
+      const textArea = document.createElement('textarea');
+      textArea.value = shareText;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('Share text copied! Paste it in your Instagram story or post.');
+    });
   };
 
   if (!open) return null;
@@ -503,8 +587,34 @@ const DonateModal: React.FC<DonateModalProps> = ({
                 <span className="text-2xl font-medium text-[#104901]">
                   View on your Dashboard
                 </span>
-                <Button className="w-[185px] h-16 flex justify-between items-center font-medium text-2xl">
+                <Button 
+                  onClick={handleViewDashboard}
+                  className="w-[185px] h-16 flex justify-between items-center font-medium text-2xl bg-[#104901] hover:bg-[#0d3d01] text-white"
+                >
                   View <Send className="ml-2" size={16} />
+                </Button>
+              </div>
+
+              {/* Copy Campaign Link */}
+              <div className="flex items-center justify-between">
+                <span className="text-2xl font-medium text-[#104901]">
+                  Copy Campaign Link
+                </span>
+                <Button 
+                  onClick={handleCopyLink}
+                  className="w-[185px] h-16 flex justify-between items-center font-medium text-2xl bg-[#5F8555] hover:bg-[#4a6b42] text-white"
+                >
+                  {linkCopied ? (
+                    <>
+                      <Check className="mr-2" size={16} />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="mr-2" size={16} />
+                      Copy Link
+                    </>
+                  )}
                 </Button>
               </div>
 
@@ -515,30 +625,43 @@ const DonateModal: React.FC<DonateModalProps> = ({
                 </span>
                 <div className="flex space-x-3">
                   <Link
-                    href="https://www.facebook.com/sharer/sharer.php?u=https://www.google.com"
+                    href={generateShareUrl('facebook')}
                     target="_blank"
+                    className="hover:opacity-80 transition-opacity"
                   >
-                    <Facebook strokeWidth={1.5} size={32} />
+                    <Facebook strokeWidth={1.5} size={32} className="text-blue-600" />
+                  </Link>
+                  <button
+                    onClick={handleInstagramShare}
+                    className="hover:opacity-80 transition-opacity"
+                  >
+                    <Instagram strokeWidth={1.5} size={32} className="text-pink-600" />
+                  </button>
+                  <Link
+                    href={generateShareUrl('twitter')}
+                    target="_blank"
+                    className="hover:opacity-80 transition-opacity"
+                  >
+                    <Twitter strokeWidth={1.5} size={32} className="text-blue-400" />
                   </Link>
                   <Link
-                    href="https://www.instagram.com/sharer/sharer.php?u=https://www.google.com"
+                    href={generateShareUrl('linkedin')}
                     target="_blank"
+                    className="hover:opacity-80 transition-opacity"
                   >
-                    <Instagram strokeWidth={1.5} size={32} />
-                  </Link>
-                  <Link
-                    href="https://www.twitter.com/sharer/sharer.php?u=https://www.google.com"
-                    target="_blank"
-                  >
-                    <Twitter strokeWidth={1.5} size={32} />
-                  </Link>
-                  <Link
-                    href="https://www.linkedin.com/sharer/sharer.php?u=https://www.google.com"
-                    target="_blank"
-                  >
-                    <Linkedin strokeWidth={1.5} size={32} />
+                    <Linkedin strokeWidth={1.5} size={32} className="text-blue-700" />
                   </Link>
                 </div>
+              </div>
+
+              {/* Close Button */}
+              <div className="flex justify-center pt-4">
+                <Button
+                  onClick={handleClose}
+                  className="w-[200px] h-12 bg-[#104901] hover:bg-[#0d3d01] text-white font-medium text-lg"
+                >
+                  Close
+                </Button>
               </div>
             </div>
           )}

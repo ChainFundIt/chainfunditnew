@@ -100,6 +100,42 @@ export function useDonations() {
     }
   };
 
+  const simulatePaymentStatus = async (
+    donationId: string,
+    status: 'completed' | 'failed' | 'pending'
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch('/api/payments/simulate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          donationId,
+          status,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        setError(result.error);
+        return { success: false, error: result.error };
+      }
+
+      return { success: true };
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to simulate payment status';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const processDonation = async (donationData: DonationData): Promise<DonationResult> => {
     const result = await initializeDonation(donationData);
     
@@ -143,6 +179,7 @@ export function useDonations() {
     error,
     initializeDonation,
     simulatePayment,
+    simulatePaymentStatus,
     processDonation,
     processTestDonation,
   };

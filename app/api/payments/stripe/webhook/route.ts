@@ -1,8 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { donations } from '@/lib/schema/donations';
-import { eq } from 'drizzle-orm';
+import { campaigns } from '@/lib/schema/campaigns';
+import { eq, sum, and } from 'drizzle-orm';
 import { handleStripeWebhook } from '@/lib/payments/stripe';
+
+// Helper function to update campaign currentAmount based on completed donations
+async function updateCampaignAmount(campaignId: string) {
+  try {
+    // Calculate total amount from completed donations
+    const donationStats = await db
+      .select({
+        totalAmount: sum(donations.amount),
+      })
+      .from(donations)
+      .where(and(
+        eq(donations.campaignId, campaignId),
+        eq(donations.paymentStatus, 'completed')
+      ));
+
+    const totalAmount = Number(donationStats[0]?.totalAmount || 0);
+
+    // Update campaign currentAmount
+    await db
+      .update(campaigns)
+      .set({
+        currentAmount: totalAmount.toString(),
+        updatedAt: new Date(),
+      })
+      .where(eq(campaigns.id, campaignId));
+
+    console.log(`Updated campaign ${campaignId} currentAmount to ${totalAmount}`);
+  } catch (error) {
+    console.error('Error updating campaign amount:', error);
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,6 +82,18 @@ async function handlePaymentSuccess(paymentIntent: any) {
       return;
     }
 
+    // Get donation to get campaignId
+    const donation = await db
+      .select({ campaignId: donations.campaignId })
+      .from(donations)
+      .where(eq(donations.id, donationId))
+      .limit(1);
+
+    if (!donation.length) {
+      console.error('Donation not found:', donationId);
+      return;
+    }
+
     await db
       .update(donations)
       .set({
@@ -57,6 +101,9 @@ async function handlePaymentSuccess(paymentIntent: any) {
         processedAt: new Date(),
       })
       .where(eq(donations.id, donationId));
+
+    // Update campaign currentAmount
+    await updateCampaignAmount(donation[0].campaignId);
 
     console.log(`Payment completed for donation: ${donationId}`);
   } catch (error) {
