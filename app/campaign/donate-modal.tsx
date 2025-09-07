@@ -104,7 +104,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
     const minAmount = parseFloat(campaign.minimumDonation);
 
     if (amountNum < minAmount) {
-      alert(`Minimum donation amount is ${campaign.currency} ${minAmount}`);
+      alert(`Minimum donation amount is ${selectedCurrency} ${minAmount}`);
       return;
     }
 

@@ -142,36 +142,38 @@ export default function DashboardPage() {
   const formatCurrency = (amount: number, currency: string) => {
     const currencyMap: Record<string, string> = {
       // ISO Codes
-      USD: "USD",
-      GBP: "GBP",
-      NGN: "NGN",
-      EUR: "EUR",
-      CAD: "CAD",
+      USD: "$",
+      GBP: "£",
+      NGN: "₦",
+      EUR: "€",
+      CAD: "C$",
 
       // Names
-      "BRITISH POUND": "GBP",
-      "US DOLLAR": "USD",
-      NAIRA: "NGN",
-      EURO: "EUR",
-      "CANADIAN DOLLAR": "CAD",
-      POUND: "GBP",
+      "BRITISH POUND": "£",
+      "US DOLLAR": "$",
+      NAIRA: "₦",
+      EURO: "€",
+      "CANADIAN DOLLAR": "C$",
+      POUND: "£",
 
       // Symbols
-      "£": "GBP",
-      $: "USD",
-      "₦": "NGN",
-      "€": "EUR",
-      C$: "CAD",
+      "£": "£",
+      $: "$",
+      "₦": "₦",
+      "€": "€",
+      C$: "C$",
     };
 
     const normalizedCurrency = (currency || "").trim().toUpperCase();
+    const symbol = currencyMap[normalizedCurrency] || "$";
 
-    const code = currencyMap[normalizedCurrency] || "USD";
-
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: code,
+    // Format the number with commas and add the currency symbol
+    const formattedAmount = new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(amount);
+
+    return `${symbol}${formattedAmount}`;
   };
 
   const formatDate = (dateString: string) => {
@@ -270,7 +272,7 @@ export default function DashboardPage() {
                     <p className="text-xs font-medium text-[#104901] opacity-80">
                       Total Campaigns
                     </p>
-                    <p className="text-3xl font-bold text-[#104901]">
+                    <p className="text-2xl font-bold text-[#104901]">
                       {stats.totalCampaigns}
                     </p>
                   </div>
@@ -289,7 +291,7 @@ export default function DashboardPage() {
                     <p className="text-xs font-medium text-[#104901] opacity-80">
                       Active Campaigns
                     </p>
-                    <p className="text-3xl font-bold text-[#104901]">
+                    <p className="text-2xl font-bold text-[#104901]">
                       {stats.activeCampaigns}
                     </p>
                   </div>
@@ -308,7 +310,7 @@ export default function DashboardPage() {
                     <p className="text-xs font-medium text-[#104901] opacity-80">
                       Total Donations
                     </p>
-                    <p className="text-3xl font-bold text-[#104901]">
+                    <p className="text-2xl font-bold text-[#104901] break-words">
                       {formatCurrency(stats.totalDonations, stats.primaryCurrency)}
                     </p>
                   </div>
@@ -327,7 +329,7 @@ export default function DashboardPage() {
                     <p className="text-xs font-medium text-[#104901] opacity-80">
                       Total Donors
                     </p>
-                    <p className="text-3xl font-bold text-[#104901]">
+                    <p className="text-2xl font-bold text-[#104901]">
                       {stats.totalDonors}
                     </p>
                   </div>
