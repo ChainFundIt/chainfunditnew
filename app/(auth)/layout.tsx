@@ -30,7 +30,7 @@ const CarouselSlide = React.memo(({ item, index, isActive }: {
   index: number; 
   isActive: boolean; 
 }) => (
-  <div className="embla__slide flex-[0_0_100%] relative h-screen overflow-hidden">
+  <div className="embla__slide flex-[0_0_100%] relative h-full overflow-hidden">
     <Image
       src={item.image}
       alt={`Carousel slide ${index + 1}`}
@@ -75,7 +75,7 @@ function Carousel() {
 
   return (
     <div
-      className="w-full h-screen overflow-y-auto"
+      className="w-full h-full overflow-hidden"
       onMouseEnter={() => setIsPlaying(false)}
       onMouseLeave={() => setIsPlaying(true)}
     >
@@ -139,7 +139,7 @@ function Carousel() {
 
 const layout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="w-full flex gap-5 md:p-5 p-2 font-source min-h-screen overflow-y-hidden max-w-[1440px] mx-auto">
+    <div className="w-full flex gap-5 md:p-5 p-2 font-source h-screen overflow-hidden max-w-[1440px] mx-auto">
       <div
         className="w-full md:w-2/5 flex flex-col justify-between items-center"
         style={{
@@ -151,7 +151,7 @@ const layout = ({ children }: { children: React.ReactNode }) => {
         <ClientToaster />
 
         {/* lower section */}
-        <div className="flex flex-col md:flex-row gap-2 md:gap-4 items-center px-2 py-6 md:py-8 mt-6 md:mt-10 w-full">
+        <div className="flex flex-col md:flex-row gap-2 md:gap-4 items-center px-2 w-full">
           <ul className="flex items-center mb-2 md:mb-0">
             <li className="w-10 h-10 rounded-full border-2 border-[#104901]">
               <Image

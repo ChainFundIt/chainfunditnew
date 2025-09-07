@@ -6,7 +6,7 @@ import Image from "next/image";
 
 export default function SignupPage() {
   return (
-    <div className="h-[calc(100vh-190px)] flex flex-col items-center justify-between px-3">
+    <div className="flex flex-col items-center justify-between px-3">
       <div className="flex flex-col gap-2 items-center justify-center">
         <div className="flex flex-col gap-2 items-center justify-center">
           <Image

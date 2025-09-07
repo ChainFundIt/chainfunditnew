@@ -4,7 +4,7 @@ import { Suspense } from "react";
 
 export default function LoginPage() {
   return (
-    <div className="w-full h-[calc(100vh-190px)] flex flex-col gap-5 px-3">
+    <div className="w-full flex flex-col gap-5 px-3">
       <div className="flex flex-col items-center justify-center">
         <Image
           src="/images/logo.svg"
@@ -22,10 +22,8 @@ export default function LoginPage() {
         </p>
       </div>
 
-      <Suspense fallback={<></>}>
-        <div className="w-full max-w-sm md:max-w-lg pt-4 md:pt-6">
+      <Suspense fallback={<div className="w-full text-center py-8">Loading...</div>}>
           <LoginForm />
-        </div>
       </Suspense>
     </div>
   );
