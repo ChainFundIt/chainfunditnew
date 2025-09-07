@@ -22,6 +22,7 @@ import CommentModal from "./comment-modal";
 import { useCampaignDonations } from "@/hooks/use-campaign-donations";
 import { useTopChainers } from "@/hooks/use-top-chainers";
 import ClientToaster from "@/components/ui/client-toaster";
+import { formatCurrency, getCurrencySymbol } from "@/lib/utils/currency";
 
 interface CampaignData {
   id: string;
@@ -83,12 +84,12 @@ interface MainProps {
 }
 
 // Mock data for fallback when API doesn't return data
-const mockDonors = [
+const createMockDonors = (currency: string) => [
   {
     id: "mock-1",
     donorName: "Angela Bassett",
     amount: "125000",
-    currency: "₦",
+    currency: currency,
     isAnonymous: false,
     donorAvatar: "/images/donor1.png",
   },
@@ -96,7 +97,7 @@ const mockDonors = [
     id: "mock-2", 
     donorName: "Ruslev Mikhailsky",
     amount: "250000",
-    currency: "₦",
+    currency: currency,
     isAnonymous: false,
     donorAvatar: "/images/donor6.png",
   },
@@ -104,7 +105,7 @@ const mockDonors = [
     id: "mock-3",
     donorName: "Alexander Iwobi", 
     amount: "150000",
-    currency: "₦",
+    currency: currency,
     isAnonymous: false,
     donorAvatar: "/images/donor2.png",
   },
@@ -112,7 +113,7 @@ const mockDonors = [
     id: "mock-4",
     donorName: "Sarah Johnson",
     amount: "75000", 
-    currency: "₦",
+    currency: currency,
     isAnonymous: false,
     donorAvatar: "/images/donor3.png",
   },
@@ -120,7 +121,7 @@ const mockDonors = [
     id: "mock-5",
     donorName: "Michael Brown",
     amount: "200000",
-    currency: "₦", 
+    currency: currency, 
     isAnonymous: false,
     donorAvatar: "/images/donor4.png",
   },
@@ -128,13 +129,13 @@ const mockDonors = [
     id: "mock-6",
     donorName: "Emily Davis",
     amount: "90000",
-    currency: "₦",
+    currency: currency,
     isAnonymous: false,
     donorAvatar: "/images/donor5.png",
   },
 ];
 
-const mockChainers = [
+const createMockChainers = () => [
   {
     id: "mock-chainer-1",
     userName: "Angela Bassett",
@@ -514,10 +515,10 @@ const Main = ({ campaignId }: MainProps) => {
 
           <section className="flex justify-between items-center mt-5">
             <p className="text-xl md:text-3xl font-medium my-1 text-black">
-              ₦{raised.toLocaleString()} raised
+              {formatCurrency(raised, campaignData.currency)} raised
             </p>
             <p className="font-medium text-lg md:text-2xl text-[#757575]">
-              {percent}% of ₦{goal.toLocaleString()} goal
+              {percent}% of {formatCurrency(goal, campaignData.currency)} goal
             </p>
           </section>
           {/* Progress bar */}
@@ -620,10 +621,10 @@ const Main = ({ campaignId }: MainProps) => {
                       <div className="text-center pt-4">
                         <Button
                           onClick={() => setUpdateModalOpen(true)}
-                          className="bg-gradient-to-r from-green-600 to-[#104901] text-white rounded-xl px-6 py-2 hover:shadow-lg transition-all duration-300"
+                          className="bg-gradient-to-r from-green-600 to-[#104901] text-white font-medium hover:bg-gradient-to-r hover:from-green-600 hover:to-[#104901] hover:text-white rounded-xl px-6 py-2 hover:shadow-lg transition-all duration-300"
                         >
                           <PlusSquare className="h-4 w-4 mr-2" />
-                          Add another update
+                          Add update
                         </Button>
                       </div>
                     )}
@@ -636,7 +637,7 @@ const Main = ({ campaignId }: MainProps) => {
                     {campaign?.canEdit && (
                       <Button
                         onClick={() => setUpdateModalOpen(true)}
-                        className="bg-gradient-to-r from-green-600 to-[#104901] text-white rounded-xl px-6 py-2 hover:shadow-lg transition-all duration-300"
+                        className="bg-gradient-to-r from-green-600 to-[#104901] text-white font-medium hover:bg-gradient-to-r hover:from-green-600 hover:to-[#104901] hover:text-white rounded-xl px-6 py-2 hover:shadow-lg transition-all duration-300"
                       >
                         <PlusSquare className="h-4 w-4 mr-2" />
                         Add update
@@ -659,7 +660,7 @@ const Main = ({ campaignId }: MainProps) => {
               </div>
             ) : (donations && donations.length > 0) || (!loadingDonations && (!donations || donations.length === 0)) ? (
               <div className="grid md:grid-cols-6 grid-cols-3 gap-3">
-                {(donations && donations.length > 0 ? donations.slice(0, 6) : mockDonors).map((donation, index) => (
+                {(donations && donations.length > 0 ? donations.slice(0, 6) : createMockDonors(campaignData.currency)).map((donation, index) => (
                   <div key={donation.id} className="flex flex-col items-center">
                     <div className="relative w-20 h-20 border-2 border-white rounded-3xl overflow-hidden">
                       {donation.donorAvatar && !donation.isAnonymous ? (
@@ -685,7 +686,7 @@ const Main = ({ campaignId }: MainProps) => {
                         : donation.donorName || "Donor"}
                     </p>
                     <p className="font-medium text-sm text-[#757575]">
-                      {donation.currency} {parseFloat(donation.amount).toLocaleString()}
+                      {formatCurrency(parseFloat(donation.amount), donation.currency)}
                     </p>
                   </div>
                 ))}
@@ -709,7 +710,7 @@ const Main = ({ campaignId }: MainProps) => {
               </div>
             ) : (topChainers && topChainers.length > 0) || (!loadingTopChainers && (!topChainers || topChainers.length === 0)) ? (
               <div className="flex gap-8">
-                {(topChainers && topChainers.length > 0 ? topChainers : mockChainers).map((chainer, index) => (
+                {(topChainers && topChainers.length > 0 ? topChainers : createMockChainers()).map((chainer, index) => (
                   <div key={chainer.id} className="flex flex-col items-center">
                     <div className="relative w-20 h-20 border-2 border-white rounded-3xl overflow-hidden">
                       {chainer.userAvatar ? (
@@ -732,7 +733,7 @@ const Main = ({ campaignId }: MainProps) => {
                       {chainer.totalReferrals} referrals
                     </p>
                     <p className="font-medium text-base text-[#757575]">
-                      ₦{chainer.totalRaised.toLocaleString()}
+                      {formatCurrency(chainer.totalRaised, campaignData.currency)}
                     </p>
                   </div>
                 ))}
@@ -886,8 +887,7 @@ const Main = ({ campaignId }: MainProps) => {
                           </span>
                         </div>
                         <p className="font-medium text-xl text-black">
-                          {donation.currency}
-                          {parseFloat(donation.amount).toLocaleString()} •{" "}
+                          {formatCurrency(parseFloat(donation.amount), donation.currency)} •{" "}
                           <span className="font-normal text-lg text-[#5F8555]">
                             {new Date(donation.createdAt).toLocaleDateString(
                               "en-US",

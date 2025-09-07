@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import CompleteProfile from "../complete-profile";
 import Image from "next/image";
+import { formatCurrency } from "@/lib/utils/currency";
 import {
   ArrowRight,
   TrendingUp,
@@ -137,43 +138,6 @@ export default function DashboardPage() {
         body: JSON.stringify({ hasSeenWelcomeModal: true }),
       });
     } catch {}
-  };
-
-  const formatCurrency = (amount: number, currency: string) => {
-    const currencyMap: Record<string, string> = {
-      // ISO Codes
-      USD: "$",
-      GBP: "£",
-      NGN: "₦",
-      EUR: "€",
-      CAD: "C$",
-
-      // Names
-      "BRITISH POUND": "£",
-      "US DOLLAR": "$",
-      NAIRA: "₦",
-      EURO: "€",
-      "CANADIAN DOLLAR": "C$",
-      POUND: "£",
-
-      // Symbols
-      "£": "£",
-      $: "$",
-      "₦": "₦",
-      "€": "€",
-      C$: "C$",
-    };
-
-    const normalizedCurrency = (currency || "").trim().toUpperCase();
-    const symbol = currencyMap[normalizedCurrency] || "$";
-
-    // Format the number with commas and add the currency symbol
-    const formattedAmount = new Intl.NumberFormat("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
-
-    return `${symbol}${formattedAmount}`;
   };
 
   const formatDate = (dateString: string) => {
@@ -310,7 +274,7 @@ export default function DashboardPage() {
                     <p className="text-xs font-medium text-[#104901] opacity-80">
                       Total Donations
                     </p>
-                    <p className="text-xl font-bold text-[#104901]">
+                    <p className="text-sm font-bold text-[#104901]">
                       {formatCurrency(stats.totalDonations, stats.primaryCurrency)}
                     </p>
                   </div>

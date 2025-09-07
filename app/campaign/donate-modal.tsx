@@ -23,6 +23,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { useDonations, DonationResult } from "@/hooks/use-donations";
 import { getSupportedProviders, PaymentProvider } from "@/lib/payments/config";
+import { getCurrencyCode } from "@/lib/utils/currency";
 import Link from "next/link";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -68,16 +69,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
       // Set initial currency to campaign currency
       setSelectedCurrency(campaign.currency || "₦");
       
-      // Map currency symbols to currency codes for payment provider lookup
-      const currencyMap: Record<string, string> = {
-        '₦': 'NGN',
-        '$': 'USD',
-        '£': 'GBP',
-        '€': 'EUR',
-        'C$': 'CAD'
-      };
-      
-      const currencyCode = currencyMap[campaign.currency] || campaign.currency;
+      const currencyCode = getCurrencyCode(campaign.currency);
       const providers = getSupportedProviders(currencyCode);
       console.log('Campaign currency symbol:', campaign.currency);
       console.log('Mapped currency code:', currencyCode);
@@ -110,16 +102,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
     }
 
     try {
-      // Map currency symbol to currency code for payment processing
-      const currencyMap: Record<string, string> = {
-        '₦': 'NGN',
-        '$': 'USD',
-        '£': 'GBP',
-        '€': 'EUR',
-        'C$': 'CAD'
-      };
-      
-      const currencyCode = currencyMap[selectedCurrency] || selectedCurrency;
+      const currencyCode = getCurrencyCode(selectedCurrency);
       
       const donationData = {
         campaignId: campaign.id,
