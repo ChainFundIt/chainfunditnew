@@ -1,10 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDonations } from "@/hooks/use-dashboard";
+import { formatCurrency } from "@/lib/utils/currency";
+import { Button } from "@/components/ui/button";
+import { RefreshCw, Clock } from "lucide-react";
 
 type Props = {};
 
 const PendingDonations = (props: Props) => {
-  const { donations, loading, error } = useDonations('pending');
+  const { donations, loading, error, refreshDonations } = useDonations('pending');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refreshDonations();
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -46,12 +59,26 @@ const PendingDonations = (props: Props) => {
   return (
     <div className="flex flex-col gap-4 2xl:container 2xl:mx-auto">
       <div className="mb-6">
-        <h3 className="font-semibold text-3xl text-[#104901] mb-2">
-          {pendingDonations.length} pending donation{pendingDonations.length !== 1 ? 's' : ''}
-        </h3>
-        <p className="font-normal text-xl text-[#104901]">
-          These donations are waiting for payment completion.
-        </p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h3 className="font-semibold text-3xl text-[#104901] mb-2">
+              {pendingDonations.length} pending donation{pendingDonations.length !== 1 ? 's' : ''}
+            </h3>
+            <p className="font-normal text-xl text-[#104901]">
+              These donations are waiting for payment completion.
+            </p>
+          </div>
+          <Button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Refreshing...' : 'Refresh'}
+          </Button>
+        </div>
       </div>
 
       {/* Pending Donations List */}
@@ -80,7 +107,7 @@ const PendingDonations = (props: Props) => {
               </div>
               <div className="text-right">
                 <p className="font-bold text-lg text-[#104901]">
-                  ${donation.amount.toFixed(2)}
+                  {formatCurrency(donation.amount, donation.currency)}
                 </p>
                 <p className="text-xs text-yellow-600">⏳ Pending</p>
               </div>

@@ -1,10 +1,44 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDonations } from "@/hooks/use-dashboard";
+import { formatCurrency } from "@/lib/utils/currency";
+import { Button } from "@/components/ui/button";
+import { RefreshCw, AlertCircle } from "lucide-react";
 
 type Props = {};
 
 const FailedDonations = (props: Props) => {
-  const { donations, loading, error } = useDonations('failed');
+  const { donations, loading, error, refreshDonations } = useDonations('failed');
+  const [retryingDonations, setRetryingDonations] = useState<Set<string>>(new Set());
+
+  const handleRetryDonation = async (donationId: string) => {
+    setRetryingDonations(prev => new Set(prev).add(donationId));
+    
+    try {
+      // Simulate retry by updating donation status to pending
+      const response = await fetch(`/api/donations/${donationId}/retry`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        // Refresh the donations list
+        await refreshDonations();
+        console.log(`Retry initiated for donation ${donationId}`);
+      } else {
+        console.error('Failed to retry donation');
+      }
+    } catch (error) {
+      console.error('Error retrying donation:', error);
+    } finally {
+      setRetryingDonations(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(donationId);
+        return newSet;
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -80,9 +114,28 @@ const FailedDonations = (props: Props) => {
               </div>
               <div className="text-right">
                 <p className="font-bold text-lg text-[#104901]">
-                  ${donation.amount.toFixed(2)}
+                  {formatCurrency(donation.amount, donation.currency)}
                 </p>
                 <p className="text-xs text-red-600">✗ Failed</p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="mt-2 text-xs h-8"
+                  onClick={() => handleRetryDonation(donation.id)}
+                  disabled={retryingDonations.has(donation.id)}
+                >
+                  {retryingDonations.has(donation.id) ? (
+                    <>
+                      <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                      Retrying...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="h-3 w-3 mr-1" />
+                      Retry
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
           </div>
