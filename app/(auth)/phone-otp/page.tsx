@@ -256,7 +256,7 @@ function PhoneOtpPageInner() {
   };
 
   return (
-    <div className="flex flex-col gap-6 h-[calc(100vh-200px)] overflow-y-hidden">
+    <div className="flex flex-col gap-6 h-full overflow-hidden">
       <div className="flex flex-col gap-2 items-center justify-center flex-1 px-3 md:p-0">
         <div className="w-full max-w-sm md:max-w-lg pt-6">
           <form className="flex flex-col gap-6 w-full pt-5">
