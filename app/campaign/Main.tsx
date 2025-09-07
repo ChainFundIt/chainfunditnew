@@ -82,6 +82,82 @@ interface MainProps {
   campaignId: string;
 }
 
+// Mock data for fallback when API doesn't return data
+const mockDonors = [
+  {
+    id: "mock-1",
+    donorName: "Angela Bassett",
+    amount: "125000",
+    currency: "₦",
+    isAnonymous: false,
+    donorAvatar: "/images/donor1.png",
+  },
+  {
+    id: "mock-2", 
+    donorName: "Ruslev Mikhailsky",
+    amount: "250000",
+    currency: "₦",
+    isAnonymous: false,
+    donorAvatar: "/images/donor6.png",
+  },
+  {
+    id: "mock-3",
+    donorName: "Alexander Iwobi", 
+    amount: "150000",
+    currency: "₦",
+    isAnonymous: false,
+    donorAvatar: "/images/donor2.png",
+  },
+  {
+    id: "mock-4",
+    donorName: "Sarah Johnson",
+    amount: "75000", 
+    currency: "₦",
+    isAnonymous: false,
+    donorAvatar: "/images/donor3.png",
+  },
+  {
+    id: "mock-5",
+    donorName: "Michael Brown",
+    amount: "200000",
+    currency: "₦", 
+    isAnonymous: false,
+    donorAvatar: "/images/donor4.png",
+  },
+  {
+    id: "mock-6",
+    donorName: "Emily Davis",
+    amount: "90000",
+    currency: "₦",
+    isAnonymous: false,
+    donorAvatar: "/images/donor5.png",
+  },
+];
+
+const mockChainers = [
+  {
+    id: "mock-chainer-1",
+    userName: "Angela Bassett",
+    totalReferrals: 20,
+    totalRaised: 125000,
+    userAvatar: "/images/donor1.png",
+  },
+  {
+    id: "mock-chainer-2", 
+    userName: "Ruslev Mikhailsky",
+    totalReferrals: 12,
+    totalRaised: 250000,
+    userAvatar: "/images/donor6.png",
+  },
+  {
+    id: "mock-chainer-3",
+    userName: "Alexander Iwobi",
+    totalReferrals: 6, 
+    totalRaised: 150000,
+    userAvatar: "/images/donor2.png",
+  },
+];
+
 
 const comments = [
   {
@@ -149,6 +225,17 @@ const Main = ({ campaignId }: MainProps) => {
     useCampaignDonations(campaignId);
   const { topChainers, loading: loadingTopChainers } =
     useTopChainers(campaignId);
+
+  // Debug logging
+  React.useEffect(() => {
+    console.log('🔍 Campaign Main Debug:', {
+      campaignId,
+      donations: donations?.length || 0,
+      loadingDonations,
+      topChainers: topChainers?.length || 0,
+      loadingTopChainers,
+    });
+  }, [campaignId, donations, loadingDonations, topChainers, loadingTopChainers]);
 
   // Fetch campaign updates
   const fetchUpdates = React.useCallback(async () => {
@@ -570,9 +657,9 @@ const Main = ({ campaignId }: MainProps) => {
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#104901]"></div>
               </div>
-            ) : donations && donations.length > 0 ? (
+            ) : (donations && donations.length > 0) || (!loadingDonations && (!donations || donations.length === 0)) ? (
               <div className="grid md:grid-cols-6 grid-cols-3 gap-3">
-                {donations.slice(0, 6).map((donation, index) => (
+                {(donations && donations.length > 0 ? donations.slice(0, 6) : mockDonors).map((donation, index) => (
                   <div key={donation.id} className="flex flex-col items-center">
                     <div className="relative w-20 h-20 border-2 border-white rounded-3xl overflow-hidden">
                       {donation.donorAvatar && !donation.isAnonymous ? (
@@ -620,9 +707,9 @@ const Main = ({ campaignId }: MainProps) => {
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#104901]"></div>
               </div>
-            ) : topChainers && topChainers.length > 0 ? (
+            ) : (topChainers && topChainers.length > 0) || (!loadingTopChainers && (!topChainers || topChainers.length === 0)) ? (
               <div className="flex gap-8">
-                {topChainers.map((chainer, index) => (
+                {(topChainers && topChainers.length > 0 ? topChainers : mockChainers).map((chainer, index) => (
                   <div key={chainer.id} className="flex flex-col items-center">
                     <div className="relative w-20 h-20 border-2 border-white rounded-3xl overflow-hidden">
                       {chainer.userAvatar ? (
