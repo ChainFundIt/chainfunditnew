@@ -82,6 +82,39 @@ interface MainProps {
   campaignId: string;
 }
 
+const donors = [
+  {
+    image: "/images/donor1.png",
+    name: "Angela Bassett",
+    amount: "₦125,000",
+  },
+  {
+    image: "/images/donor6.png",
+    name: "Ruslev Mikhailsky",
+    amount: "₦250,000",
+  },
+  {
+    image: "/images/donor2.png",
+    name: "Alexander Iwobi",
+    amount: "₦150,000",
+  },
+  {
+    image: "/images/donor3.png",
+    name: "Sarah Johnson",
+    amount: "₦75,000",
+  },
+  {
+    image: "/images/donor4.png",
+    name: "Michael Brown",
+    amount: "₦200,000",
+  },
+  {
+    image: "/images/donor5.png",
+    name: "Emily Davis",
+    amount: "₦90,000",
+  },
+];
+
 const chainers = [
   {
     image: "/images/donor1.png",
@@ -163,17 +196,19 @@ const Main = ({ campaignId }: MainProps) => {
   const [loadingComments, setLoadingComments] = useState(false);
   const [chainCount, setChainCount] = useState(0);
   const [loadingChains, setLoadingChains] = useState(false);
-  
+
   // Fetch donations data
-  const { donations, loading: loadingDonations } = useCampaignDonations(campaignId);
-  const { topChainers, loading: loadingTopChainers } = useTopChainers(campaignId);
+  const { donations, loading: loadingDonations } =
+    useCampaignDonations(campaignId);
+  const { topChainers, loading: loadingTopChainers } =
+    useTopChainers(campaignId);
 
   // Fetch campaign updates
   const fetchUpdates = React.useCallback(async () => {
     try {
       setLoadingUpdates(true);
       const response = await fetch(`/api/campaigns/${campaignId}/updates`);
-      
+
       if (response.ok) {
         const result = await response.json();
         if (result.success) {
@@ -192,7 +227,7 @@ const Main = ({ campaignId }: MainProps) => {
     try {
       setLoadingComments(true);
       const response = await fetch(`/api/campaigns/${campaignId}/comments`);
-      
+
       if (response.ok) {
         const result = await response.json();
         if (result.success) {
@@ -211,7 +246,7 @@ const Main = ({ campaignId }: MainProps) => {
     try {
       setLoadingChains(true);
       const response = await fetch(`/api/campaigns/${campaignId}/chains`);
-      
+
       if (response.ok) {
         const result = await response.json();
         if (result.success) {
@@ -233,135 +268,39 @@ const Main = ({ campaignId }: MainProps) => {
       console.log("Fetching campaign with ID:", campaignId);
       const response = await fetch(`/api/campaigns/${campaignId}`);
       console.log("Response status:", response.status);
-      
+
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error("Campaign not found");
         }
         throw new Error(`Failed to fetch campaign: ${response.status}`);
       }
-      
+
       const result = await response.json();
       console.log("API response:", result);
-      
+
       if (!result.success) {
         throw new Error(result.error || "Failed to fetch campaign");
       }
-      
+
       let campaignData = result.data;
-      
-      // If creator information is missing, try to fetch it separately
-      if (!campaignData.creatorName && campaignData.creatorId) {
-        try {
-          console.log("Creator name missing, fetching user info for:", campaignData.creatorId);
-          
-          // Try multiple approaches to get creator info
-          let creatorName = null;
-          let creatorAvatar = null;
-          
-          // Approach 1: Try the direct creator endpoint (bypasses JOIN issues)
-          try {
-            const directCreatorResponse = await fetch(`/api/campaigns/${campaignData.id}/direct-creator`);
-            if (directCreatorResponse.ok) {
-              const directCreatorResult = await directCreatorResponse.json();
-              if (directCreatorResult.success) {
-                creatorName = directCreatorResult.data.creator.fullName;
-                creatorAvatar = directCreatorResult.data.creator.avatar;
-                console.log("Successfully fetched creator info via direct creator API:", { creatorName, creatorAvatar });
-              }
-            }
-          } catch (directCreatorErr) {
-            console.log("Direct creator API approach failed:", directCreatorErr);
-          }
-          
-          // Approach 2: Try the regular creator endpoint
-          if (!creatorName) {
-            try {
-              const creatorResponse = await fetch(`/api/campaigns/${campaignData.id}/creator`);
-              if (creatorResponse.ok) {
-                const creatorResult = await creatorResponse.json();
-                if (creatorResult.success) {
-                  creatorName = creatorResult.creator.fullName;
-                  creatorAvatar = creatorResult.creator.avatar;
-                  console.log("Successfully fetched creator info via creator API:", { creatorName, creatorAvatar });
-                }
-              }
-            } catch (creatorErr) {
-              console.log("Creator API approach failed:", creatorErr);
-            }
-          }
-          
-          // Approach 2: Try the user API endpoint as fallback
-          if (!creatorName) {
-            try {
-              const userResponse = await fetch(`/api/user/${campaignData.creatorId}`);
-              if (userResponse.ok) {
-                const userResult = await userResponse.json();
-                if (userResult.success) {
-                  creatorName = userResult.user.fullName;
-                  creatorAvatar = userResult.user.avatar;
-                  console.log("Successfully fetched creator info via user API:", { creatorName, creatorAvatar });
-                }
-              }
-            } catch (apiErr) {
-              console.log("User API approach failed:", apiErr);
-            }
-          }
-          
-          // Approach 2: Try to fetch from user profile endpoint
-          if (!creatorName) {
-            try {
-              const profileResponse = await fetch(`/api/user/profile`);
-              if (profileResponse.ok) {
-                const profileResult = await profileResponse.json();
-                if (profileResult.success && profileResult.user.id === campaignData.creatorId) {
-                  creatorName = profileResult.user.fullName;
-                  creatorAvatar = profileResult.user.avatar;
-                  console.log("Successfully fetched creator info via profile API:", { creatorName, creatorAvatar });
-                }
-              }
-            } catch (profileErr) {
-              console.log("Profile API approach failed:", profileErr);
-            }
-          }
-          
-          // Update campaign data with whatever we found
-          if (creatorName) {
-            campaignData = {
-              ...campaignData,
-              creatorName: creatorName,
-              creatorAvatar: creatorAvatar
-            };
-            console.log("Updated campaign data with creator info:", campaignData);
-          } else {
-            // Fallback to default values
-            campaignData = {
-              ...campaignData,
-              creatorName: 'Unknown Creator',
-              fundraisingFor: campaignData.fundraisingFor || 'Unknown Cause'
-            };
-            console.log("No creator info found, using fallback values");
-          }
-        } catch (userErr) {
-          console.error("Error in creator info fallback:", userErr);
-          // Fallback to default values
-          campaignData = {
-            ...campaignData,
-            creatorName: 'Unknown Creator',
-            fundraisingFor: campaignData.fundraisingFor || 'Unknown Cause'
-          };
-        }
+
+      // Ensure creator information has fallback values
+      if (!campaignData.creatorName) {
+        campaignData = {
+          ...campaignData,
+          creatorName: "Unknown Creator",
+          fundraisingFor: campaignData.fundraisingFor || "Unknown Cause",
+        };
       }
-      
+
       setCampaign(campaignData);
-      
+
       // Fetch campaign updates, comments, and chain count
       await Promise.all([fetchUpdates(), fetchComments(), fetchChainCount()]);
     } catch (err) {
       console.error("Error fetching campaign:", err);
-      setError(
-        err instanceof Error ? err.message : "Failed to fetch campaign"
-      );
+      setError(err instanceof Error ? err.message : "Failed to fetch campaign");
     } finally {
       setLoading(false);
     }
@@ -395,16 +334,17 @@ const Main = ({ campaignId }: MainProps) => {
           <div className="text-center">
             <div className="text-6xl mb-4">😔</div>
             <h2 className="text-2xl font-semibold text-black mb-2">
-              {error === "Campaign not found" ? "Campaign Not Found" : "Something went wrong"}
+              {error === "Campaign not found"
+                ? "Campaign Not Found"
+                : "Something went wrong"}
             </h2>
             <p className="text-lg text-[#757575] mb-4">
-              {error === "Campaign not found" 
+              {error === "Campaign not found"
                 ? "The campaign you're looking for doesn't exist or has been removed."
-                : "We couldn't load the campaign. Please try again later."
-              }
+                : "We couldn't load the campaign. Please try again later."}
             </p>
-            <button 
-              onClick={() => window.location.reload()} 
+            <button
+              onClick={() => window.location.reload()}
               className="bg-[#104901] text-white px-6 py-3 rounded-lg hover:bg-[#0d3a01] transition-colors"
             >
               Try Again
@@ -422,9 +362,12 @@ const Main = ({ campaignId }: MainProps) => {
   const percent = Math.min(100, Math.round((raised / goal) * 100));
 
   // Use campaign images if available, otherwise show empty state
-  const campaignImages = campaign?.galleryImages && campaign.galleryImages.length > 0 
-    ? campaign.galleryImages.filter(img => img && !img.startsWith('/uploads/') && img !== 'undefined')
-    : [];
+  const campaignImages =
+    campaign?.galleryImages && campaign.galleryImages.length > 0
+      ? campaign.galleryImages.filter(
+          (img) => img && !img.startsWith("/uploads/") && img !== "undefined"
+        )
+      : [];
 
   return (
     <div className="max-w-[1440px] bg-[url('/images/logo-bg.svg')] bg-[length:60%] md:bg-[length:30%] md:h-full bg-no-repeat bg-right-bottom mx-auto mt-16 md:mt-22 h-full p-5 md:p-12 font-source">
@@ -494,15 +437,14 @@ const Main = ({ campaignId }: MainProps) => {
           <p className="font-medium text-2xl text-[#757575] md:my-1 my-3">
             Organised by{" "}
             <span className="font-semibold text-[#104901]">
-              {campaignData.creatorName || 'Unknown Creator'}
+              {campaignData.creatorName || "Unknown Creator"}
             </span>{" "}
-            for {" "}
+            for{" "}
             <span className="font-semibold text-[#104901]">
-              {campaignData.fundraisingFor || 'Unknown Cause'}
+              {campaignData.fundraisingFor || "Unknown Cause"}
             </span>
           </p>
-          
-     
+
           <div className="flex md:flex-row flex-col gap-2 justify-between md:items-center pb-5 border-b border-[#ADADAD]">
             <section className="flex gap-2 items-center">
               <p className="font-medium text-sm md:text-xl text-[#757575]">
@@ -563,7 +505,7 @@ const Main = ({ campaignId }: MainProps) => {
               {loadingChains ? (
                 <span className="animate-pulse">Loading...</span>
               ) : (
-                `${chainCount} chain${chainCount === 1 ? '' : 's'}`
+                `${chainCount} chain${chainCount === 1 ? "" : "s"}`
               )}
             </p>
           </section>
@@ -591,18 +533,18 @@ const Main = ({ campaignId }: MainProps) => {
                 }`}
               >
                 Updates
-                <span className="absolute -top-1 -right-1 bg-[#E8F5E8] text-[#104901] text-xs rounded-full w-5 h-5 flex items-center justify-center border border-white">
-                  1
-                </span>
+                {updates.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-[#E8F5E8] text-[#104901] text-xs rounded-full w-5 h-5 flex items-center justify-center border border-white">
+                    {updates.length}
+                  </span>
+                )}
               </button>
             </div>
 
             {/* Tab Content */}
             {activeTab === "why-support" && (
               <div className="bg-[#F2F1E9] border-x border-b border-[#C0BFC4] font-normal text-sm md:text-xl text-[#104901] p-3 md:p-6 space-y-4">
-                <p className="">
-                  {campaignData.description}
-                </p>
+                <p className="">{campaignData.description}</p>
               </div>
             )}
 
@@ -616,14 +558,21 @@ const Main = ({ campaignId }: MainProps) => {
                 ) : updates.length > 0 ? (
                   <div className="space-y-6">
                     {updates.map((update) => (
-                      <div key={update.id} className="bg-white rounded-xl p-4 border border-[#C0BFC4]">
+                      <div
+                        key={update.id}
+                        className="bg-white rounded-xl p-4 border border-[#C0BFC4]"
+                      >
                         <div className="flex items-start justify-between mb-3">
-                          <h4 className="font-semibold text-lg text-[#104901]">{update.title}</h4>
+                          <h4 className="font-semibold text-lg text-[#104901]">
+                            {update.title}
+                          </h4>
                           <span className="text-sm text-[#757575]">
                             {new Date(update.createdAt).toLocaleDateString()}
                           </span>
                         </div>
-                        <p className="text-[#474553] leading-relaxed">{update.content}</p>
+                        <p className="text-[#474553] leading-relaxed">
+                          {update.content}
+                        </p>
                         {!update.isPublic && (
                           <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
                             <span>🔒</span>
@@ -632,17 +581,31 @@ const Main = ({ campaignId }: MainProps) => {
                         )}
                       </div>
                     ))}
+                    {/* Add Update Button - Always show when user can edit */}
+                    {campaign?.canEdit && (
+                      <div className="text-center pt-4">
+                        <Button
+                          onClick={() => setUpdateModalOpen(true)}
+                          className="bg-gradient-to-r from-green-600 to-[#104901] text-white rounded-xl px-6 py-2 hover:shadow-lg transition-all duration-300"
+                        >
+                          <PlusSquare className="h-4 w-4 mr-2" />
+                          Add another update
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <p className="text-[#757575] mb-4">No updates available yet.</p>
+                    <p className="text-[#757575] mb-4">
+                      No updates available yet.
+                    </p>
                     {campaign?.canEdit && (
                       <Button
                         onClick={() => setUpdateModalOpen(true)}
                         className="bg-gradient-to-r from-green-600 to-[#104901] text-white rounded-xl px-6 py-2 hover:shadow-lg transition-all duration-300"
                       >
                         <PlusSquare className="h-4 w-4 mr-2" />
-                        Add First Update
+                        Add update
                       </Button>
                     )}
                   </div>
@@ -656,123 +619,55 @@ const Main = ({ campaignId }: MainProps) => {
             <h3 className="text-3xl font-semibold text-black mb-4">
               Top Donors
             </h3>
-            {loadingDonations ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#104901]"></div>
-              </div>
-            ) : donations && donations.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {donations.slice(0, 6).map((donation, index) => (
-                  <div key={donation.id} className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                    <div className="flex flex-col items-center text-center">
-                      {/* Circular Profile Picture */}
-                      <div className="w-16 h-16 bg-gradient-to-br from-[#104901] to-[#5F8555] rounded-full flex items-center justify-center text-white font-bold text-xl mb-3 relative">
-                        {donation.isAnonymous ? 'A' : donation.donorName ? donation.donorName.charAt(0).toUpperCase() : 'D'}
-                        {/* Rank Badge */}
-                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center text-xs font-bold text-gray-800">
-                          {index + 1}
-                        </div>
-                      </div>
-                      
-                      {/* Name */}
-                      <h4 className="font-semibold text-[#104901] text-lg mb-1">
-                        {donation.isAnonymous ? 'Anonymous' : (donation.donorName || 'Donor')}
-                      </h4>
-                      
-                      {/* Amount */}
-                      <p className="font-bold text-xl text-[#104901] mb-2">
-                        {donation.currency} {donation.amount.toLocaleString()}
-                      </p>
-                      
-                      {/* Date */}
-                      <p className="text-xs text-gray-500 mb-2">
-                        {new Date(donation.createdAt).toLocaleDateString()}
-                      </p>
-                      
-                      {/* Message */}
-                      {donation.message && (
-                        <p className="text-xs text-gray-600 italic max-w-full truncate">
-                          "{donation.message}"
-                        </p>
-                      )}
-                    </div>
+            <div className="grid md:grid-cols-6 grid-cols-3 gap-3">
+              {donors.map((donor, index) => (
+                <div key={index} className="flex flex-col items-center">
+                  <div className="relative w-20 h-20 border-2 border-white rounded-3xl overflow-hidden">
+                    <Image
+                      src={donor.image}
+                      alt={donor.name}
+                      fill
+                      style={{ objectFit: "cover" }}
+                    />
                   </div>
-                ))}
-                {donations.length > 6 && (
-                  <div className="col-span-full text-center py-4">
-                    <p className="text-sm text-gray-500">
-                      And {donations.length - 6} more donors...
-                    </p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex items-center justify-center py-8">
-                <p className="text-[#757575]">No donors yet. Be the first to donate!</p>
-              </div>
-            )}
+                  <p className="font-normal text-base text-black">
+                    {donor.name}
+                  </p>
+                  <p className="font-medium text-sm text-[#757575]">
+                    {donor.amount}
+                  </p>
+                </div>
+              ))}
+            </div>
           </section>
 
           <section className="my-5 py-5 border-y border-[#ADADAD]">
             <h3 className="text-3xl font-semibold text-black mb-4">
               Top Chainers
             </h3>
-            {loadingTopChainers ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#104901]"></div>
-              </div>
-            ) : topChainers && topChainers.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {topChainers.map((chainer, index) => (
-                  <div key={chainer.id} className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                    <div className="flex flex-col items-center text-center">
-                      {/* Circular Profile Picture */}
-                      <div className="w-16 h-16 bg-gradient-to-br from-[#FFAF69] to-[#FFD4AE] rounded-full flex items-center justify-center text-white font-bold text-xl mb-3 relative">
-                        {chainer.userName.charAt(0).toUpperCase()}
-                        {/* Rank Badge */}
-                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center text-xs font-bold text-gray-800">
-                          {index + 1}
-                        </div>
-                      </div>
-                      
-                      {/* Name */}
-                      <h4 className="font-semibold text-[#104901] text-lg mb-1">
-                        {chainer.userName}
-                      </h4>
-                      
-                      {/* Stats */}
-                      <div className="space-y-1 mb-2">
-                        <p className="font-bold text-lg text-[#104901]">
-                          ₦{chainer.totalRaised.toLocaleString()}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {chainer.totalReferrals} referrals
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          ₦{chainer.commissionEarned.toLocaleString()} earned
-                        </p>
-                      </div>
-                      
-                      {/* Date */}
-                      <p className="text-xs text-gray-500">
-                        Joined {new Date(chainer.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
+            <div className="flex gap-8">
+              {chainers.map((chainer, index) => (
+                <div key={index} className="flex flex-col items-center">
+                  <div className="relative w-20 h-20 border-2 border-white rounded-3xl overflow-hidden">
+                    <Image
+                      src={chainer.image}
+                      alt={chainer.name}
+                      fill
+                      style={{ objectFit: "cover" }}
+                    />
                   </div>
-                ))}
-                {topChainers.length > 6 && (
-                  <div className="col-span-full text-center py-4">
-                    <p className="text-sm text-gray-500">
-                      And {topChainers.length - 6} more chainers...
-                    </p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex items-center justify-center py-8">
-                <p className="text-[#757575]">No chainers yet. Start the chain!</p>
-              </div>
-            )}
+                  <p className="font-normal text-lg text-black">
+                    {chainer.name}
+                  </p>
+                  <p className="font-medium text-base text-[#5F8555]">
+                    {chainer.numberOfDonations} donations
+                  </p>
+                  <p className="font-medium text-base text-[#757575]">
+                    {chainer.amount}
+                  </p>
+                </div>
+              ))}
+            </div>
           </section>
         </div>
 
@@ -844,38 +739,40 @@ const Main = ({ campaignId }: MainProps) => {
                 </Button>
               </section>
             </section>
-                        {loadingDonations ? (
+            {loadingDonations ? (
               <div className="my-5 py-8 bg-white border border-[#C0BFC4] rounded-2xl">
                 <div className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#104901] mr-3"></div>
-                  <span className="text-[#5F8555]">Loading recent donations...</span>
+                  <span className="text-[#5F8555]">
+                    Loading recent donations...
+                  </span>
                 </div>
               </div>
             ) : donations.length > 0 ? (
-            <ul className="my-5 py-3 px-2 bg-white space-y-3 border border-[#C0BFC4] rounded-2xl">
+              <ul className="my-5 py-3 px-2 bg-white space-y-3 border border-[#C0BFC4] rounded-2xl">
                 {donations.slice(0, 3).map((donation) => {
                   // Get status styling
                   const getStatusStyle = (status: string) => {
                     switch (status) {
-                      case 'completed':
-                        return 'bg-green-100 text-green-700 border-green-200';
-                      case 'pending':
-                        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-                      case 'failed':
-                        return 'bg-red-100 text-red-700 border-red-200';
+                      case "completed":
+                        return "bg-green-100 text-green-700 border-green-200";
+                      case "pending":
+                        return "bg-yellow-100 text-yellow-700 border-yellow-200";
+                      case "failed":
+                        return "bg-red-100 text-red-700 border-red-200";
                       default:
-                        return 'bg-gray-100 text-gray-700 border-gray-200';
+                        return "bg-gray-100 text-gray-700 border-gray-200";
                     }
                   };
 
                   const getStatusText = (status: string) => {
                     switch (status) {
-                      case 'completed':
-                        return '✓ Completed';
-                      case 'pending':
-                        return '⏳ Pending';
-                      case 'failed':
-                        return '✗ Failed';
+                      case "completed":
+                        return "✓ Completed";
+                      case "pending":
+                        return "⏳ Pending";
+                      case "failed":
+                        return "✗ Failed";
                       default:
                         return status;
                     }
@@ -885,15 +782,18 @@ const Main = ({ campaignId }: MainProps) => {
                     <li key={donation.id} className="flex gap-3 items-center">
                       {donation.donorAvatar && !donation.isAnonymous ? (
                         <Image
-                          src={donation.donorAvatar} 
-                          alt={donation.donorName || "Donor"} 
+                          src={donation.donorAvatar}
+                          alt={donation.donorName || "Donor"}
                           width={64}
                           height={64}
                           className="rounded-full object-cover"
                         />
                       ) : (
                         <div className="w-16 h-16 bg-[#E7EDE6] rounded-full flex items-center justify-center text-[#104901] font-semibold text-xl">
-                          {donation.isAnonymous ? "?" : (donation.donorName?.charAt(0).toUpperCase() || "D")}
+                          {donation.isAnonymous
+                            ? "?"
+                            : donation.donorName?.charAt(0).toUpperCase() ||
+                              "D"}
                         </div>
                       )}
                       <section className="flex-1">
@@ -901,19 +801,27 @@ const Main = ({ campaignId }: MainProps) => {
                           <p className="font-normal text-xl text-[#5F8555]">
                             {donation.donorName}
                           </p>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusStyle(donation.paymentStatus)}`}>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusStyle(
+                              donation.paymentStatus
+                            )}`}
+                          >
                             {getStatusText(donation.paymentStatus)}
                           </span>
                         </div>
                         <p className="font-medium text-xl text-black">
-                          {donation.currency}{parseFloat(donation.amount).toLocaleString()} •{" "}
+                          {donation.currency}
+                          {parseFloat(donation.amount).toLocaleString()} •{" "}
                           <span className="font-normal text-lg text-[#5F8555]">
-                            {new Date(donation.createdAt).toLocaleDateString('en-US', { 
-                              month: 'short', 
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
+                            {new Date(donation.createdAt).toLocaleDateString(
+                              "en-US",
+                              {
+                                month: "short",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              }
+                            )}
                           </span>
                         </p>
                         {donation.message && (
@@ -925,12 +833,14 @@ const Main = ({ campaignId }: MainProps) => {
                     </li>
                   );
                 })}
-            </ul>
+              </ul>
             ) : (
               <div className="my-5 py-8 bg-white border border-[#C0BFC4] rounded-2xl">
                 <div className="text-center">
                   <p className="text-[#5F8555] text-lg">No donations yet</p>
-                  <p className="text-[#757575] text-sm mt-1">Be the first to support this campaign!</p>
+                  <p className="text-[#757575] text-sm mt-1">
+                    Be the first to support this campaign!
+                  </p>
                 </div>
               </div>
             )}
@@ -964,8 +874,8 @@ const Main = ({ campaignId }: MainProps) => {
                       <section className="flex gap-2 items-start">
                         <div className="w-9 h-9 bg-[#E7EDE6] rounded-full flex items-center justify-center text-[#104901] font-semibold text-sm overflow-hidden">
                           {comment.userAvatar ? (
-                            <Image 
-                              src={comment.userAvatar} 
+                            <Image
+                              src={comment.userAvatar}
                               alt={comment.userName}
                               width={36}
                               height={36}
@@ -1005,7 +915,9 @@ const Main = ({ campaignId }: MainProps) => {
                         <section className="flex gap-2 items-center font-semibold text-base text-[#104901]">
                           <Heart color="black" size={20} />{" "}
                           <p>
-                            <span className="font-normal">Liked by the campaign creator</span>
+                            <span className="font-normal">
+                              Liked by the campaign creator
+                            </span>
                           </p>
                         </section>
                       </div>
@@ -1015,15 +927,17 @@ const Main = ({ campaignId }: MainProps) => {
               </div>
             ) : (
               <div className="flex items-center justify-center py-8">
-                <p className="text-[#757575]">No comments yet. Be the first to comment!</p>
+                <p className="text-[#757575]">
+                  No comments yet. Be the first to comment!
+                </p>
               </div>
             )}
             <section className="flex justify-center">
-              <Button 
+              <Button
                 onClick={() => setCommentModalOpen(true)}
                 className="bg-transparent h-12 text-[#104901] border-2 border-[#104901] hover:bg-[#104901] hover:text-white transition-colors"
               >
-               Add a comment <PlusSquare />
+                Add a comment <PlusSquare />
               </Button>
             </section>
           </div>
