@@ -229,7 +229,6 @@ export default function DashboardPage() {
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="group relative">
-              <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-[#104901] rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
               <div className="relative bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
                 <div className="flex items-center justify-between">
                   <div>
@@ -248,7 +247,6 @@ export default function DashboardPage() {
             </div>
 
             <div className="group relative">
-              <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
               <div className="relative bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
                 <div className="flex items-center justify-between">
                   <div>
@@ -267,7 +265,6 @@ export default function DashboardPage() {
             </div>
 
             <div className="group relative">
-              <div className="absolute -inset-1 bg-gradient-to-r from-[#104901] to-green-500 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
               <div className="relative bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
                 <div className="flex items-center justify-between">
                   <div>
@@ -286,7 +283,6 @@ export default function DashboardPage() {
             </div>
 
             <div className="group relative">
-              <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-[#104901] rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
               <div className="relative bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
                 <div className="flex items-center justify-between">
                   <div>
@@ -308,7 +304,6 @@ export default function DashboardPage() {
 
         {/* Recent Campaigns */}
         <div className="relative">
-          <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-blue-600 rounded-3xl blur opacity-10"></div>
           <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20">
             <div className="p-8 border-b border-white/20">
               <div className="flex items-center justify-between">
@@ -339,7 +334,6 @@ export default function DashboardPage() {
                       key={campaign.id}
                       className="group relative overflow-hidden rounded-2xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
                     >
-                      <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-blue-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
                       <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl overflow-hidden">
                         <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200">
                           {campaign.coverImageUrl && (
@@ -402,7 +396,6 @@ export default function DashboardPage() {
               ) : (
                 <div className="text-center py-16">
                   <div className="relative inline-block">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-blue-600 rounded-full blur opacity-20"></div>
                     <div className="relative bg-white/80 backdrop-blur-sm p-6 rounded-full">
                       <Share2 className="h-16 w-16 text-[#104901] mx-auto" />
                     </div>
@@ -428,7 +421,6 @@ export default function DashboardPage() {
         {/* Recent Donations */}
         {stats && stats.recentDonations.length > 0 && (
           <div className="relative">
-            <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-[#104901] rounded-3xl blur opacity-10"></div>
             <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20">
               <div className="p-8 border-b border-white/20">
                 <div className="flex items-center justify-between">
@@ -451,12 +443,10 @@ export default function DashboardPage() {
                       key={donation.id}
                       className="group relative overflow-hidden rounded-2xl hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                     >
-                      <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-[#104901] rounded-2xl blur opacity-10 group-hover:opacity-20 transition duration-300"></div>
                       <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-4">
                             <div className="relative">
-                              <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-[#104901] rounded-full blur opacity-20"></div>
                               <div className="relative w-12 h-12 rounded-full overflow-hidden">
                                 {donation.donorAvatar ? (
                                   <Image

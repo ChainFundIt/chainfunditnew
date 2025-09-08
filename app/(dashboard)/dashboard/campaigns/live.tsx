@@ -53,7 +53,6 @@ const LiveCampaigns = ({ campaigns }: Props) => {
             key={campaign.id}
             className="group relative overflow-hidden rounded-2xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
           >
-            <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-[#104901] rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
             <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl overflow-hidden">
               <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200">
                 <Image
