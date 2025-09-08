@@ -117,7 +117,7 @@ export function CampaignCard({ campaign, viewMode, geolocation, convertedAmounts
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
                   <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
-                    {campaign.title.slice(0, 20)}...
+                    {campaign.title.slice(0, 40)}...
                   </h3>
                   <p className="text-gray-600 mb-3 line-clamp-2">
                     {campaign.description}
@@ -221,7 +221,7 @@ export function CampaignCard({ campaign, viewMode, geolocation, convertedAmounts
       <div className="p-4">
         <div className="mb-3">
           <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2">
-            {campaign.title.slice(0, 20)}...
+            {campaign.title.slice(0, 40)}...
           </h3>
           <p className="text-gray-600 text-sm line-clamp-2 mb-3">
             {campaign.description}

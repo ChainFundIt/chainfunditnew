@@ -118,8 +118,6 @@ const tabs = ["S", "M", "L"];
 
 export default function CreateCampaignPage() {
   const [aiInstruction, setAiInstruction] = useState("");
-  const [preview, setPreview] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(1);
   const { shortenLink } = useShortenLink();
   const [showAiModal, setShowAiModal] = useState(false);
@@ -179,14 +177,6 @@ export default function CreateCampaignPage() {
     }));
   };
 
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setFormData((prev) => ({ ...prev, coverImage: file }));
-    const reader = new FileReader();
-    reader.onloadend = () => setPreview(reader.result as string);
-    reader.readAsDataURL(file);
-  };
 
   const handleFieldChange = (field: keyof CampaignFormData, value: any) => {
     if (field === "currency") {
@@ -257,28 +247,33 @@ export default function CreateCampaignPage() {
     setIsLoading(true);
     const payload = new FormData();
 
-    // Add form data with safety check
-    if (formData && typeof formData === 'object') {
-      Object.entries(formData).forEach(([key, value]) => {
-        if (key === "images" || key === "documents" || key === "coverImage") {
-          // Skip file objects, we'll use URLs instead
-          return;
-        } else {
-          payload.append(key, value as string);
-        }
-      });
-    }
+    // Map form fields to API expected field names
+    payload.append("title", formData.title);
+    payload.append("subtitle", formData.subtitle || "");
+    payload.append("description", formData.story); // story -> description
+    payload.append("reason", formData.reason);
+    payload.append("fundraisingFor", formData.fundraisingFor);
+    payload.append("duration", formData.duration || "");
+    payload.append("videoUrl", formData.video || ""); // video -> videoUrl
+    payload.append("goalAmount", formData.goal.toString()); // goal -> goalAmount
+    payload.append("currency", formData.currency);
+    payload.append("minimumDonation", "1"); // Default minimum donation
+    payload.append("chainerCommissionRate", "5"); // Default commission rate
 
     // Add uploaded file URLs
     if (uploadedFiles.coverImageUrl) {
       payload.append("coverImageUrl", uploadedFiles.coverImageUrl);
     }
-    uploadedFiles.imageUrls.forEach(url => {
-      payload.append("imageUrls", url);
-    });
-    uploadedFiles.documentUrls.forEach(url => {
-      payload.append("documentUrls", url);
-    });
+    
+    // Convert image URLs to JSON string for galleryImages
+    if (uploadedFiles.imageUrls.length > 0) {
+      payload.append("galleryImages", JSON.stringify(uploadedFiles.imageUrls));
+    }
+    
+    // Convert document URLs to JSON string for documents
+    if (uploadedFiles.documentUrls.length > 0) {
+      payload.append("documents", JSON.stringify(uploadedFiles.documentUrls));
+    }
 
     try {
       const res = await fetch("/api/campaigns", {
@@ -381,28 +376,26 @@ export default function CreateCampaignPage() {
             {/* Left Side: Image Upload */}
             <div className="w-full md:w-2/5">
               <div className="relative">
-                <input
-                  type="file"
-                  id="profile-image-upload"
+                <Upload
+                  type="imageUpload"
                   accept="image/*"
-                  className="hidden"
-                  ref={inputRef}
-                  onChange={handleImageChange}
-                />
-                <label
-                  htmlFor="profile-image-upload"
-                  className="w-[200px] md:w-[360px] h-[200px] md:h-[360px] flex items-center justify-center cursor-pointer bg-center bg-cover"
-                  style={{
-                    backgroundImage: preview
-                      ? `url(${preview})`
-                      : `url('/images/image.png')`,
-                  }}
-                  title="Upload profile image"
+                  onUpload={handleCoverImageUpload}
+                  className="relative"
                 >
-                  {!preview && (
-                    <span className="sr-only">Upload profile image</span>
-                  )}
-                </label>
+                  <div
+                    className="w-[200px] md:w-[360px] h-[200px] md:h-[360px] flex items-center justify-center cursor-pointer bg-center bg-cover"
+                    style={{
+                      backgroundImage: uploadedFiles.coverImageUrl
+                        ? `url(${uploadedFiles.coverImageUrl})`
+                        : `url('/images/image.png')`,
+                    }}
+                    title="Upload campaign image"
+                  >
+                    {!uploadedFiles.coverImageUrl && (
+                      <span className="sr-only">Upload campaign image</span>
+                    )}
+                  </div>
+                </Upload>
                 <section className="w-8 md:w-[56px] h-8 md:h-[56px] bg-[#104901] flex items-center justify-center text-white absolute right-[118px] md:right-[160px] 2xl:right-[200px] bottom-6 md:bottom-11">
                   <Plus className="md:text-4xl text-lg" size={36} />
                 </section>

@@ -347,7 +347,7 @@ export default function DashboardPage() {
                         </div>
                         <div className="p-6">
                           <h3 className="font-bold text-[#104901] mb-3 text-lg">
-                            {campaign.title.slice(0, 20)}...
+                            {campaign.title.slice(0, 40)}...
                           </h3>
                           <div className="space-y-3">
                             <div className="flex justify-between text-sm">
