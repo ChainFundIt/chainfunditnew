@@ -227,7 +227,7 @@ const Main = (props: Props) => {
                   className="group relative overflow-hidden rounded-2xl hover:shadow-2xl transition-all duration-500 cursor-pointer"
                   onClick={() => setOpenCard(idx)}
                 >
-                  <div className="relative h-[500px] bg-white/90 backdrop-blur-sm rounded-2xl overflow-hidden">
+                  <div className="relative h-[500px] bg-[#F2F1E9] backdrop-blur-sm rounded-2xl overflow-hidden">
                     <div className="relative h-[200px] bg-gradient-to-br from-gray-100 to-gray-200">
                       <Image
                         src={card.image}
@@ -277,7 +277,7 @@ const Main = (props: Props) => {
                           <span>{card.donors} donors</span>
                         </div>
                       </div>
-                      <Button
+                      {/* <Button
                         variant="outline"
                         className="w-full mt-6 text-[#104901] border-[#104901] hover:bg-[#104901] hover:text-white rounded-xl py-3 transition-all duration-300"
                         onClick={(e) => {
@@ -287,7 +287,7 @@ const Main = (props: Props) => {
                       >
                         <Eye className="h-4 w-4 mr-2" />
                         View Campaign
-                      </Button>
+                      </Button> */}
                     </div>
                   </div>
                 </div>
