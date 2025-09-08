@@ -238,7 +238,7 @@ const Main = (props: Props) => {
                     </div>
                     <div className="p-6 h-full">
                       <h3 className="font-bold text-[#104901] mb-3 text-lg">
-                        {card.title}
+                        {card.title.slice(0, 20)}...
                       </h3>
                       <p className="text-gray-600 text-sm mb-4 line-clamp-2">
                         {card.description.slice(0, 80)}...

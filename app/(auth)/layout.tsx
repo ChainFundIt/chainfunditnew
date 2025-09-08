@@ -30,7 +30,7 @@ const CarouselSlide = React.memo(({ item, index, isActive }: {
   index: number; 
   isActive: boolean; 
 }) => (
-  <div className="embla__slide flex-[0_0_100%] relative h-full overflow-hidden">
+  <div className="embla__slide flex-[0_0_100%] relative h-screen overflow-hidden">
     <Image
       src={item.image}
       alt={`Carousel slide ${index + 1}`}
@@ -75,7 +75,7 @@ function Carousel() {
 
   return (
     <div
-      className="w-full h-full overflow-hidden"
+      className="w-full h-screen overflow-hidden"
       onMouseEnter={() => setIsPlaying(false)}
       onMouseLeave={() => setIsPlaying(true)}
     >
@@ -197,7 +197,7 @@ const layout = ({ children }: { children: React.ReactNode }) => {
         </div>
       </div>
 {/* right */}
-      <div className="md:w-3/5 relative hidden lg:block">
+      <div className="md:w-3/5 relative hidden lg:block h-screen">
         <Carousel />
       </div>
     </div>

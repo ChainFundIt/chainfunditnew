@@ -344,11 +344,10 @@ export default function DashboardPage() {
                               className="object-cover group-hover:scale-110 transition-transform duration-500"
                             />
                           )}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                         </div>
                         <div className="p-6">
                           <h3 className="font-bold text-[#104901] mb-3 text-lg">
-                            {campaign.title}
+                            {campaign.title.slice(0, 20)}...
                           </h3>
                           <div className="space-y-3">
                             <div className="flex justify-between text-sm">
