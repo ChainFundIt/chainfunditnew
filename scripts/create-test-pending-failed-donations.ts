@@ -8,14 +8,17 @@ async function createTestPendingFailedDonations() {
   console.log('🧪 Creating test pending and failed donations...\n');
 
   try {
-    // Get a test campaign
+    // Use specific campaign: Save the Planet
+    const campaignId = 'a9ac811e-e98a-43ba-9f3e-409111db5258';
+    
     const testCampaigns = await db
       .select()
       .from(campaigns)
-      .limit(3);
+      .where(eq(campaigns.id, campaignId))
+      .limit(1);
 
     if (testCampaigns.length === 0) {
-      console.log('❌ No campaigns found. Please create a campaign first.');
+      console.log('❌ Campaign "Save the Planet" not found. Please check the campaign ID.');
       return;
     }
 

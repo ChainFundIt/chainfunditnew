@@ -18,8 +18,8 @@ interface DonationResult {
   error?: string;
 }
 
-// Test campaign ID - you'll need to replace this with a real campaign ID
-const TEST_CAMPAIGN_ID = 'your-campaign-id-here';
+// Test campaign ID - Save the Planet campaign
+const TEST_CAMPAIGN_ID = 'a9ac811e-e98a-43ba-9f3e-409111db5258';
 
 async function initializeTestDonation(donationData: TestDonationData): Promise<DonationResult> {
   try {
@@ -181,15 +181,9 @@ async function main() {
   console.log('🧪 Testing Pending and Failed Donation Flows');
   console.log('==============================================');
   
-  // Check if we have a valid campaign ID
-  if (TEST_CAMPAIGN_ID === 'your-campaign-id-here') {
-    console.log('❌ Please update TEST_CAMPAIGN_ID with a real campaign ID');
-    console.log('💡 You can find campaign IDs by:');
-    console.log('   1. Going to your dashboard');
-    console.log('   2. Looking at the URL: /campaign/[id]');
-    console.log('   3. Or checking the database directly');
-    return;
-  }
+  // Campaign ID is set to Save the Planet campaign
+  console.log('🌍 Using campaign: Save the Planet');
+  console.log(`📋 Campaign ID: ${TEST_CAMPAIGN_ID}`);
 
   try {
     // Test all three scenarios
