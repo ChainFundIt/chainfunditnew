@@ -5,6 +5,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Heart, Share2, Eye, Calendar, User, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { formatCurrencyWithConversion } from '@/lib/utils/currency';
+import { GeolocationData } from '@/lib/utils/geolocation';
 
 interface Campaign {
   id: string;
@@ -42,11 +44,20 @@ interface Campaign {
 interface CampaignCardProps {
   campaign: Campaign;
   viewMode: 'grid' | 'list';
+  geolocation?: GeolocationData | null;
+  convertedAmounts?: {
+    currentAmount: { amount: number; currency: string; originalAmount?: number; originalCurrency?: string };
+    goalAmount: { amount: number; currency: string; originalAmount?: number; originalCurrency?: string };
+  };
 }
 
-export function CampaignCard({ campaign, viewMode }: CampaignCardProps) {
+export function CampaignCard({ campaign, viewMode, geolocation, convertedAmounts }: CampaignCardProps) {
   const progressPercentage = campaign.stats?.progressPercentage || 
     Math.min(100, Math.round((campaign.currentAmount / campaign.goalAmount) * 100));
+
+  // Use converted amounts if available, otherwise use original amounts
+  const displayCurrentAmount = convertedAmounts?.currentAmount || { amount: campaign.currentAmount, currency: campaign.currency };
+  const displayGoalAmount = convertedAmounts?.goalAmount || { amount: campaign.goalAmount, currency: campaign.currency };
 
   const formatCurrency = (amount: number, currency: string) => {
     return new Intl.NumberFormat('en-US', {
@@ -143,8 +154,8 @@ export function CampaignCard({ campaign, viewMode }: CampaignCardProps) {
                   ></div>
                 </div>
                 <div className="flex justify-between text-sm text-gray-600 mt-2">
-                  <span>{formatCurrency(campaign.currentAmount, campaign.currency)} raised</span>
-                  <span>Goal: {formatCurrency(campaign.goalAmount, campaign.currency)}</span>
+                  <span>{formatCurrencyWithConversion(displayCurrentAmount.amount, displayCurrentAmount.currency, displayCurrentAmount.originalAmount, displayCurrentAmount.originalCurrency)} raised</span>
+                  <span>Goal: {formatCurrencyWithConversion(displayGoalAmount.amount, displayGoalAmount.currency, displayGoalAmount.originalAmount, displayGoalAmount.originalCurrency)}</span>
                 </div>
               </div>
 
@@ -238,8 +249,8 @@ export function CampaignCard({ campaign, viewMode }: CampaignCardProps) {
             ></div>
           </div>
           <div className="flex justify-between text-sm text-gray-600 mt-2">
-            <span>{formatCurrency(campaign.currentAmount, campaign.currency)}</span>
-            <span>{formatCurrency(campaign.goalAmount, campaign.currency)}</span>
+            <span>{formatCurrencyWithConversion(displayCurrentAmount.amount, displayCurrentAmount.currency, displayCurrentAmount.originalAmount, displayCurrentAmount.originalCurrency)}</span>
+            <span>{formatCurrencyWithConversion(displayGoalAmount.amount, displayGoalAmount.currency, displayGoalAmount.originalAmount, displayGoalAmount.originalCurrency)}</span>
           </div>
         </div>
 

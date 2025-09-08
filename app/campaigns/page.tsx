@@ -14,6 +14,7 @@ import {
   Heart,
   Share2,
   Eye,
+  MapPin,
 } from "lucide-react";
 import { toast } from "sonner";
 import ClientToaster from "@/components/ui/client-toaster";
@@ -26,6 +27,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Navbar from "@/app/campaign/Navbar";
+import { useGeolocation, useCampaignFiltering, useCurrencyConversion } from "@/hooks/use-geolocation";
+import { formatCurrencyWithConversion } from "@/lib/utils/currency";
 const campaignReasons = [
   "Emergency",
   "Business",
@@ -44,6 +47,56 @@ const campaignReasons = [
 
 const campaignStatuses = ["active", "completed", "paused", "cancelled"];
 
+// Component to handle async currency conversion
+function CampaignCardWithConversion({ 
+  campaign, 
+  viewMode, 
+  geolocation, 
+  formatAmount 
+}: {
+  campaign: any;
+  viewMode: 'grid' | 'list';
+  geolocation: any;
+  formatAmount: (amount: number, currency: string) => Promise<any>;
+}) {
+  const [convertedAmounts, setConvertedAmounts] = React.useState<{
+    currentAmount: { amount: number; currency: string; originalAmount?: number; originalCurrency?: string };
+    goalAmount: { amount: number; currency: string; originalAmount?: number; originalCurrency?: string };
+  } | null>(null);
+
+  React.useEffect(() => {
+    const convertAmounts = async () => {
+      try {
+        const convertedCurrentAmount = await formatAmount(campaign.currentAmount, campaign.currency);
+        const convertedGoalAmount = await formatAmount(campaign.goalAmount, campaign.currency);
+        
+        setConvertedAmounts({
+          currentAmount: convertedCurrentAmount,
+          goalAmount: convertedGoalAmount,
+        });
+      } catch (error) {
+        console.error('Failed to convert amounts:', error);
+        // Fallback to original amounts
+        setConvertedAmounts({
+          currentAmount: { amount: campaign.currentAmount, currency: campaign.currency },
+          goalAmount: { amount: campaign.goalAmount, currency: campaign.currency },
+        });
+      }
+    };
+
+    convertAmounts();
+  }, [campaign.currentAmount, campaign.goalAmount, campaign.currency, formatAmount]);
+
+  return (
+    <CampaignCard
+      campaign={campaign}
+      viewMode={viewMode}
+      geolocation={geolocation}
+      convertedAmounts={convertedAmounts}
+    />
+  );
+}
+
 export default function AllCampaignsPage() {
   const [activeTab, setActiveTab] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,6 +110,11 @@ export default function AllCampaignsPage() {
 
   const { campaigns, loading, error, fetchCampaigns, hasMore, loadMore } =
     useAllCampaigns();
+  
+  // Geolocation and filtering
+  const { geolocation, loading: locationLoading, error: locationError } = useGeolocation();
+  const { shouldShowCampaign } = useCampaignFiltering(geolocation);
+  const { formatAmount } = useCurrencyConversion(geolocation);
 
   // Add timeout for loading
   useEffect(() => {
@@ -87,7 +145,15 @@ export default function AllCampaignsPage() {
       selectedStatus,
       activeTab,
       sortBy,
+      geolocation: geolocation?.country,
+      userCurrency: geolocation?.currency,
     });
+
+    // Filter by geolocation/currency
+    if (geolocation) {
+      filtered = filtered.filter((campaign) => shouldShowCampaign(campaign.currency));
+      console.log("After geolocation filter:", filtered.length);
+    }
 
     // Filter by search query
     if (searchQuery) {
@@ -248,6 +314,19 @@ export default function AllCampaignsPage() {
       </div>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Location Indicator */}
+        {geolocation && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center gap-2 text-blue-800">
+              <MapPin className="h-4 w-4" />
+              <span className="font-medium">
+                Showing campaigns for {geolocation.country} 
+                {geolocation.canSeeAllCurrencies ? ' (All currencies)' : ` (${geolocation.currency} only)`}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Search and Filters */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
           <div className="flex flex-col lg:flex-row gap-6">
@@ -472,10 +551,12 @@ export default function AllCampaignsPage() {
               }`}
             >
               {filteredCampaigns.map((campaign) => (
-                <CampaignCard
+                <CampaignCardWithConversion
                   key={campaign.id}
                   campaign={campaign}
                   viewMode={viewMode}
+                  geolocation={geolocation}
+                  formatAmount={formatAmount}
                 />
               ))}
             </div>

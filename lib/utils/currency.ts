@@ -99,3 +99,28 @@ export function getCurrencyCode(currency: string): string {
   const normalizedCurrency = (currency || "").trim().toUpperCase();
   return codeMap[normalizedCurrency] || "USD";
 }
+
+/**
+ * Formats currency with conversion information
+ * @param amount - The amount to format
+ * @param currency - The currency code
+ * @param originalAmount - Original amount before conversion
+ * @param originalCurrency - Original currency before conversion
+ * @returns Formatted currency string with conversion info
+ */
+export function formatCurrencyWithConversion(
+  amount: number,
+  currency: string,
+  originalAmount?: number,
+  originalCurrency?: string
+): string {
+  const formattedAmount = formatCurrency(amount, currency);
+  
+  // If there's original amount info, show it
+  if (originalAmount && originalCurrency && originalCurrency !== currency) {
+    const originalFormatted = formatCurrency(originalAmount, originalCurrency);
+    return `${formattedAmount} (${originalFormatted})`;
+  }
+  
+  return formattedAmount;
+}
