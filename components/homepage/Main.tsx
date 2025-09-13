@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { PiYoutubeLogoLight } from "react-icons/pi";
+import { FaPlay, FaPause } from "react-icons/fa";
 import CardDetailsDrawer from "@/components/homepage/CardDetailsDrawer";
 import {
   Select,
@@ -15,9 +16,6 @@ import { NotificationsList } from "@/components/homepage/notifications-list";
 import BenefitsCarousel from "./BenefitsCarousel";
 import { usePublicCampaigns } from "@/hooks/use-public-campaigns";
 import { formatCurrency } from "@/lib/utils/currency";
-import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
-
 type Props = {};
 
 const Main = (props: Props) => {
@@ -31,6 +29,8 @@ const Main = (props: Props) => {
   const [openCard, setOpenCard] = useState<number | null>(null);
   const [selectedFilter, setSelectedFilter] =
     useState<string>("live campaigns");
+  const [isVideoPlaying, setIsVideoPlaying] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   // Fetch public campaigns
   const {
@@ -49,6 +49,17 @@ const Main = (props: Props) => {
   const handleNextCard = () => {
     if (openCard !== null && openCard < campaigns.length - 1) {
       setOpenCard(openCard + 1);
+    }
+  };
+
+  const toggleVideoPlayPause = () => {
+    if (videoRef.current) {
+      if (isVideoPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsVideoPlaying(!isVideoPlaying);
     }
   };
 
@@ -389,15 +400,38 @@ const Main = (props: Props) => {
         </div>
       </div>
       <div className="px-4 md:px-12 flex flex-col md:flex-row gap-4 md:gap-5 w-full h-fit my-5">
-        <section className="bg-[url('/images/video.png')] bg-cover bg-no-repeat w-full md:w-1/3 h-60 md:h-[650px]">
-          <section className="bg-[linear-gradient(180deg,rgba(255,255,255,0)_70%,#F2F1E9_100%)] h-full px-2 md:px-4 py-4 md:py-6 flex flex-col">
+        <section className="w-full md:w-1/3 h-60 md:h-[650px] relative overflow-hidden">
+          <video
+            ref={videoRef}
+            className="w-full h-full object-cover"
+            autoPlay
+            muted
+            loop
+            playsInline
+          >
+            <source src="/video/chain-podcast.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+          <section className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0)_70%,#F2F1E9_100%)] h-full px-2 md:px-4 py-4 md:py-6 flex flex-col">
             <section className="flex items-center justify-center my-auto">
-              <PiYoutubeLogoLight
-                color="white"
-                size={48}
-                strokeWidth={0.1}
-                className="md:w-[100px] md:h-[100px] w-[48px] h-[48px]"
-              />
+              <button
+                onClick={toggleVideoPlayPause}
+                className="transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 rounded-full"
+              >
+                {isVideoPlaying ? (
+                  <FaPause
+                    color="white"
+                    size={48}
+                    className="md:w-[100px] md:h-[100px] w-[48px] h-[48px] drop-shadow-lg"
+                  />
+                ) : (
+                  <FaPlay
+                    color="white"
+                    size={48}
+                    className="md:w-[100px] md:h-[100px] w-[48px] h-[48px] drop-shadow-lg"
+                  />
+                )}
+              </button>
             </section>
             <div className="flex flex-col gap-1 justify-end ">
               <p className="font-dm font-medium text-lg md:text-xl text-black">
