@@ -74,12 +74,6 @@ const Main = (props: Props) => {
 
   // Transform campaigns data to match the expected format
   const cardDetails = filteredCampaigns.map((campaign) => {
-    console.log(
-      "Campaign currency:",
-      campaign.currency,
-      "Amount:",
-      campaign.currentAmount
-    );
     return {
       id: campaign.id,
       title: campaign.title,
@@ -221,7 +215,7 @@ const Main = (props: Props) => {
           {/* Campaign Cards */}
           {!campaignsLoading && !campaignsError && cardDetails.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-8">
-              {cardDetails.slice(0, 3).map((card, idx) => (
+              {cardDetails.slice(3, 6).map((card, idx) => (
                 <div
                   key={card.id}
                   className="group relative overflow-hidden rounded-2xl hover:shadow-2xl transition-all duration-500 cursor-pointer"
