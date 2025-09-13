@@ -372,37 +372,39 @@ export default function CreateCampaignPage() {
         {/* Step 1 */}
         {step === 1 && (
           <div className="w-full flex md:flex-row flex-col gap-5 md:gap-10">
-            {/* Left Side: Image Upload */}
-            <div className="w-full md:w-2/5">
-              <div className="relative">
-                <Upload
-                  type="imageUpload"
-                  onUpload={handleCoverImageUpload}
-                  accept="image/*"
-                >
-                  <div
-                    className="w-[200px] md:w-[360px] h-[200px] md:h-[360px] flex items-center justify-center cursor-pointer bg-center bg-cover border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors"
-                    style={{
-                      backgroundImage: uploadedFiles.coverImageUrl
-                        ? `url(${uploadedFiles.coverImageUrl})`
-                        : `url('/images/image.png')`,
-                    }}
-                    title="Upload campaign image"
+              {/* Left Side: Image Upload */}
+              <div className="w-full md:w-2/5 flex flex-col gap-4">
+                <div className="relative">
+                  <Upload
+                    type="imageUpload"
+                    onUpload={handleCoverImageUpload}
+                    accept="image/*"
                   >
-                    {!uploadedFiles.coverImageUrl && (
-                      <div className="text-center">
-                        <LuImage className="mx-auto mb-2 text-gray-400" size={48} />
-                        <p className="text-gray-500 text-sm">Click to upload</p>
-                      </div>
-                    )}
-                  </div>
-                </Upload>
+                    <div
+                      className="w-[200px] md:w-[360px] h-[200px] md:h-[360px] flex items-center justify-center cursor-pointer bg-center bg-cover border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors"
+                      style={{
+                        backgroundImage: uploadedFiles.coverImageUrl
+                          ? `url(${uploadedFiles.coverImageUrl})`
+                          : `url('/images/image.png')`,
+                      }}
+                      title="Upload campaign image"
+                    >
+                      {!uploadedFiles.coverImageUrl && (
+                        <div className="text-center">
+                          <LuImage className="mx-auto mb-2 text-gray-400" size={48} />
+                          <p className="text-gray-500 text-sm">Click to upload</p>
+                        </div>
+                      )}
+                    </div>
+                  </Upload>
+                  
+                  {/* Plus button positioned to match original design */}
+                  <section className="w-8 md:w-[56px] h-8 md:h-[56px] bg-[#104901] flex items-center justify-center text-white absolute right-[118px] md:right-[160px] 2xl:right-[200px] bottom-6 md:bottom-11">
+                    <Plus className="md:text-4xl text-lg" size={36} />
+                  </section>
+                </div>
                 
-                <section className="w-8 md:w-[56px] h-8 md:h-[56px] bg-[#104901] flex items-center justify-center text-white absolute right-[118px] md:right-[160px] 2xl:right-[200px] bottom-6 md:bottom-11">
-                  <Plus className="md:text-4xl text-lg" size={36} />
-                </section>
-              </div>
-              <p className="font-medium text-sm md:text-xl text-[#104901]">
+                <p className="font-medium text-sm md:text-xl text-[#104901]">
                 Upload your main campaign image
               </p>
             </div>

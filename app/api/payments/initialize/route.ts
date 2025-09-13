@@ -39,27 +39,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get authenticated user using the same method as other APIs
+    // Get authenticated user or create guest user
     const userEmail = await getUserFromRequest(request);
-    if (!userEmail) {
-      return NextResponse.json(
-        { success: false, error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
+    let user;
+    
+    if (userEmail) {
+      // Get authenticated user details
+      const userResult = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, userEmail))
+        .limit(1);
 
-    // Get user details
-    const user = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, userEmail))
-      .limit(1);
-
-    if (!user.length) {
-      return NextResponse.json(
-        { success: false, error: 'User not found' },
-        { status: 404 }
-      );
+      if (!userResult.length) {
+        return NextResponse.json(
+          { success: false, error: 'User not found' },
+          { status: 404 }
+        );
+      }
+      user = userResult[0];
+    } else {
+      // Create guest user for anonymous donations
+      const guestEmail = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}@chainfundit.com`;
+      const guestUser = await db.insert(users).values({
+        email: guestEmail,
+        fullName: 'Anonymous Donor',
+        isVerified: false,
+        hasCompletedProfile: false,
+      }).returning();
+      
+      user = guestUser[0];
     }
 
     // Validate campaign exists and is active
@@ -95,7 +104,7 @@ export async function POST(request: NextRequest) {
     // Create donation record
     const newDonation = await db.insert(donations).values({
       campaignId,
-      donorId: user[0].id,
+      donorId: user.id,
       amount: amount.toString(),
       currency,
       paymentMethod: paymentProvider,
@@ -118,9 +127,9 @@ export async function POST(request: NextRequest) {
           currency,
           donationId,
           campaignId,
-          donorEmail: user[0].email!,
+          donorEmail: user.email!,
           metadata: {
-            donorName: user[0].fullName,
+            donorName: user.fullName,
             campaignTitle: campaign[0].title,
           },
         });
@@ -130,9 +139,9 @@ export async function POST(request: NextRequest) {
           currency,
           donationId,
           campaignId,
-          donorEmail: user[0].email!,
+          donorEmail: user.email!,
           metadata: {
-            donorName: user[0].fullName,
+            donorName: user.fullName,
             campaignTitle: campaign[0].title,
           },
         });
@@ -161,11 +170,11 @@ export async function POST(request: NextRequest) {
         paymentResult = await simulatePaystackPayment({
           amount: amountInKobo,
           currency,
-          email: user[0].email!,
+          email: user.email!,
           donationId,
           campaignId,
           metadata: {
-            donorName: user[0].fullName,
+            donorName: user.fullName,
             campaignTitle: campaign[0].title,
           },
         });
@@ -173,11 +182,11 @@ export async function POST(request: NextRequest) {
         paymentResult = await createPaystackTransaction({
           amount: amountInKobo,
           currency,
-          email: user[0].email!,
+          email: user.email!,
           donationId,
           campaignId,
           metadata: {
-            donorName: user[0].fullName,
+            donorName: user.fullName,
             campaignTitle: campaign[0].title,
           },
           callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/payments/paystack/callback`,

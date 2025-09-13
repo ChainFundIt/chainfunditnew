@@ -4,19 +4,36 @@ import { donations } from '@/lib/schema/donations';
 import { campaigns } from '@/lib/schema/campaigns';
 import { eq } from 'drizzle-orm';
 
-// GET /api/donations - Get all donations (with optional filtering)
+// GET /api/donations - Get donations (with optional filtering)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const campaignId = searchParams.get('campaignId');
     const donorId = searchParams.get('donorId');
+    const donationId = searchParams.get('donationId');
     const status = searchParams.get('status');
     const limit = parseInt(searchParams.get('limit') || '10');
     const offset = parseInt(searchParams.get('offset') || '0');
 
+    let query = db.select().from(donations);
+
+    // If specific donation ID is requested, get that donation
+    if (donationId) {
+      const donation = await db
+        .select()
+        .from(donations)
+        .where(eq(donations.id, donationId))
+        .limit(1);
+      
+      return NextResponse.json({
+        success: true,
+        data: donation,
+      });
+    }
+
     // For now, get all donations with basic pagination
     // TODO: Implement proper filtering with and() operator
-    const allDonations = await db.select().from(donations).limit(limit).offset(offset);
+    const allDonations = await query.limit(limit).offset(offset);
     
     return NextResponse.json({
       success: true,
