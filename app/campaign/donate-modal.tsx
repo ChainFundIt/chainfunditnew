@@ -149,7 +149,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
         if (result.provider === 'paystack' && result.authorization_url) {
           // Redirect to Paystack payment page
           window.location.href = result.authorization_url;
-        } else if (result.provider === 'stripe' && result.clientSecret) {
+        } else if (result.provider === 'stripe' && result.clientSecret && result.donationId) {
           // Store Stripe payment data and show payment form
           setStripePaymentData({
             clientSecret: result.clientSecret,
