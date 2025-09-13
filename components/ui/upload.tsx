@@ -66,7 +66,7 @@ export function Upload({
         />
         <label
           htmlFor="upload-input"
-          className="w-[200px] md:w-[360px] h-[200px] md:h-[360px] flex items-center justify-center cursor-pointer bg-center bg-cove transition-colors"
+          className="w-[200px] md:w-[360px] h-[200px] md:h-[360px] flex items-center justify-center cursor-pointer bg-center bg-cover transition-colors"
           style={{
             backgroundImage: currentPreview
               ? `url(${currentPreview})`
