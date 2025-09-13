@@ -108,8 +108,6 @@ type CampaignFormData = {
   goal: number;
   duration: string;
   video: string;
-  documents: File[];
-  images: File[];
   story: string;
 };
 
@@ -148,8 +146,6 @@ export default function CreateCampaignPage() {
     goal: 0,
     duration: "",
     video: "",
-    documents: [],
-    images: [],
     story: "",
   });
 
@@ -161,21 +157,31 @@ export default function CreateCampaignPage() {
   });
 
   const handleCoverImageUpload = (url: string) => {
-    setUploadedFiles(prev => ({ ...prev, coverImageUrl: url }));
+    console.log('🖼️ Cover image uploaded successfully:', url);
+    setUploadedFiles(prev => {
+      const newState = { ...prev, coverImageUrl: url };
+      console.log('📸 Updated uploadedFiles state:', newState);
+      return newState;
+    });
+    console.log('📸 Cover image URL updated');
   };
 
   const handleImageUpload = (url: string) => {
+    console.log('🖼️ Gallery image uploaded successfully:', url);
     setUploadedFiles(prev => ({ 
       ...prev, 
       imageUrls: [...prev.imageUrls, url] 
     }));
+    console.log('📸 Updated image URLs:', [...uploadedFiles.imageUrls, url]);
   };
 
   const handleDocumentUpload = (url: string) => {
+    console.log('📄 Document uploaded successfully:', url);
     setUploadedFiles(prev => ({ 
       ...prev, 
       documentUrls: [...prev.documentUrls, url] 
     }));
+    console.log('📋 Updated document URLs:', [...uploadedFiles.documentUrls, url]);
   };
 
 
@@ -187,34 +193,6 @@ export default function CreateCampaignPage() {
     }
   };
 
-  const handleSelectFile = (
-    field: "images" | "documents",
-    files: FileList | null
-  ) => {
-    if (!files) return;
-    const selectedFiles = Array.from(files);
-    setFormData((prev) => {
-      const existing = prev[field];
-      const combined = [...existing, ...selectedFiles];
-      const limited =
-        field === "images" ? combined.slice(0, 5) : combined.slice(0, 3);
-      return { ...prev, [field]: limited };
-    });
-  };
-
-  const handleRemoveImage = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index),
-    }));
-  };
-
-  const handleRemoveDocument = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      documents: prev.documents.filter((_, i) => i !== index),
-    }));
-  };
 
   const generateAiSuggestion = async () => {
     const prompt = aiInstruction.trim();
@@ -656,40 +634,41 @@ export default function CreateCampaignPage() {
               </p>
 
               <div className="grid md:grid-cols-3 grid-cols-1 gap-4 my-2">
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  id="campaign-images"
-                  onChange={(e) => handleSelectFile("images", e.target.files)}
-                />
+                {/* Upload component for adding new images */}
+                <div className="col-span-1">
+                  <Upload
+                    type="imageUpload"
+                    onUpload={handleImageUpload}
+                    accept="image/*"
+                    maxSize={1024 * 1024} // 1MB
+                  >
+                    <div className="bg-[#E5ECDE] flex gap-3 items-center px-8 py-4 rounded-2xl text-xl text-[#5F8555] cursor-pointer">
+                      <LuImage size={32} />
+                      Choose image
+                    </div>
+                  </Upload>
+                </div>
 
-                <label
-                  htmlFor="campaign-images"
-                  className="bg-[#E5ECDE] flex gap-3 items-center px-8 py-4 rounded-2xl text-xl text-[#5F8555] cursor-pointer col-span-1"
-                >
-                  <LuImage size={32} />
-                  Choose image
-                </label>
-
-                {/* Preview selected images */}
-                {formData.images.length > 0 ? (
-                  formData.images.map((file, index) => (
+                {/* Preview uploaded images */}
+                {uploadedFiles.imageUrls.length > 0 ? (
+                  uploadedFiles.imageUrls.map((url, index) => (
                     <div
                       key={index}
                       className="relative bg-[#E5ECDE] rounded-2xl overflow-hidden flex items-center justify-center"
                     >
                       <Image
-                        src={URL.createObjectURL(file)}
-                        alt={`preview-${index}`}
+                        src={url}
+                        alt={`uploaded-image-${index}`}
                         width={200}
                         height={120}
                         className="object-cover w-full h-[120px]"
                       />
                       <button
                         type="button"
-                        onClick={() => handleRemoveImage(index)}
+                        onClick={() => {
+                          const newUrls = uploadedFiles.imageUrls.filter((_, i) => i !== index);
+                          setUploadedFiles(prev => ({ ...prev, imageUrls: newUrls }));
+                        }}
                         className="absolute top-2 right-2 bg-red-600 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center"
                       >
                         ×
@@ -698,7 +677,7 @@ export default function CreateCampaignPage() {
                   ))
                 ) : (
                   <>
-                    {[...Array(5)].map((_, index) => (
+                    {[...Array(4)].map((_, index) => (
                       <section
                         key={index}
                         className="bg-[#E5ECDE] flex gap-3 items-center px-8 py-4 rounded-2xl text-xl text-[#5F8555]"
@@ -724,45 +703,48 @@ export default function CreateCampaignPage() {
               </p>
 
               <div className="grid md:grid-cols-3 grid-cols-1 gap-4 my-2">
-                <input
-                  type="file"
-                  accept=".pdf,.doc,.docx"
-                  multiple
-                  className="hidden"
-                  id="supporting-documents"
-                  onChange={(e) =>
-                    handleSelectFile("documents", e.target.files)
-                  }
-                />
-
-                <label
-                  htmlFor="supporting-documents"
-                  className="bg-[#E5ECDE] flex gap-3 items-center px-8 py-4 rounded-2xl text-xl text-[#5F8555] cursor-pointer col-span-1"
-                >
-                  <Paperclip size={32} />
-                  Choose file
-                </label>
-
-                {/* Preview selected documents */}
-                {formData.documents.length > 0 ? (
-                  formData.documents.map((file, index) => (
-                    <div
-                      key={index}
-                      className="relative bg-[#E5ECDE] px-4 py-3 rounded-2xl flex items-center gap-2 text-[#5F8555] text-sm"
-                    >
-                      <Paperclip size={20} />
-                      {file.name.length > 30
-                        ? file.name.slice(0, 30) + "..."
-                        : file.name}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveDocument(index)}
-                        className="absolute top-2 right-2 bg-red-600 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center"
-                      >
-                        ×
-                      </button>
+                {/* Upload component for adding new documents */}
+                <div className="col-span-1">
+                  <Upload
+                    type="documentUpload"
+                    onUpload={handleDocumentUpload}
+                    accept=".pdf,.doc,.docx"
+                    maxSize={10 * 1024 * 1024} // 10MB
+                  >
+                    <div className="bg-[#E5ECDE] flex gap-3 items-center px-8 py-4 rounded-2xl text-xl text-[#5F8555] cursor-pointer">
+                      <Paperclip size={32} />
+                      Choose file
                     </div>
-                  ))
+                  </Upload>
+                </div>
+
+                {/* Preview uploaded documents */}
+                {uploadedFiles.documentUrls.length > 0 ? (
+                  uploadedFiles.documentUrls.map((url, index) => {
+                    // Extract filename from URL
+                    const filename = url.split('/').pop() || `document-${index}`;
+                    return (
+                      <div
+                        key={index}
+                        className="relative bg-[#E5ECDE] px-4 py-3 rounded-2xl flex items-center gap-2 text-[#5F8555] text-sm"
+                      >
+                        <Paperclip size={20} />
+                        {filename.length > 30
+                          ? filename.slice(0, 30) + "..."
+                          : filename}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newUrls = uploadedFiles.documentUrls.filter((_, i) => i !== index);
+                            setUploadedFiles(prev => ({ ...prev, documentUrls: newUrls }));
+                          }}
+                          className="absolute top-2 right-2 bg-red-600 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    );
+                  })
                 ) : (
                   <>
                     {[...Array(2)].map((_, index) => (

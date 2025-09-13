@@ -32,9 +32,15 @@ export function Upload({
       accept,
       maxSize,
       previewUrl: previewUrl ? 'Present' : 'None',
+      previewUrlValue: previewUrl,
       hasOnUploadCallback: typeof onUpload === 'function'
     });
   }, []);
+
+  // Log when previewUrl prop changes
+  React.useEffect(() => {
+    console.log('🔄 previewUrl prop changed:', previewUrl);
+  }, [previewUrl]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     console.log('🚀 Upload process started');
@@ -107,7 +113,7 @@ export function Upload({
     }
   };
 
-  const currentPreview = localPreview || previewUrl;
+  const currentPreview = previewUrl || localPreview;
 
   // Log component state changes
   React.useEffect(() => {
@@ -116,7 +122,10 @@ export function Upload({
       uploadError,
       localPreview: localPreview ? 'Present' : 'None',
       previewUrl: previewUrl ? 'Present' : 'None',
-      currentPreview: currentPreview ? 'Present' : 'None'
+      currentPreview: currentPreview ? 'Present' : 'None',
+      previewUrlValue: previewUrl,
+      localPreviewValue: localPreview,
+      currentPreviewValue: currentPreview
     });
   }, [isUploading, uploadError, localPreview, previewUrl, currentPreview]);
 
