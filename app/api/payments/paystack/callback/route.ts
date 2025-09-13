@@ -26,7 +26,6 @@ async function updateCampaignAmount(campaignId: string) {
       .update(campaigns)
       .set({
         currentAmount: totalAmount.toString(),
-        updatedAt: new Date(),
       })
       .where(eq(campaigns.id, campaignId));
   } catch (error) {
@@ -75,7 +74,6 @@ export async function GET(request: NextRequest) {
       .set({
         paymentStatus: 'completed',
         processedAt: new Date(),
-        updatedAt: new Date(),
       })
       .where(eq(donations.id, donation[0].id));
 

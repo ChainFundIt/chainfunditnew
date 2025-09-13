@@ -24,10 +24,10 @@ async function testDonationUpdates() {
       console.log(`${index + 1}. ID: ${donation.id}`);
       console.log(`   Amount: ${donation.currency} ${donation.amount}`);
       console.log(`   Status: ${donation.paymentStatus}`);
-      console.log(`   Provider: ${donation.paymentProvider}`);
+      console.log(`   Provider: ${donation.paymentMethod}`);
       console.log(`   Payment ID: ${donation.paymentIntentId || 'N/A'}`);
       console.log(`   Created: ${donation.createdAt}`);
-      console.log(`   Updated: ${donation.updatedAt}`);
+      console.log(`   Processed: ${donation.processedAt || 'N/A'}`);
       console.log(`   Campaign: ${donation.campaignId}`);
       console.log('');
     });
@@ -53,7 +53,7 @@ async function testDonationUpdates() {
         id: campaigns.id,
         title: campaigns.title,
         currentAmount: campaigns.currentAmount,
-        targetAmount: campaigns.targetAmount,
+        goalAmount: campaigns.goalAmount,
       })
       .from(campaigns)
       .orderBy(desc(campaigns.updatedAt))
@@ -62,8 +62,8 @@ async function testDonationUpdates() {
     campaignsWithAmounts.forEach((campaign, index) => {
       console.log(`${index + 1}. ${campaign.title}`);
       console.log(`   Current: ${campaign.currentAmount}`);
-      console.log(`   Target: ${campaign.targetAmount}`);
-      console.log(`   Progress: ${((parseFloat(campaign.currentAmount || '0') / parseFloat(campaign.targetAmount || '1')) * 100).toFixed(1)}%`);
+      console.log(`   Goal: ${campaign.goalAmount}`);
+      console.log(`   Progress: ${((parseFloat(campaign.currentAmount || '0') / parseFloat(campaign.goalAmount || '1')) * 100).toFixed(1)}%`);
       console.log('');
     });
 
@@ -79,7 +79,7 @@ async function testDonationUpdates() {
       pendingDonations.forEach((donation, index) => {
         console.log(`${index + 1}. ID: ${donation.id}`);
         console.log(`   Amount: ${donation.currency} ${donation.amount}`);
-        console.log(`   Provider: ${donation.paymentProvider}`);
+        console.log(`   Provider: ${donation.paymentMethod}`);
         console.log(`   Created: ${donation.createdAt}`);
         console.log('');
       });
