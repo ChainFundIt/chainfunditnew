@@ -416,7 +416,7 @@ const Main = (props: Props) => {
             <section className="flex items-center justify-center my-auto">
               <button
                 onClick={toggleVideoPlayPause}
-                className="transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 rounded-full"
+                className="transition-all duration-300 hover:scale-110"
               >
                 {isVideoPlaying ? (
                   <FaPause
