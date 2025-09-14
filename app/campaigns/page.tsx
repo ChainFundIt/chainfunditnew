@@ -45,7 +45,7 @@ const campaignReasons = [
   "Uncategorized",
 ];
 
-const campaignStatuses = ["active", "completed", "paused", "cancelled"];
+const campaignStatuses = ["active", "completed", "paused", "cancelled", "trending"];
 
 // Component to handle async currency conversion
 function CampaignCardWithConversion({ 
@@ -98,7 +98,6 @@ function CampaignCardWithConversion({
 }
 
 export default function AllCampaignsPage() {
-  const [activeTab, setActiveTab] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedReason, setSelectedReason] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
@@ -158,11 +157,11 @@ export default function AllCampaignsPage() {
     // Server-side filtering handles status and reason filters
     // Only apply tab filtering if no status filter is selected
     if (!selectedStatus) {
-      if (activeTab === "Live") {
+      if (selectedStatus === "active") {
         filtered = filtered.filter((campaign) => campaign.status === "active");
-      } else if (activeTab === "Completed") {
+      } else if (selectedStatus === "completed") {
         filtered = filtered.filter((campaign) => campaign.status === "completed");
-      } else if (activeTab === "Trending") {
+      } else if (selectedStatus === "trending") {
         // Show campaigns with high engagement (you can customize this logic)
         filtered = filtered.filter(
           (campaign) =>
@@ -205,7 +204,6 @@ export default function AllCampaignsPage() {
     campaigns,
     searchQuery,
     selectedStatus,
-    activeTab,
     sortBy,
     geolocation,
     shouldShowCampaign,
@@ -236,7 +234,6 @@ export default function AllCampaignsPage() {
     }
   }, [error]);
 
-  const tabs = ["All", "Live", "Completed", "Trending"];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50">
@@ -384,25 +381,6 @@ export default function AllCampaignsPage() {
               </Button>
             </div>
           )}
-        </div>
-
-        {/* Tabs */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-          <div className="flex flex-wrap gap-2">
-            {tabs.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
-                  activeTab === tab
-                    ? "bg-[#104901] text-white shadow-lg"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* View Mode Toggle */}

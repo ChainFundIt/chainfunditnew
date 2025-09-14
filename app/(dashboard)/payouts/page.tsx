@@ -20,6 +20,7 @@ import { formatCurrency } from '@/lib/utils/currency';
 import { getPayoutProvider, getPayoutConfig, isPayoutSupported } from '@/lib/payments/payout-config';
 import { getCurrencyCode } from '@/lib/utils/currency';
 import { toast } from 'sonner';
+import { useGeolocation, useCurrencyConversion } from '@/hooks/use-geolocation';
 
 interface CampaignPayout {
   id: string;
@@ -52,6 +53,10 @@ const PayoutsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processingPayouts, setProcessingPayouts] = useState<Set<string>>(new Set());
+  
+  // Get user's geolocation and currency conversion capabilities
+  const { geolocation, loading: geolocationLoading } = useGeolocation();
+  const { formatAmount, loading: conversionLoading } = useCurrencyConversion(geolocation);
 
   useEffect(() => {
     fetchPayoutData();
@@ -112,6 +117,44 @@ const PayoutsPage = () => {
     }
   };
 
+  // Component for async currency formatting
+  const CurrencyDisplay = ({ amount, currency }: { amount: number; currency: string }) => {
+    const [formattedAmount, setFormattedAmount] = useState<string>('');
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+      const formatCurrencyWithConversion = async () => {
+        if (!geolocation) {
+          setFormattedAmount(formatCurrency(amount, currency));
+          setIsLoading(false);
+          return;
+        }
+        
+        try {
+          const result = await formatAmount(amount, currency);
+          if (result.originalAmount && result.originalCurrency && result.originalCurrency !== result.currency) {
+            setFormattedAmount(`${formatCurrency(result.amount, result.currency)} (${formatCurrency(result.originalAmount, result.originalCurrency)})`);
+          } else {
+            setFormattedAmount(formatCurrency(result.amount, result.currency));
+          }
+        } catch (error) {
+          console.error('Currency conversion error:', error);
+          setFormattedAmount(formatCurrency(amount, currency));
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      formatCurrencyWithConversion();
+    }, [amount, currency, geolocation, formatAmount]);
+
+    if (isLoading) {
+      return <span className="animate-pulse">...</span>;
+    }
+
+    return <span>{formattedAmount}</span>;
+  };
+
   const getProviderIcon = (provider: string) => {
     switch (provider) {
       case 'stripe':
@@ -136,7 +179,7 @@ const PayoutsPage = () => {
     }
   };
 
-  if (loading) {
+  if (loading || geolocationLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 p-6">
         <div className="max-w-7xl mx-auto">
@@ -198,6 +241,15 @@ const PayoutsPage = () => {
           <p className="text-gray-600">
             Manage your campaign earnings and request payouts to your bank account.
           </p>
+          {geolocation && (
+            <div className="mt-2 text-sm text-gray-500">
+              <span className="inline-flex items-center gap-1">
+                <span>📍</span>
+                Showing amounts in your local currency ({geolocation.currency}) 
+                {geolocation.canSeeAllCurrencies ? ' - You can see all currencies' : ` - Only showing ${geolocation.currency} campaigns`}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Summary Cards */}
@@ -211,7 +263,10 @@ const PayoutsPage = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-[#104901]">
-                {formatCurrency(payoutData.summary.totalRaised, 'USD')}
+                <CurrencyDisplay 
+                  amount={payoutData.summary.totalRaised} 
+                  currency={geolocation?.currency || 'USD'} 
+                />
               </div>
               <p className="text-xs text-gray-500">
                 Across {payoutData.summary.totalCampaigns} campaigns
@@ -228,7 +283,10 @@ const PayoutsPage = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-[#104901]">
-                {formatCurrency(payoutData.totalAvailableForPayout, 'USD')}
+                <CurrencyDisplay 
+                  amount={payoutData.totalAvailableForPayout} 
+                  currency={geolocation?.currency || 'USD'} 
+                />
               </div>
               <p className="text-xs text-gray-500">
                 {payoutData.summary.campaignsWithPayouts} campaigns ready
@@ -281,8 +339,8 @@ const PayoutsPage = () => {
                         {campaign.title}
                       </CardTitle>
                       <div className="flex items-center gap-4 text-sm text-gray-600">
-                        <span>Target: {formatCurrency(campaign.targetAmount, campaign.currencyCode)}</span>
-                        <span>Raised: {formatCurrency(campaign.totalRaised, campaign.currencyCode)}</span>
+                        <span>Target: <CurrencyDisplay amount={campaign.targetAmount} currency={campaign.currencyCode} /></span>
+                        <span>Raised: <CurrencyDisplay amount={campaign.totalRaised} currency={campaign.currencyCode} /></span>
                         <span>Progress: {Math.round((campaign.totalRaised / campaign.targetAmount) * 100)}%</span>
                       </div>
                     </div>
@@ -309,7 +367,7 @@ const PayoutsPage = () => {
                           <div className="flex items-center gap-2 text-green-600">
                             <CheckCircle className="h-5 w-5" />
                             <span className="text-sm font-medium">
-                              Payout Available: {formatCurrency(campaign.totalRaised, campaign.currencyCode)}
+                              Payout Available: <CurrencyDisplay amount={campaign.totalRaised} currency={campaign.currencyCode} />
                             </span>
                           </div>
                         ) : (
@@ -331,7 +389,7 @@ const PayoutsPage = () => {
                           <Button
                             onClick={() => handlePayout(campaign)}
                             disabled={processingPayouts.has(campaign.id)}
-                            className="bg-[#104901] hover:bg-[#0d3a01] text-white"
+                            className="bg-[#104901] text-white"
                           >
                             {processingPayouts.has(campaign.id) ? (
                               <>

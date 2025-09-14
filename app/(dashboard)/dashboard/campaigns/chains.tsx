@@ -20,7 +20,6 @@ type Props = {
 };
 
 const Chains = ({ campaigns }: Props) => {
-  const isEmpty = campaigns.length === 0;
   const transformedCampaigns = campaigns.map(transformCampaign);
 
   // Get chain counts for all campaigns - use memoized IDs from parent
@@ -31,6 +30,16 @@ const Chains = ({ campaigns }: Props) => {
 
   const { chainCounts, loading: chainsLoading } =
     useCampaignChains(campaignIds);
+
+  // Filter campaigns to only show those with chains (chainCount > 0)
+  const campaignsWithChains = useMemo(() => {
+    return transformedCampaigns.filter((campaign) => {
+      const chainCount = chainCounts[campaign.id] || 0;
+      return chainCount > 0;
+    });
+  }, [transformedCampaigns, chainCounts]);
+
+  const isEmpty = campaignsWithChains.length === 0;
 
   if (isEmpty) {
     return (
@@ -67,7 +76,7 @@ const Chains = ({ campaigns }: Props) => {
   return (
     <div className="flex flex-col gap-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {transformedCampaigns.map((campaign) => {
+        {campaignsWithChains.map((campaign) => {
           const chainCount = chainCounts[campaign.id] || 0;
 
           return (
@@ -75,7 +84,6 @@ const Chains = ({ campaigns }: Props) => {
               key={campaign.id}
               className="group relative overflow-hidden rounded-2xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
             >
-              <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-[#104901] rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
               <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl overflow-hidden">
                 <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200">
                   <Image
