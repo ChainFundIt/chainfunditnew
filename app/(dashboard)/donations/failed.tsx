@@ -165,7 +165,7 @@ const FailedDonations = (props: Props) => {
                 </div>
               </div>
               
-              <div className="text-right">
+              <div className="text-right flex gap-3 items-center">
                 <p className="font-bold text-lg text-[#104901]">
                   {formatCurrency(donation.amount, donation.currency)}
                 </p>
