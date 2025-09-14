@@ -40,18 +40,13 @@ const Navbar = (props: Props) => {
             <Link href="/campaigns">Campaigns</Link>
           </li>
           <li>
-            <Link href="#">For Individuals</Link>
-          </li>
-          <li>
-            <Link href="#">For Charities</Link>
-          </li>
-          <li>
             <Link href="/virtual-giving-mall">Virtual Giving Mall</Link>
           </li>
           <li>
-            <Link href="/faqs" className="">
-              FAQs
-            </Link>
+            <Link href="#">About</Link>
+          </li>
+          <li>
+            <Link href="/faqs">FAQs</Link>
           </li>
         </ul>
         <section className="hidden md:flex items-center gap-4">
@@ -62,7 +57,7 @@ const Navbar = (props: Props) => {
           </Link>
           <Search color="#757575" size={24} />
           <NotificationAlert />
-         
+
           <Link href="/settings">
             <Image
               src="/images/user.png"
@@ -82,19 +77,17 @@ const Navbar = (props: Props) => {
               <Link href="/campaigns">Campaigns</Link>
             </li>
             <li>
-              <Link href="#" onClick={() => setMenuOpen(false)}>
-                For Individuals
-              </Link>
-            </li>
-            <li>
-              <Link href="#" onClick={() => setMenuOpen(false)}>
-                For Charities
-              </Link>
-            </li>
-            <li>
-              <Link href="/virtual-giving-mall" onClick={() => setMenuOpen(false)}>
+              <Link
+                href="/virtual-giving-mall"
+                onClick={() => setMenuOpen(false)}
+              >
                 Virtual Giving Mall
               </Link>
+              <li>
+                <Link href="#" onClick={() => setMenuOpen(false)}>
+                  About
+                </Link>
+              </li>
             </li>
             <li>
               <Link href="/faqs" onClick={() => setMenuOpen(false)}>
