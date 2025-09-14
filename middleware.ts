@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyUserJWT } from "@/lib/auth";
+import { verifyUserJWT } from "@/lib/auth-middleware";
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

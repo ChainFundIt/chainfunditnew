@@ -10,6 +10,7 @@ interface SessionTimeoutProviderProps {
   children: React.ReactNode;
   config?: {
     timeoutMinutes?: number;
+    warningMinutes?: number;
     checkInterval?: number;
   };
 }
