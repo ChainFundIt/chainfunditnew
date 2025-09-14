@@ -67,6 +67,12 @@ function CampaignCardWithConversion({
   React.useEffect(() => {
     const convertAmounts = async () => {
       try {
+        // Validate campaign data before processing
+        if (!campaign || typeof campaign.currentAmount !== 'number' || typeof campaign.goalAmount !== 'number') {
+          console.warn('Invalid campaign data:', campaign);
+          return;
+        }
+
         const convertedCurrentAmount = await formatAmount(campaign.currentAmount, campaign.currency);
         const convertedGoalAmount = await formatAmount(campaign.goalAmount, campaign.currency);
         
@@ -78,27 +84,38 @@ function CampaignCardWithConversion({
         console.error('Failed to convert amounts:', error);
         // Fallback to original amounts
         setConvertedAmounts({
-          currentAmount: { amount: campaign.currentAmount, currency: campaign.currency },
-          goalAmount: { amount: campaign.goalAmount, currency: campaign.currency },
+          currentAmount: { amount: campaign.currentAmount || 0, currency: campaign.currency || 'USD' },
+          goalAmount: { amount: campaign.goalAmount || 0, currency: campaign.currency || 'USD' },
         });
       }
     };
 
     convertAmounts();
-  }, [campaign.currentAmount, campaign.goalAmount, campaign.currency, formatAmount]);
+  }, [campaign?.currentAmount, campaign?.goalAmount, campaign?.currency, formatAmount]);
 
-  return (
-    <CampaignCard
-      campaign={campaign}
-      viewMode={viewMode}
-      geolocation={geolocation}
-      convertedAmounts={convertedAmounts}
-    />
-  );
+  // Add error boundary for campaign card rendering
+  try {
+    return (
+      <CampaignCard
+        campaign={campaign}
+        viewMode={viewMode}
+        geolocation={geolocation}
+        convertedAmounts={convertedAmounts}
+      />
+    );
+  } catch (error) {
+    console.error('Error rendering campaign card:', error, campaign);
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <p className="text-red-600 text-sm">Error loading campaign</p>
+      </div>
+    );
+  }
 }
 
 export default function AllCampaignsPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [selectedReason, setSelectedReason] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -114,6 +131,15 @@ export default function AllCampaignsPage() {
   const { geolocation, loading: locationLoading, error: locationError } = useGeolocation();
   const { shouldShowCampaign } = useCampaignFiltering(geolocation);
   const { formatAmount } = useCurrencyConversion(geolocation);
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Add timeout for loading
   useEffect(() => {
@@ -135,91 +161,112 @@ export default function AllCampaignsPage() {
 
   // Filter and sort campaigns
   const filteredCampaigns = useMemo(() => {
-    let filtered = campaigns;
+    try {
+      let filtered = [...campaigns]; // Create a copy to avoid mutations
 
-    // Filter by geolocation/currency
-    if (geolocation) {
-      filtered = filtered.filter((campaign) => shouldShowCampaign(campaign.currency));
-    }
-
-    // Filter by search query
-    if (searchQuery) {
-      filtered = filtered.filter(
-        (campaign) =>
-          campaign.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          campaign.description
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          campaign.creatorName.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Server-side filtering handles status and reason filters
-    // Only apply tab filtering if no status filter is selected
-    if (!selectedStatus) {
-      if (selectedStatus === "active") {
-        filtered = filtered.filter((campaign) => campaign.status === "active");
-      } else if (selectedStatus === "completed") {
-        filtered = filtered.filter((campaign) => campaign.status === "completed");
-      } else if (selectedStatus === "trending") {
-        // Show campaigns with high engagement (you can customize this logic)
-        filtered = filtered.filter(
-          (campaign) =>
-            campaign.status === "active" &&
-            (campaign.stats?.totalDonations || 0) > 10
-        );
+      // Filter by geolocation/currency
+      if (geolocation) {
+        filtered = filtered.filter((campaign) => shouldShowCampaign(campaign.currency));
       }
+
+      // Filter by search query (using debounced version)
+      if (debouncedSearchQuery.trim()) {
+        const query = debouncedSearchQuery.toLowerCase().trim();
+        filtered = filtered.filter((campaign) => {
+          try {
+            return (
+              (campaign.title?.toLowerCase() || '').includes(query) ||
+              (campaign.description?.toLowerCase() || '').includes(query) ||
+              (campaign.creatorName?.toLowerCase() || '').includes(query)
+            );
+          } catch (error) {
+            console.warn('Error filtering campaign:', error, campaign);
+            return false;
+          }
+        });
+      }
+
+      // Server-side filtering handles status and reason filters
+      // Only apply tab filtering if no status filter is selected
+      if (!selectedStatus) {
+        if (selectedStatus === "active") {
+          filtered = filtered.filter((campaign) => campaign.status === "active");
+        } else if (selectedStatus === "completed") {
+          filtered = filtered.filter((campaign) => campaign.status === "completed");
+        } else if (selectedStatus === "trending") {
+          // Show campaigns with high engagement (you can customize this logic)
+          filtered = filtered.filter(
+            (campaign) =>
+              campaign.status === "active" &&
+              (campaign.stats?.totalDonations || 0) > 10
+          );
+        }
+      }
+
+      // Sort campaigns
+      switch (sortBy) {
+        case "newest":
+          filtered = filtered.sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+          break;
+        case "oldest":
+          filtered = filtered.sort(
+            (a, b) =>
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          );
+          break;
+        case "amount":
+          filtered = filtered.sort(
+            (a, b) => (b.stats?.totalAmount || 0) - (a.stats?.totalAmount || 0)
+          );
+          break;
+        case "popular":
+          filtered = filtered.sort(
+            (a, b) =>
+              (b.stats?.totalDonations || 0) - (a.stats?.totalDonations || 0)
+          );
+          break;
+      }
+
+      return filtered;
+    } catch (error) {
+      console.error('Error filtering campaigns:', error);
+      return campaigns; // Return original campaigns if filtering fails
     }
-
-
-    // Sort campaigns
-    switch (sortBy) {
-      case "newest":
-        filtered = filtered.sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-        break;
-      case "oldest":
-        filtered = filtered.sort(
-          (a, b) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        );
-        break;
-      case "amount":
-        filtered = filtered.sort(
-          (a, b) => (b.stats?.totalAmount || 0) - (a.stats?.totalAmount || 0)
-        );
-        break;
-      case "popular":
-        filtered = filtered.sort(
-          (a, b) =>
-            (b.stats?.totalDonations || 0) - (a.stats?.totalDonations || 0)
-        );
-        break;
-    }
-
-    return filtered;
   }, [
     campaigns,
-    searchQuery,
+    debouncedSearchQuery, // Use debounced search query instead
     selectedStatus,
     sortBy,
     geolocation,
     shouldShowCampaign,
   ]);
 
-  // Handle search with debouncing
+  // Handle search with error handling
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+    try {
+      const value = e.target.value;
+      setSearchQuery(value);
+    } catch (error) {
+      console.error('Error handling search input:', error);
+      // Reset search on error
+      setSearchQuery("");
+    }
   };
 
   // Clear all filters
   const clearFilters = () => {
-    setSearchQuery("");
-    setSelectedReason("");
-    setSelectedStatus("");
-    setSortBy("newest");
+    try {
+      setSearchQuery("");
+      setDebouncedSearchQuery("");
+      setSelectedReason("");
+      setSelectedStatus("");
+      setSortBy("newest");
+    } catch (error) {
+      console.error('Error clearing filters:', error);
+    }
   };
 
   // Update server-side filters when status or reason changes
