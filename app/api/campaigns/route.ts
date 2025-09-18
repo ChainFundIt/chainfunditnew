@@ -4,6 +4,7 @@ import { campaigns, users, donations } from '@/lib/schema';
 import { eq, and, count, sum } from 'drizzle-orm';
 import { parse } from 'cookie';
 import { verifyUserJWT } from '@/lib/auth';
+import { generateSlug, generateUniqueSlug } from '@/lib/utils/slug';
 
 async function getUserFromRequest(request: NextRequest) {
   const cookie = request.headers.get('cookie') || '';
@@ -41,6 +42,7 @@ export async function GET(request: NextRequest) {
     const campaignsWithDetails = await db
       .select({
         id: campaigns.id,
+        slug: campaigns.slug,
         title: campaigns.title,
         subtitle: campaigns.subtitle,
         description: campaigns.description,
@@ -208,10 +210,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Generate unique slug for the campaign
+    const baseSlug = generateSlug(title);
+    
+    // Check for existing slugs to ensure uniqueness
+    const existingSlugs = await db
+      .select({ slug: campaigns.slug })
+      .from(campaigns)
+      .where(eq(campaigns.slug, baseSlug));
+    
+    const uniqueSlug = existingSlugs.length > 0 
+      ? generateUniqueSlug(baseSlug, existingSlugs.map(c => c.slug))
+      : baseSlug;
+
     // Create campaign
     const newCampaign = await db.insert(campaigns).values({
       creatorId: userId,
       title,
+      slug: uniqueSlug,
       subtitle: subtitle || null,
       description,
       reason: reason || null,

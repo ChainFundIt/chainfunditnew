@@ -48,6 +48,7 @@ interface DashboardStats {
 
 interface Campaign {
   id: string;
+  slug: string;
   title: string;
   subtitle: string;
   goalAmount: number;
@@ -333,7 +334,7 @@ export default function DashboardPage() {
                 </div>
               ) : campaigns.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {campaigns.slice(0, 6).map((campaign) => (
+                  {campaigns.slice(0, 3).map((campaign) => (
                     <div
                       key={campaign.id}
                       className="group relative overflow-hidden rounded-2xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
@@ -393,7 +394,7 @@ export default function DashboardPage() {
                           <Button
                             variant="outline"
                             className="w-full mt-6 text-[#104901] border-[#104901] hover:bg-[#104901] hover:text-white rounded-xl py-3 transition-all duration-300"
-                            onClick={() => router.push(`/campaign/${campaign.id}`)}
+                            onClick={() => router.push(`/campaign/${campaign.slug}`)}
                           >
                             <Eye className="h-4 w-4 mr-2" />
                             View Campaign

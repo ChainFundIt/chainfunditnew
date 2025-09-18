@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 
 interface PublicCampaign {
   id: string;
+  slug: string;
   title: string;
   subtitle: string;
   description: string;

@@ -12,16 +12,16 @@ export function useFileUpload() {
       const formData = new FormData();
       formData.append(type, file);
 
-      // Try local upload first (more reliable)
-      let response = await fetch('/api/upload-local', {
+      // Try R2 upload first (for production)
+      let response = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
       });
 
-      // If local upload fails, try R2 upload
+      // If R2 upload fails, try local upload as fallback
       if (!response.ok) {
-        console.log('Local upload failed, trying R2 upload...');
-        response = await fetch('/api/upload', {
+        console.log('R2 upload failed, trying local upload...');
+        response = await fetch('/api/upload-local', {
           method: 'POST',
           body: formData,
         });
@@ -34,6 +34,7 @@ export function useFileUpload() {
 
       const result = await response.json();
       console.log('Upload successful:', result);
+      console.log('Upload URL:', result.url);
       return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Upload failed';

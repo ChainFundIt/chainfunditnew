@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { PiYoutubeLogoLight } from "react-icons/pi";
-import { FaPlay, FaPause } from "react-icons/fa";
 import CardDetailsDrawer from "@/components/homepage/CardDetailsDrawer";
 import {
   Select,
@@ -87,6 +85,7 @@ const Main = (props: Props) => {
   const cardDetails = filteredCampaigns.map((campaign) => {
     return {
       id: campaign.id,
+      slug: campaign.slug,
       title: campaign.title,
       description: campaign.description,
       raised: `${formatCurrency(
@@ -412,28 +411,8 @@ const Main = (props: Props) => {
             <source src="/video/chain-podcast.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
-          <section className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0)_70%,#F2F1E9_100%)] h-full px-2 md:px-4 py-4 md:py-6 flex flex-col">
-            <section className="flex items-center justify-center my-auto">
-              <button
-                onClick={toggleVideoPlayPause}
-                className="transition-all duration-300 hover:scale-110"
-              >
-                {isVideoPlaying ? (
-                  <FaPause
-                    color="white"
-                    size={32}
-                    className="md:w-[100px] md:h-[100px] w-[32px] h-[32px] drop-shadow-lg"
-                  />
-                ) : (
-                  <FaPlay
-                    color="white"
-                    size={32}
-                    className="md:w-[100px] md:h-[100px] w-[32px] h-[32px] drop-shadow-lg"
-                  />
-                )}
-              </button>
-            </section>
-            <div className="flex flex-col gap-1 justify-end ">
+          <section className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0)_70%,#F2F1E9_100%)] h-full px-2 md:px-4 py-4 md:py-6">
+            <div className="space-y-1 absolute bottom-5 flex flex-col gap-1 justify-end mt-auto">
               <p className="font-dm font-medium text-lg md:text-xl text-black">
                 Video explainers
               </p>

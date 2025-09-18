@@ -110,32 +110,32 @@ const Footer = (props: Props) => {
         </p>
         <section className="flex flex-wrap gap-2 md:gap-3 items-center justify-center md:justify-end">
           {[
-            { src: "/images/paystack-white.png", alt: "Paystack", width: 80 },
-            { src: "/images/stripe-white.png", alt: "Stripe", width: 32 },
-            { src: "/images/visa-white.png", alt: "Visa", width: 36 },
+            { src: "/images/paystack-white.png", alt: "Paystack", width: 150 },
+            { src: "/images/stripe-white.png", alt: "Stripe", width: 40 },
+            { src: "/images/visa-white.png", alt: "Visa", width: 40 },
             {
               src: "/images/mastercard-white.png",
               alt: "Mastercard",
-              width: 24,
+              width: 40,
             },
             {
               src: "/images/amex-white.png",
               alt: "American Express",
-              width: 20,
+              width: 40,
             },
             {
               src: "/images/google-pay-white.png",
               alt: "Google Pay",
-              width: 28,
+              width: 40,
             },
-            { src: "/images/apple-pay-white.png", alt: "Apple Pay", width: 28 },
+            { src: "/images/apple-pay-white.png", alt: "Apple Pay", width: 40 },
           ].map((img) => (
             <Image
               key={img.src}
               src={img.src}
               alt={img.alt}
               width={img.width}
-              height={16}
+              height={20}
               className="object-contain"
             />
           ))}

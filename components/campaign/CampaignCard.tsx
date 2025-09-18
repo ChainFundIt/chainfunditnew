@@ -13,6 +13,7 @@ import { needsEmojiFallback } from '@/lib/utils/campaign-emojis';
 
 interface Campaign {
   id: string;
+  slug: string;
   title: string;
   subtitle: string;
   description: string;
@@ -85,6 +86,8 @@ export function CampaignCard({ campaign, viewMode, geolocation, convertedAmounts
         return 'bg-green-100 text-green-800';
       case 'completed':
         return 'bg-blue-100 text-blue-800';
+      case 'closed':
+        return 'bg-purple-100 text-purple-800';
       case 'paused':
         return 'bg-yellow-100 text-yellow-800';
       case 'cancelled':
@@ -94,36 +97,68 @@ export function CampaignCard({ campaign, viewMode, geolocation, convertedAmounts
     }
   };
 
+  const getStatusDisplayText = (status: string, closedAt?: string) => {
+    switch (status) {
+      case 'closed':
+        if (closedAt) {
+          const closedDate = new Date(closedAt);
+          const now = new Date();
+          const daysSinceClosed = Math.floor((now.getTime() - closedDate.getTime()) / (1000 * 60 * 60 * 24));
+          
+          if (daysSinceClosed === 0) {
+            return 'Closed Today';
+          } else if (daysSinceClosed === 1) {
+            return 'Closed Yesterday';
+          } else if (daysSinceClosed < 7) {
+            return `Closed ${daysSinceClosed} days ago`;
+          } else {
+            return `Closed ${closedDate.toLocaleDateString()}`;
+          }
+        }
+        return 'Closed';
+      case 'active':
+        return 'Active';
+      case 'completed':
+        return 'Completed';
+      case 'paused':
+        return 'Paused';
+      case 'cancelled':
+        return 'Cancelled';
+      default:
+        return status.charAt(0).toUpperCase() + status.slice(1);
+    }
+  };
+
   if (viewMode === 'list') {
     return (
       <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
         <div className="flex flex-col md:flex-row">
           {/* Image */}
-          <div className="md:w-1/3 relative">
+          <div className="md:w-1/3 h-[400px] relative">
             {needsEmojiFallback(campaign.coverImageUrl) ? (
               <EmojiFallbackImage
                 category={campaign.reason}
                 title={campaign.title}
-                className="w-full h-48 md:h-full"
+                className="w-full h-full object-cover"
               />
             ) : (
               <R2Image
                 src={campaign.coverImageUrl!}
                 alt={campaign.title}
                 width={400}
-                height={300}
-                className="w-full h-48 md:h-full object-cover"
+                height={400}
+                className="w-full h-full object-cover"
               />
             )}
             <div className="absolute top-3 left-3">
               <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(campaign.status)}`}>
-                {campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
+                {getStatusDisplayText(campaign.status, campaign.closedAt)}
               </span>
             </div>
           </div>
 
           {/* Content */}
-          <div className="md:w-2/3 p-6 flex flex-col justify-between">
+          <div className="md:w-2/3 p-6 flex flex-col justify-between h-[400px]">
             <div>
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
@@ -191,7 +226,7 @@ export function CampaignCard({ campaign, viewMode, geolocation, convertedAmounts
                   Share
                 </Button>
               </div>
-              <Link href={`/campaign/${campaign.id}`}>
+              <Link href={`/campaign/${campaign.slug}`}>
                 <Button className="">
                   <Eye className="h-4 w-4 mr-2" />
                   View Campaign
@@ -226,7 +261,7 @@ export function CampaignCard({ campaign, viewMode, geolocation, convertedAmounts
         )}
         <div className="absolute top-3 left-3">
           <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(campaign.status)}`}>
-            {campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
+            {getStatusDisplayText(campaign.status, campaign.closedAt)}
           </span>
         </div>
         <div className="absolute top-3 right-3">
@@ -280,7 +315,7 @@ export function CampaignCard({ campaign, viewMode, geolocation, convertedAmounts
         </div>
 
         {/* Action Button */}
-        <Link href={`/campaign/${campaign.id}`} className="block">
+        <Link href={`/campaign/${campaign.slug}`} className="block">
           <Button className="w-full">
             View Campaign
           </Button>

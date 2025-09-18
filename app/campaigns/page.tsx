@@ -26,9 +26,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import Navbar from "@/app/campaign/Navbar";
+import Navbar from "./Navbar";
 import { useGeolocation, useCampaignFiltering, useCurrencyConversion } from "@/hooks/use-geolocation";
-import { formatCurrencyWithConversion } from "@/lib/utils/currency";
 const campaignReasons = [
   "Emergency",
   "Business",
@@ -45,7 +44,7 @@ const campaignReasons = [
   "Uncategorized",
 ];
 
-const campaignStatuses = ["active", "completed", "paused", "cancelled", "trending"];
+const campaignStatuses = ["active", "closed", "trending"];
 
 // Component to handle async currency conversion
 function CampaignCardWithConversion({ 
@@ -67,7 +66,6 @@ function CampaignCardWithConversion({
   React.useEffect(() => {
     const convertAmounts = async () => {
       try {
-        // Validate campaign data before processing
         if (!campaign || typeof campaign.currentAmount !== 'number' || typeof campaign.goalAmount !== 'number') {
           console.warn('Invalid campaign data:', campaign);
           return;
@@ -82,7 +80,6 @@ function CampaignCardWithConversion({
         });
       } catch (error) {
         console.error('Failed to convert amounts:', error);
-        // Fallback to original amounts
         setConvertedAmounts({
           currentAmount: { amount: campaign.currentAmount || 0, currency: campaign.currency || 'USD' },
           goalAmount: { amount: campaign.goalAmount || 0, currency: campaign.currency || 'USD' },
@@ -93,7 +90,6 @@ function CampaignCardWithConversion({
     convertAmounts();
   }, [campaign?.currentAmount, campaign?.goalAmount, campaign?.currency, formatAmount]);
 
-  // Add error boundary for campaign card rendering
   try {
     return (
       <CampaignCard
@@ -136,12 +132,11 @@ export default function AllCampaignsPage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
-    }, 300); // 300ms debounce
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Add timeout for loading
   useEffect(() => {
     if (loading) {
       const timer = setTimeout(() => {
@@ -159,17 +154,14 @@ export default function AllCampaignsPage() {
     }
   }, [loading]);
 
-  // Filter and sort campaigns
   const filteredCampaigns = useMemo(() => {
     try {
-      let filtered = [...campaigns]; // Create a copy to avoid mutations
+      let filtered = [...campaigns];
 
-      // Filter by geolocation/currency
       if (geolocation) {
         filtered = filtered.filter((campaign) => shouldShowCampaign(campaign.currency));
       }
 
-      // Filter by search query (using debounced version)
       if (debouncedSearchQuery.trim()) {
         const query = debouncedSearchQuery.toLowerCase().trim();
         filtered = filtered.filter((campaign) => {
@@ -186,24 +178,16 @@ export default function AllCampaignsPage() {
         });
       }
 
-      // Server-side filtering handles status and reason filters
-      // Only apply tab filtering if no status filter is selected
-      if (!selectedStatus) {
-        if (selectedStatus === "active") {
-          filtered = filtered.filter((campaign) => campaign.status === "active");
-        } else if (selectedStatus === "completed") {
-          filtered = filtered.filter((campaign) => campaign.status === "completed");
-        } else if (selectedStatus === "trending") {
-          // Show campaigns with high engagement (you can customize this logic)
-          filtered = filtered.filter(
-            (campaign) =>
-              campaign.status === "active" &&
-              (campaign.stats?.totalDonations || 0) > 10
-          );
-        }
+      // Handle trending filter on client side since it's computed
+      if (selectedStatus === "trending") {
+        filtered = filtered.filter(
+          (campaign) =>
+            campaign.status === "active" &&
+            (campaign.stats?.totalDonations || 0) > 10
+        );
       }
+      // Other status filters are handled by the API
 
-      // Sort campaigns
       switch (sortBy) {
         case "newest":
           filtered = filtered.sort(
@@ -233,30 +217,27 @@ export default function AllCampaignsPage() {
       return filtered;
     } catch (error) {
       console.error('Error filtering campaigns:', error);
-      return campaigns; // Return original campaigns if filtering fails
+      return campaigns;
     }
   }, [
     campaigns,
-    debouncedSearchQuery, // Use debounced search query instead
+    debouncedSearchQuery,
     selectedStatus,
     sortBy,
     geolocation,
     shouldShowCampaign,
   ]);
 
-  // Handle search with error handling
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
       const value = e.target.value;
       setSearchQuery(value);
     } catch (error) {
       console.error('Error handling search input:', error);
-      // Reset search on error
       setSearchQuery("");
     }
   };
 
-  // Clear all filters
   const clearFilters = () => {
     try {
       setSearchQuery("");
@@ -269,12 +250,13 @@ export default function AllCampaignsPage() {
     }
   };
 
-  // Update server-side filters when status or reason changes
   useEffect(() => {
-    updateFilters({ status: selectedStatus || undefined, reason: selectedReason || undefined });
-  }, [selectedStatus, selectedReason, updateFilters]);
+    updateFilters({ 
+      status: selectedStatus && selectedStatus.trim() ? selectedStatus : undefined, 
+      reason: selectedReason && selectedReason.trim() ? selectedReason : undefined 
+    });
+  }, [selectedStatus, selectedReason]);
 
-  // Handle errors
   useEffect(() => {
     if (error) {
       toast.error(`Failed to load campaigns: ${error}`);
@@ -483,7 +465,7 @@ export default function AllCampaignsPage() {
                     setTimeoutError(false);
                     fetchCampaigns();
                   }}
-                  className="bg-[#5F8555] hover:bg-[#104901] text-white"
+                  className="bg-[#5F8555] text-white"
                 >
                   Retry Loading
                 </Button>

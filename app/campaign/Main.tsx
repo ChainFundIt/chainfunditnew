@@ -30,8 +30,25 @@ import ClientToaster from "@/components/ui/client-toaster";
 import { formatCurrency, getCurrencySymbol } from "@/lib/utils/currency";
 import { toast } from "sonner";
 
+// Utility function to extract YouTube video ID and generate thumbnail URL
+const getYouTubeThumbnail = (url: string): string | null => {
+  const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+  const match = url.match(regex);
+  if (match && match[1]) {
+    return `https://img.youtube.com/vi/${match[1]}/maxresdefault.jpg`;
+  }
+  return null;
+};
+
+const getYouTubeVideoId = (url: string): string | null => {
+  const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+  const match = url.match(regex);
+  return match && match[1] ? match[1] : null;
+};
+
 interface CampaignData {
   id: string;
+  slug: string;
   title: string;
   subtitle: string;
   description: string;
@@ -66,6 +83,7 @@ interface CampaignData {
 
 interface CampaignUpdate {
   id: string;
+  slug: string;
   title: string;
   content: string;
   isPublic: boolean;
@@ -75,6 +93,7 @@ interface CampaignUpdate {
 
 interface CampaignComment {
   id: string;
+  slug: string;
   content: string;
   isPublic: boolean;
   createdAt: string;
@@ -87,54 +106,10 @@ interface CampaignComment {
 
 interface MainProps {
   campaignId: string;
+  initialCampaignData?: CampaignData;
 }
 
-
-
-const comments = [
-  {
-    id: 1,
-    image: "/images/donor1.png",
-    name: "Angela Bassett",
-    donation: "₦20,000",
-    time: "32 minutes ago",
-    comment:
-      "This is such a cool cause! Hope you and your kids get the best flat available in Knightsbridge.",
-    creator: {
-      name: "Donald Chopra",
-      comment: "Thank you so much Angie!",
-      time: "22 minutes ago",
-    },
-  },
-  {
-    id: 2,
-    image: "/images/donor1.png",
-    name: "Angela Bassett",
-    donation: "₦20,000",
-    time: "32 minutes ago",
-    comment: "Let’s effing goooooo!",
-    creator: {
-      name: "Donald Chopra",
-      comment: "Thank you so much Angie!",
-      time: "22 minutes ago",
-    },
-  },
-  {
-    id: 3,
-    image: "/images/donor1.png",
-    name: "Angela Bassett",
-    donation: "₦20,000",
-    time: "32 minutes ago",
-    comment: "God will make a way for you and your family Donald.",
-    creator: {
-      name: "Donald Chopra",
-      comment: "Thank you so much Angie!",
-      time: "22 minutes ago",
-    },
-  },
-];
-
-const Main = ({ campaignId }: MainProps) => {
+const Main = ({ campaignId, initialCampaignData }: MainProps) => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [activeTab, setActiveTab] = useState("why-support");
   const [chainModalOpen, setChainModalOpen] = useState(false);
@@ -282,7 +257,18 @@ const Main = ({ campaignId }: MainProps) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`/api/campaigns/${campaignId}`);
+      
+      // Use initial data if available, otherwise fetch from API
+      if (initialCampaignData) {
+        console.log('Using initial campaign data:', initialCampaignData);
+        setCampaign(initialCampaignData);
+        // Still fetch updates, comments, and chain count
+        await Promise.all([fetchUpdates(), fetchComments(), fetchChainCount()]);
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch(`/api/campaigns/${campaignId}?t=${Date.now()}`);
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -317,7 +303,7 @@ const Main = ({ campaignId }: MainProps) => {
     } finally {
       setLoading(false);
     }
-  }, [campaignId, fetchUpdates, fetchComments]);
+  }, [campaignId, initialCampaignData, fetchUpdates, fetchComments]);
 
   React.useEffect(() => {
     if (campaignId) {
@@ -374,13 +360,33 @@ const Main = ({ campaignId }: MainProps) => {
   const goal = campaignData.goalAmount;
   const percent = Math.min(100, Math.round((raised / goal) * 100));
 
+  // Helper function to parse JSON strings to arrays
+  const parseJsonArray = (data: any): any[] => {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (typeof data === 'string') {
+      try {
+        const parsed = JSON.parse(data);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  };
+
   // Use campaign images if available, otherwise show empty state
-  const campaignImages =
-    campaign?.galleryImages && campaign.galleryImages.length > 0
-      ? campaign.galleryImages.filter(
-          (img) => img && img !== "undefined"
-        )
-      : [];
+  const galleryImages = parseJsonArray(campaign?.galleryImages).filter(
+    (img) => img && img !== "undefined"
+  );
+  
+  // Include cover image as the first image if available
+  const campaignImages = campaignData?.coverImageUrl 
+    ? [campaignData.coverImageUrl, ...galleryImages]
+    : galleryImages;
+
+  // Parse documents
+  const campaignDocuments = parseJsonArray(campaignData?.documents);
 
   return (
     <div className="max-w-[1440px] bg-[url('/images/logo-bg.svg')] bg-[length:60%] md:bg-[length:30%] md:h-full bg-no-repeat bg-right-bottom mx-auto mt-16 md:mt-22 h-full p-5 md:p-12 font-source">
@@ -460,6 +466,7 @@ const Main = ({ campaignId }: MainProps) => {
               </div>
               {/* Thumbnails */}
               <div className="flex gap-4 overflow-x-auto">
+                {/* Cover Image Thumbnails */}
                 {campaignImages.map((img, idx) => (
                   <button
                     key={img}
@@ -488,6 +495,35 @@ const Main = ({ campaignId }: MainProps) => {
                     )}
                   </button>
                 ))}
+                
+                {/* YouTube Video Thumbnail */}
+                {campaignData.videoUrl && getYouTubeThumbnail(campaignData.videoUrl) && (
+                  <button
+                    onClick={() => {
+                      const videoId = getYouTubeVideoId(campaignData.videoUrl!);
+                      if (videoId) {
+                        window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+                      }
+                    }}
+                    className="relative md:w-[137px] w-[60px] md:h-[84px] h-[60px] border-2 border-transparent overflow-hidden focus:outline-none hover:border-[#104901] transition-colors group"
+                    aria-label="Watch YouTube video"
+                  >
+                    <Image
+                      src={getYouTubeThumbnail(campaignData.videoUrl)!}
+                      alt="YouTube video"
+                      fill
+                      style={{ objectFit: "cover" }}
+                    />
+                    {/* Play button overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 group-hover:bg-opacity-40 transition-all">
+                      <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z"/>
+                        </svg>
+                      </div>
+                    </div>
+                  </button>
+                )}
               </div>
             </>
           ) : (
@@ -567,7 +603,7 @@ const Main = ({ campaignId }: MainProps) => {
           <section className="flex justify-between items-center">
             <p className="text-lg text-[#868686] flex gap-1 items-center">
               <Users size={20} />
-              {campaignData.stats.uniqueDonors} donors
+              {campaignData?.stats?.uniqueDonors} donors
             </p>
             <p className="text-lg text-[#868686] flex gap-1 items-center">
               <LinkIcon size={20} />
@@ -603,8 +639,23 @@ const Main = ({ campaignId }: MainProps) => {
               >
                 Updates
                 {updates.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-[#E8F5E8] text-[#104901] text-xs rounded-full w-5 h-5 flex items-center justify-center border border-white">
+                  <span className="absolute -top-1 -right-1 bg-[#104901] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center border border-white">
                     {updates.length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab("documents")}
+                className={`md:px-5 px-2 py-3 border-r border-t border-[#C0BFC4] font-semibold text-lg md:text-3xl relative ${
+                  activeTab === "documents"
+                    ? "bg-[#E7EDE6] text-[#104901]"
+                    : "text-[#868686]"
+                }`}
+              >
+                Documents
+                {campaignDocuments.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-[#104901] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center border border-white">
+                    {campaignDocuments.length}
                   </span>
                 )}
               </button>
@@ -650,7 +701,7 @@ const Main = ({ campaignId }: MainProps) => {
                         )}
                       </div>
                     ))}
-                    {/* Add Update Button - Always show when user can edit */}
+                    {/* Add Update Button */}
                     {campaign?.canEdit && (
                       <div className="text-center pt-4">
                         <Button
@@ -677,6 +728,62 @@ const Main = ({ campaignId }: MainProps) => {
                         Add update
                       </Button>
                     )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === "documents" && (
+              <div className="bg-[#F2F1E9] border-x border-b border-[#C0BFC4] font-normal text-sm md:text-xl text-[#104901] p-3 md:p-6">
+                {campaignDocuments.length > 0 ? (
+                  <div className="space-y-4">
+                    <p className="text-[#757575] mb-4">
+                      Click on any document to view or download it.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {campaignDocuments.map((doc, index) => (
+                        <div
+                          key={index}
+                          className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
+                          onClick={() => window.open(doc, '_blank')}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                              <svg className="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                              </svg>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">
+                                Document {index + 1}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Click to view/download
+                              </p>
+                            </div>
+                            <div className="text-gray-400">
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <p className="text-[#757575] mb-2">
+                      No documents available yet.
+                    </p>
+                    <p className="text-sm text-[#757575]">
+                      Documents will appear here when they are uploaded.
+                    </p>
                   </div>
                 )}
               </div>

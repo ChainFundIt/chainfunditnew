@@ -82,12 +82,22 @@ const LiveCampaigns = ({ campaigns }: Props) => {
                   />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                {/* Live badge */}
+                {/* Status badge */}
                 <div className="absolute top-4 right-4">
-                  <div className="bg-gradient-to-r from-green-600 to-[#104901] text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
-                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                    Live
-                  </div>
+                  {campaign.status === 'active' ? (
+                    <div className="bg-gradient-to-r from-green-600 to-[#104901] text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
+                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                      Live
+                    </div>
+                  ) : campaign.status === 'closed' ? (
+                    <div className="bg-purple-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                      Closed
+                    </div>
+                  ) : (
+                    <div className="bg-gray-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                      {campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="p-3 space-y-2">
@@ -143,7 +153,7 @@ const LiveCampaigns = ({ campaigns }: Props) => {
 
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
-                    <Link href={`/dashboard/campaigns/edit/${campaign.id}`}>
+                    <Link href={`/dashboard/campaigns/edit/${campaign.slug}`}>
                       <Button
                         variant="outline"
                         className="w-full text-[#104901] border-[#104901] hover:bg-[#104901] hover:text-white rounded-xl py-2 transition-all duration-300"
@@ -152,7 +162,7 @@ const LiveCampaigns = ({ campaigns }: Props) => {
                         Edit
                       </Button>
                     </Link>
-                    <Link href={`/campaign/${campaign.id}`}>
+                    <Link href={`/campaign/${campaign.slug}`}>
                       <Button className="w-full bg-gradient-to-r from-green-600 to-[#104901] text-white rounded-xl py-2 hover:shadow-lg hover:from-green-600 hover:to-[#104901] hover:text-white transition-all duration-300">
                         <Eye size={16} className="mr-2" />
                         View
@@ -161,7 +171,7 @@ const LiveCampaigns = ({ campaigns }: Props) => {
                   </div>
                   <Button
                     onClick={() =>
-                      window.open(`/campaign/${campaign.id}`, "_blank")
+                      window.open(`/campaign/${campaign.slug}`, "_blank")
                     }
                     className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-xl py-2 hover:shadow-lg hover:text-white transition-all duration-300"
                   >

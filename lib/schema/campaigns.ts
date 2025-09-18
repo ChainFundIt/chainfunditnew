@@ -5,6 +5,7 @@ export const campaigns = pgTable('campaigns', {
   id: uuid('id').primaryKey().defaultRandom(),
   creatorId: uuid('creator_id').notNull(),
   title: varchar('title', { length: 255 }).notNull(),
+  slug: varchar('slug', { length: 255 }).notNull().unique(),
   subtitle: varchar('subtitle', { length: 255 }),
   description: text('description').notNull(),
   reason: varchar('reason', { length: 100 }),

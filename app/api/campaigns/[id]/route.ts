@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { campaigns, users, donations } from '@/lib/schema';
-import { eq, and, count, sum } from 'drizzle-orm';
+import { eq, and, count, sum, or } from 'drizzle-orm';
 import { parse } from 'cookie';
 import { verifyUserJWT } from '@/lib/auth';
 
@@ -21,7 +21,7 @@ async function getUserFromRequest(request: NextRequest) {
   return userPayload.email;
 }
 
-// GET /api/campaigns/[id] - Get campaign by ID with detailed stats
+// GET /api/campaigns/[id] - Get campaign by ID or slug with detailed stats
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -29,13 +29,11 @@ export async function GET(
   try {
     const { id: campaignId } = await params;
     
-    // Validate UUID format
-    if (!isValidUUID(campaignId)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid campaign ID format' },
-        { status: 400 }
-      );
-    }
+    // Determine if the ID is a UUID or slug
+    const isUUID = isValidUUID(campaignId);
+    const whereCondition = isUUID 
+      ? eq(campaigns.id, campaignId)
+      : eq(campaigns.slug, campaignId);
 
     // Get authenticated user (optional for viewing)
     const userEmail = await getUserFromRequest(request);
@@ -52,6 +50,7 @@ export async function GET(
     let campaignData = await db
       .select({
         id: campaigns.id,
+        slug: campaigns.slug,
         title: campaigns.title,
         subtitle: campaigns.subtitle,
         description: campaigns.description,
@@ -78,7 +77,7 @@ export async function GET(
       })
       .from(campaigns)
       .leftJoin(users, eq(campaigns.creatorId, users.id))
-      .where(eq(campaigns.id, campaignId))
+      .where(whereCondition)
       .limit(1);
 
     // If JOIN didn't work or creator info is missing, fetch user info separately
@@ -124,7 +123,7 @@ export async function GET(
       })
       .from(donations)
       .where(and(
-        eq(donations.campaignId, campaignId),
+        eq(donations.campaignId, campaign.id),
         eq(donations.paymentStatus, 'completed')
       ));
 
@@ -169,13 +168,11 @@ export async function PUT(
   try {
     const { id: campaignId } = await params;
     
-    // Validate UUID format
-    if (!isValidUUID(campaignId)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid campaign ID format' },
-        { status: 400 }
-      );
-    }
+    // Determine if the ID is a UUID or slug
+    const isUUID = isValidUUID(campaignId);
+    const whereCondition = isUUID 
+      ? eq(campaigns.id, campaignId)
+      : eq(campaigns.slug, campaignId);
 
     // Get authenticated user
     const userEmail = await getUserFromRequest(request);
@@ -197,9 +194,11 @@ export async function PUT(
 
     const userId = user[0].id;
     const body = await request.json();
+    console.log('PUT request body received:', body);
+    console.log('Cover image URL in request:', body.coverImageUrl);
 
     // Check if campaign exists
-    const campaign = await db.select().from(campaigns).where(eq(campaigns.id, campaignId)).limit(1);
+    const campaign = await db.select().from(campaigns).where(whereCondition).limit(1);
     if (!campaign.length) {
       return NextResponse.json({ success: false, error: 'Campaign not found' }, { status: 404 });
     }
@@ -222,10 +221,9 @@ export async function PUT(
       'title', 
       'subtitle', 
       'description', 
-      'reason',
-      'fundraisingFor',
       'duration',
-      'videoUrl', 
+      'videoUrl',
+      'coverImageUrl',
       'goalAmount',
       'currency',
       'minimumDonation',
@@ -243,7 +241,7 @@ export async function PUT(
     const updatedCampaign = await db
       .update(campaigns)
       .set(updateData)
-      .where(eq(campaigns.id, campaignId))
+      .where(eq(campaigns.id, campaign[0].id))
       .returning();
 
     return NextResponse.json({
@@ -268,16 +266,14 @@ export async function DELETE(
     // TODO: Re-enable authentication later
     const { id: campaignId } = await params;
     
-    // Validate UUID format
-    if (!isValidUUID(campaignId)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid campaign ID format' },
-        { status: 400 }
-      );
-    }
+    // Determine if the ID is a UUID or slug
+    const isUUID = isValidUUID(campaignId);
+    const whereCondition = isUUID 
+      ? eq(campaigns.id, campaignId)
+      : eq(campaigns.slug, campaignId);
 
     // Check if campaign exists
-    const campaign = await db.select().from(campaigns).where(eq(campaigns.id, campaignId)).limit(1);
+    const campaign = await db.select().from(campaigns).where(whereCondition).limit(1);
     if (!campaign.length) {
       return NextResponse.json({ success: false, error: 'Campaign not found' }, { status: 404 });
     }
@@ -291,7 +287,7 @@ export async function DELETE(
         closedAt: new Date(),
         updatedAt: new Date(),
       })
-      .where(eq(campaigns.id, campaignId))
+      .where(eq(campaigns.id, campaign[0].id))
       .returning();
 
     return NextResponse.json({

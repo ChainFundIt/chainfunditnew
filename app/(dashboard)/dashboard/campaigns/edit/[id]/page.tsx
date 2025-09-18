@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Upload, X } from "lucide-react";
 import Image from "next/image";
 import { formatCurrency } from "@/lib/utils/currency";
+import { useFileUpload } from "@/hooks/use-upload";
 
 interface CampaignFormData {
   title: string;
@@ -18,6 +19,7 @@ interface CampaignFormData {
   fundraisingFor: string;
   duration: string;
   videoUrl: string;
+  coverImageUrl: string;
   goalAmount: number;
   currency: string;
   minimumDonation: number;
@@ -74,11 +76,16 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
     fundraisingFor: "",
     duration: "",
     videoUrl: "",
+    coverImageUrl: "",
     goalAmount: 0,
     currency: "NGN",
     minimumDonation: 0,
     chainerCommissionRate: 0,
   });
+
+  const [newCoverImage, setNewCoverImage] = useState<File | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const { uploadFile, isUploading: isUploadingImage, uploadError: imageUploadError } = useFileUpload();
 
   useEffect(() => {
     const loadCampaign = async () => {
@@ -126,6 +133,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
           fundraisingFor: campaignData.fundraisingFor || "",
           duration: campaignData.duration || "",
           videoUrl: campaignData.videoUrl || "",
+          coverImageUrl: campaignData.coverImageUrl || "",
           goalAmount: campaignData.goalAmount || 0,
           currency: campaignData.currency || "NGN",
           minimumDonation: campaignData.minimumDonation || 0,
@@ -150,12 +158,51 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
     }));
   };
 
+  const handleImageUpload = async (file: File) => {
+    try {
+      console.log('Starting image upload for file:', file.name, file.size);
+      const result = await uploadFile(file, 'imageUpload');
+      console.log('Upload result:', result);
+      console.log('Setting coverImageUrl to:', result.url);
+      
+      setFormData(prev => ({
+        ...prev,
+        coverImageUrl: result.url
+      }));
+      setNewCoverImage(file);
+      setPreviewImage(URL.createObjectURL(file));
+      
+      console.log('Image upload completed successfully');
+    } catch (error) {
+      console.error('Image upload failed:', error);
+    }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleImageUpload(file);
+    }
+  };
+
+  const removeImage = () => {
+    setNewCoverImage(null);
+    setPreviewImage(null);
+    setFormData(prev => ({
+      ...prev,
+      coverImageUrl: campaign?.coverImageUrl || ""
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setError(null);
 
     try {
+      console.log('Submitting form data:', formData);
+      console.log('Cover image URL being sent:', formData.coverImageUrl);
+      
       const response = await fetch(`/api/campaigns/${campaignId}`, {
         method: "PUT",
         headers: {
@@ -232,7 +279,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
             </p>
             <Button 
               onClick={() => router.back()} 
-              className="bg-[#104901] text-white px-6 py-3 rounded-lg hover:bg-[#0d3a01] transition-colors"
+              className="bg-[#104901] text-white px-6 py-3 rounded-lg transition-colors"
             >
               Go Back
             </Button>
@@ -299,6 +346,67 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
 
           {/* Edit Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Cover Image Upload */}
+            <div className="bg-white p-6 rounded-2xl border border-gray-200">
+              <label className="block text-sm font-medium text-[#104901] mb-4">
+                Campaign Cover Image
+              </label>
+              
+              <div className="flex items-start gap-6">
+                {/* Current/Preview Image */}
+                <div className="relative">
+                  {(previewImage || formData.coverImageUrl) && (
+                    <div className="relative group">
+                      <Image
+                        src={previewImage || formData.coverImageUrl}
+                        alt="Campaign cover"
+                        width={120}
+                        height={120}
+                        className="rounded-xl object-cover border border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Upload Controls */}
+                <div className="flex-1">
+                  <div className="space-y-4">
+                    <div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                        id="cover-image-upload"
+                      />
+                      <label
+                        htmlFor="cover-image-upload"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-[#104901] text-white rounded-xl cursor-pointer hover:bg-[#0a3d00] transition-colors"
+                      >
+                        <Upload className="h-4 w-4" />
+                        {isUploadingImage ? "Uploading..." : "Choose New Image"}
+                      </label>
+                    </div>
+                    
+                    {imageUploadError && (
+                      <p className="text-red-600 text-sm">{imageUploadError}</p>
+                    )}
+                    
+                    <p className="text-sm text-gray-600">
+                      Recommended size: 800x600px. Max file size: 5MB. Supported formats: JPG, PNG, WebP.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-[#104901] mb-2">
@@ -327,37 +435,20 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
 
               <div>
                 <label className="block text-sm font-medium text-[#104901] mb-2">
-                  Category *
+                  Category
                 </label>
-                <Select
-                  value={formData.reason}
-                  onValueChange={(value) => handleInputChange("reason", value)}
-                >
-                  <SelectTrigger className="rounded-xl border-gray-300 focus:border-[#104901] focus:ring-[#104901]">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Family">Family</SelectItem>
-                    <SelectItem value="Education">Education</SelectItem>
-                    <SelectItem value="Medical">Medical</SelectItem>
-                    <SelectItem value="Community Development">Community Development</SelectItem>
-                    <SelectItem value="Emergency">Emergency</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="px-3 py-1 text-[#104901] shadow-sm rounded-xl border border-gray-300 focus:border-[#104901] focus:ring-[#104901]">
+                  {formData.reason || "Not specified"}
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-[#104901] mb-2">
-                  Fundraising For *
+                  Fundraising For
                 </label>
-                <Input
-                  value={formData.fundraisingFor}
-                  onChange={(e) => handleInputChange("fundraisingFor", e.target.value)}
-                  placeholder="Who/what are you fundraising for?"
-                  className="rounded-xl border-gray-300 focus:border-[#104901] focus:ring-[#104901]"
-                  required
-                />
+                <div className="px-3 py-1 text-[#104901] shadow-sm rounded-xl border border-gray-300 focus:border-[#104901] focus:ring-[#104901]">
+                  {formData.fundraisingFor || "Not specified"}
+                </div>
               </div>
 
               <div>
@@ -483,7 +574,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
               <Button
                 type="submit"
                 disabled={saving}
-                className="bg-gradient-to-r from-green-600 to-[#104901] text-white rounded-xl px-8 py-2 hover:shadow-lg transition-all duration-300 disabled:opacity-50"
+                className="bg-gradient-to-r from-green-600 to-[#104901] text-white hover:text-white rounded-xl px-8 py-2 hover:shadow-lg transition-all duration-300 disabled:opacity-50"
               >
                 {saving ? (
                   <>

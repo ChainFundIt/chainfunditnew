@@ -12,12 +12,16 @@ const s3Client = new S3Client({
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('R2 Upload: Starting upload process');
     const formData = await request.formData();
     const file = formData.get('imageUpload') as File || formData.get('documentUpload') as File;
     
     if (!file) {
+      console.log('R2 Upload: No file provided');
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
+
+    console.log('R2 Upload: File received:', file.name, file.size, file.type);
 
     // Generate unique filename
     const timestamp = Date.now();
@@ -37,9 +41,11 @@ export async function POST(request: NextRequest) {
     });
 
     await s3Client.send(command);
+    console.log('R2 Upload: File uploaded successfully to R2');
 
     // Return the URL - construct public URL for Cloudflare R2
     const fileUrl = `https://pub-${process.env.R2_ACCOUNT_ID}.r2.dev/${fileName}`;
+    console.log('R2 Upload: Generated URL:', fileUrl);
     
     return NextResponse.json({ 
       url: fileUrl,

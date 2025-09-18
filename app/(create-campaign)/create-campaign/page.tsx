@@ -316,7 +316,7 @@ export default function CreateCampaignPage() {
         console.error("Campaign creation failed:", data);
         throw new Error(data.error || "Failed to create campaign");
       }
-      const campaignUrl = `${window.location.origin}/campaign/${data.data.id}`;
+      const campaignUrl = `${window.location.origin}/campaign/${data.data.slug}`;
       let shortUrl = null;
       try {
         shortUrl = await shortenLink(campaignUrl);
@@ -352,14 +352,14 @@ export default function CreateCampaignPage() {
 
   const handleViewCampaign = () => {
     if (createdCampaign?.id) {
-      router.push(`/campaign/${createdCampaign.id}`);
+      router.push(`/campaign/${createdCampaign.slug}`);
     }
   };
 
   const handleShareCampaign = (platform: string) => {
     const campaignUrl =
       createdCampaign?.shortUrl ||
-      `chainfund.it/${createdCampaign?.id || "l0rea12"}`;
+      `chainfund.it/${createdCampaign?.slug}`;
     const shareText = `Check out my campaign: ${formData.title}`;
 
     let shareUrl = "";

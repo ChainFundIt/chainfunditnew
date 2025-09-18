@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { chainers } from '@/lib/schema/chainers';
+import { campaigns } from '@/lib/schema/campaigns';
 import { linkClicks } from '@/lib/schema/link-clicks';
 import { eq } from 'drizzle-orm';
 
@@ -49,8 +50,21 @@ export async function GET(
       })
       .where(eq(chainers.id, chainer[0].id));
 
-    // Redirect to the campaign page
-    const campaignUrl = `/campaign/${chainer[0].campaignId}?ref=${referralCode}`;
+    // Get campaign details to use slug in URL
+    const campaign = await db
+      .select({ slug: campaigns.slug })
+      .from(campaigns)
+      .where(eq(campaigns.id, chainer[0].campaignId))
+      .limit(1);
+
+    if (!campaign[0]?.slug) {
+      return NextResponse.json(
+        { success: false, error: 'Campaign slug not found' },
+        { status: 404 }
+      );
+    }
+
+    const campaignUrl = `/campaign/${campaign[0].slug}?ref=${referralCode}`;
     
     return NextResponse.redirect(new URL(campaignUrl, request.url));
   } catch (error) {

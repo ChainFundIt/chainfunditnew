@@ -2,6 +2,7 @@
 export type Campaign = {
   id: string;
   title: string;
+  slug: string;
   subtitle: string;
   description: string;
   reason: string;
@@ -36,6 +37,7 @@ export type Campaign = {
 export type TransformedCampaign = {
   id: string; // Changed from number to string to preserve UUID
   title: string;
+  slug: string;
   description: string;
   amountRaised: number;
   goal: number;
@@ -43,11 +45,14 @@ export type TransformedCampaign = {
   chains: number;
   image: string;
   currency: string;
+  status: string;
+  closedAt?: string;
 };
 
 // Transform function to convert Campaign to TransformedCampaign
 export const transformCampaign = (campaign: Campaign): TransformedCampaign => ({
   id: campaign.id, // Keep as string instead of converting to number
+  slug: campaign.slug,
   title: campaign.title,
   description: campaign.description,
   amountRaised: campaign.currentAmount || 0,
@@ -56,4 +61,6 @@ export const transformCampaign = (campaign: Campaign): TransformedCampaign => ({
   chains: 0, // TODO: Implement chain counting
   image: campaign.coverImageUrl || "/images/image.png",
   currency: campaign.currency,
+  status: campaign.status,
+  closedAt: campaign.closedAt,
 }); 

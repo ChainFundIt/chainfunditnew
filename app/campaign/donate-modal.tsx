@@ -31,6 +31,7 @@ import StripePaymentForm from "@/components/payments/StripePaymentForm";
 
 interface Campaign {
   id: string;
+  slug: string;
   title: string;
   shortUrl?: string;
   currency: string;
@@ -204,7 +205,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
     
     const campaignUrl = campaign.shortUrl 
       ? `https://chainfundit.com/c/${campaign.shortUrl}`
-      : `https://chainfundit.com/campaign/${campaign.id}`;
+      : `https://chainfundit.com/campaign/${campaign.slug}`;
     
     try {
       await navigator.clipboard.writeText(campaignUrl);
@@ -229,7 +230,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
     
     const campaignUrl = campaign.shortUrl 
       ? `https://chainfundit.com/c/${campaign.shortUrl}`
-      : `https://chainfundit.com/campaign/${campaign.id}`;
+      : `https://chainfundit.com/campaign/${campaign.slug}`;
     
     const shareText = `I just donated ${selectedCurrency} ${amount} to "${campaign.title}"! Help support this cause: `;
     
@@ -258,7 +259,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
     
     const campaignUrl = campaign.shortUrl 
       ? `https://chainfundit.com/c/${campaign.shortUrl}`
-      : `https://chainfundit.com/campaign/${campaign.id}`;
+      : `https://chainfundit.com/campaign/${campaign.slug}`;
     
     const shareText = `I just donated ${selectedCurrency} ${amount} to "${campaign.title}"! Help support this cause: ${campaignUrl}`;
     

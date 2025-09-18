@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
       title: 'Test Campaign for Creator Name',
       subtitle: 'Testing the creator name display',
       description: 'This is a test campaign to verify that creator names are displayed correctly.',
+      slug: 'test-campaign-for-creator-name',
       reason: 'Testing',
       fundraisingFor: 'Testing Creator Display',
       duration: '1 month',

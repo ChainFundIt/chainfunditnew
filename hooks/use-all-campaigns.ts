@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 
 interface Campaign {
   id: string;
+  slug: string;
   title: string;
   subtitle: string;
   description: string;
@@ -68,7 +69,7 @@ export function useAllCampaigns() {
 
         // Build query parameters
         const params = new URLSearchParams();
-        if (filters.status) params.append("status", filters.status);
+        if (filters.status && filters.status !== "trending") params.append("status", filters.status);
         if (filters.reason) params.append("reason", filters.reason);
         params.append("limit", filters.limit?.toString() || "20");
         params.append(
@@ -148,10 +149,64 @@ export function useAllCampaigns() {
 
   // Refetch when filters change (but not offset)
   useEffect(() => {
-    if (filters.status !== undefined || filters.reason !== undefined) {
-      fetchCampaigns(true);
+    if ((filters.status && filters.status.trim()) || (filters.reason && filters.reason.trim())) {
+      // Use a local function to avoid dependency issues
+      const refetchCampaigns = async () => {
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
+
+        abortControllerRef.current = new AbortController();
+
+        try {
+          setLoading(true);
+          setError(null);
+
+          // Build query parameters
+          const params = new URLSearchParams();
+          if (filters.status && filters.status.trim() && filters.status !== "trending") {
+            params.append("status", filters.status);
+          }
+          if (filters.reason && filters.reason.trim()) params.append("reason", filters.reason);
+          params.append("limit", filters.limit?.toString() || "20");
+          params.append("offset", "0");
+
+          const response = await fetch(`/api/campaigns?${params.toString()}`, {
+            signal: abortControllerRef.current.signal,
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to fetch campaigns: ${response.status}`);
+          }
+
+          const data = await response.json();
+
+          if (!isMountedRef.current) return;
+
+          // Fix: API returns data.data, not data.campaigns
+          const campaignsData = data.data || [];
+          setCampaigns(campaignsData);
+          setFilters((prev) => ({ ...prev, offset: 0 }));
+
+          // Check if there are more campaigns
+          setHasMore(campaignsData.length === (filters.limit || 20));
+        } catch (err: any) {
+          if (err.name === "AbortError") return;
+
+          if (!isMountedRef.current) return;
+
+          console.error("Error fetching campaigns:", err);
+          setError(err.message || "Failed to fetch campaigns");
+        } finally {
+          if (isMountedRef.current) {
+            setLoading(false);
+          }
+        }
+      };
+
+      refetchCampaigns();
     }
-  }, [filters.status, filters.reason, fetchCampaigns]);
+  }, [filters.status, filters.reason, filters.limit]);
 
   // Fetch more when offset changes - but don't depend on fetchCampaigns
   useEffect(() => {
@@ -171,7 +226,7 @@ export function useAllCampaigns() {
 
           // Build query parameters
           const params = new URLSearchParams();
-          if (filters.status) params.append("status", filters.status);
+          if (filters.status && filters.status !== "trending") params.append("status", filters.status);
           if (filters.reason) params.append("reason", filters.reason);
           params.append("limit", filters.limit?.toString() || "20");
           params.append("offset", currentOffset.toString());

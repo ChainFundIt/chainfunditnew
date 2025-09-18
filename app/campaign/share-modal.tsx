@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useShortenLink } from "@/hooks/use-shorten-link";
 import Link from "next/link";
+import { getFullCampaignUrl } from "@/lib/utils/campaign-url";
 
 interface Campaign {
   id: string;
+  slug: string;
   title: string;
   shortUrl?: string;
 }
@@ -26,7 +28,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ open, onOpenChange, campaign })
 
   useEffect(() => {
     if (campaign && open) {
-      const longUrl = `${window.location.origin}/campaign/${campaign.id}`;
+      const longUrl = getFullCampaignUrl(campaign);
       
       // If campaign already has a short URL, use it
       if (campaign.shortUrl) {
@@ -130,18 +132,18 @@ const ShareModal: React.FC<ShareModalProps> = ({ open, onOpenChange, campaign })
                 Share campaign
               </h3>
               <div className="flex space-x-5">
-                <Link href="https://www.facebook.com/sharer/sharer.php?u=https://www.google.com" target="_blank">
+                <Button onClick={() => handleShare("facebook")}>
                   <Facebook strokeWidth={1.5} color="#104901" size={32} />
-                </Link>
-                <Link href="https://www.instagram.com/sharer/sharer.php?u=https://www.google.com" target="_blank">
+                </Button>
+                <Button onClick={() => handleShare("instagram")}>
                   <Instagram strokeWidth={1.5} color="#104901" size={32} />
-                </Link>
-                    <Link href="https://www.twitter.com/sharer/sharer.php?u=https://www.google.com" target="_blank">
+                </Button>
+                    <Button onClick={() => handleShare("twitter")}>
                   <Twitter strokeWidth={1.5} color="#104901" size={32} />
-                </Link>
-                <Link href="https://www.linkedin.com/sharer/sharer.php?u=https://www.google.com" target="_blank">
+                </Button>
+                <Button onClick={() => handleShare("linkedin")}>
                   <Linkedin strokeWidth={1.5} color="#104901" size={32} />
-                </Link>
+                </Button>
               </div>
             </div>
           </div>

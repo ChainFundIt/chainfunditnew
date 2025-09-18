@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
             title: campaign.title,
             subtitle: campaign.subtitle,
             description: campaign.description,
+            slug: campaign.id.replace('test-campaign-', 'test-campaign-'),
             reason: campaign.reason,
             fundraisingFor: campaign.fundraisingFor,
             duration: campaign.duration,

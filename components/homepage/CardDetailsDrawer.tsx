@@ -26,6 +26,7 @@ import CampaignCreatorAvatar from "@/components/ui/campaign-creator-avatar";
 
 interface CardDetails {
   title: string;
+  slug: string;
   description: string;
   raised: string;
   image: string;
@@ -66,7 +67,7 @@ const CardDetailsDrawer: React.FC<CardDetailsDrawerProps> = ({
 
   useEffect(() => {
     if (card && open) {
-      const longUrl = `${window.location.origin}/campaign/${card.id}`;
+      const longUrl = `${window.location.origin}/campaign/${card.slug}`;
       setCampaignUrl(longUrl);
       
       // Try to shorten the URL
@@ -126,7 +127,7 @@ const CardDetailsDrawer: React.FC<CardDetailsDrawerProps> = ({
               <Copy />
               {copied ? "Copied!" : isLoading ? "Generating..." : "Copy Link"}
             </Button>
-            <Link href={`/campaign/${card?.id}`}>
+            <Link href={`/campaign/${card?.slug}`}>
               <Button className="text-white" variant="secondary">
                 Campaign Page <ExternalLink />
               </Button>
@@ -254,7 +255,7 @@ const CardDetailsDrawer: React.FC<CardDetailsDrawerProps> = ({
                 </li>
               </ul>
             </div>
-            <Link href={`/campaign/${card?.id}`}>
+            <Link href={`/campaign/${card?.slug}`}>
               <Button className="w-[500px] h-20 flex justify-between font-semibold text-2xl">
                 Donate
                 <ArrowRight size={32} />

@@ -63,6 +63,11 @@ export async function GET(request: NextRequest) {
         const payoutSupported = isPayoutSupported(currencyCode);
         const payoutProvider = payoutSupported ? getPayoutProvider(currencyCode) : null;
         const payoutConfig = payoutProvider ? getPayoutConfig(payoutProvider) : null;
+        
+        // Check if campaign has reached 50% of its goal
+        const targetAmount = parseFloat(campaign.targetAmount);
+        const goalProgress = targetAmount > 0 ? (totalRaised / targetAmount) * 100 : 0;
+        const hasReached50Percent = goalProgress >= 50;
 
         return {
           ...campaign,
@@ -72,7 +77,9 @@ export async function GET(request: NextRequest) {
           payoutSupported,
           payoutProvider,
           payoutConfig,
-          availableForPayout: payoutSupported && totalRaised > 0,
+          goalProgress,
+          hasReached50Percent,
+          availableForPayout: payoutSupported && totalRaised > 0 && hasReached50Percent,
         };
       })
     );
@@ -179,6 +186,26 @@ export async function POST(request: NextRequest) {
       );
 
     const totalRaised = parseFloat(totalDonations[0]?.total || '0');
+    const targetAmount = parseFloat(campaign[0].goalAmount);
+    
+    // Check if campaign has reached 50% of its goal
+    const goalProgress = targetAmount > 0 ? (totalRaised / targetAmount) * 100 : 0;
+    const hasReached50Percent = goalProgress >= 50;
+    
+    if (!hasReached50Percent) {
+      return NextResponse.json(
+        { 
+          error: 'Campaign must reach at least 50% of its goal before requesting payout',
+          details: {
+            currentProgress: Math.round(goalProgress),
+            requiredProgress: 50,
+            totalRaised,
+            targetAmount
+          }
+        },
+        { status: 400 }
+      );
+    }
     
     if (amount > totalRaised) {
       return NextResponse.json(

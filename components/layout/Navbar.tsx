@@ -38,7 +38,7 @@ const Navbar = (props: Props) => {
           <span className="block w-6 h-0.5 bg-black"></span>
         </button>
         {/* Desktop nav */}
-        <ul className="hidden md:flex justify-between gap-3 font-semibold text-base text-black">
+        <ul className="hidden md:flex justify-between gap-6 font-semibold text-base text-black">
           <li>
             <Link href="/campaigns">Campaigns</Link>
           </li>

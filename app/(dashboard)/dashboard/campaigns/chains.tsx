@@ -170,7 +170,7 @@ const Chains = ({ campaigns }: Props) => {
                         Edit
                       </Button>
                     </Link>
-                    <Link href={`/campaign/${campaign.id}`}>
+                    <Link href={`/campaign/${campaign.slug}`}>
                       <Button className="w-full bg-gradient-to-r from-green-600 to-[#104901] text-white rounded-xl py-2 hover:shadow-lg hover:from-green-600 hover:to-[#104901] hover:text-white transition-all duration-300">
                         <Eye size={16} className="mr-2" />
                         View
@@ -179,7 +179,7 @@ const Chains = ({ campaigns }: Props) => {
                   </div>
                   <Button
                     onClick={() =>
-                      window.open(`/campaign/${campaign.id}`, "_blank")
+                      window.open(`/campaign/${campaign.slug}`, "_blank")
                     }
                     className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-xl py-2 hover:shadow-lg hover:text-white transition-all duration-300"
                   >

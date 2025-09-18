@@ -36,6 +36,8 @@ interface CampaignPayout {
   payoutSupported: boolean;
   payoutProvider: string | null;
   payoutConfig: any;
+  goalProgress: number;
+  hasReached50Percent: boolean;
   availableForPayout: boolean;
 }
 
@@ -109,7 +111,17 @@ const PayoutsPage = () => {
         // Refresh payout data
         await fetchPayoutData();
       } else {
-        toast.error(result.error || 'Failed to process payout');
+        // Handle specific 50% requirement error
+        if (result.error && result.error.includes('50%')) {
+          toast.error(result.error, {
+            description: result.details ? 
+              `Current progress: ${result.details.currentProgress}% (Needs ${result.details.requiredProgress}%)` : 
+              undefined,
+            duration: 6000
+          });
+        } else {
+          toast.error(result.error || 'Failed to process payout');
+        }
       }
     } catch (err) {
       toast.error('Failed to process payout');
@@ -174,13 +186,13 @@ const PayoutsPage = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Active</Badge>;
+        return <Badge variant="default" className="bg-green-100 text-green-800 capitalize">Active</Badge>;
       case 'completed':
-        return <Badge variant="default" className="bg-blue-100 text-blue-800">Completed</Badge>;
+        return <Badge variant="default" className="bg-blue-100 text-blue-800 capitalize">Completed</Badge>;
       case 'paused':
-        return <Badge variant="secondary">Paused</Badge>;
+        return <Badge variant="secondary" className="capitalize">Paused</Badge>;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <Badge variant="outline">{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
     }
   };
 
@@ -238,14 +250,38 @@ const PayoutsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-[#104901] mb-2">Payouts</h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 mb-4">
             Manage your campaign earnings and request payouts to your bank account.
           </p>
+          
+          {/* Payout Requirements Info */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <Info className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
+              <div className="text-sm text-blue-800">
+                <p className="font-medium mb-1">Payout Requirements</p>
+                <p className="mb-2">
+                  Campaigns must reach at least <strong>50% of their goal</strong> before you can request a payout. 
+                  This ensures sufficient progress before funds are withdrawn.
+                </p>
+                <div className="flex items-center gap-4 text-xs">
+                  <span className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-orange-400 rounded"></div>
+                    <span>50% Threshold</span>
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-green-500 rounded"></div>
+                    <span>Payout Available</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Summary Section */}
@@ -383,53 +419,80 @@ const PayoutsPage = () => {
                 <CardContent>
                   <div className="space-y-4">
                     {/* Progress Bar */}
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="w-full bg-gray-200 rounded-full h-2 relative">
+                      {/* 50% threshold marker */}
+                      <div 
+                        className="absolute top-0 w-0.5 h-2 bg-orange-400 z-10"
+                        style={{ left: '50%' }}
+                      ></div>
                       <div 
                         className="bg-gradient-to-r from-[#104901] to-green-500 h-2 rounded-full transition-all duration-500"
                         style={{ width: `${Math.min((campaign.totalRaised / campaign.targetAmount) * 100, 100)}%` }}
                       ></div>
+                      {/* Progress percentage text */}
+                      <div className="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>0%</span>
+                        <span className="font-medium text-orange-600">50% (Payout Threshold)</span>
+                        <span>100%</span>
+                      </div>
                     </div>
 
                     {/* Payout Information */}
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        {campaign.payoutSupported ? (
-                          <div className="flex items-center gap-2 text-green-600">
-                            <CheckCircle className="h-5 w-5" />
-                            <span className="text-sm font-medium">
-                              Payout Available: <CurrencyDisplay amount={campaign.totalRaised} currency={campaign.currencyCode} /> (₦{campaign.totalRaisedInNGN.toLocaleString()})
-                            </span>
-                          </div>
-                        ) : (
+                      <div className="flex items-center gap-4 mt-2">
+                        {!campaign.payoutSupported ? (
                           <div className="flex items-center gap-2 text-gray-500">
                             <AlertCircle className="h-5 w-5" />
                             <span className="text-sm">
                               Payout not supported for {campaign.currencyCode}
                             </span>
                           </div>
+                        ) : !campaign.hasReached50Percent ? (
+                          <div className="flex items-center gap-2 text-orange-600">
+                            <Clock className="h-5 w-5" />
+                            <span className="text-sm font-medium">
+                              Needs {50 - Math.round(campaign.goalProgress)}% more to reach payout threshold
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 text-green-600 my-2">
+                            <CheckCircle className="h-5 w-5" />
+                            <span className="text-sm font-medium">
+                              Payout Available: <CurrencyDisplay amount={campaign.totalRaised} currency={campaign.currencyCode} /> (₦{campaign.totalRaisedInNGN.toLocaleString()})
+                            </span>
+                          </div>
                         )}
                       </div>
 
                       {campaign.payoutSupported && campaign.totalRaised > 0 && (
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 my-2">
                           <div className="flex items-center gap-2 text-sm text-gray-600">
                             {getProviderIcon(campaign.payoutProvider!)}
                             <span className="capitalize">{campaign.payoutProvider}</span>
                           </div>
                           <Button
                             onClick={() => handlePayout(campaign)}
-                            disabled={processingPayouts.has(campaign.id)}
-                            className="bg-[#104901] text-white"
+                            disabled={processingPayouts.has(campaign.id) || !campaign.hasReached50Percent}
+                            className={`mt-2${
+                              campaign.hasReached50Percent 
+                                ? "bg-[#104901] text-white" 
+                                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                            }`}
                           >
                             {processingPayouts.has(campaign.id) ? (
                               <>
                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                                 Processing...
                               </>
-                            ) : (
+                            ) : campaign.hasReached50Percent ? (
                               <>
                                 Request Payout
                                 <ExternalLink className="h-4 w-4 ml-2" />
+                              </>
+                            ) : (
+                              <>
+                                <Clock className="h-4 w-4 mr-2" />
+                                Needs 50% Goal
                               </>
                             )}
                           </Button>
@@ -450,11 +513,6 @@ const PayoutsPage = () => {
                                 <span className="font-medium">Processing Time:</span>
                                 <br />
                                 {campaign.payoutConfig.processingTime}
-                              </div>
-                              <div>
-                                <span className="font-medium">Fees:</span>
-                                <br />
-                                {campaign.payoutConfig.fees}
                               </div>
                             </div>
                           </div>

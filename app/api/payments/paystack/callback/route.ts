@@ -38,7 +38,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const reference = searchParams.get('reference');
     
+    console.log('🔗 Paystack callback received:', { reference });
+    
     if (!reference) {
+      console.log('❌ No reference in callback');
       return NextResponse.redirect(
         `${process.env.NEXT_PUBLIC_APP_URL}/campaigns?donation_status=failed&error=missing_reference`
       );
@@ -48,41 +51,72 @@ export async function GET(request: NextRequest) {
     const verification = await verifyPaystackTransaction(reference);
     
     if (!verification.success) {
+      console.log('❌ Transaction verification failed:', verification.error);
       return NextResponse.redirect(
         `${process.env.NEXT_PUBLIC_APP_URL}/campaigns?donation_status=failed&error=verification_failed`
       );
     }
 
+    console.log('✅ Transaction verified successfully');
+
     // Find donation by payment intent ID (reference)
-    const donation = await db
+    let donation = await db
       .select()
       .from(donations)
       .where(eq(donations.paymentIntentId, reference))
       .limit(1);
 
+    // If not found by paymentIntentId, try to find by reference pattern
     if (!donation.length) {
+      console.log('🔍 Donation not found by paymentIntentId, trying reference pattern...');
+      // Try to find by reference pattern (donation_<id>_<timestamp>)
+      const referenceMatch = reference.match(/donation_(.+)_\d+/);
+      if (referenceMatch) {
+        const donationId = referenceMatch[1];
+        donation = await db
+          .select()
+          .from(donations)
+          .where(eq(donations.id, donationId))
+          .limit(1);
+        console.log('🔍 Found donation by ID pattern:', donation.length > 0 ? donation[0].id : 'Not found');
+      }
+    }
+
+    if (!donation.length) {
+      console.log('❌ Donation not found for reference:', reference);
       return NextResponse.redirect(
         `${process.env.NEXT_PUBLIC_APP_URL}/campaigns?donation_status=failed&error=donation_not_found`
       );
     }
 
-    console.log('Paystack callback: Found donation', donation[0].id, 'for reference', reference);
+    console.log('✅ Found donation:', donation[0].id, 'for reference:', reference);
+
+    // Check if donation is already completed
+    if (donation[0].paymentStatus === 'completed') {
+      console.log('ℹ️ Donation already completed, redirecting...');
+      const redirectUrl = `${process.env.NEXT_PUBLIC_APP_URL}/campaign/${donation[0].campaignId}?donation_status=success&donation_id=${donation[0].id}`;
+      return NextResponse.redirect(redirectUrl);
+    }
 
     // Update donation status
-    await db
+    const updateResult = await db
       .update(donations)
       .set({
         paymentStatus: 'completed',
         processedAt: new Date(),
+        lastStatusUpdate: new Date(),
+        providerStatus: 'success',
+        providerError: null,
+        paymentIntentId: reference, // Ensure reference is stored
       })
-      .where(eq(donations.id, donation[0].id));
+      .where(eq(donations.id, donation[0].id))
+      .returning();
 
-    console.log('Paystack callback: Updated donation status to completed');
+    console.log('✅ Updated donation status to completed:', updateResult[0]?.id);
 
     // Update campaign currentAmount
     await updateCampaignAmount(donation[0].campaignId);
-    console.log('Paystack callback: Updated campaign amount');
-
+    console.log('✅ Updated campaign amount');
 
     // Redirect to campaign page with success status
     const redirectUrl = `${process.env.NEXT_PUBLIC_APP_URL}/campaign/${donation[0].campaignId}?donation_status=success&donation_id=${donation[0].id}`;
@@ -90,6 +124,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
 
   } catch (error) {
+    console.error('💥 Paystack callback error:', error);
     return NextResponse.redirect(
       `${process.env.NEXT_PUBLIC_APP_URL}/campaigns?donation_status=failed&error=callback_error`
     );

@@ -5,6 +5,7 @@ import { campaigns } from '@/lib/schema/campaigns';
 import { notifications } from '@/lib/schema/notifications';
 import { eq, sum, and } from 'drizzle-orm';
 import { handleStripeWebhook } from '@/lib/payments/stripe';
+import { shouldCloseForGoalReached, closeCampaign } from '@/lib/utils/campaign-closure';
 
 // Helper function to update campaign currentAmount based on completed donations
 async function updateCampaignAmount(campaignId: string) {
@@ -202,6 +203,31 @@ async function handlePaymentSuccess(paymentIntent: any) {
 
     // Update campaign currentAmount
     await updateCampaignAmount(donation[0].campaignId);
+
+    // Check if campaign should be closed due to goal reached
+    const campaign = await db
+      .select({
+        id: campaigns.id,
+        creatorId: campaigns.creatorId,
+        title: campaigns.title,
+        currentAmount: campaigns.currentAmount,
+        goalAmount: campaigns.goalAmount,
+        currency: campaigns.currency,
+        status: campaigns.status
+      })
+      .from(campaigns)
+      .where(eq(campaigns.id, donation[0].campaignId))
+      .limit(1);
+
+    if (campaign.length > 0 && campaign[0].status === 'active') {
+      const currentAmount = parseFloat(campaign[0].currentAmount);
+      const goalAmount = parseFloat(campaign[0].goalAmount);
+      
+      if (shouldCloseForGoalReached(currentAmount, goalAmount)) {
+        console.log('🎯 Campaign goal reached, closing campaign...');
+        await closeCampaign(campaign[0].id, 'goal_reached', campaign[0].creatorId);
+      }
+    }
 
     // Create notification for successful donation
     await createSuccessfulDonationNotification(donationId, donation[0].campaignId);
