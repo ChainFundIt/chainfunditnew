@@ -65,8 +65,8 @@ export async function POST(request: NextRequest) {
       .set({
         accountNumber,
         bankCode,
-        bankName: verificationResult.data.bank_name,
-        accountName: verificationResult.data.account_name,
+        bankName: verificationResult.data!.bank_name,
+        accountName: verificationResult.data!.account_name,
         accountVerified: true,
         accountVerificationDate: new Date(),
         accountLocked: true, // Lock the account after successful verification
@@ -80,8 +80,8 @@ export async function POST(request: NextRequest) {
       data: {
         accountNumber,
         bankCode,
-        bankName: verificationResult.data.bank_name,
-        accountName: verificationResult.data.account_name,
+        bankName: verificationResult.data!.bank_name,
+        accountName: verificationResult.data!.account_name,
         verified: true,
       },
     });
