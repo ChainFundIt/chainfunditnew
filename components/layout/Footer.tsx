@@ -93,7 +93,7 @@ const Footer = (props: Props) => {
             </p>
             <ul className="flex flex-col gap-2 font-normal text-sm md:text-base text-white">
               <li>Privacy policy</li>
-              <li>Terms and Conditions</li>
+              <Link href="/terms-and-conditions">Terms and Conditions</Link>
               <li>Ambassador Agreement</li>
               <li>Fundraising tips</li>
               <li>Fundraising ideas</li>

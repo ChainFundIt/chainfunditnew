@@ -519,7 +519,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
 
               <div>
                 <label className="block text-sm font-medium text-[#104901] mb-2">
-                  Chainer Commission Rate (%)
+                  Ambassador Commission Rate (%)
                 </label>
                 <Input
                   type="number"

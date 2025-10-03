@@ -67,7 +67,7 @@ export default function ChainerReferralPage() {
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Chainer Referral</h1>
+      <h1 className="text-3xl font-bold mb-6">Ambassador Referral</h1>
       <div className="max-w-2xl">
         <p className="text-gray-600 mb-6">
           You were referred by: <strong>{referralCode}</strong>

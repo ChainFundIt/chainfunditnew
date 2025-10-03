@@ -659,15 +659,15 @@ export default function CreateCampaignPage() {
                 </p>
               </section>
               <p className="font-medium text-xs text-[#5F8555] my-2">
-                Note: Chainers will receive a percentage of the proceeds from
-                the campaign. Chainer commission rate must be between 0 and 10% of campaign proceeds and must be a valid percentage.
+                Note: Ambassadors will receive a percentage of the proceeds from
+                the campaign. Ambassador commission rate must be between 0 and 10% of campaign proceeds and must be a valid percentage.
               </p>
             </section>
 
             {formData.isChained && (
               <section className=" space-y-2">
                 <p className="font-semibold text-[28px] text-[#104901]">
-                  What percentage of the proceeds will chainers get?
+                  What percentage of the proceeds will ambassadors get?
                 </p>
                 <input
                   type="number"
@@ -927,7 +927,7 @@ export default function CreateCampaignPage() {
                       Additional instructions
                     </label>
                     <textarea
-                      className="w-full bg-[#F2F1E9] rounded border-[#C0BFC4] p-5 text-[#5F8555] placeholder:text-[#B3B3B3] outline-none h-28"
+                      className="w-full bg-[whitesmoke] rounded border-[#C0BFC4] p-5 text-[#5F8555] placeholder:text-[#B3B3B3] outline-none h-28"
                       rows={3}
                       value={aiInstruction}
                       onChange={(e) => setAiInstruction(e.target.value)}

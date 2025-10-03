@@ -273,7 +273,7 @@ export function PayoutDetailsModal({
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="font-medium">Total Chainer Donations:</span>
+                  <span className="font-medium">Total Ambassador Donations:</span>
                   <div className="text-right">
                     <div className="font-semibold">
                       {formatCurrency(campaign.chainerDonationsTotal || 0, campaign.currencyCode)}
@@ -349,7 +349,7 @@ export function PayoutDetailsModal({
               {/* Chainer Commissions */}
               {fees.chainerCommissions > 0 && (
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-600">Chainer Commissions:</span>
+                  <span className="text-gray-600">Ambassador Commissions:</span>
                   <span className="text-blue-600">
                     -{formatCurrency(fees.chainerCommissions, campaign.currencyCode)}
                   </span>

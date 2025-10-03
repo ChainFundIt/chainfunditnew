@@ -137,7 +137,7 @@ const ChainModal: React.FC<ChainModalProps> = ({ open, onOpenChange, campaign, o
                   value={whyChain}
                   onChange={(e) => setWhyChain(e.target.value)}
                   placeholder="Tell us why you want to chain this campaign..."
-                  className="mt-2 h-12 p-5 bg-[#F2F1E9] border border-[#C0BFC4] rounded-lg shadow-none"
+                  className="mt-2 h-12 p-5 bg-[whitesmoke] border border-[#C0BFC4] rounded-lg shadow-none"
                 />
               </div>
 
@@ -150,19 +150,19 @@ const ChainModal: React.FC<ChainModalProps> = ({ open, onOpenChange, campaign, o
                   onValueChange={setProceedsOption}
                   className="mt-3 space-y-3"
                 >
-                  <div className="flex items-center space-x-2 w-fit h-12 p-5 bg-[#F2F1E9] border border-[#C0BFC4] rounded-lg">
+                  <div className="flex items-center space-x-2 w-fit h-12 p-5 bg-[whitesmoke] border border-[#C0BFC4] rounded-lg">
                     <RadioGroupItem value="give-back" id="give-back" />
                     <Label htmlFor="give-back" className="text-xl font-normal text-[#5F8555]">
                       Give back to fundraiser
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2 w-fit h-12 p-5 bg-[#F2F1E9] border border-[#C0BFC4] rounded-lg">
+                  <div className="flex items-center space-x-2 w-fit h-12 p-5 bg-[whitesmoke] border border-[#C0BFC4] rounded-lg">
                     <RadioGroupItem value="receive-payout" id="receive-payout" />
                     <Label htmlFor="receive-payout" className="text-xl font-normal text-[#5F8555]">
                       Receive as payout
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2 w-fit h-12 p-5 bg-[#F2F1E9] border border-[#C0BFC4] rounded-lg">
+                  <div className="flex items-center space-x-2 w-fit h-12 p-5 bg-[whitesmoke] border border-[#C0BFC4] rounded-lg">
                     <RadioGroupItem value="donate-charity" id="donate-charity" />
                     <Label htmlFor="donate-charity" className="text-xl font-normal text-[#5F8555]">
                       Donate to a charity of your choice

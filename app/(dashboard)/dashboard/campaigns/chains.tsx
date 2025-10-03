@@ -33,10 +33,10 @@ const Chains = () => {
 
         <div className="text-center mb-8">
           <h3 className="font-bold text-3xl text-[#104901] mb-3">
-            No Chainer Donations Yet
+            No Ambassador Donations Yet
           </h3>
           <p className="font-normal text-xl text-[#104901] opacity-80">
-            No donations have been raised through chainers for your campaigns yet. Encourage people to chain your campaigns to help spread the word!
+            No donations have been raised through ambassadors for your campaigns yet. Encourage people to chain your campaigns to help spread the word!
           </p>
         </div>
 
@@ -53,7 +53,7 @@ const Chains = () => {
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#104901]"></div>
-        <p className="mt-4 text-[#104901] opacity-80">Loading chainer donations...</p>
+        <p className="mt-4 text-[#104901] opacity-80">Loading ambassador donations...</p>
       </div>
     );
   }
@@ -84,35 +84,35 @@ const Chains = () => {
       {/* Stats Overview */}
       {chainerData && chainerData.stats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-gradient-to-r from-green-600 to-[#104901] text-white p-6 rounded-2xl">
-            <div className="flex items-center justify-between">
+          <div className="bg-gradient-to-r from-green-600 to-[#104901] text-white p-4 rounded-2xl">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-green-100 text-sm font-medium">Total Chainer Donations</p>
+                <p className="text-green-100 text-sm font-medium">Total Ambassador Donations</p>
                 <p className="text-3xl font-bold">{chainerData.stats.totalChainedDonations}</p>
               </div>
               <Gift className="h-8 w-8 text-green-100" />
             </div>
           </div>
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-2xl">
-            <div className="flex items-center justify-between">
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-2xl">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-blue-100 text-sm font-medium">Amount Raised by Chainers</p>
+                <p className="text-blue-100 text-sm font-medium">Amount Raised by ambassadors</p>
                 <p className="text-3xl font-bold">{formatCurrency(chainerData.stats.totalChainedAmount, 'NGN')}</p>
               </div>
               <DollarSign className="h-8 w-8 text-blue-100" />
             </div>
           </div>
-          <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-6 rounded-2xl">
-            <div className="flex items-center justify-between">
+          <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-4 rounded-2xl">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-purple-100 text-sm font-medium">Total Chainers</p>
+                <p className="text-purple-100 text-sm font-medium">Total ambassadors</p>
                 <p className="text-3xl font-bold">{chainerData.stats.totalChainers}</p>
               </div>
               <Users className="h-8 w-8 text-purple-100" />
             </div>
           </div>
-          <div className="bg-gradient-to-r from-orange-600 to-orange-700 text-white p-6 rounded-2xl">
-            <div className="flex items-center justify-between">
+          <div className="bg-gradient-to-r from-orange-600 to-orange-700 text-white p-4 rounded-2xl">
+            <div className="flex items-start justify-between">
               <div>
                 <p className="text-orange-100 text-sm font-medium">Commissions Paid</p>
                 <p className="text-3xl font-bold">{formatCurrency(chainerData.stats.totalCommissionsPaid, 'NGN')}</p>
@@ -153,7 +153,7 @@ const Chains = () => {
                       </span>
                       <span className="flex items-center gap-1">
                         <Users size={14} />
-                        {campaign.totalChainers} chainers
+                        {campaign.totalChainers} ambassadors
                       </span>
                     </div>
                   </div>
@@ -161,7 +161,7 @@ const Chains = () => {
                 
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Raised by Chainers</span>
+                    <span className="text-gray-600">Raised by ambassadors</span>
                     <span className="font-semibold text-green-600">
                       {formatCurrency(campaign.chainedAmount, campaign.campaignCurrency)}
                     </span>
@@ -192,7 +192,7 @@ const Chains = () => {
       {/* Recent Chainer Donations */}
       {chainerData && chainerData.donations.length > 0 && (
         <div>
-          <h2 className="text-2xl font-bold text-[#104901] mb-6">Recent Chainer Donations</h2>
+          <h2 className="text-2xl font-bold text-[#104901] mb-6">Recent Chain Ambassador Donations</h2>
           <div className="space-y-4">
             {chainerData.donations.slice(0, 10).map((donation) => (
               <div

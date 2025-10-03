@@ -347,7 +347,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
                         }
                         className={`p-5 text-[#5F8555] text-xl ${
                           period === option.toLowerCase().replace(" ", "-")
-                            ? "bg-[#F2F1E9] rounded-lg border border-[#C0BFC4] hover:bg-[#F2F1E9] hover:text-[#5F8555] shadow-none"
+                            ? "bg-[whitesmoke] rounded-lg border border-[#C0BFC4] hover:bg-[whitesmoke] hover:text-[#5F8555] shadow-none"
                             : "border-none bg-transparent shadow-none hover:bg-transparent hover:text-[#5F8555]"
                         }`}
                         onClick={() =>
@@ -376,7 +376,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
                       value={selectedCurrency}
                       onValueChange={handleCurrencyChange}
                     >
-                      <SelectTrigger className="h-11 bg-[#F2F1E9] rounded-lg border border-[#C0BFC4] text-[#5F8555] text-xl shadow-none appearance-none cursor-pointer hover:border-[#104901] transition-colors">
+                      <SelectTrigger className="h-11 bg-[whitesmoke] rounded-lg border border-[#C0BFC4] text-[#5F8555] text-xl shadow-none appearance-none cursor-pointer hover:border-[#104901] transition-colors">
                         <SelectValue placeholder="$" />
                       </SelectTrigger>
                       <SelectContent>
@@ -397,7 +397,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                       placeholder="type in an amount"
-                      className="w-full h-11 bg-[#F2F1E9] rounded-lg border border-[#C0BFC4] text-[#5F8555] text-xl shadow-none"
+                      className="w-full h-11 bg-[whitesmoke] rounded-lg border border-[#C0BFC4] text-[#5F8555] text-xl shadow-none"
                     />
                   </div>
                 </div>
@@ -421,7 +421,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
                       value={fullName}
                       placeholder="Full name"
                       onChange={(e) => setFullName(e.target.value)}
-                      className="mt-2 h-11 bg-[#F2F1E9] rounded-lg border border-[#C0BFC4] text-[#5F8555] placeholder:text-xl placeholder:text-[#5F8555] text-xl shadow-none"
+                      className="mt-2 h-11 bg-[whitesmoke] rounded-lg border border-[#C0BFC4] text-[#5F8555] placeholder:text-xl placeholder:text-[#5F8555] text-xl shadow-none"
                     />
                   </div>
                   <div>
@@ -437,7 +437,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
                       value={email}
                       placeholder="Email"
                       onChange={(e) => setEmail(e.target.value)}
-                      className="mt-2 h-11 bg-[#F2F1E9] rounded-lg border border-[#C0BFC4] text-[#5F8555] placeholder:text-xl placeholder:text-[#5F8555] text-xl shadow-none"
+                      className="mt-2 h-11 bg-[whitesmoke] rounded-lg border border-[#C0BFC4] text-[#5F8555] placeholder:text-xl placeholder:text-[#5F8555] text-xl shadow-none"
                     />
                   </div>
                   <div>
@@ -453,7 +453,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
                       value={phone}
                       placeholder="Phone number"
                       onChange={(e) => setPhone(e.target.value)}
-                      className="mt-2 h-11 bg-[#F2F1E9] rounded-lg border border-[#C0BFC4] text-[#5F8555] placeholder:text-xl placeholder:text-[#5F8555] text-xl shadow-none"
+                      className="mt-2 h-11 bg-[whitesmoke] rounded-lg border border-[#C0BFC4] text-[#5F8555] placeholder:text-xl placeholder:text-[#5F8555] text-xl shadow-none"
                     />
                   </div>
                   <div>
@@ -468,7 +468,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
                       value={taxNumber}
                       placeholder="Tax number"
                       onChange={(e) => setTaxNumber(e.target.value)}
-                      className="mt-2 h-11 bg-[#F2F1E9] rounded-lg border border-[#C0BFC4] text-[#5F8555] placeholder:text-xl placeholder:text-[#5F8555] text-xl shadow-none"
+                      className="mt-2 h-11 bg-[whitesmoke] rounded-lg border border-[#C0BFC4] text-[#5F8555] placeholder:text-xl placeholder:text-[#5F8555] text-xl shadow-none"
                     />
                   </div>
                 </div>
@@ -508,7 +508,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
                   value={comments}
                   onChange={(e) => setComments(e.target.value)}
                   placeholder="Support the fundraiser with nice words."
-                  className="mt-2 min-h-[100px] bg-[#F2F1E9] border border-[#C0BFC4] text-sm text-[#5F8555] placeholder:text-sm placeholder:text-[#5F8555]"
+                  className="mt-2 min-h-[100px] bg-[whitesmoke] border border-[#C0BFC4] text-sm text-[#5F8555] placeholder:text-sm placeholder:text-[#5F8555]"
                 />
               </div>
 
@@ -535,7 +535,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
           {step === "payment" && (
             <div className="space-y-6">
               {/* Donation Summary */}
-              <div className="bg-[#F2F1E9] rounded-lg p-4 border border-[#C0BFC4]">
+              <div className="bg-[whitesmoke] rounded-lg p-4 border border-[#C0BFC4]">
                 <h3 className="font-semibold text-lg text-[#104901] mb-2">Donation Summary</h3>
                 <div className="space-y-1">
                   <p className="text-[#5F8555]">Amount: <span className="font-semibold">{selectedCurrency} {amount}</span></p>
@@ -563,8 +563,8 @@ const DonateModal: React.FC<DonateModalProps> = ({
                           variant={paymentProvider === provider ? "default" : "outline"}
                           className={`p-4 h-auto text-left flex items-center gap-3 relative ${
                             paymentProvider === provider
-                              ? "bg-[#F2F1E9] border border-[#C0BFC4] hover:bg-[#F2F1E9] text-[#5F8555]"
-                              : "border border-[#C0BFC4] bg-transparent hover:bg-[#F2F1E9] text-[#5F8555]"
+                              ? "bg-[whitesmoke] border border-[#C0BFC4] hover:bg-[whitesmoke] text-[#5F8555]"
+                              : "border border-[#C0BFC4] bg-transparent hover:bg-[whitesmoke] text-[#5F8555]"
                           }`}
                           onClick={() => setPaymentProvider(provider)}
                         >

@@ -216,7 +216,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Payment Amount Display */}
-      <div className="bg-[#F2F1E9] rounded-lg p-4 border border-[#C0BFC4]">
+      <div className="bg-[whitesmoke] rounded-lg p-4 border border-[#C0BFC4]">
         <h3 className="font-semibold text-lg text-[#104901] mb-2">Payment Details</h3>
         <div className="space-y-1">
           <p className="text-[#5F8555]">Amount: <span className="font-semibold">{currency} {amount}</span></p>

@@ -144,7 +144,7 @@ const layout = ({ children }: { children: React.ReactNode }) => {
         className="w-full md:w-2/5 flex flex-col justify-between items-center"
         style={{
           background:
-            "linear-gradient(180deg, #F2F1E9 80%, #FFF 85%, #F2F1E9 100%)",
+            "linear-gradient(180deg, whitesmoke 80%, #FFF 85%, whitesmoke 100%)",
         }}
       >
         <div className="w-full flex flex-col gap-3 py-3">{children}</div>

@@ -96,7 +96,7 @@ const Favourites = ({ campaigns }: Props) => {
             <div className="mt-3 flex gap-2">
               <Link href={`/campaign/${campaign.slug}`}>
                 <Button
-                  className="bg-[#F2F1E9] font-medium text-lg text-[#474553] border-[#474553]"
+                  className="bg-[whitesmoke] font-medium text-lg text-[#474553] border-[#474553]"
                   variant="outline"
                 >
                   View

@@ -23,66 +23,66 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-const teamMembers = [
-  {
-    id: 1,
-    name: "Tolu Aturamu",
-    role: "CEO",
-    bio: (
-      <div>
-        <ul className="list-disc list-inside">
-          <li>⁠ ⁠Fixed Income & FX Treasury Operations</li>
-          <li>⁠ ⁠Operations</li>
-          <li>⁠ ⁠Sales & Marketing</li>
-          <li>⁠ ⁠Law</li>
-        </ul>
-      </div>
-    ),
-  },
-  {
-    id: 2,
-    name: "Ladetunji Osibanjo",
-    role: "CTO",
-    bio: (
-      <div>
-        <ul className="list-disc list-inside">
-          <li>⁠ ⁠ ⁠HTML, CSS, JavaScript</li>
-          <li>⁠ ⁠WordPress</li>
-          <li>⁠ ⁠Frontend Design</li>
-          <li>⁠⁠Graphics Design & Motion Graphics</li>
-        </ul>
-      </div>
-    ),
-  },
-  {
-    id: 3,
-    name: "Emily Tong",
-    role: "COO",
-    bio: (
-      <div>
-        <ul className="list-disc list-inside">
-          <li>⁠ ⁠Accounting & Finance</li>
-          <li>⁠Compliance</li>
-        </ul>
-      </div>
-    ),
-  },
-  {
-    id: 4,
-    name: "Ade Atunramu",
-    role: "Executive Director",
-    bio: (
-      <div>
-        <ul className="list-disc list-inside">
-          <li>⁠  ⁠Capital Raising</li>
-          <li>⁠  ⁠Investment Banking</li>
-          <li>⁠  ⁠Operations</li>
-          <li>⁠Sales & Marketing</li>
-        </ul>
-      </div>
-    ),
-  },
-];
+// const teamMembers = [
+//   {
+//     id: 1,
+//     name: "Tolu Aturamu",
+//     role: "CEO",
+//     bio: (
+//       <div>
+//         <ul className="list-disc list-inside">
+//           <li>⁠ ⁠Fixed Income & FX Treasury Operations</li>
+//           <li>⁠ ⁠Operations</li>
+//           <li>⁠ ⁠Sales & Marketing</li>
+//           <li>⁠ ⁠Law</li>
+//         </ul>
+//       </div>
+//     ),
+//   },
+//   {
+//     id: 2,
+//     name: "Ladetunji Osibanjo",
+//     role: "CTO",
+//     bio: (
+//       <div>
+//         <ul className="list-disc list-inside">
+//           <li>⁠ ⁠ ⁠HTML, CSS, JavaScript</li>
+//           <li>⁠ ⁠WordPress</li>
+//           <li>⁠ ⁠Frontend Design</li>
+//           <li>⁠⁠Graphics Design & Motion Graphics</li>
+//         </ul>
+//       </div>
+//     ),
+//   },
+//   {
+//     id: 3,
+//     name: "Emily Tong",
+//     role: "COO",
+//     bio: (
+//       <div>
+//         <ul className="list-disc list-inside">
+//           <li>⁠ ⁠Accounting & Finance</li>
+//           <li>⁠Compliance</li>
+//         </ul>
+//       </div>
+//     ),
+//   },
+//   {
+//     id: 4,
+//     name: "Ade Atunramu",
+//     role: "Executive Director",
+//     bio: (
+//       <div>
+//         <ul className="list-disc list-inside">
+//           <li>⁠  ⁠Capital Raising</li>
+//           <li>⁠  ⁠Investment Banking</li>
+//           <li>⁠  ⁠Operations</li>
+//           <li>⁠Sales & Marketing</li>
+//         </ul>
+//       </div>
+//     ),
+//   },
+// ];
 
 const stats = [
   { label: "Campaigns Funded", value: "50+", icon: Target },
@@ -385,7 +385,7 @@ export default function AboutPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {teamMembers.map((member) => (
               <Card
                 key={member.id}
@@ -412,7 +412,7 @@ export default function AboutPage() {
                 </CardContent>
               </Card>
             ))}
-          </div>
+          </div> */}
         </div>
 
         <div className="bg-gradient-to-r from-green-600 to-[#104901] rounded-2xl p-12 text-center text-white">

@@ -682,13 +682,13 @@ const Main = ({ campaignId }: MainProps) => {
 
             {/* Tab Content */}
             {activeTab === "why-support" && (
-              <div className="bg-[#F2F1E9] border-x border-b border-[#C0BFC4] font-normal text-sm md:text-xl text-[#104901] p-3 md:p-6 space-y-4">
+              <div className="bg-[whitesmoke] border-x border-b border-[#C0BFC4] font-normal text-sm md:text-xl text-[#104901] p-3 md:p-6 space-y-4">
                 <p className="">{campaignData.description}</p>
               </div>
             )}
 
             {activeTab === "updates" && (
-              <div className="bg-[#F2F1E9] border-x border-b border-[#C0BFC4] font-normal text-sm md:text-xl text-[#104901] p-3 md:p-6">
+              <div className="bg-[whitesmoke] border-x border-b border-[#C0BFC4] font-normal text-sm md:text-xl text-[#104901] p-3 md:p-6">
                 {loadingUpdates ? (
                   <div className="text-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#104901] mx-auto mb-4"></div>
@@ -753,7 +753,7 @@ const Main = ({ campaignId }: MainProps) => {
             )}
 
             {activeTab === "documents" && (
-              <div className="bg-[#F2F1E9] border-x border-b border-[#C0BFC4] font-normal text-sm md:text-xl text-[#104901] p-3 md:p-6">
+              <div className="bg-[whitesmoke] border-x border-b border-[#C0BFC4] font-normal text-sm md:text-xl text-[#104901] p-3 md:p-6">
                 {campaignDocuments.length > 0 ? (
                   <div className="space-y-4">
                     <p className="text-[#757575] mb-4">
@@ -862,7 +862,7 @@ const Main = ({ campaignId }: MainProps) => {
 
           <section className="my-5 py-5 border-y border-[#ADADAD]">
             <h3 className="text-3xl font-semibold text-black mb-4">
-              Top Chainers
+              Top Ambassadors
             </h3>
             {loadingTopChainers ? (
               <div className="flex items-center justify-center py-8">
@@ -901,7 +901,7 @@ const Main = ({ campaignId }: MainProps) => {
             ) : (
               <div className="flex items-center justify-center py-8">
                 <p className="text-[#757575] text-lg">
-                  No chainers yet. Start the chain!
+                  No ambassadors yet. Start the chain!
                 </p>
               </div>
             )}
@@ -939,7 +939,7 @@ const Main = ({ campaignId }: MainProps) => {
                 own custom link.
               </p>
               <span className="font-normal text-base text-[#5F8555]">
-                Click the button below to join other chainers, bring in
+                Click the button below to join other ambassadors, bring in
                 referrals, and get recognition for your efforts!
               </span>
 
@@ -981,7 +981,7 @@ const Main = ({ campaignId }: MainProps) => {
                 <div className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#104901] mr-3"></div>
                   <span className="text-[#5F8555]">
-                    Loading recent donations...
+                    Loading recent ambassador donations...
                   </span>
                 </div>
               </div>
@@ -1093,7 +1093,7 @@ const Main = ({ campaignId }: MainProps) => {
           {/* comments */}
           <div className="space-y-3">
             <h3 className="font-semibold text-3xl text-[#104901]">
-              Top Comments
+              Top Ambassador Comments
             </h3>
             {loadingComments ? (
               <div className="flex items-center justify-center py-8">
@@ -1106,7 +1106,7 @@ const Main = ({ campaignId }: MainProps) => {
               <div className="space-y-4 max-h-96 overflow-y-auto">
                 {comments.slice(0, 5).map((comment) => (
                   <div className="" key={comment.id}>
-                    <section className="bg-[#F2F1E9] w-full p-3 space-y-3 rounded-t-xl">
+                    <section className="bg-[whitesmoke] w-full p-3 space-y-3 rounded-t-xl">
                       <section className="flex gap-2 items-start">
                         <div className="w-9 h-9 bg-[#E7EDE6] rounded-full flex items-center justify-center text-[#104901] font-semibold text-sm overflow-hidden">
                           {comment.userAvatar ? (
