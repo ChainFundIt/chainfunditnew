@@ -56,14 +56,14 @@ const PastCampaigns = ({ campaigns }: Props) => {
         return (
         <div
           key={transformedCampaign.id}
-          className="border border-[#D9D9D9] bg-white py-4 pl-4 pr-6 flex gap-20 items-start"
+          className="border border-[#D9D9D9] bg-white py-4 pl-4 pr-6 flex flex-col md:flex-row md:gap-20 gap-4 items-start"
           style={{ boxShadow: "0px 4px 8px 0px #0000001A" }}
         >
           {needsEmojiFallback(transformedCampaign.image) ? (
             <EmojiFallbackImage
               category={campaign.reason || 'Uncategorized'}
               title={transformedCampaign.title}
-              className="w-[270px] h-[190px]"
+              className="w-full md:w-[270px] h-[150px] md:h-[190px]"
             />
           ) : (
             <R2Image
@@ -71,12 +71,12 @@ const PastCampaigns = ({ campaigns }: Props) => {
               alt={transformedCampaign.title}
               width={270}
               height={190}
-              className="object-cover"
+              className="w-full md:w-[270px] h-[150px] md:h-[190px] object-cover"
             />
           )}
           <div className="flex flex-col justify-end">
-            <div className="flex items-center gap-2 mb-2">
-              <h3 className="text-2xl font-medium">{transformedCampaign.title}</h3>
+            <div className="flex flex-col md:flex-row md:items-center gap-2 mb-2">
+              <h3 className="text-lg md:text-2xl font-medium">{transformedCampaign.title}</h3>
               {(() => {
                 const statusInfo = getCampaignStatus(campaign);
                 const timeRemaining = getTimeRemaining(campaign);
@@ -106,14 +106,14 @@ const PastCampaigns = ({ campaigns }: Props) => {
                 return null;
               })()}
             </div>
-            <span className="font-normal text-base">
+            <span className="font-normal text-sm md:text-base">
               {transformedCampaign.description.slice(0, 60)}...
             </span>
-            <section className="flex justify-between">
-              <p className="text-lg font-medium my-1 text-black">
+            <section className="flex flex-col md:flex-row md:justify-between gap-1">
+              <p className="text-base md:text-lg font-medium my-1 text-black">
                 {formatCurrency(transformedCampaign.amountRaised, transformedCampaign.currency)} raised
               </p>
-              <p className="font-medium text-lg text-[#757575] my-1">
+              <p className="font-medium text-base md:text-lg text-[#757575] my-1">
                 {formatCurrency(transformedCampaign.goal, transformedCampaign.currency)} total
               </p>
             </section>
@@ -128,13 +128,13 @@ const PastCampaigns = ({ campaigns }: Props) => {
                 }}
               ></div>
             </div>
-            <section className="flex justify-between items-center">
-              <p className="text-lg text-[#868686] flex gap-1 items-center">
-                <Users size={20} />
+            <section className="flex flex-col md:flex-row md:justify-between gap-2 md:items-center">
+              <p className="text-sm md:text-lg text-[#868686] flex gap-1 items-center">
+                <Users size={16} className="md:w-5 md:h-5" />
                 {transformedCampaign.donors} donors
               </p>
-              <p className="text-lg text-[#868686] flex gap-1 items-center">
-                <LinkIcon size={20} /> {transformedCampaign.chains} chains
+              <p className="text-sm md:text-lg text-[#868686] flex gap-1 items-center">
+                <LinkIcon size={16} className="md:w-5 md:h-5" /> {transformedCampaign.chains} chains
               </p>
             </section>
             <div className="mt-3 flex gap-2">

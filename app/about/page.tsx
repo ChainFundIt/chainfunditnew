@@ -374,7 +374,7 @@ export default function AboutPage() {
           </div>
         </div>
 
-        <div className="mb-20">
+        {/* <div className="mb-20">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
               Meet Our Team
@@ -385,7 +385,7 @@ export default function AboutPage() {
             </p>
           </div>
 
-          {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {teamMembers.map((member) => (
               <Card
                 key={member.id}
@@ -412,8 +412,8 @@ export default function AboutPage() {
                 </CardContent>
               </Card>
             ))}
-          </div> */}
-        </div>
+          </div>
+        </div> */}
 
         <div className="bg-gradient-to-r from-green-600 to-[#104901] rounded-2xl p-12 text-center text-white">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
