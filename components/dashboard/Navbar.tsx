@@ -88,7 +88,7 @@ const Navbar = (props: Props) => {
               </Link>
             </li>
             <li>
-              <Link href="/faqs" onClick={() => setMenuOpen(false)}>
+              <Link href="/faq" onClick={() => setMenuOpen(false)}>
                 FAQs
               </Link>
             </li>

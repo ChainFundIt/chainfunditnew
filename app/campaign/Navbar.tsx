@@ -46,7 +46,7 @@ const Navbar = (props: Props) => {
             <Link href="#">About</Link>
           </li>
           <li>
-            <Link href="/faqs">FAQs</Link>
+            <Link href="/faq">FAQs</Link>
           </li>
         </ul>
         <section className="hidden md:flex items-center gap-4">
@@ -90,7 +90,7 @@ const Navbar = (props: Props) => {
               </li>
             </li>
             <li>
-              <Link href="/faqs" onClick={() => setMenuOpen(false)}>
+              <Link href="/faq" onClick={() => setMenuOpen(false)}>
                 FAQs
               </Link>
             </li>
