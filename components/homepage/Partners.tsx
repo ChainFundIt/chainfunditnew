@@ -65,7 +65,7 @@ const Partners = (props: Props) => {
   ];
 
   return (
-    <div className="w-full h-[200px] bg-[whitesmoke] px-4 md:px-10 py-6 flex flex-col md:flex-row gap-4 md:gap-5 items-start md:items-center">
+    <div className="w-full h-[200px] bg-whitesmoke px-4 md:px-10 py-6 flex flex-col md:flex-row gap-4 md:gap-5 items-start md:items-center">
       {/* Fixed "Our Partners" text */}
       <p className="font-source font-semibold text-xl md:text-3xl text-black whitespace-nowrap mb-3 md:mb-0">
         Our Partners
@@ -74,9 +74,9 @@ const Partners = (props: Props) => {
       <div className="flex-1 overflow-hidden">
         <div className="relative w-full overflow-hidden" style={{ height: "80px" }}>
           {/* Left gradient mask */}
-          <div className="absolute left-0 top-0 h-full w-10 bg-gradient-to-r from-[whitesmoke] to-transparent z-10" />
+          <div className="absolute left-0 top-0 h-full w-10 bg-gradient-to-r from-whitesmoke to-transparent z-10" />
           {/* Right gradient mask */}
-          <div className="absolute right-0 top-0 h-full w-10 bg-gradient-to-l from-[whitesmoke] to-transparent z-10" />
+          <div className="absolute right-0 top-0 h-full w-10 bg-gradient-to-l from-whitesmoke to-transparent z-10" />
           
           {/* Slider track */}
           <div 

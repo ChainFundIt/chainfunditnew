@@ -133,7 +133,7 @@ const Main = (props: Props) => {
       {/* benefits */}
       <BenefitsCarousel />
       {/* campaign cards */}
-      <div className="p-4 md:p-12 w-full h-fit flex flex-col gap-5 my-5 bg-[whitesmoke]">
+      <div className="p-4 md:p-12 w-full h-fit flex flex-col gap-5 my-5 bg-whitesmoke">
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0">
           <section className="flex flex-col gap-2 md:gap-3">
             <p className="font-source font-semibold text-2xl md:text-3xl text-black">
@@ -239,7 +239,7 @@ const Main = (props: Props) => {
                   className="group relative overflow-hidden rounded-2xl hover:shadow-2xl transition-all duration-500 cursor-pointer"
                   onClick={() => setOpenCard(idx)}
                 >
-                  <div className="relative h-[500px] bg-[whitesmoke] backdrop-blur-sm rounded-2xl overflow-hidden">
+                  <div className="relative h-[500px] bg-whitesmoke backdrop-blur-sm rounded-2xl overflow-hidden">
                     <div className="relative h-[200px] bg-gradient-to-br from-gray-100 to-gray-200">
                       <Image
                         src={card.image}

@@ -682,13 +682,13 @@ const Main = ({ campaignId }: MainProps) => {
 
             {/* Tab Content */}
             {activeTab === "why-support" && (
-              <div className="bg-[whitesmoke] border-x border-b border-[#C0BFC4] font-normal text-sm md:text-xl text-[#104901] p-3 md:p-6 space-y-4">
+              <div className="bg-whitesmoke border-x border-b border-[#C0BFC4] font-normal text-sm md:text-xl text-[#104901] p-3 md:p-6 space-y-4">
                 <p className="">{campaignData.description}</p>
               </div>
             )}
 
             {activeTab === "updates" && (
-              <div className="bg-[whitesmoke] border-x border-b border-[#C0BFC4] font-normal text-sm md:text-xl text-[#104901] p-3 md:p-6">
+              <div className="bg-whitesmoke border-x border-b border-[#C0BFC4] font-normal text-sm md:text-xl text-[#104901] p-3 md:p-6">
                 {loadingUpdates ? (
                   <div className="text-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#104901] mx-auto mb-4"></div>
@@ -753,7 +753,7 @@ const Main = ({ campaignId }: MainProps) => {
             )}
 
             {activeTab === "documents" && (
-              <div className="bg-[whitesmoke] border-x border-b border-[#C0BFC4] font-normal text-sm md:text-xl text-[#104901] p-3 md:p-6">
+              <div className="bg-whitesmoke border-x border-b border-[#C0BFC4] font-normal text-sm md:text-xl text-[#104901] p-3 md:p-6">
                 {campaignDocuments.length > 0 ? (
                   <div className="space-y-4">
                     <p className="text-[#757575] mb-4">
@@ -1106,7 +1106,7 @@ const Main = ({ campaignId }: MainProps) => {
               <div className="space-y-4 max-h-96 overflow-y-auto">
                 {comments.slice(0, 5).map((comment) => (
                   <div className="" key={comment.id}>
-                    <section className="bg-[whitesmoke] w-full p-3 space-y-3 rounded-t-xl">
+                    <section className="bg-whitesmoke w-full p-3 space-y-3 rounded-t-xl">
                       <section className="flex gap-2 items-start">
                         <div className="w-9 h-9 bg-[#E7EDE6] rounded-full flex items-center justify-center text-[#104901] font-semibold text-sm overflow-hidden">
                           {comment.userAvatar ? (

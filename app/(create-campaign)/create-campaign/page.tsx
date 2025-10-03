@@ -927,7 +927,7 @@ export default function CreateCampaignPage() {
                       Additional instructions
                     </label>
                     <textarea
-                      className="w-full bg-[whitesmoke] rounded border-[#C0BFC4] p-5 text-[#5F8555] placeholder:text-[#B3B3B3] outline-none h-28"
+                      className="w-full bg-whitesmoke rounded border-[#C0BFC4] p-5 text-[#5F8555] placeholder:text-[#B3B3B3] outline-none h-28"
                       rows={3}
                       value={aiInstruction}
                       onChange={(e) => setAiInstruction(e.target.value)}
