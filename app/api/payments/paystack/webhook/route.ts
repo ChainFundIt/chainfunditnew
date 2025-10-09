@@ -4,7 +4,7 @@ import { donations } from '@/lib/schema/donations';
 import { campaigns } from '@/lib/schema/campaigns';
 import { notifications } from '@/lib/schema/notifications';
 import { eq, sum, and } from 'drizzle-orm';
-import { handlePaystackWebhook, verifyPaystackTransaction } from '@/lib/payments/paystack';
+import { verifyPaystackWebhook, verifyPaystackPayment } from '@/lib/payments/paystack';
 import { 
   DONATION_STATUS_CONFIG, 
   getFailureReason, 
@@ -208,38 +208,38 @@ export async function POST(request: NextRequest) {
       } : 'No data'
     });
     
-    // Skip signature verification in development for easier testing
-    const { success, event, error } = await handlePaystackWebhook(
-      body, 
-      process.env.NODE_ENV === 'development' ? undefined : signature || undefined
+    // Verify webhook signature
+    const isValid = verifyPaystackWebhook(
+      JSON.stringify(body), 
+      signature || ''
     );
 
-    if (!success) {
-      console.error('❌ Paystack webhook verification failed:', error);
-      return NextResponse.json({ error }, { status: 400 });
+    if (!isValid && process.env.NODE_ENV === 'production') {
+      console.error('❌ Paystack webhook verification failed');
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
     }
 
-    console.log('✅ Paystack webhook verified, processing event:', event.event);
+    console.log('✅ Paystack webhook verified, processing event:', body.event);
 
     // Handle different event types
-    switch (event.event) {
+    switch (body.event) {
       case 'charge.success':
-        console.log('💰 Processing successful charge:', event.data.reference);
-        await handleChargeSuccess(event.data);
+        console.log('💰 Processing successful charge:', body.data.reference);
+        await handleChargeSuccess(body.data);
         break;
       
       case 'charge.failed':
-        console.log('❌ Processing failed charge:', event.data.reference);
-        await handleChargeFailed(event.data);
+        console.log('❌ Processing failed charge:', body.data.reference);
+        await handleChargeFailed(body.data);
         break;
       
       case 'charge.pending':
-        console.log('⏳ Processing pending charge:', event.data.reference);
-        await handleChargePending(event.data);
+        console.log('⏳ Processing pending charge:', body.data.reference);
+        await handleChargePending(body.data);
         break;
       
       default:
-        console.log('ℹ️ Unhandled event type:', event.event);
+        console.log('ℹ️ Unhandled event type:', body.event);
     }
 
     return NextResponse.json({ received: true });
@@ -280,9 +280,9 @@ async function handleChargeSuccess(chargeData: any) {
     console.log('✅ Found donation:', donation[0].campaignId);
 
     // Verify the transaction
-    const verification = await verifyPaystackTransaction(reference);
+    const verification = await verifyPaystackPayment(reference);
     
-    if (verification.success) {
+    if (verification.status && verification.data.status === 'success') {
       console.log('✅ Transaction verified successfully');
       
       // Update donation status
@@ -339,7 +339,7 @@ async function handleChargeSuccess(chargeData: any) {
       console.log('✅ Success notification created');
 
     } else {
-      console.error('❌ Transaction verification failed:', verification.error);
+      console.error('❌ Transaction verification failed:', verification.message);
     }
   } catch (error) {
     console.error('💥 Error handling charge success:', error);

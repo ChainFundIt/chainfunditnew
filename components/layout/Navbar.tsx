@@ -4,14 +4,16 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
+import SessionStatusIndicator from "@/components/dashboard/SessionStatusIndicator";
+import { useAuth } from "@/hooks/use-auth";
 
 type Props = {};
 
 const Navbar = (props: Props) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { user, loading } = useAuth();
 
   const handleCreateCampaign = () => {
-    // Use window.location for better compatibility with Next.js 15
     window.location.href = "/create-campaign";
   };
 
@@ -55,7 +57,10 @@ const Navbar = (props: Props) => {
           </li>
         </ul>
         <section className="hidden md:flex items-center gap-3">
-          <Link href='/signin' className="font-medium text-base text-black">Sign in</Link>
+          <SessionStatusIndicator />
+          {!user && !loading && (
+            <Link href='/signin' className="font-medium text-base text-black">Sign in</Link>
+          )}
           <Button
             className="px-4 py-3 border-2 border-white text-base font-semibold rounded-none"
             onClick={handleCreateCampaign}
@@ -82,7 +87,10 @@ const Navbar = (props: Props) => {
             </li>
           </ul>
           <div className="flex flex-col gap-2">
-            <Link href='/signin' className="font-medium text-base text-black">Signin</Link>
+            <SessionStatusIndicator />
+            {!user && !loading && (
+              <Link href='/signin' className="font-medium text-base text-black">Signin</Link>
+            )}
             <div className="flex items-center justify-center gap-3">
             </div>
             <Button className="w-full px-4 py-3 border-2 border-white text-base font-semibold rounded-none">Create Campaign</Button>

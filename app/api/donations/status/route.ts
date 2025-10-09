@@ -4,8 +4,8 @@ import { db } from '@/lib/db';
 import { donations } from '@/lib/schema/donations';
 import { campaigns } from '@/lib/schema/campaigns';
 import { eq, sum, and } from 'drizzle-orm';
-import { verifyPaystackTransaction } from '@/lib/payments/paystack';
-import { confirmStripePayment } from '@/lib/payments/stripe';
+import { verifyPaystackPayment } from '@/lib/payments/paystack';
+import { getStripePaymentIntent } from '@/lib/payments/stripe';
 
 // Helper function to update campaign currentAmount based on completed donations
 async function updateCampaignAmount(campaignId: string) {
@@ -80,11 +80,11 @@ export async function GET(request: NextRequest) {
       
       try {
         if (donationData.paymentMethod === 'paystack') {
-          const verification = await verifyPaystackTransaction(donationData.paymentIntentId);
-          providerStatus = verification.success ? 'completed' : 'failed';
+          const verification = await verifyPaystackPayment(donationData.paymentIntentId);
+          providerStatus = verification.status && verification.data.status === 'success' ? 'completed' : 'failed';
         } else if (donationData.paymentMethod === 'stripe') {
-          const confirmation = await confirmStripePayment(donationData.paymentIntentId);
-          providerStatus = confirmation.success ? 'completed' : 'failed';
+          const paymentIntent = await getStripePaymentIntent(donationData.paymentIntentId);
+          providerStatus = paymentIntent.status === 'succeeded' ? 'completed' : 'failed';
         }
 
         // Update database if status changed

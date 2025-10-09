@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { donations } from '@/lib/schema/donations';
 import { campaigns } from '@/lib/schema/campaigns';
 import { eq, sum, and } from 'drizzle-orm';
-import { verifyPaystackTransaction } from '@/lib/payments/paystack';
+import { verifyPaystackPayment } from '@/lib/payments/paystack';
 import { checkAndUpdateGoalReached } from '@/lib/utils/campaign-validation';
 
 // Helper function to update campaign currentAmount based on completed donations
@@ -52,10 +52,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Verify the transaction
-    const verification = await verifyPaystackTransaction(reference);
+    const verification = await verifyPaystackPayment(reference);
     
-    if (!verification.success) {
-      console.log('❌ Transaction verification failed:', verification.error);
+    if (!verification.status || verification.data.status !== 'success') {
+      console.log('❌ Transaction verification failed:', verification.message);
       return NextResponse.redirect(
         `${process.env.NEXT_PUBLIC_APP_URL}/campaigns?donation_status=failed&error=verification_failed`
       );

@@ -22,6 +22,7 @@ import {
   Zap,
 } from "lucide-react";
 import Link from "next/link";
+import Footer from "@/components/layout/Footer";
 
 // const teamMembers = [
 //   {
@@ -445,6 +446,8 @@ export default function AboutPage() {
           </div>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }

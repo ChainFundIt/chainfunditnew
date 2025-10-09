@@ -28,6 +28,8 @@ import {
 } from "@/components/ui/select";
 import Navbar from "./Navbar";
 import { useGeolocation, useCampaignFiltering, useCurrencyConversion } from "@/hooks/use-geolocation";
+import Footer from "@/components/layout/Footer";
+
 const campaignReasons = [
   "Emergency",
   "Business",
@@ -524,6 +526,7 @@ export default function AllCampaignsPage() {
         )}
       </div>
       <ClientToaster />
+      <Footer />
     </div>
   );
 }

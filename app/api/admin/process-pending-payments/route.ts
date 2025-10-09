@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { donations } from '@/lib/schema/donations';
 import { campaigns } from '@/lib/schema/campaigns';
 import { eq, sum, and, isNull, lt } from 'drizzle-orm';
-import { verifyPaystackTransaction } from '@/lib/payments/paystack';
+import { verifyPaystackPayment } from '@/lib/payments/paystack';
 import { checkAndUpdateGoalReached } from '@/lib/utils/campaign-validation';
 
 // Helper function to update campaign currentAmount based on completed donations
@@ -120,9 +120,9 @@ export async function POST(request: NextRequest) {
     if (action === 'verify' && donationRecord.paymentMethod === 'paystack' && donationRecord.paymentIntentId) {
       // Verify with Paystack
       try {
-        const verification = await verifyPaystackTransaction(donationRecord.paymentIntentId);
+        const verification = await verifyPaystackPayment(donationRecord.paymentIntentId);
         
-        if (verification.success) {
+        if (verification.status && verification.data.status === 'success') {
           newStatus = 'completed';
           processedAt = new Date();
           providerStatus = 'success';
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
         } else {
           newStatus = 'failed';
           providerStatus = 'failed';
-          providerError = verification.error || 'Verification failed';
+          providerError = verification.message || 'Verification failed';
         }
       } catch (error) {
         console.error('Error verifying payment:', error);

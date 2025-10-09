@@ -27,181 +27,52 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useCharities, useCharityCategories } from "@/hooks/use-charities";
+import Footer from "@/components/layout/Footer";
 
-// Charity data - might need to be put in an API
-const charities = [
-  {
-    id: "1",
-    name: "British Heart Foundation",
-    category: "Health",
-    logo: "/images/bhf.png",
-    website: "https://www.bhf.org.uk/",
-    verified: true,
-  },
-  {
-    id: "2",
-    name: "Cancer Research UK",
-    category: "Health",
-    logo: "/images/cruk.png",
-    website: "https://www.cancerresearchuk.org/",
-    verified: true,
-  },
-  {
-    id: "3",
-    name: "Save the Children International",
-    category: "Children",
-    logo: "/images/stc.png",
-    website: "https://www.savethechildren.org/",
-    verified: true,
-  },
-  {
-    id: "4",
-    name: "Macmillan Cancer Support",
-    category: "Health",
-    logo: "/images/mcp.png",
-    website: "https://www.macmillan.org.uk/",
-    verified: true,
-  },
-  {
-    id: "5",
-    name: "The Salvation Army",
-    category: "Community",
-    logo: "/images/tsa.png",
-    website: "https://secure20.salvationarmy.org",
-    verified: true,
-  },
-  {
-    id: "6",
-    name: "NSPCC",
-    category: "Children",
-    logo: "/images/nspcc.png",
-    website: "https://www.nspcc.org.uk/",
-    verified: true,
-  },
-  {
-    id: "7",
-    name: "Global Fund for Children",
-    category: "Global",
-    logo: "/images/gfc.png",
-    website: "https://globalfundforchildren.org/",
-    verified: true,
-  },
-  {
-    id: "8",
-    name: "Brain Tumour Research",
-    category: "Health",
-    logo: "/images/btr.png",
-    website: "https://braintumourresearch.org/",
-    verified: true,
-  },
-  {
-    id: "9",
-    name: "The Primary Club",
-    category: "Children",
-    logo: "/images/tpc.png",
-    website: "https://www.primaryclub.org/",
-    verified: true,
-  },
-  {
-    id: "10",
-    name: "Capokolam",
-    category: "Arts",
-    logo: "/images/capokolam.png",
-    website: "https://www.capokolam.org/",
-    verified: true,
-  },
-  {
-    id: "11",
-    name: "Seeability",
-    category: "Health",
-    logo: "/images/seeability.png",
-    website: "https://www.seeability.org/",
-    verified: true,
-  },
-  {
-    id: "12",
-    name: "Drinkaware",
-    category: "Health",
-    logo: "/images/drinkaware.png",
-    website: "https://www.drinkaware.co.uk/",
-    verified: true,
-  },
-  {
-    id: "13",
-    name: "Movember",
-    category: "Health",
-    logo: "/images/movember.png",
-    website: "https://uk.movember.com/",
-    verified: true,
-  },
-  {
-    id: "14",
-    name: "Amnesty International",
-    category: "Global",
-    logo: "/images/ai.png",
-    website: "https://www.amnesty.org.uk/",
-    verified: true,
-  },
-  {
-    id: "15",
-    name: "Scope",
-    category: "Community",
-    logo: "/images/scope.png",
-    website: "https://www.scope.org.uk/",
-    verified: true,
-  },
-  {
-    id: "16",
-    name: "Practical Action",
-    category: "Global",
-    logo: "/images/practical-action.png",
-    website: "https://practicalaction.org/",
-    verified: true,
-  },
-  {
-    id: "17",
-    name: "The Blue Cross",
-    category: "Community",
-    logo: "/images/blue-cross.jpg",
-    website: "https://www.bluecross.org.uk/",
-    verified: true,
-  },
-  {
-    id: "18",
-    name: "Sightsavers",
-    category: "Health",
-    logo: "/images/sightsavers.png",
-    website: "https://www.sightsavers.org/",
-    verified: true,
-  },
-];
-
-const categories = [
-  { id: "all", name: "All Categories", icon: Globe },
-  { id: "Health", name: "Health", icon: Stethoscope },
-  { id: "Children", name: "Children", icon: Users },
-  { id: "Education", name: "Education", icon: GraduationCap },
-  { id: "Community", name: "Community", icon: Home },
-  { id: "Environment", name: "Environment", icon: TreePine },
-  { id: "Arts", name: "Arts", icon: Music },
-  { id: "Housing", name: "Housing", icon: BookOpen },
-  { id: "Global", name: "Global", icon: Globe },
-];
+// Category icon mapping
+const categoryIcons: Record<string, any> = {
+  "Health": Stethoscope,
+  "Children": Users,
+  "Children & Youth": Users,
+  "Education": GraduationCap,
+  "Community": Home,
+  "Environment": TreePine,
+  "Arts": Music,
+  "Housing": Home,
+  "Housing & Shelter": Home,
+  "Global": Globe,
+  "Disaster Relief": Shield,
+  "Hunger & Poverty": Heart,
+  "Employment & Training": BookOpen,
+};
 
 export default function VirtualGivingMallPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  // Filter charities based on search and category
-  const filteredCharities = charities.filter((charity) => {
-    const matchesSearch =
-      charity.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      charity.category.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory =
-      selectedCategory === "all" || charity.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+  const { charities, loading, error } = useCharities({
+    search: searchQuery || undefined,
+    category: selectedCategory === "all" ? undefined : selectedCategory,
+    verified: true,
+    active: true,
+    limit: 100,
   });
+
+  const { categories: apiCategories } = useCharityCategories();
+
+  const categories = [
+    { id: "all", name: "All Categories", icon: Globe },
+    ...apiCategories.map((cat) => ({
+      id: cat.category,
+      name: cat.category,
+      icon: categoryIcons[cat.category] || Heart,
+      count: cat.count,
+    })),
+  ];
+
+  const filteredCharities = charities;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
@@ -329,72 +200,111 @@ export default function VirtualGivingMallPage() {
           </div>
         </div>
 
-        {/* Charities Grid/List */}
-        <div
-          className={
-            viewMode === "grid"
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-              : "space-y-4"
-          }
-        >
-          {filteredCharities.map((charity) => (
-            <Card
-              key={charity.id}
-              className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-            >
-              <CardContent className="p-0">
-                {/* Logo Section */}
-                <div
-                  className="bg-white h-36 rounded-t-lg flex items-center justify-center relative overflow-hidden bg-contain bg-center bg-no-repeat"
-                  style={{
-                    backgroundImage: `url(${charity.logo})`,
-                  }}
-                >
-                  {/* Subtle overlay for better badge visibility */}
-                  {/* <div className="absolute inset-0 bg-black/10 rounded-t-lg"></div> */}
-                  {charity.verified && (
-                    <div className="absolute top-2 right-2 z-10">
-                      <Badge className="bg-white/90 backdrop-blur-sm text-green-600 border-green-600 shadow-sm">
-                        <Shield className="h-3 w-3 mr-1" />
-                        Verified
-                      </Badge>
-                    </div>
-                  )}
-                </div>
+        {/* Loading State */}
+        {loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <Card key={i} className="animate-pulse">
+                <CardContent className="p-0">
+                  <div className="bg-gray-200 h-36 rounded-t-lg"></div>
+                  <div className="p-6">
+                    <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+                    <div className="h-10 bg-gray-200 rounded"></div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
-                {/* Content */}
-                <div className="p-6">
-                  <div className="mb-4">
-                    <h3 className="font-bold text-lg text-gray-900 mb-2 group-hover:text-green-600 transition-colors">
-                      {charity.name}
-                    </h3>
-                    <div className="flex items-center justify-between text-xs text-gray-500">
-                      <span className="bg-gray-100 px-2 py-1 rounded-full">
-                        {charity.category}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Heart className="h-3 w-3 text-red-500" />
-                      </span>
-                    </div>
+        {/* Error State */}
+        {error && (
+          <div className="text-center py-16">
+            <div className="text-red-400 mb-4">
+              <Shield className="h-16 w-16 mx-auto" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">
+              Error loading charities
+            </h3>
+            <p className="text-gray-500">{error}</p>
+          </div>
+        )}
+
+        {/* Charities Grid/List */}
+        {!loading && !error && (
+          <div
+            className={
+              viewMode === "grid"
+                ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                : "space-y-4"
+            }
+          >
+            {filteredCharities.map((charity) => (
+              <Card
+                key={charity.id}
+                className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+              >
+                <CardContent className="p-0">
+                  {/* Logo Section */}
+                  <div
+                    className="bg-white h-36 rounded-t-lg flex items-center justify-center relative overflow-hidden bg-contain bg-center bg-no-repeat"
+                    style={{
+                      backgroundImage: charity.logo ? `url(${charity.logo})` : 'none',
+                      backgroundColor: charity.logo ? 'white' : '#f3f4f6',
+                    }}
+                  >
+                    {!charity.logo && (
+                      <div className="text-gray-400 text-center p-4">
+                        <Heart className="h-12 w-12 mx-auto mb-2" />
+                        <p className="text-xs font-medium">{charity.name}</p>
+                      </div>
+                    )}
+                    
+                    {charity.isVerified && (
+                      <div className="absolute top-2 right-2 z-10">
+                        <Badge className="bg-white/90 backdrop-blur-sm text-green-600 border-green-600 shadow-sm">
+                          <Shield className="h-3 w-3 mr-1" />
+                          Verified
+                        </Badge>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Donate Button */}
-                  <Button
-                    // onClick={() => handleDonate(charity)}
-                    className="w-full text-white font-semibold py-3 rounded-lg transition-all duration-200 hover:shadow-lg"
-                  >
-                    <Link href={charity.website} target="_blank">
-                      Donate Now
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  {/* Content */}
+                  <div className="p-6">
+                    <div className="mb-4">
+                      <h3 className="font-bold text-lg text-gray-900 mb-2 group-hover:text-green-600 transition-colors line-clamp-2">
+                        {charity.name}
+                      </h3>
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span className="bg-gray-100 px-2 py-1 rounded-full">
+                          {charity.category || 'General'}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Heart className="h-3 w-3 text-red-500" />
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Donate Button */}
+                    <Button
+                      asChild
+                      className="w-full text-white font-semibold py-3 rounded-lg transition-all duration-200 hover:shadow-lg"
+                    >
+                      <Link href={`/virtual-giving-mall/${charity.slug}`}>
+                        Donate Now
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         {/* Empty State */}
-        {filteredCharities.length === 0 && (
+        {!loading && !error && filteredCharities.length === 0 && (
           <div className="text-center py-16">
             <div className="text-gray-400 mb-4">
               <Search className="h-16 w-16 mx-auto" />
@@ -418,6 +328,8 @@ export default function VirtualGivingMallPage() {
           </div>
         )}
       </div>
+
+      <Footer />
     </div>
   );
 }

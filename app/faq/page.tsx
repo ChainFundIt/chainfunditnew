@@ -25,6 +25,7 @@ import {
   SelectContent,
   SelectGroup,
 } from "@/components/ui/select";
+import Footer from "@/components/layout/Footer";
 
 const faqCategories = [
   { id: "general", name: "General", icon: HelpCircle },
@@ -419,6 +420,8 @@ export default function FAQPage() {
           </div>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }

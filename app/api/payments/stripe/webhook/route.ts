@@ -4,7 +4,8 @@ import { donations } from '@/lib/schema/donations';
 import { campaigns } from '@/lib/schema/campaigns';
 import { notifications } from '@/lib/schema/notifications';
 import { eq, sum, and } from 'drizzle-orm';
-import { handleStripeWebhook } from '@/lib/payments/stripe';
+import { verifyStripeWebhook } from '@/lib/payments/stripe';
+import Stripe from 'stripe';
 import { shouldCloseForGoalReached, closeCampaign } from '@/lib/utils/campaign-closure';
 
 // Helper function to update campaign currentAmount based on completed donations
@@ -144,11 +145,15 @@ export async function POST(request: NextRequest) {
     const body = await request.text();
     const signature = request.headers.get('stripe-signature') || '';
 
-    const { success, event, error } = await handleStripeWebhook(body, signature);
-
-    if (!success) {
-      return NextResponse.json({ error }, { status: 400 });
+    let event: Stripe.Event;
+    try {
+      event = verifyStripeWebhook(body, signature);
+    } catch (err: any) {
+      console.error('❌ Stripe webhook verification failed:', err.message);
+      return NextResponse.json({ error: 'Webhook verification failed' }, { status: 400 });
     }
+
+    // Event is verified at this point
 
     // Handle different event types
     switch (event.type) {

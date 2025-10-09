@@ -3,26 +3,14 @@
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
 type Props = {};
 
 const Navbar = (props: Props) => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    const checkAuthStatus = async () => {
-      try {
-        const response = await fetch('/api/user/profile');
-        setIsLoggedIn(response.ok);
-      } catch {
-        setIsLoggedIn(false);
-      }
-    };
-
-    checkAuthStatus();
-  }, []);
+  const { user, loading } = useAuth();
 
   const handleCreateCampaign = () => {
     window.location.href = "/create-campaign";
@@ -68,7 +56,7 @@ const Navbar = (props: Props) => {
           </li>
         </ul>
         <section className="hidden md:flex items-center gap-3">
-          {!isLoggedIn && (
+          {!user && !loading && (
             <Link href='/signin' className="font-medium text-base text-black">Sign in</Link>
           )}
           <Button
@@ -97,7 +85,7 @@ const Navbar = (props: Props) => {
             </li>
           </ul>
           <div className="flex flex-col gap-2">
-            {!isLoggedIn && (
+            {!user && !loading && (
               <Link href='/signin' className="font-medium text-base text-black">Signin</Link>
             )}
             <div className="flex items-center justify-center gap-3">

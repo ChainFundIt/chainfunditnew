@@ -5,8 +5,8 @@ import { donations } from '@/lib/schema/donations';
 import { campaigns } from '@/lib/schema/campaigns';
 import { users } from '@/lib/schema/users';
 import { eq } from 'drizzle-orm';
-import { createStripePaymentIntent, simulateStripePayment } from '@/lib/payments/stripe';
-import { createPaystackTransaction, simulatePaystackPayment } from '@/lib/payments/paystack';
+import { createStripePaymentIntent } from '@/lib/payments/stripe';
+import { initializePaystackPayment } from '@/lib/payments/paystack';
 import { getSupportedProviders } from '@/lib/payments/config';
 import { validateCampaignForDonations, checkAndUpdateGoalReached } from '@/lib/utils/campaign-validation';
 
@@ -117,31 +117,24 @@ export async function POST(request: NextRequest) {
     if (paymentProvider === 'stripe') {
       const amountInCents = Math.round(amount * 100); // Convert to cents
       
-      if (simulate) {
-        paymentResult = await simulateStripePayment({
-          amount: amountInCents,
-          currency,
+      // Create payment intent (simulate mode removed - using real payments)
+      const paymentIntent = await createStripePaymentIntent(
+        amount,
+        currency,
+        {
           donationId,
           campaignId,
           donorEmail: user.email!,
-          metadata: {
-            donorName: user.fullName,
-            campaignTitle: campaign.title,
-          },
-        });
-      } else {
-        paymentResult = await createStripePaymentIntent({
-          amount: amountInCents,
-          currency,
-          donationId,
-          campaignId,
-          donorEmail: user.email!,
-          metadata: {
-            donorName: user.fullName,
-            campaignTitle: campaign.title,
-          },
-        });
-      }
+          donorName: user.fullName || '',
+          campaignTitle: campaign.title,
+        }
+      );
+
+      paymentResult = {
+        success: true,
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id,
+      };
 
       if (paymentResult.success) {
         // Update donation with payment intent ID
@@ -162,32 +155,26 @@ export async function POST(request: NextRequest) {
     else if (paymentProvider === 'paystack') {
       const amountInKobo = currency === 'NGN' ? Math.round(amount * 100) : Math.round(amount * 100);
       
-      if (simulate) {
-        paymentResult = await simulatePaystackPayment({
-          amount: amountInKobo,
-          currency,
-          email: user.email!,
+      // Initialize Paystack payment (simulate mode removed - using real payments)
+      const paystackResponse = await initializePaystackPayment(
+        user.email!,
+        amount,
+        currency,
+        {
           donationId,
           campaignId,
-          metadata: {
-            donorName: user.fullName,
-            campaignTitle: campaign.title,
-          },
-        });
-      } else {
-        paymentResult = await createPaystackTransaction({
-          amount: amountInKobo,
-          currency,
-          email: user.email!,
-          donationId,
-          campaignId,
-          metadata: {
-            donorName: user.fullName,
-            campaignTitle: campaign.title,
-          },
-          callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/payments/paystack/callback`,
-        });
-      }
+          donorName: user.fullName || '',
+          campaignTitle: campaign.title,
+        },
+        `${process.env.NEXT_PUBLIC_APP_URL}/api/payments/paystack/callback`
+      );
+
+      paymentResult = {
+        success: paystackResponse.status,
+        authorization_url: paystackResponse.data.authorization_url,
+        reference: paystackResponse.data.reference,
+        accessCode: paystackResponse.data.access_code,
+      };
 
       if (paymentResult.success) {
         // Update donation with reference
@@ -210,7 +197,7 @@ export async function POST(request: NextRequest) {
     await db.delete(donations).where(eq(donations.id, donationId));
 
     return NextResponse.json(
-      { success: false, error: paymentResult?.error || 'Payment initialization failed' },
+      { success: false, error: 'Payment initialization failed' },
       { status: 500 }
     );
 

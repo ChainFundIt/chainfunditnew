@@ -1,148 +1,202 @@
-import { paystackConfig } from './config';
+import axios from 'axios';
+import crypto from 'crypto';
 
-export interface CreatePaystackTransactionParams {
-  amount: number; // Amount in kobo (for NGN) or cents (for other currencies)
-  currency: string;
-  email: string;
-  donationId: string;
-  campaignId: string;
-  metadata?: Record<string, any>;
-  callback_url?: string;
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+const PAYSTACK_PUBLIC_KEY = process.env.PAYSTACK_PUBLIC_KEY;
+const PAYSTACK_BASE_URL = 'https://api.paystack.co';
+
+if (!PAYSTACK_SECRET_KEY) {
+  console.warn('PAYSTACK_SECRET_KEY is not set in environment variables');
 }
 
-export interface PaystackPaymentResult {
-  success: boolean;
-  authorization_url?: string;
-  access_code?: string;
-  reference?: string;
-  error?: string;
+export interface PaystackInitializeResponse {
+  status: boolean;
+  message: string;
+  data: {
+    authorization_url: string;
+    access_code: string;
+    reference: string;
+  };
 }
 
-export async function createPaystackTransaction(
-  params: CreatePaystackTransactionParams
-): Promise<PaystackPaymentResult> {
+export interface PaystackVerifyResponse {
+  status: boolean;
+  message: string;
+  data: {
+    id: number;
+    status: string;
+    reference: string;
+    amount: number;
+    currency: string;
+    customer: {
+      email: string;
+      customer_code: string;
+    };
+    metadata?: Record<string, any>;
+  };
+}
+
+/**
+ * Initialize a Paystack payment
+ */
+export async function initializePaystackPayment(
+  email: string,
+  amount: number,
+  currency: string = 'NGN',
+  metadata?: Record<string, any>,
+  callbackUrl?: string
+): Promise<PaystackInitializeResponse> {
   try {
-    const { amount, currency, email, donationId, campaignId, metadata = {}, callback_url } = params;
-
-    const response = await fetch(`${paystackConfig.baseUrl}/transaction/initialize`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${paystackConfig.secretKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        amount,
-        currency,
+    const response = await axios.post(
+      `${PAYSTACK_BASE_URL}/transaction/initialize`,
+      {
         email,
-        reference: `donation_${donationId}_${Date.now()}`,
-        metadata: {
-          donationId,
-          campaignId,
-          ...metadata,
+        amount: Math.round(amount * 100), // Convert to kobo/cents
+        currency,
+        metadata,
+        callback_url: callbackUrl,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+          'Content-Type': 'application/json',
         },
-        callback_url: callback_url || `${process.env.NEXT_PUBLIC_APP_URL}/api/payments/paystack/callback`,
-      }),
-    });
+      }
+    );
 
-    const data = await response.json();
-
-    if (data.status) {
-      return {
-        success: true,
-        authorization_url: data.data.authorization_url,
-        access_code: data.data.access_code,
-        reference: data.data.reference,
-      };
-    } else {
-      return {
-        success: false,
-        error: data.message || 'Failed to initialize transaction',
-      };
-    }
-  } catch (error) {
-    console.error('Error creating Paystack transaction:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error occurred',
-    };
+    return response.data;
+  } catch (error: any) {
+    console.error('Error initializing Paystack payment:', error.response?.data || error.message);
+    throw error;
   }
 }
 
-export async function verifyPaystackTransaction(reference: string): Promise<PaystackPaymentResult> {
+/**
+ * Verify a Paystack payment
+ */
+export async function verifyPaystackPayment(
+  reference: string
+): Promise<PaystackVerifyResponse> {
   try {
-    const response = await fetch(`${paystackConfig.baseUrl}/transaction/verify/${reference}`, {
-      method: 'GET',
+    const response = await axios.get(
+      `${PAYSTACK_BASE_URL}/transaction/verify/${reference}`,
+      {
+        headers: {
+          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error('Error verifying Paystack payment:', error.response?.data || error.message);
+    throw error;
+  }
+}
+
+/**
+ * Verify Paystack webhook signature
+ */
+export function verifyPaystackWebhook(payload: string, signature: string): boolean {
+  const hash = crypto
+    .createHmac('sha512', PAYSTACK_SECRET_KEY || '')
+    .update(payload)
+    .digest('hex');
+  
+  return hash === signature;
+}
+
+/**
+ * Create a transfer recipient (for payouts)
+ */
+export async function createPaystackRecipient(
+  name: string,
+  accountNumber: string,
+  bankCode: string,
+  currency: string = 'NGN'
+) {
+  try {
+    const response = await axios.post(
+      `${PAYSTACK_BASE_URL}/transferrecipient`,
+      {
+        type: 'nuban',
+        name,
+        account_number: accountNumber,
+        bank_code: bankCode,
+        currency,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error('Error creating Paystack recipient:', error.response?.data || error.message);
+    throw error;
+  }
+}
+
+/**
+ * Initiate a transfer (payout)
+ */
+export async function initiatePaystackTransfer(
+  amount: number,
+  recipientCode: string,
+  reason: string,
+  currency: string = 'NGN',
+  reference?: string
+) {
+  try {
+    const response = await axios.post(
+      `${PAYSTACK_BASE_URL}/transfer`,
+      {
+        source: 'balance',
+        amount: Math.round(amount * 100), // Convert to kobo
+        recipient: recipientCode,
+        reason,
+        currency,
+        reference,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error('Error initiating Paystack transfer:', error.response?.data || error.message);
+    throw error;
+  }
+}
+
+/**
+ * Get Paystack public key
+ */
+export function getPaystackPublicKey(): string {
+  return PAYSTACK_PUBLIC_KEY || '';
+}
+
+/**
+ * List Nigerian banks
+ */
+export async function getPaystackBanks() {
+  try {
+    const response = await axios.get(`${PAYSTACK_BASE_URL}/bank?country=nigeria`, {
       headers: {
-        'Authorization': `Bearer ${paystackConfig.secretKey}`,
+        Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
       },
     });
 
-    const data = await response.json();
-
-    if (data.status && data.data.status === 'success') {
-      return {
-        success: true,
-        reference: data.data.reference,
-      };
-    } else {
-      return {
-        success: false,
-        error: data.message || 'Transaction verification failed',
-      };
-    }
-  } catch (error) {
-    console.error('Error verifying Paystack transaction:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error occurred',
-    };
+    return response.data;
+  } catch (error: any) {
+    console.error('Error fetching Paystack banks:', error.response?.data || error.message);
+    throw error;
   }
-}
-
-export async function handlePaystackWebhook(
-  payload: any,
-  signature?: string
-): Promise<{ success: boolean; event?: any; error?: string }> {
-  try {
-    // Verify the webhook signature if provided
-    if (signature) {
-      const hash = require('crypto')
-        .createHmac('sha512', paystackConfig.secretKey)
-        .update(JSON.stringify(payload))
-        .digest('hex');
-      
-      if (hash !== signature) {
-        console.error('❌ Invalid webhook signature');
-        return {
-          success: false,
-          error: 'Invalid webhook signature',
-        };
-      }
-    }
-
-    return { success: true, event: payload };
-  } catch (error) {
-    console.error('Error handling Paystack webhook:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error occurred',
-    };
-  }
-}
-
-// Simulate a successful payment for testing
-export async function simulatePaystackPayment(
-  params: CreatePaystackTransactionParams
-): Promise<PaystackPaymentResult> {
-  // In development, simulate successful payment
-  if (process.env.NODE_ENV === 'development') {
-    return {
-      success: true,
-      authorization_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/payments/paystack/simulate`,
-      access_code: `test_access_${Date.now()}`,
-      reference: `test_ref_${Date.now()}`,
-    };
-  }
-  
-  return createPaystackTransaction(params);
 }

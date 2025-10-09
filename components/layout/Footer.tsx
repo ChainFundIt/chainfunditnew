@@ -78,8 +78,12 @@ const Footer = (props: Props) => {
               discover
             </p>
             <ul className="flex flex-col gap-2 font-normal text-sm md:text-base text-white">
-              <li>About us</li>
-              <li>How ChainFundIt works</li>
+              <li>
+                <Link href="/about">About us</Link>
+              </li>
+              <li>
+                <Link href="/faq">How ChainFundIt works</Link>
+              </li>
               <li>Join the Chain Reaction</li>
               <li>Careers</li>
               <li>Success stories</li>

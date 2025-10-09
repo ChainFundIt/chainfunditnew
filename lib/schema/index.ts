@@ -12,4 +12,5 @@ export * from './campaign-updates';
 export * from './campaign-comments';
 export * from './email-otps';
 export * from './phone-otps';
-export * from './better-auth'; 
+export * from './better-auth';
+export * from './charities'; 
