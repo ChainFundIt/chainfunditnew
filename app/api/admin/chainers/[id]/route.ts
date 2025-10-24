@@ -9,10 +9,10 @@ import { eq, and, count, sum, desc } from 'drizzle-orm';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const chainerId = params.id;
+    const { id: chainerId } = await params;
 
     // Get chainer details with user and campaign info
     const chainer = await db
@@ -145,10 +145,10 @@ export async function GET(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const chainerId = params.id;
+    const { id: chainerId } = await params;
     const body = await request.json();
     const { action, ...updateData } = body;
 
@@ -268,10 +268,10 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const chainerId = params.id;
+    const { id: chainerId } = await params;
 
     // Check if chainer exists
     const existingChainer = await db.query.chainers.findFirst({

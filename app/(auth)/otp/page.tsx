@@ -242,42 +242,21 @@ function OtpPageInner() {
       localStorage.removeItem("otp_login_identifier");
       toast.success("Verification successful! Redirecting...");
       
-      // Get user role for role-based redirection
-      try {
-        const userResponse = await fetch('/api/user/me');
-        if (userResponse.ok) {
-          const userData = await userResponse.json();
-          const userRole = userData.user?.role;
-          
-          // Redirect logic based on mode, loginType, and user role
-          if (mode === "signup" && loginType === "email") {
-            if (redirect && isSafeRedirect(redirect)) {
-              router.replace(redirect);
-            } else {
-              router.push(`/phone?email=${encodeURIComponent(identifier ?? "")}&mode=signup`);
-            }
-          } else {
-            // Role-based redirect for login
-            if (userRole === 'admin' || userRole === 'super_admin') {
-              router.push("/admin/dashboard/overview");
-            } else if (redirect && isSafeRedirect(redirect)) {
-              router.replace(redirect);
-            } else {
-              router.push("/dashboard");
-            }
-          }
-        } else {
-          // Fallback to default redirect if user data fetch fails
-          if (redirect && isSafeRedirect(redirect)) {
-            router.replace(redirect);
-          } else {
-            router.push("/dashboard");
-          }
-        }
-      } catch (error) {
-        console.error('Error getting user role:', error);
-        // Fallback to default redirect
+      // Get user role from the signin response
+      const userRole = data.user?.role;
+      
+      // Redirect logic based on mode, loginType, and user role
+      if (mode === "signup" && loginType === "email") {
         if (redirect && isSafeRedirect(redirect)) {
+          router.replace(redirect);
+        } else {
+          router.push(`/phone?email=${encodeURIComponent(identifier ?? "")}&mode=signup`);
+        }
+      } else {
+        // Role-based redirect for login
+        if (userRole === 'admin' || userRole === 'super_admin') {
+          router.push("/admin/dashboard/overview");
+        } else if (redirect && isSafeRedirect(redirect)) {
           router.replace(redirect);
         } else {
           router.push("/dashboard");

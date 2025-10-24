@@ -41,10 +41,10 @@ export async function GET(request: NextRequest) {
       })
       .from(chainers);
 
-    // Get average commission rate
+    // Get average commission rate (using commissionEarned/totalRaised ratio)
     const [averageCommissionRate] = await db
       .select({
-        average: sql<number>`AVG(${chainers.commissionRate})`,
+        average: sql<number>`AVG(${chainers.commissionEarned} / NULLIF(${chainers.totalRaised}, 0))`,
       })
       .from(chainers);
 
@@ -84,6 +84,7 @@ export async function GET(request: NextRequest) {
         totalReferrals: chainers.totalReferrals,
         commissionEarned: chainers.commissionEarned,
         status: chainers.status,
+        lastActivity: chainers.lastActivity,
         createdAt: chainers.createdAt,
         userName: users.fullName,
         campaignTitle: campaigns.title,
@@ -91,7 +92,7 @@ export async function GET(request: NextRequest) {
       .from(chainers)
       .leftJoin(users, eq(chainers.userId, users.id))
       .leftJoin(campaigns, eq(chainers.campaignId, campaigns.id))
-      .orderBy(desc(chainers.createdAt))
+      .orderBy(desc(chainers.lastActivity))
       .limit(10);
 
     // Get chainer growth over time (last 12 months)

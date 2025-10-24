@@ -44,12 +44,16 @@ export async function GET(request: NextRequest) {
         commissionEarned: chainers.commissionEarned,
         commissionRate: chainers.commissionRate,
         status: chainers.status,
+        isVerified: chainers.isVerified,
+        notes: chainers.notes,
+        suspendedAt: chainers.suspendedAt,
+        suspendedReason: chainers.suspendedReason,
+        lastActivity: chainers.lastActivity,
         createdAt: chainers.createdAt,
         updatedAt: chainers.updatedAt,
         userName: users.fullName,
         userEmail: users.email,
         campaignTitle: campaigns.title,
-        isVerified: users.isVerified,
       })
       .from(chainers)
       .leftJoin(users, eq(chainers.userId, users.id))
@@ -87,8 +91,8 @@ export async function GET(request: NextRequest) {
         if (chainer.totalReferrals > 100) fraudScore += 30;
 
         // High commission earned
-        if (chainer.commissionEarned > 1000) fraudScore += 15;
-        if (chainer.commissionEarned > 5000) fraudScore += 25;
+        if (Number(chainer.commissionEarned) > 1000) fraudScore += 15;
+        if (Number(chainer.commissionEarned) > 5000) fraudScore += 25;
 
         // Recent activity spike
         if (recentDonations.count > 20) {

@@ -198,7 +198,7 @@ export async function POST(request: NextRequest) {
 
       // Get user details and create JWT token
       const [user] = await db
-        .select({ id: users.id, email: users.email, fullName: users.fullName })
+        .select({ id: users.id, email: users.email, fullName: users.fullName, role: users.role })
         .from(users)
         .where(eq(users.email, email))
         .limit(1);
@@ -214,7 +214,7 @@ export async function POST(request: NextRequest) {
       const response = NextResponse.json({ 
         success: true, 
         message: 'Email OTP verified successfully',
-        user: { id: user.id, email: user.email, fullName: user.fullName }
+        user: { id: user.id, email: user.email, fullName: user.fullName, role: user.role }
       });
 
       // Set access token cookie (30 minutes)
@@ -269,7 +269,7 @@ export async function POST(request: NextRequest) {
       
       // Get user details and create JWT token
       const [user] = await db
-        .select({ id: users.id, email: users.email, fullName: users.fullName })
+        .select({ id: users.id, email: users.email, fullName: users.fullName, role: users.role })
         .from(users)
         .where(eq(users.email, email))
         .limit(1);
@@ -285,7 +285,7 @@ export async function POST(request: NextRequest) {
       const response = NextResponse.json({ 
         success: true, 
         message: 'Phone OTP verified and user phone updated successfully',
-        user: { id: user.id, email: user.email, fullName: user.fullName }
+        user: { id: user.id, email: user.email, fullName: user.fullName, role: user.role }
       });
 
       // Set access token cookie (30 minutes)

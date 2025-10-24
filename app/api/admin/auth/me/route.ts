@@ -39,7 +39,6 @@ export async function GET(request: NextRequest) {
         isVerified: users.isVerified,
         accountLocked: users.accountLocked,
         createdAt: users.createdAt,
-        lastLoginAt: users.lastLoginAt,
       })
       .from(users)
       .where(eq(users.email, userPayload.email))
@@ -76,7 +75,6 @@ export async function GET(request: NextRequest) {
         role: user.role,
         isVerified: user.isVerified,
         createdAt: user.createdAt,
-        lastLoginAt: user.lastLoginAt,
       },
     });
 

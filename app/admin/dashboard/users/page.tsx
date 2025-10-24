@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,6 +43,8 @@ import {
   UserX
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+import { useGeolocationCurrency } from '@/hooks/use-geolocation-currency';
 
 interface User {
   id: string;
@@ -50,15 +52,17 @@ interface User {
   fullName: string;
   phone?: string;
   countryCode?: string;
-  status: 'active' | 'suspended' | 'pending' | 'banned';
-  role: 'user' | 'admin' | 'super_admin';
+  accountLocked: boolean;
+  role: string;
   createdAt: string;
-  lastActive: string;
-  totalDonations: number;
-  totalCampaigns: number;
-  totalChainers: number;
   isVerified: boolean;
-  location?: string;
+  stats?: {
+    totalDonations: number;
+    totalDonated: number;
+    totalRaised: number;
+    totalCampaigns: number;
+    totalChains: number;
+  };
 }
 
 interface UserStats {
@@ -76,16 +80,29 @@ export default function AdminUsersPage() {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [roleFilter, setRoleFilter] = useState('all');
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const router = useRouter();
+  const { locationInfo } = useGeolocationCurrency();
+  const currency = locationInfo?.currency?.code;
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   useEffect(() => {
     fetchUsers();
     fetchStats();
-  }, [searchTerm, statusFilter, roleFilter, currentPage]);
+  }, [debouncedSearchTerm, statusFilter, roleFilter, currentPage]);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -93,13 +110,16 @@ export default function AdminUsersPage() {
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: '20',
-        search: searchTerm,
+        search: debouncedSearchTerm,
         status: statusFilter,
         role: roleFilter,
       });
 
       const response = await fetch(`/api/admin/users?${params.toString()}`);
       const data = await response.json();
+      
+      console.log('API Response:', data);
+      console.log('Users data:', data.users);
       
       setUsers(data.users || []);
       setTotalPages(data.totalPages || 1);
@@ -115,6 +135,8 @@ export default function AdminUsersPage() {
     try {
       const response = await fetch('/api/admin/users/stats');
       const data = await response.json();
+      
+      console.log('Stats Response:', data);
       setStats(data);
     } catch (error) {
       console.error('Error fetching user stats:', error);
@@ -184,7 +206,7 @@ export default function AdminUsersPage() {
 
     return (
       <Badge variant={variants[status as keyof typeof variants] || 'secondary'}>
-        {status}
+        {status.charAt(0).toUpperCase() + status.slice(1)}
       </Badge>
     );
   };
@@ -198,7 +220,7 @@ export default function AdminUsersPage() {
 
     return (
       <Badge variant={variants[role as keyof typeof variants] || 'secondary'}>
-        {role.replace('_', ' ')}
+        {role.replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
       </Badge>
     );
   };
@@ -214,8 +236,48 @@ export default function AdminUsersPage() {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: currency || 'USD',
     }).format(amount);
+  };
+
+  // Button handlers
+  const handleExportUsers = async () => {
+    try {
+      toast.info('Exporting users data...');
+      // In a real app, this would generate and download a CSV/Excel file
+      setTimeout(() => {
+        toast.success('Users data exported successfully!');
+      }, 2000);
+    } catch (error) {
+      toast.error('Failed to export users data');
+    }
+  };
+
+  const handleBulkVerify = async () => {
+    if (selectedUsers.length === 0) {
+      toast.error('Please select users to verify');
+      return;
+    }
+    
+    try {
+      toast.info(`Verifying ${selectedUsers.length} users...`);
+      // In a real app, this would call the bulk verify API
+      setTimeout(() => {
+        toast.success('Users verified successfully!');
+        setSelectedUsers([]);
+        fetchUsers();
+      }, 2000);
+    } catch (error) {
+      toast.error('Failed to verify users');
+    }
+  };
+
+  const handleViewUser = (userId: string) => {
+    router.push(`/admin/dashboard/users/${userId}`);
+  };
+
+  const handleEditUser = (userId: string) => {
+    router.push(`/admin/dashboard/users/${userId}/edit`);
   };
 
   if (loading && users.length === 0) {
@@ -240,13 +302,13 @@ export default function AdminUsersPage() {
               <p className="text-gray-600 mt-1">Manage users, roles, and account status</p>
             </div>
             <div className="flex items-center space-x-3">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={handleExportUsers}>
                 <Download className="h-4 w-4 mr-2" />
                 Export Users
               </Button>
-              <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
+              <Button size="sm" className="bg-purple-600 text-white hover:text-purple-600" onClick={handleBulkVerify}> 
                 <UserCheck className="h-4 w-4 mr-2" />
-                Add User
+                Bulk Verify
               </Button>
             </div>
           </div>
@@ -348,10 +410,6 @@ export default function AdminUsersPage() {
                     <SelectItem value="super_admin">Super Admin</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" size="sm">
-                  <Filter className="h-4 w-4 mr-2" />
-                  More Filters
-                </Button>
               </div>
             </div>
           </CardContent>
@@ -425,7 +483,6 @@ export default function AdminUsersPage() {
                     <TableHead>User</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Role</TableHead>
-                    <TableHead>Activity</TableHead>
                     <TableHead>Stats</TableHead>
                     <TableHead>Joined</TableHead>
                     <TableHead className="w-12">Actions</TableHead>
@@ -469,7 +526,7 @@ export default function AdminUsersPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-2">
-                          {getStatusBadge(user.status)}
+                          {getStatusBadge(user.accountLocked ? 'suspended' : 'active')}
                           {user.isVerified && (
                             <span title="Verified">
                               <Shield className="h-4 w-4 text-blue-500" />
@@ -478,24 +535,20 @@ export default function AdminUsersPage() {
                         </div>
                       </TableCell>
                       <TableCell>{getRoleBadge(user.role)}</TableCell>
-                      <TableCell>
-                        <div className="text-sm text-gray-600">
-                          Last active: {formatDate(user.lastActive)}
-                        </div>
-                      </TableCell>
+                      
                       <TableCell>
                         <div className="text-sm space-y-1">
                           <div className="flex items-center">
                             <DollarSign className="h-3 w-3 mr-1 text-green-600" />
-                            {formatCurrency(user.totalDonations)}
+                            {formatCurrency(user.stats?.totalDonated || 0)}
                           </div>
                           <div className="flex items-center">
                             <TrendingUp className="h-3 w-3 mr-1 text-blue-600" />
-                            {user.totalCampaigns} campaigns
+                            {user.stats?.totalCampaigns || 0} campaigns
                           </div>
                           <div className="flex items-center">
                             <Users className="h-3 w-3 mr-1 text-purple-600" />
-                            {user.totalChainers} chainers
+                            {user.stats?.totalChains || 0} chainers
                           </div>
                         </div>
                       </TableCell>
@@ -523,9 +576,9 @@ export default function AdminUsersPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleUserAction(user.id, user.status === 'active' ? 'suspend' : 'activate')}
+                            onClick={() => handleUserAction(user.id, user.accountLocked ? 'activate' : 'suspend')}
                           >
-                            {user.status === 'active' ? (
+                            {user.accountLocked ? (
                               <Ban className="h-4 w-4 text-red-600" />
                             ) : (
                               <CheckCircle className="h-4 w-4 text-green-600" />

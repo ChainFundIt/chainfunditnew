@@ -14,6 +14,14 @@ export const chainers = pgTable('chainers', {
   conversions: integer('conversions').default(0).notNull(),
   commissionEarned: decimal('commission_earned', { precision: 10, scale: 2 }).default('0').notNull(),
   commissionPaid: boolean('commission_paid').default(false).notNull(),
+  // Ambassador management fields
+  status: varchar('status', { length: 20 }).default('active').notNull(),
+  commissionRate: decimal('commission_rate', { precision: 5, scale: 2 }).default('5.0').notNull(),
+  isVerified: boolean('is_verified').default(false).notNull(),
+  notes: text('notes'),
+  suspendedAt: timestamp('suspended_at'),
+  suspendedReason: text('suspended_reason'),
+  lastActivity: timestamp('last_activity').defaultNow().notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

@@ -32,30 +32,6 @@ export async function PATCH(request: NextRequest) {
     };
 
     switch (action) {
-      case 'approve':
-        updatedCampaigns = await db
-          .update(campaigns)
-          .set({ 
-            ...updateData,
-            status: 'active',
-            isActive: true,
-          })
-          .where(inArray(campaigns.id, campaignIds))
-          .returning();
-        break;
-
-      case 'reject':
-        updatedCampaigns = await db
-          .update(campaigns)
-          .set({ 
-            ...updateData,
-            status: 'rejected',
-            isActive: false,
-          })
-          .where(inArray(campaigns.id, campaignIds))
-          .returning();
-        break;
-
       case 'pause':
         updatedCampaigns = await db
           .update(campaigns)

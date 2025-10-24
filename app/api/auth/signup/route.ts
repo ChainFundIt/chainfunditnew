@@ -143,7 +143,12 @@ export async function POST(request: NextRequest) {
       const name = fullName || email.split("@")[0];
       const [newUser] = await db
         .insert(users)
-        .values({ email, fullName: name, hasCompletedProfile: false })
+        .values({ 
+          email, 
+          fullName: name, 
+          hasCompletedProfile: false,
+          role: 'user' // Default role for new signups
+        })
         .returning();
 
       const result = { user: newUser };

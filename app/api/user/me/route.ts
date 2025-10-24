@@ -6,17 +6,23 @@ import { verifyUserJWT } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get the authorization header
+    // Get token from either Authorization header or cookies
     const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    let token = null;
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    } else {
+      // Try to get token from cookies
+      token = request.cookies.get('auth_token')?.value;
+    }
+    
+    if (!token) {
       return NextResponse.json(
         { success: false, error: 'No authorization token provided' },
         { status: 401 }
       );
     }
-
-    // Extract the token
-    const token = authHeader.substring(7);
     
     // Verify the JWT token
     const userPayload = verifyUserJWT(token);
@@ -34,6 +40,7 @@ export async function GET(request: NextRequest) {
         email: users.email,
         fullName: users.fullName,
         avatar: users.avatar,
+        role: users.role,
         hasCompletedProfile: users.hasCompletedProfile,
         hasSeenWelcomeModal: users.hasSeenWelcomeModal,
         createdAt: users.createdAt,
@@ -52,11 +59,12 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: {
+      user: {
         id: user.id,
         email: user.email,
         fullName: user.fullName,
         avatar: user.avatar,
+        role: user.role,
         hasCompletedProfile: user.hasCompletedProfile,
         hasSeenWelcomeModal: user.hasSeenWelcomeModal,
         createdAt: user.createdAt,

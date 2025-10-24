@@ -9,7 +9,9 @@ import { eq, gte, count, sum, sql, desc } from 'drizzle-orm';
  */
 export async function GET(request: NextRequest) {
   try {
-    // Get basic donation counts
+    console.log('🌱 Phase 1: Adding basic stats queries');
+    
+    // Phase 1: Basic count queries - no complex aggregations
     const [totalDonations] = await db.select({ count: count() }).from(donations);
     
     const [completedDonations] = await db
@@ -32,51 +34,34 @@ export async function GET(request: NextRequest) {
       .from(donations)
       .where(eq(donations.paymentStatus, 'refunded'));
 
-    // Get total amounts
+    // Basic amount queries
     const [totalAmount] = await db
-      .select({
-        total: sum(donations.amount),
-      })
+      .select({ total: sum(donations.amount) })
       .from(donations);
 
     const [completedAmount] = await db
-      .select({
-        total: sum(donations.amount),
-      })
+      .select({ total: sum(donations.amount) })
       .from(donations)
       .where(eq(donations.paymentStatus, 'completed'));
 
     const [pendingAmount] = await db
-      .select({
-        total: sum(donations.amount),
-      })
+      .select({ total: sum(donations.amount) })
       .from(donations)
       .where(eq(donations.paymentStatus, 'pending'));
 
     const [refundedAmount] = await db
-      .select({
-        total: sum(donations.amount),
-      })
+      .select({ total: sum(donations.amount) })
       .from(donations)
       .where(eq(donations.paymentStatus, 'refunded'));
 
-    // Get average donation amount
+    // Basic average query
     const [averageDonation] = await db
-      .select({
-        average: sql<number>`AVG(${donations.amount})`,
-      })
+      .select({ average: sql<number>`AVG(${donations.amount})` })
       .from(donations)
       .where(eq(donations.paymentStatus, 'completed'));
 
-    // Get fraud alerts (high amount donations)
-    const [fraudAlerts] = await db
-      .select({ count: count() })
-      .from(donations)
-      .where(
-        sql`${donations.amount} > 1000 AND ${donations.paymentStatus} = 'completed'`
-      );
-
-    // Get recent donations
+   
+    // Phase 2: Add recent donations with joins
     const recentDonations = await db
       .select({
         id: donations.id,
@@ -95,82 +80,28 @@ export async function GET(request: NextRequest) {
       .orderBy(desc(donations.createdAt))
       .limit(10);
 
-    // Get donation growth over time (last 12 months)
-    const donationGrowth = await db
-      .select({
-        month: sql<string>`DATE_TRUNC('month', ${donations.createdAt})`,
-        count: count(),
-        total: sum(donations.amount),
-      })
-      .from(donations)
-      .where(gte(donations.createdAt, sql`NOW() - INTERVAL '12 months'`))
-      .groupBy(sql`DATE_TRUNC('month', ${donations.createdAt})`)
-      .orderBy(sql`DATE_TRUNC('month', ${donations.createdAt})`);
-
-    // Get status distribution
-    const statusDistribution = await db
-      .select({
-        status: donations.paymentStatus,
-        count: count(),
-      })
-      .from(donations)
-      .groupBy(donations.paymentStatus);
-
-    // Get currency distribution
-    const currencyDistribution = await db
-      .select({
-        currency: donations.currency,
-        count: count(),
-        total: sum(donations.amount),
-      })
-      .from(donations)
-      .where(eq(donations.paymentStatus, 'completed'))
-      .groupBy(donations.currency);
-
-    // Get payment method distribution
-    const paymentMethodDistribution = await db
-      .select({
-        method: donations.paymentMethod,
-        count: count(),
-      })
-      .from(donations)
-      .where(eq(donations.paymentStatus, 'completed'))
-      .groupBy(donations.paymentMethod);
-
-    // Get top donors
-    const topDonors = await db
-      .select({
-        donorId: donations.donorId,
-        donorName: users.fullName,
-        totalDonations: count(),
-        totalAmount: sum(donations.amount),
-      })
-      .from(donations)
-      .leftJoin(users, eq(donations.donorId, users.id))
-      .where(eq(donations.paymentStatus, 'completed'))
-      .groupBy(donations.donorId, users.fullName)
-      .orderBy(desc(sum(donations.amount)))
-      .limit(10);
-
     const stats = {
-      totalDonations: totalDonations.count,
-      completedDonations: completedDonations.count,
-      pendingDonations: pendingDonations.count,
-      failedDonations: failedDonations.count,
-      refundedDonations: refundedDonations.count,
+      totalDonations: totalDonations?.count || 0,
+      completedDonations: completedDonations?.count || 0,
+      pendingDonations: pendingDonations?.count || 0,
+      failedDonations: failedDonations?.count || 0,
+      refundedDonations: refundedDonations?.count || 0,
       totalAmount: Number(totalAmount?.total) || 0,
       completedAmount: Number(completedAmount?.total) || 0,
       pendingAmount: Number(pendingAmount?.total) || 0,
       refundedAmount: Number(refundedAmount?.total) || 0,
       averageDonation: Number(averageDonation?.average) || 0,
-      fraudAlerts: fraudAlerts.count,
-      recentDonations,
-      donationGrowth,
-      statusDistribution,
-      currencyDistribution,
-      paymentMethodDistribution,
-      topDonors,
+      // Phase 2: Add recent donations
+      recentDonations: recentDonations || [],
+      // Keep these empty for Phase 3
+      donationGrowth: [],
+      statusDistribution: [],
+      currencyDistribution: [],
+      paymentMethodDistribution: [],
+      topDonors: [],
     };
+
+    console.log(`✅ Phase 2: Stats calculated with joins - Total: ${stats.totalDonations}, Amount: $${stats.totalAmount}, Recent: ${recentDonations.length}`);
 
     return NextResponse.json(stats);
 

@@ -30,6 +30,7 @@ export const users = pgTable('users', {
   accountLocked: boolean('account_locked').default(false),
   accountChangeRequested: boolean('account_change_requested').default(false),
   accountChangeReason: text('account_change_reason'),
+  role: varchar('role', { length: 20 }).default('user'),
 }, (table) => ({
   emailIdx: index('users_email_idx').on(table.email),
   phoneIdx: index('users_phone_idx').on(table.phone),
@@ -37,6 +38,7 @@ export const users = pgTable('users', {
   accountNumberIdx: index('users_account_number_idx').on(table.accountNumber),
   accountVerifiedIdx: index('users_account_verified_idx').on(table.accountVerified),
   accountLockedIdx: index('users_account_locked_idx').on(table.accountLocked),
+  roleIdx: index('users_role_idx').on(table.role),
 }));
 
 // Relations will be defined later to avoid circular dependencies

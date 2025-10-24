@@ -28,40 +28,51 @@ export async function GET(request: NextRequest) {
     }
     
     if (status !== 'all') {
-      whereConditions.push(eq(users.status, status as any));
+      if (status === 'active') {
+        whereConditions.push(eq(users.accountLocked, false));
+      } else if (status === 'suspended' || status === 'banned') {
+        whereConditions.push(eq(users.accountLocked, true));
+      }
     }
     
     if (role !== 'all') {
       whereConditions.push(eq(users.role, role as any));
     }
 
-    const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined;
-
     // Get users with pagination
-    const usersList = await db
+    let query = db
       .select({
         id: users.id,
         email: users.email,
         fullName: users.fullName,
         phone: users.phone,
         countryCode: users.countryCode,
-        status: users.status,
+        accountLocked: users.accountLocked,
         role: users.role,
         createdAt: users.createdAt,
-        lastActive: users.lastActive,
         isVerified: users.isVerified,
       })
-      .from(users)
-      .where(whereClause)
+      .from(users);
+
+    if (whereConditions.length > 0) {
+      query = query.where(and(...whereConditions));
+    }
+
+    const usersList = await query
       .orderBy(desc(users.createdAt))
       .limit(limit)
       .offset(offset);
 
     // Get total count for pagination
-    const [totalCount] = await db
+    let countQuery = db
       .select({ count: count() })
-      .from(users)
-      .where(whereClause);
+      .from(users);
+
+    if (whereConditions.length > 0) {
+      countQuery = countQuery.where(and(...whereConditions));
+    }
+
+    const [totalCount] = await countQuery;
 
     // Get user stats for each user
     const usersWithStats = await Promise.all(
@@ -92,9 +103,14 @@ export async function GET(request: NextRequest) {
 
         return {
           ...user,
-          totalDonations: donationStats?.totalAmount || 0,
-          totalCampaigns: campaignStats?.count || 0,
-          totalChainers: chainerStats?.count || 0,
+          status: user.accountLocked ? 'suspended' : 'active',
+          stats: {
+            totalDonations: donationStats?.totalDonations || 0,
+            totalDonated: donationStats?.totalAmount || 0,
+            totalRaised: 0, // This would need to be calculated from campaigns
+            totalCampaigns: campaignStats?.count || 0,
+            totalChains: chainerStats?.count || 0,
+          },
         };
       })
     );

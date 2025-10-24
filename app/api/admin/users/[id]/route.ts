@@ -205,6 +205,20 @@ export async function PATCH(
           { status: 400 }
         );
 
+      case 'view':
+        // For view action, just return the user data
+        return NextResponse.json({
+          message: 'User data retrieved',
+          user: existingUser,
+        });
+
+      case 'edit':
+        // For edit action, return the user data for editing
+        return NextResponse.json({
+          message: 'User data for editing',
+          user: existingUser,
+        });
+
       case 'update':
         updatedUser = await db
           .update(users)

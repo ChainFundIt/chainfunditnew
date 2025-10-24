@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
+import NotificationPanel from '@/components/admin/NotificationPanel';
 import { 
   LayoutDashboard,
   Users,
@@ -20,17 +22,12 @@ import {
   Menu,
   X,
   Shield,
-  FileText,
-  PieChart,
-  Activity,
-  Building,
-  Wrench,
-  MessageSquare,
-  Folder,
+   Wrench,
   Sparkles,
   LogOut,
   User
 } from 'lucide-react';
+import {MoneyTick } from 'iconsax-reactjs';
 
 const navigation = [
   {
@@ -52,8 +49,8 @@ const navigation = [
     current: false,
   },
   {
-    name: 'Chainers',
-    href: '/admin/dashboard/chainers',
+    name: 'Ambassadors',
+    href: '/admin/dashboard/ambassadors',
     icon: Share,
     current: false,
   },
@@ -66,13 +63,19 @@ const navigation = [
   {
     name: 'Payouts',
     href: '/admin/dashboard/payouts',
-    icon: DollarSign,
+    icon: MoneyTick,
     current: false,
   },
   {
     name: 'Analytics',
     href: '/admin/dashboard/analytics',
     icon: BarChart3,
+    current: false,
+  },
+  {
+    name: 'Notifications',
+    href: '/admin/notifications',
+    icon: Bell,
     current: false,
   },
   {
@@ -95,8 +98,8 @@ const adminTools = [
     icon: BarChart3,
   },
   {
-    name: 'Chainer Analytics',
-    href: '/admin/dashboard/chainers',
+    name: 'Ambassador Analytics',
+    href: '/admin/dashboard/ambassadors',
     icon: TrendingUp,
   },
   {
@@ -141,6 +144,7 @@ export default function AdminLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [user, setUser] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
+  // Remove mock notification count - now handled by NotificationPanel
   const pathname = usePathname();
   const router = useRouter();
 
@@ -193,6 +197,23 @@ export default function AdminLayout({
       console.error('Logout error:', error);
       router.push('/signin');
     }
+  };
+
+  // Header button handlers
+  const handleNotifications = () => {
+    toast.info('Notifications feature coming soon!');
+  };
+
+  const handleHelp = () => {
+    window.open('/faq', '_blank');
+  };
+
+  const handleInviteAdmin = () => {
+    toast.info('Admin invitation feature coming soon!');
+  };
+
+  const handleUpgrade = () => {
+    toast.info('Upgrade feature coming soon!');
   };
 
   return (
@@ -286,9 +307,7 @@ export default function AdminLayout({
           {/* User Profile Section */}
           <div className="p-4 border-t border-gray-200">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <User className="h-4 w-4 text-blue-600" />
-              </div>
+             
               <div className="flex-1">
                 <p className="text-sm font-medium">{user.fullName}</p>
                 <p className="text-xs text-gray-500">{user.email}</p>
@@ -348,40 +367,27 @@ export default function AdminLayout({
             <div className="flex flex-1"></div>
             <div className="flex items-center gap-x-4 lg:gap-x-6">
               {/* Notifications */}
-              <Button variant="ghost" size="sm" className="relative">
-                <Bell className="h-5 w-5" />
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs">
-                  3
-                </Badge>
-              </Button>
+              <NotificationPanel />
 
               {/* Help */}
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" onClick={handleHelp}>
                 <HelpCircle className="h-5 w-5" />
               </Button>
 
-              {/* Share */}
-              <Button variant="ghost" size="sm">
-                <Share className="h-5 w-5" />
-              </Button>
-
-              {/* Invite */}
-              <Button variant="outline" size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Invite Admin
-              </Button>
-
-              {/* Upgrade */}
-              <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
-                Upgrade
-              </Button>
 
               {/* User menu */}
               <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-700">Admin</span>
-                <div className="h-8 w-8 bg-purple-600 rounded-full flex items-center justify-center">
-                  <span className="text-sm font-medium text-white">A</span>
-                </div>
+                <span className="text-sm text-gray-700">{user?.fullName || 'Admin'}</span>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleLogout}
+                  className="h-8 w-8 bg-purple-600 rounded-full flex items-center justify-center"
+                >
+                  <span className="text-sm font-medium text-white">
+                    {user?.fullName?.charAt(0) || 'A'}
+                  </span>
+                </Button>
               </div>
             </div>
           </div>

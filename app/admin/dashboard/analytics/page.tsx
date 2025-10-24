@@ -23,6 +23,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 interface AnalyticsData {
   overview: {
@@ -93,6 +94,7 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('30d');
   const [refreshKey, setRefreshKey] = useState(0);
+  const router = useRouter();
 
   useEffect(() => {
     fetchAnalytics();

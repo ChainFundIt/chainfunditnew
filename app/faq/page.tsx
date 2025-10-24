@@ -139,7 +139,7 @@ const faqDataByCategory = {
       id: 6,
       question: "How do I create a campaign?",
       answer:
-        'Click the "Create Campaign" button, fill in your campaign details, upload images, set your funding goal, and submit for review. Once approved, your campaign will go live.',
+        'Click the "Create Campaign" button, fill in your campaign details, upload images, set your funding goal, and submit. Your campaign will go live immediately.',
     },
     {
       id: 7,

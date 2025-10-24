@@ -233,7 +233,29 @@ function PhoneOtpPageInner() {
       localStorage.removeItem("link_phone_number");
       localStorage.removeItem("link_phone_email");
       toast.success("Phone number linked successfully!");
-      router.push("/dashboard");
+      
+      // Get user role for role-based redirection
+      try {
+        const userResponse = await fetch('/api/user/me');
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          const userRole = userData.user?.role;
+          
+          // Role-based redirect
+          if (userRole === 'admin' || userRole === 'super_admin') {
+            router.push("/admin/dashboard/overview");
+          } else {
+            router.push("/dashboard");
+          }
+        } else {
+          // Fallback to dashboard
+          router.push("/dashboard");
+        }
+      } catch (error) {
+        console.error('Error getting user role:', error);
+        // Fallback to dashboard
+        router.push("/dashboard");
+      }
     } catch (err: any) {
     } finally {
       setIsLoading(false);

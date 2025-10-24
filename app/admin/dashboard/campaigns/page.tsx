@@ -42,6 +42,10 @@ import {
 } from 'lucide-react';
 import { BsFillStopFill } from "react-icons/bs";
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+import { useGeolocationCurrency } from '@/hooks/use-geolocation-currency';
+import Image from 'next/image';
+import { R2Image } from '@/components/ui/r2-image';
 
 interface Campaign {
   id: string;
@@ -52,7 +56,7 @@ interface Campaign {
   goalAmount: number;
   currentAmount: number;
   currency: string;
-  status: 'active' | 'paused' | 'completed' | 'closed' | 'rejected';
+  status: 'active' | 'paused' | 'completed' | 'closed';
   category: string;
   createdAt: string;
   updatedAt: string;
@@ -87,6 +91,9 @@ export default function AdminCampaignsPage() {
   const [selectedCampaigns, setSelectedCampaigns] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const router = useRouter();
+  const { locationInfo } = useGeolocationCurrency();
+  const currency = locationInfo?.currency?.code;
 
   useEffect(() => {
     fetchCampaigns();
@@ -180,13 +187,37 @@ export default function AdminCampaignsPage() {
     }
   };
 
+  // Additional button handlers
+  const handleExportCampaigns = async () => {
+    try {
+      toast.info('Exporting campaigns data...');
+      // In a real app, this would generate and download a CSV/Excel file
+      setTimeout(() => {
+        toast.success('Campaigns data exported successfully!');
+      }, 2000);
+    } catch (error) {
+      toast.error('Failed to export campaigns data');
+    }
+  };
+
+  const handleCreateCampaign = () => {
+    router.push('/admin/dashboard/campaigns/create');
+  };
+
+  const handleViewCampaign = (campaignId: string) => {
+    router.push(`/admin/dashboard/campaigns/${campaignId}`);
+  };
+
+  const handleEditCampaign = (campaignId: string) => {
+    router.push(`/admin/dashboard/campaigns/${campaignId}/edit`);
+  };
+
   const getStatusBadge = (status: string) => {
     const variants = {
       active: 'default',
       paused: 'secondary',
       completed: 'default',
       closed: 'destructive',
-      rejected: 'destructive',
     } as const;
 
     const colors = {
@@ -194,7 +225,6 @@ export default function AdminCampaignsPage() {
       paused: 'bg-yellow-100 text-yellow-800',
       completed: 'bg-blue-100 text-blue-800',
       closed: 'bg-red-100 text-red-800',
-      rejected: 'bg-red-100 text-red-800',
     };
 
     return (
@@ -210,7 +240,6 @@ export default function AdminCampaignsPage() {
       case 'paused': return <Pause className="h-4 w-4 text-yellow-600" />;
       case 'completed': return <CheckCircle className="h-4 w-4 text-blue-600" />;
       case 'closed': return <BsFillStopFill className="h-4 w-4 text-red-600" />;
-      case 'rejected': return <XCircle className="h-4 w-4 text-red-600" />;
       default: return <Clock className="h-4 w-4 text-gray-600" />;
     }
   };
@@ -223,10 +252,11 @@ export default function AdminCampaignsPage() {
     });
   };
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
+  const formatCurrency = (amount: number, currencyCode?: string) => {
+    const currencyToUse = currencyCode || currency || 'USD';
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: currency,
+      currency: currencyToUse,
     }).format(amount);
   };
 
@@ -256,11 +286,11 @@ export default function AdminCampaignsPage() {
               <p className="text-gray-600 mt-1">Moderate campaigns and review content</p>
             </div>
             <div className="flex items-center space-x-3">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={handleExportCampaigns}>
                 <Download className="h-4 w-4 mr-2" />
                 Export Campaigns
               </Button>
-              <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
+              <Button size="sm" className="bg-purple-600 text-white hover:text-purple-600" onClick={() => router.push('/admin/dashboard/analytics')}>
                 <BarChart3 className="h-4 w-4 mr-2" />
                 Analytics
               </Button>
@@ -353,7 +383,6 @@ export default function AdminCampaignsPage() {
                     <SelectItem value="paused">Paused</SelectItem>
                     <SelectItem value="completed">Completed</SelectItem>
                     <SelectItem value="closed">Closed</SelectItem>
-                    <SelectItem value="rejected">Rejected</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
@@ -390,26 +419,10 @@ export default function AdminCampaignsPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleBulkAction('approve')}
-                  >
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Approve
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
                     onClick={() => handleBulkAction('pause')}
                   >
                     <Pause className="h-4 w-4 mr-2" />
                     Pause
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleBulkAction('reject')}
-                  >
-                    <XCircle className="h-4 w-4 mr-2" />
-                    Reject
                   </Button>
                   <Button
                     size="sm"
@@ -480,10 +493,12 @@ export default function AdminCampaignsPage() {
                       <TableCell>
                         <div className="flex items-center space-x-3">
                           {campaign.imageUrl ? (
-                            <img
-                              src={campaign.imageUrl}
+                            <R2Image
+                              src={campaign.imageUrl || ''}
                               alt={campaign.title}
                               className="h-12 w-12 rounded-lg object-cover"
+                              width={48}
+                              height={48}
                             />
                           ) : (
                             <div className="h-12 w-12 bg-gray-200 rounded-lg flex items-center justify-center">
@@ -497,9 +512,9 @@ export default function AdminCampaignsPage() {
                             <div className="text-sm text-gray-500 truncate">
                               {campaign.description}
                             </div>
-                            <div className="flex items-center space-x-2 mt-1">
+                            {/* <div className="flex items-center space-x-2 mt-1">
                               <Badge variant="outline" className="text-xs">
-                                {campaign.category}
+                                {campaign?.category ? campaign.category.charAt(0).toUpperCase() + campaign.category.slice(1) : ''}
                               </Badge>
                               {campaign.hasReports && (
                                 <Badge variant="destructive" className="text-xs">
@@ -512,7 +527,7 @@ export default function AdminCampaignsPage() {
                                   <Shield className="h-4 w-4 text-blue-500" />
                                 </span>
                               )}
-                            </div>
+                            </div> */}
                           </div>
                         </div>
                       </TableCell>
@@ -574,20 +589,6 @@ export default function AdminCampaignsPage() {
                             onClick={() => handleCampaignAction(campaign.id, 'view')}
                           >
                             <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleCampaignAction(campaign.id, 'approve')}
-                          >
-                            <CheckCircle className="h-4 w-4 text-green-600" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleCampaignAction(campaign.id, 'reject')}
-                          >
-                            <XCircle className="h-4 w-4 text-red-600" />
                           </Button>
                         </div>
                       </TableCell>

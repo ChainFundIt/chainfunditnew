@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seed Donations</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌱 Database Seeding Tool</h1>
+        <p>This tool will help you seed the database with test data for donations.</p>
+        
+        <div>
+            <button onclick="checkData()">Check Current Data</button>
+            <button onclick="seedDonations()">Seed Donations</button>
+            <button onclick="seedBasicData()">Seed Basic Data (Users + Campaigns + Donations)</button>
+        </div>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `result ${type}`;
+            resultDiv.textContent = message;
+        }
+
+        async function checkData() {
+            showResult('Checking data...', 'info');
+            try {
+                const response = await fetch('/api/test/check-data');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const { users, campaigns, donations } = data.data;
+                    showResult(`Current Data:
+Users: ${users.count}
+Campaigns: ${campaigns.count}
+Donations: ${donations.count}
+
+Sample Users: ${users.sample.map(u => u.fullName).join(', ')}
+Sample Campaigns: ${campaigns.sample.map(c => c.title).join(', ')}
+Sample Donations: ${donations.sample.map(d => `${d.currency} ${d.amount}`).join(', ')}`, 'success');
+                } else {
+                    showResult(`Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showResult(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function seedDonations() {
+            showResult('Seeding donations...', 'info');
+            try {
+                const response = await fetch('/api/test/quick-seed', { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showResult(`✅ Success! Created ${data.donations.length} donations:
+${data.donations.map(d => `- ${d.currency} ${d.amount} (${d.status})`).join('\n')}`, 'success');
+                } else {
+                    showResult(`Error: ${data.message || data.error}`, 'error');
+                }
+            } catch (error) {
+                showResult(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function seedBasicData() {
+            showResult('Seeding basic data...', 'info');
+            try {
+                const response = await fetch('/api/test/seed-basic-data', { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showResult(`✅ Success! Created:
+- ${data.data.usersCreated} users
+- ${data.data.campaignsCreated} campaigns  
+- ${data.data.donationsCreated} donations
+
+Sample donations:
+${data.data.sampleDonations.map(d => `- ${d.currency} ${d.amount} (${d.status})`).join('\n')}`, 'success');
+                } else {
+                    showResult(`Error: ${data.message || data.error}`, 'error');
+                }
+            } catch (error) {
+                showResult(`Error: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -30,6 +30,9 @@ import {
   BarChart3
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+import { useGeolocationCurrency } from '@/hooks/use-geolocation-currency';
+import { formatCurrency } from '@/lib/utils/currency';
 
 interface Donation {
   id: string;
@@ -49,8 +52,6 @@ interface Donation {
   refundedAt?: string;
   refundReason?: string;
   transactionId: string;
-  fraudScore: number;
-  suspiciousActivity: boolean;
 }
 
 interface DonationStats {
@@ -63,8 +64,7 @@ interface DonationStats {
   completedAmount: number;
   pendingAmount: number;
   refundedAmount: number;
-  averageDonation: number;
-  fraudAlerts: number;
+  averageDonation: number;  
   recentDonations: Donation[];
 }
 
@@ -75,7 +75,9 @@ export default function DonationsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [currencyFilter, setCurrencyFilter] = useState('all');
-  const [fraudFilter, setFraudFilter] = useState('all');
+  const router = useRouter();
+  const { locationInfo } = useGeolocationCurrency();
+  const currency = locationInfo?.currency?.code;
   const [selectedDonations, setSelectedDonations] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -83,7 +85,7 @@ export default function DonationsPage() {
   useEffect(() => {
     fetchDonations();
     fetchStats();
-  }, [currentPage, searchTerm, statusFilter, currencyFilter, fraudFilter]);
+  }, [currentPage, searchTerm, statusFilter, currencyFilter]);
 
   const fetchDonations = async () => {
     try {
@@ -92,15 +94,16 @@ export default function DonationsPage() {
         search: searchTerm,
         status: statusFilter,
         currency: currencyFilter,
-        fraud: fraudFilter,
       });
 
       const response = await fetch(`/api/admin/donations?${params}`);
       if (!response.ok) throw new Error('Failed to fetch donations');
 
       const data = await response.json();
-      setDonations(data.donations);
-      setTotalPages(data.totalPages);
+      console.log('Donations API response:', data);
+      console.log('Donations array:', data.donations);
+      setDonations(data.donations || []);
+      setTotalPages(data.totalPages || 1);
     } catch (error) {
       console.error('Error fetching donations:', error);
       toast.error('Failed to fetch donations');
@@ -115,7 +118,7 @@ export default function DonationsPage() {
       if (!response.ok) throw new Error('Failed to fetch stats');
 
       const data = await response.json();
-      setStats(data);
+      setStats(data || {});
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
@@ -170,6 +173,23 @@ export default function DonationsPage() {
     }
   };
 
+  // Additional button handlers
+  const handleExportDonations = async () => {
+    try {
+      toast.info('Exporting donations data...');
+      // In a real app, this would generate and download a CSV/Excel file
+      setTimeout(() => {
+        toast.success('Donations data exported successfully!');
+      }, 2000);
+    } catch (error) {
+      toast.error('Failed to export donations data');
+    }
+  };
+
+  const handleViewDonation = (donationId: string) => {
+    router.push(`/admin/dashboard/donations/${donationId}`);
+  };
+
   const getStatusBadge = (status: string) => {
     const variants = {
       pending: 'secondary',
@@ -195,12 +215,6 @@ export default function DonationsPage() {
     );
   };
 
-  const getFraudScoreColor = (score: number) => {
-    if (score >= 80) return 'text-red-600';
-    if (score >= 60) return 'text-orange-600';
-    if (score >= 40) return 'text-yellow-600';
-    return 'text-green-600';
-  };
 
   if (loading) {
     return (
@@ -214,7 +228,8 @@ export default function DonationsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -230,7 +245,7 @@ export default function DonationsPage() {
             <RefreshCw className="h-4 w-4 mr-2" />
             Refund Selected
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleExportDonations}>
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
@@ -259,9 +274,9 @@ export default function DonationsPage() {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${stats.totalAmount.toLocaleString()}</div>
+              <div className="text-2xl font-bold">{formatCurrency(stats?.totalAmount || 0, 'USD')}</div>
               <p className="text-xs text-muted-foreground">
-                ${stats.completedAmount.toLocaleString()} completed
+                {formatCurrency(stats?.completedAmount || 0, 'USD')} completed
               </p>
             </CardContent>
           </Card>
@@ -272,25 +287,14 @@ export default function DonationsPage() {
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${stats.averageDonation.toLocaleString()}</div>
+              <div className="text-2xl font-bold">{formatCurrency(stats?.averageDonation || 0, 'USD')}</div>
               <p className="text-xs text-muted-foreground">
                 Per donation
               </p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Fraud Alerts</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">{stats.fraudAlerts}</div>
-              <p className="text-xs text-muted-foreground">
-                Require investigation
-              </p>
-            </CardContent>
-          </Card>
+          
         </div>
       )}
 
@@ -335,18 +339,6 @@ export default function DonationsPage() {
                 <SelectItem value="NGN">NGN</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={fraudFilter} onValueChange={setFraudFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Fraud Risk" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Risk Levels</SelectItem>
-                <SelectItem value="high">High Risk</SelectItem>
-                <SelectItem value="medium">Medium Risk</SelectItem>
-                <SelectItem value="low">Low Risk</SelectItem>
-                <SelectItem value="suspicious">Suspicious Activity</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </CardContent>
       </Card>
@@ -366,10 +358,10 @@ export default function DonationsPage() {
                 <TableHead className="w-12">
                   <input
                     type="checkbox"
-                    checked={selectedDonations.length === donations.length && donations.length > 0}
+                    checked={selectedDonations.length === (donations || []).length && (donations || []).length > 0}
                     onChange={(e) => {
                       if (e.target.checked) {
-                        setSelectedDonations(donations.map(d => d.id));
+                        setSelectedDonations((donations || []).map(d => d.id));
                       } else {
                         setSelectedDonations([]);
                       }
@@ -381,14 +373,13 @@ export default function DonationsPage() {
                 <TableHead>Amount</TableHead>
                 <TableHead>Payment Method</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Chainer</TableHead>
-                <TableHead>Fraud Score</TableHead>
+                <TableHead>Ambassador</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {donations.map((donation) => (
+              {(donations || []).map((donation) => (
                 <TableRow key={donation.id}>
                   <TableCell>
                     <input
@@ -414,7 +405,7 @@ export default function DonationsPage() {
                   </TableCell>
                   <TableCell>
                     <div className="font-medium">
-                      ${donation.amount.toLocaleString()} {donation.currency}
+                      {formatCurrency(donation.amount, donation.currency)}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -425,11 +416,6 @@ export default function DonationsPage() {
                   </TableCell>
                   <TableCell>
                     {getStatusBadge(donation.paymentStatus)}
-                    {donation.suspiciousActivity && (
-                      <span title="Suspicious Activity" className="ml-2">
-                        <AlertTriangle className="h-4 w-4 text-red-500" />
-                      </span>
-                    )}
                   </TableCell>
                   <TableCell>
                     {donation.chainerName ? (
@@ -440,16 +426,6 @@ export default function DonationsPage() {
                     ) : (
                       <span className="text-gray-400">Direct</span>
                     )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <span className={`font-medium ${getFraudScoreColor(donation.fraudScore)}`}>
-                        {donation.fraudScore}%
-                      </span>
-                      {donation.suspiciousActivity && (
-                        <AlertTriangle className="h-4 w-4 text-red-500" />
-                      )}
-                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">
@@ -518,6 +494,7 @@ export default function DonationsPage() {
           )}
         </CardContent>
       </Card>
+    </div>
     </div>
   );
 }

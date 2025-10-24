@@ -156,30 +156,6 @@ export async function PATCH(
     let updatedCampaign;
 
     switch (action) {
-      case 'approve':
-        updatedCampaign = await db
-          .update(campaigns)
-          .set({ 
-            status: 'active',
-            isActive: true,
-            updatedAt: new Date(),
-          })
-          .where(eq(campaigns.id, campaignId))
-          .returning();
-        break;
-
-      case 'reject':
-        updatedCampaign = await db
-          .update(campaigns)
-          .set({ 
-            status: 'rejected',
-            isActive: false,
-            updatedAt: new Date(),
-          })
-          .where(eq(campaigns.id, campaignId))
-          .returning();
-        break;
-
       case 'pause':
         updatedCampaign = await db
           .update(campaigns)

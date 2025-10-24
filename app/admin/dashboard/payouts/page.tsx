@@ -22,13 +22,13 @@ import {
   Ban,
   Clock,
   CheckCircle2,
-  XCircle2,
   Download,
   Upload,
   Shield,
   FileText
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatCurrency } from '@/lib/utils/currency';
 
 interface Payout {
   id: string;
@@ -186,7 +186,7 @@ export default function PayoutsPage() {
       approved: CheckCircle,
       paid: CheckCircle2,
       rejected: XCircle,
-      failed: XCircle2,
+      failed: XCircle,
     } as const;
 
     const Icon = icons[status as keyof typeof icons];
@@ -271,7 +271,7 @@ export default function PayoutsPage() {
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${stats.pendingAmount.toLocaleString()}</div>
+              <div className="text-2xl font-bold">{formatCurrency(stats.pendingAmount, 'USD')}</div>
               <p className="text-xs text-muted-foreground">
                 Awaiting approval
               </p>
@@ -284,7 +284,7 @@ export default function PayoutsPage() {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${stats.paidAmount.toLocaleString()}</div>
+              <div className="text-2xl font-bold">{formatCurrency(stats.paidAmount, 'USD')}</div>
               <p className="text-xs text-muted-foreground">
                 Successfully processed
               </p>
@@ -415,7 +415,7 @@ export default function PayoutsPage() {
                   </TableCell>
                   <TableCell>
                     <div className="font-medium">
-                      ${payout.amount.toLocaleString()} {payout.currency}
+                      {formatCurrency(payout.amount, payout.currency)}
                     </div>
                   </TableCell>
                   <TableCell>
