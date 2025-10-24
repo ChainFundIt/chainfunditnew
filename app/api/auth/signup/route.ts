@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { emailOtps } from "@/lib/schema/email-otps";
 import { users } from "@/lib/schema/users";
 import { eq, and, desc, gt, lt } from "drizzle-orm";
-import { generateUserJWT } from "@/lib/auth";
+import { generateTokenPair } from "@/lib/auth";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -158,19 +158,28 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Generate JWT and set as cookie
-      const token = generateUserJWT({ id: result.user.id, email: result.user.email });
+      // Generate access and refresh tokens
+      const tokens = await generateTokenPair({ id: result.user.id, email: result.user.email }, request);
       const response = NextResponse.json({
         success: true,
         message: "Signup complete. User created and verified.",
         user: result.user,
-        token,
       });
       
-      response.cookies.set("auth_token", token, {
+      // Set access token cookie (30 minutes)
+      response.cookies.set("auth_token", tokens.accessToken, {
         httpOnly: true,
         path: "/",
-        maxAge: 60 * 60 * 24 * 7, // 7 days
+        maxAge: 30 * 60, // 30 minutes
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+      });
+
+      // Set refresh token cookie (30 days)
+      response.cookies.set("refresh_token", tokens.refreshToken, {
+        httpOnly: true,
+        path: "/",
+        maxAge: 30 * 24 * 60 * 60, // 30 days
         sameSite: "lax",
         secure: process.env.NODE_ENV === "production",
       });

@@ -5,7 +5,7 @@ import { db } from '@/lib/db';
 import { emailOtps } from '@/lib/schema/email-otps';
 import { eq, and, desc, gt, lt } from 'drizzle-orm';
 import { users } from '@/lib/schema/users';
-import { generateUserJWT } from '@/lib/auth';
+import { generateTokenPair } from '@/lib/auth';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -207,8 +207,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
       }
 
-      // Generate JWT token
-      const token = generateUserJWT({ id: user.id, email: user.email });
+      // Generate access and refresh tokens
+      const tokens = await generateTokenPair({ id: user.id, email: user.email }, request);
 
       // Create response with success message
       const response = NextResponse.json({ 
@@ -217,11 +217,20 @@ export async function POST(request: NextRequest) {
         user: { id: user.id, email: user.email, fullName: user.fullName }
       });
 
-      // Set auth cookie
-      response.cookies.set("auth_token", token, {
+      // Set access token cookie (30 minutes)
+      response.cookies.set("auth_token", tokens.accessToken, {
         httpOnly: true,
         path: "/",
-        maxAge: 60 * 60 * 24 * 2, // 2 days
+        maxAge: 30 * 60, // 30 minutes
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+      });
+
+      // Set refresh token cookie (30 days)
+      response.cookies.set("refresh_token", tokens.refreshToken, {
+        httpOnly: true,
+        path: "/",
+        maxAge: 30 * 24 * 60 * 60, // 30 days
         sameSite: "lax",
         secure: process.env.NODE_ENV === "production",
       });
@@ -269,8 +278,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
       }
 
-      // Generate JWT token
-      const token = generateUserJWT({ id: user.id, email: user.email });
+      // Generate access and refresh tokens
+      const tokens = await generateTokenPair({ id: user.id, email: user.email }, request);
 
       // Create response with success message
       const response = NextResponse.json({ 
@@ -279,11 +288,20 @@ export async function POST(request: NextRequest) {
         user: { id: user.id, email: user.email, fullName: user.fullName }
       });
 
-      // Set auth cookie
-      response.cookies.set("auth_token", token, {
+      // Set access token cookie (30 minutes)
+      response.cookies.set("auth_token", tokens.accessToken, {
         httpOnly: true,
         path: "/",
-        maxAge: 60 * 60 * 24 * 2, // 2 days
+        maxAge: 30 * 60, // 30 minutes
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+      });
+
+      // Set refresh token cookie (30 days)
+      response.cookies.set("refresh_token", tokens.refreshToken, {
+        httpOnly: true,
+        path: "/",
+        maxAge: 30 * 24 * 60 * 60, // 30 days
         sameSite: "lax",
         secure: process.env.NODE_ENV === "production",
       });

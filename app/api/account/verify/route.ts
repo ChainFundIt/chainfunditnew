@@ -4,6 +4,7 @@ import { users } from '@/lib/schema/users';
 import { eq } from 'drizzle-orm';
 import { parse } from 'cookie';
 import { verifyUserJWT } from '@/lib/auth';
+import { notifyAccountChangeRequest } from '@/lib/notifications/account-change-alerts';
 
 async function getUserFromRequest(request: NextRequest) {
   const cookie = request.headers.get('cookie') || '';
@@ -158,6 +159,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
     }
 
+    const userData = user[0];
+
     // Update user to request account change
     await db
       .update(users)
@@ -167,6 +170,19 @@ export async function PUT(request: NextRequest) {
         updatedAt: new Date(),
       })
       .where(eq(users.email, email));
+
+    // Send email notifications to admins and user
+    await notifyAccountChangeRequest({
+      userId: userData.id,
+      userName: userData.fullName,
+      userEmail: userData.email,
+      userPhone: userData.phone || undefined,
+      currentAccountNumber: userData.accountNumber || undefined,
+      currentBankName: userData.bankName || undefined,
+      currentAccountName: userData.accountName || undefined,
+      reason: reason.trim(),
+      requestDate: new Date(),
+    });
 
     return NextResponse.json({
       success: true,

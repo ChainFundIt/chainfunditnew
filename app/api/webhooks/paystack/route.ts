@@ -4,6 +4,7 @@ import { verifyPaystackWebhook } from '@/lib/payments/paystack';
 import { db } from '@/lib/db';
 import { charityDonations, charities } from '@/lib/schema/charities';
 import { eq, sql } from 'drizzle-orm';
+import { notifyAdminsOfCharityDonation } from '@/lib/notifications/charity-donation-alerts';
 
 export const runtime = 'nodejs';
 
@@ -117,8 +118,27 @@ async function handleChargeSuccess(data: any) {
       reference,
     });
 
+    // Get charity details for notification
+    const charity = await db.query.charities.findFirst({
+      where: eq(charities.id, donation.charityId),
+    });
+
+    if (charity) {
+      // Send notification to admins
+      await notifyAdminsOfCharityDonation({
+        donationId: donation.id,
+        charityId: charity.id,
+        charityName: charity.name,
+        amount: donation.amount,
+        currency: donation.currency,
+        donorName: donation.donorName || 'Anonymous',
+        donorEmail: donation.donorEmail || '',
+        isAnonymous: donation.isAnonymous,
+        message: donation.message || undefined,
+      });
+    }
+
     // TODO: Send confirmation email to donor
-    // TODO: Send notification to charity
   } catch (error) {
     console.error('Error handling Paystack charge success:', error);
     throw error;

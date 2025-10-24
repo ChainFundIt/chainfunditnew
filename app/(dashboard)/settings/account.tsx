@@ -83,12 +83,12 @@ const Account = (props: Props) => {
     <div className=" 2xl:container 2xl:mx-auto">
       <h4 className="font-semibold text-2xl md:text-3xl text-[#104901]">Your profile</h4>
       <p className="font-normal text-base md:text-xl text-[#104901]">
-        Choose how you are displayed on the frontend of the website.
+        Choose how you are displayed on the website.
       </p>
 
       <form className="mt-8" onSubmit={handleSubmit}>
-        <div className="flex flex-col md:flex-row gap-6 md:gap-10">
-          <section className="flex flex-col flex-1">
+        <div className="flex flex-col md:flex-row gap-5 md:gap-10">
+          <section className="flex flex-col">
             <label className="font-normal text-base md:text-xl text-[#104901] mb-2">
               Name
             </label>
@@ -111,7 +111,7 @@ const Account = (props: Props) => {
               className="w-full md:w-[385px] py-[10px] mb-3 px-5 rounded-lg border border-[#D9D9DC] outline-none placeholder:font-medium placeholder:text-sm placeholder:text-[#ADADAD]"
             />
           </section>
-          <div className="relative flex md:block md:items-center">
+          <div className="relative">
             <p className="font-medium text-base md:text-xl text-black mb-4">Profile picture</p>
             <input
               type="file"

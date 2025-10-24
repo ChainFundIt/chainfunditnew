@@ -1,26 +1,38 @@
 "use client";
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  CheckCircle, 
-  XCircle, 
-  Lock, 
-  Unlock, 
-  AlertTriangle, 
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  CheckCircle,
+  XCircle,
+  Lock,
+  Unlock,
+  AlertTriangle,
   CreditCard,
   Building2,
   User,
   Shield,
   Mail,
-  Phone
-} from 'lucide-react';
+  Phone,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -28,9 +40,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { useAccountManagement } from '@/hooks/use-account-management';
-import { toast } from 'sonner';
+} from "@/components/ui/dialog";
+import { useAccountManagement } from "@/hooks/use-account-management";
+import { toast } from "sonner";
+import Link from "next/link";
 
 type Props = {};
 
@@ -46,11 +59,11 @@ const Payments = (props: Props) => {
   } = useAccountManagement();
 
   const [formData, setFormData] = useState({
-    accountNumber: '',
-    bankCode: '',
+    accountNumber: "",
+    bankCode: "",
   });
 
-  const [changeRequestReason, setChangeRequestReason] = useState('');
+  const [changeRequestReason, setChangeRequestReason] = useState("");
   const [showChangeRequest, setShowChangeRequest] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [verificationData, setVerificationData] = useState<{
@@ -61,47 +74,51 @@ const Payments = (props: Props) => {
   } | null>(null);
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleVerifyAccount = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.accountNumber || !formData.bankCode) {
-      toast.error('Please fill in all fields');
+      toast.error("Please fill in all fields");
       return;
     }
 
     try {
-      const response = await fetch('/api/account/verify/preview', {
-        method: 'POST',
+      const response = await fetch("/api/account/verify/preview", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include',
-        body: JSON.stringify({ 
-          accountNumber: formData.accountNumber, 
-          bankCode: formData.bankCode 
+        credentials: "include",
+        body: JSON.stringify({
+          accountNumber: formData.accountNumber,
+          bankCode: formData.bankCode,
         }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Account verification failed');
+        throw new Error(result.error || "Account verification failed");
       }
 
-      const selectedBank = banks.find(bank => bank.code === formData.bankCode);
-      
+      const selectedBank = banks.find(
+        (bank) => bank.code === formData.bankCode
+      );
+
       setVerificationData({
         accountNumber: formData.accountNumber,
         bankCode: formData.bankCode,
-        bankName: selectedBank?.name || result.data.bank_name || 'Unknown Bank',
+        bankName: selectedBank?.name || result.data.bank_name || "Unknown Bank",
         accountName: result.data.account_name,
       });
       setShowConfirmationModal(true);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Account verification failed');
+      toast.error(
+        error instanceof Error ? error.message : "Account verification failed"
+      );
     }
   };
 
@@ -109,13 +126,18 @@ const Payments = (props: Props) => {
     if (!verificationData) return;
 
     try {
-      const result = await verifyAccount(verificationData.accountNumber, verificationData.bankCode);
-      toast.success(result.message || 'Account verified successfully!');
-      setFormData({ accountNumber: '', bankCode: '' });
+      const result = await verifyAccount(
+        verificationData.accountNumber,
+        verificationData.bankCode
+      );
+      toast.success(result.message || "Account verified successfully!");
+      setFormData({ accountNumber: "", bankCode: "" });
       setShowConfirmationModal(false);
       setVerificationData(null);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Account verification failed');
+      toast.error(
+        error instanceof Error ? error.message : "Account verification failed"
+      );
     }
   };
 
@@ -126,19 +148,21 @@ const Payments = (props: Props) => {
 
   const handleRequestChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!changeRequestReason.trim() || changeRequestReason.trim().length < 10) {
-      toast.error('Please provide a detailed reason (minimum 10 characters)');
+      toast.error("Please provide a detailed reason (minimum 10 characters)");
       return;
     }
 
     try {
       const result = await requestAccountChange(changeRequestReason);
-      toast.success(result.message || 'Account change request submitted!');
-      setChangeRequestReason('');
+      toast.success(result.message || "Account change request submitted!");
+      setChangeRequestReason("");
       setShowChangeRequest(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Account change request failed');
+      toast.error(
+        error instanceof Error ? error.message : "Account change request failed"
+      );
     }
   };
 
@@ -154,9 +178,12 @@ const Payments = (props: Props) => {
   return (
     <div className="2xl:container 2xl:mx-auto space-y-8">
       <div>
-        <h4 className="font-semibold text-3xl text-[#104901] mb-2">Payment Settings</h4>
+        <h4 className="font-semibold text-3xl text-[#104901] mb-2">
+          Payment Settings
+        </h4>
         <p className="font-normal text-xl text-[#104901] opacity-80">
-          Manage your bank account details for receiving payouts and commissions.
+          Manage your bank account details for receiving payouts and
+          commissions.
         </p>
       </div>
 
@@ -187,29 +214,39 @@ const Payments = (props: Props) => {
                 <XCircle className="h-5 w-5 text-red-600" />
               )}
               <span className="font-medium">
-                {accountDetails.accountVerified ? 'Account Verified' : 'Account Not Verified'}
+                {accountDetails.accountVerified
+                  ? "Account Verified"
+                  : "Account Not Verified"}
               </span>
             </div>
 
             {accountDetails.accountLocked && (
               <div className="flex items-center gap-3">
                 <Lock className="h-5 w-5 text-orange-600" />
-                <span className="font-medium text-orange-600">Account Details Locked</span>
+                <span className="font-medium text-orange-600">
+                  Account Details Locked
+                </span>
               </div>
             )}
 
             {accountDetails.accountChangeRequested && (
               <div className="flex items-center gap-3">
                 <AlertTriangle className="h-5 w-5 text-blue-600" />
-                <span className="font-medium text-blue-600">Change Request Pending</span>
+                <span className="font-medium text-blue-600">
+                  Change Request Pending
+                </span>
               </div>
             )}
 
-            {accountDetails.accountVerified && accountDetails.accountVerificationDate && (
-              <p className="text-sm text-gray-600">
-                Verified on: {new Date(accountDetails.accountVerificationDate).toLocaleDateString()}
-              </p>
-            )}
+            {accountDetails.accountVerified &&
+              accountDetails.accountVerificationDate && (
+                <p className="text-sm text-gray-600">
+                  Verified on:{" "}
+                  {new Date(
+                    accountDetails.accountVerificationDate
+                  ).toLocaleDateString()}
+                </p>
+              )}
           </CardContent>
         </Card>
       )}
@@ -229,35 +266,49 @@ const Payments = (props: Props) => {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label className="text-sm font-medium text-gray-600">Account Number</Label>
+                <Label className="text-sm font-medium text-gray-600">
+                  Account Number
+                </Label>
                 <div className="flex items-center gap-2 mt-1">
                   <User className="h-4 w-4 text-gray-400" />
-                  <span className="font-mono text-lg">{accountDetails.accountNumber}</span>
+                  <span className="font-mono text-lg">
+                    {accountDetails.accountNumber}
+                  </span>
                 </div>
               </div>
               <div>
-                <Label className="text-sm font-medium text-gray-600">Account Name</Label>
+                <Label className="text-sm font-medium text-gray-600">
+                  Account Name
+                </Label>
                 <div className="flex items-center gap-2 mt-1">
                   <User className="h-4 w-4 text-gray-400" />
                   <span className="text-lg">{accountDetails.accountName}</span>
                 </div>
               </div>
               <div>
-                <Label className="text-sm font-medium text-gray-600">Bank Name</Label>
+                <Label className="text-sm font-medium text-gray-600">
+                  Bank Name
+                </Label>
                 <div className="flex items-center gap-2 mt-1">
                   <Building2 className="h-4 w-4 text-gray-400" />
                   <span className="text-lg">
-                    {accountDetails.bankName || 
-                     (banks.find(bank => bank.code === accountDetails.bankCode)?.name) || 
-                     'Unknown Bank'}
+                    {accountDetails.bankName ||
+                      banks.find(
+                        (bank) => bank.code === accountDetails.bankCode
+                      )?.name ||
+                      "Unknown Bank"}
                   </span>
                 </div>
               </div>
               <div>
-                <Label className="text-sm font-medium text-gray-600">Bank Code</Label>
+                <Label className="text-sm font-medium text-gray-600">
+                  Bank Code
+                </Label>
                 <div className="flex items-center gap-2 mt-1">
                   <Building2 className="h-4 w-4 text-gray-400" />
-                  <span className="font-mono text-lg">{accountDetails.bankCode}</span>
+                  <span className="font-mono text-lg">
+                    {accountDetails.bankCode}
+                  </span>
                 </div>
               </div>
             </div>
@@ -266,11 +317,12 @@ const Payments = (props: Props) => {
               <Alert>
                 <Lock className="h-4 w-4" />
                 <AlertDescription>
-                  Your account details are locked and cannot be changed. If you need to update your account details, please contact our admin team.
+                  Your account details are locked and cannot be changed. If you
+                  need to update your account details, please contact our admin
+                  team.
                 </AlertDescription>
               </Alert>
             )}
-           
           </CardContent>
         </Card>
       )}
@@ -284,19 +336,25 @@ const Payments = (props: Props) => {
               Verify Bank Account
             </CardTitle>
             <CardDescription>
-              Verify your bank account details to receive payouts and commissions
+              Verify your bank account details to receive payouts and
+              commissions
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleVerifyAccount} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="bankCode" className="text-lg font-medium text-[#104901]">
+                  <Label
+                    htmlFor="bankCode"
+                    className="text-lg font-medium text-[#104901]"
+                  >
                     Select Bank
                   </Label>
                   <Select
                     value={formData.bankCode}
-                    onValueChange={(value) => handleInputChange('bankCode', value)}
+                    onValueChange={(value) =>
+                      handleInputChange("bankCode", value)
+                    }
                   >
                     <SelectTrigger className="h-12">
                       <SelectValue placeholder="Choose your bank" />
@@ -312,7 +370,10 @@ const Payments = (props: Props) => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="accountNumber" className="text-lg font-medium text-[#104901]">
+                  <Label
+                    htmlFor="accountNumber"
+                    className="text-lg font-medium text-[#104901]"
+                  >
                     Account Number
                   </Label>
                   <Input
@@ -320,7 +381,9 @@ const Payments = (props: Props) => {
                     type="text"
                     placeholder="Enter your account number"
                     value={formData.accountNumber}
-                    onChange={(e) => handleInputChange('accountNumber', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("accountNumber", e.target.value)
+                    }
                     className="h-12 text-lg"
                     maxLength={10}
                   />
@@ -330,13 +393,18 @@ const Payments = (props: Props) => {
               <Alert>
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>Important:</strong> Once verified, your account details will be locked and cannot be changed without contacting our admin team. Please ensure the details are correct.
+                  <strong>Important:</strong> Once verified, your account
+                  details will be locked and cannot be changed without
+                  contacting our admin team. Please ensure the details are
+                  correct.
                 </AlertDescription>
               </Alert>
 
               <Button
                 type="submit"
-                disabled={verifying || !formData.accountNumber || !formData.bankCode}
+                disabled={
+                  verifying || !formData.accountNumber || !formData.bankCode
+                }
                 className="w-full h-12 text-lg font-semibold"
               >
                 {verifying ? (
@@ -365,16 +433,18 @@ const Payments = (props: Props) => {
               Request Account Change
             </CardTitle>
             <CardDescription>
-              Need to change your account details? Submit a request to our admin team.
+              Need to change your account details? Submit a request to our admin
+              team.
             </CardDescription>
           </CardHeader>
           <CardContent>
             {!showChangeRequest ? (
               <div className="space-y-4">
-                <Alert>
+                <Alert className="flex items-center gap-2">
                   <Lock className="h-4 w-4" />
                   <AlertDescription>
-                    Your account details are locked for security. To change them, you need to submit a request to our admin team.
+                    Your account details are locked. To change them, you need to
+                    submit a request to our admin team.
                   </AlertDescription>
                 </Alert>
 
@@ -389,7 +459,10 @@ const Payments = (props: Props) => {
             ) : (
               <form onSubmit={handleRequestChange} className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="changeReason" className="text-lg font-medium text-[#104901]">
+                  <Label
+                    htmlFor="changeReason"
+                    className="text-lg font-medium text-[#104901]"
+                  >
                     Reason for Change
                   </Label>
                   <Textarea
@@ -401,7 +474,8 @@ const Payments = (props: Props) => {
                     maxLength={500}
                   />
                   <p className="text-sm text-gray-600">
-                    {changeRequestReason.length}/500 characters (minimum 10 required)
+                    {changeRequestReason.length}/500 characters (minimum 10
+                    required)
                   </p>
                 </div>
 
@@ -411,7 +485,7 @@ const Payments = (props: Props) => {
                     variant="outline"
                     onClick={() => {
                       setShowChangeRequest(false);
-                      setChangeRequestReason('');
+                      setChangeRequestReason("");
                     }}
                     className="flex-1 h-12 text-lg"
                   >
@@ -432,48 +506,6 @@ const Payments = (props: Props) => {
         </Card>
       )}
 
-      {/* Test Reset Button - Remove in production */}
-      {process.env.NODE_ENV === 'development' && (
-        <Card className="border-2 bg-red-50 border-red-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-600">
-              <AlertTriangle className="h-5 w-5" />
-              Test Reset (Development Only)
-            </CardTitle>
-            <CardDescription>
-              Reset account details for testing purposes
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              onClick={async () => {
-                try {
-                  const response = await fetch('/api/test/reset-account', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include'
-                  });
-                  const result = await response.json();
-                  if (result.success) {
-                    toast.success('Account details reset successfully!');
-                    // Refresh the page to show the reset state
-                    window.location.reload();
-                  } else {
-                    toast.error(result.error || 'Failed to reset account');
-                  }
-                } catch (error) {
-                  toast.error('Failed to reset account details');
-                }
-              }}
-              variant="destructive"
-              className="w-full"
-            >
-              Reset Account Details
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Contact Information */}
       <Card className="border-2 bg-gray-50">
         <CardHeader>
@@ -484,23 +516,38 @@ const Payments = (props: Props) => {
         </CardHeader>
         <CardContent>
           <p className="text-gray-700 mb-4">
-            If you're having trouble with account verification or need assistance with your account details, please contact our support team.
+            If you're having trouble with account verification or need
+            assistance with your account details, please contact our support
+            team.
           </p>
           <div className="flex gap-4">
-            <Button variant="outline" className="flex items-center gap-2">
-              <Mail className="h-4 w-4" />
-              Email Support
+            <Button variant="outline">
+              <Link
+                href="mailto:campaigns@chainfundit.com"
+                className="flex items-center gap-2"
+              >
+                <Mail className="h-4 w-4" />
+                Email Support
+              </Link>
             </Button>
-            <Button variant="outline" className="flex items-center gap-2">
-              <Phone className="h-4 w-4" />
-              Call Support
+            <Button variant="outline">
+              <Link
+                href="tel:+442038380360"
+                className="flex items-center gap-2"
+              >
+                <Phone className="h-4 w-4" />
+                Call Support
+              </Link>
             </Button>
           </div>
         </CardContent>
       </Card>
 
       {/* Account Verification Confirmation Modal */}
-      <Dialog open={showConfirmationModal} onOpenChange={setShowConfirmationModal}>
+      <Dialog
+        open={showConfirmationModal}
+        onOpenChange={setShowConfirmationModal}
+      >
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-[#104901]">
@@ -508,34 +555,48 @@ const Payments = (props: Props) => {
               Confirm Account Details
             </DialogTitle>
             <DialogDescription>
-              Please verify that the account details below are correct before proceeding. Once confirmed, these details will be locked and cannot be changed without contacting our admin team.
+              Please verify that the account details below are correct before
+              proceeding. Once confirmed, these details will be locked and
+              cannot be changed without contacting our admin team.
             </DialogDescription>
           </DialogHeader>
-          
+
           {verificationData && (
             <div className="space-y-4">
               <div className="bg-gray-50 p-4 rounded-lg space-y-3">
                 <div>
-                  <Label className="text-sm font-medium text-gray-600">Account Number</Label>
+                  <Label className="text-sm font-medium text-gray-600">
+                    Account Number
+                  </Label>
                   <div className="flex items-center gap-2 mt-1">
                     <User className="h-4 w-4 text-gray-400" />
-                    <span className="font-mono text-lg font-semibold">{verificationData.accountNumber}</span>
+                    <span className="font-mono text-lg font-semibold">
+                      {verificationData.accountNumber}
+                    </span>
                   </div>
                 </div>
-                
+
                 <div>
-                  <Label className="text-sm font-medium text-gray-600">Bank Name</Label>
+                  <Label className="text-sm font-medium text-gray-600">
+                    Bank Name
+                  </Label>
                   <div className="flex items-center gap-2 mt-1">
                     <Building2 className="h-4 w-4 text-gray-400" />
-                    <span className="text-lg font-semibold">{verificationData.bankName}</span>
+                    <span className="text-lg font-semibold">
+                      {verificationData.bankName}
+                    </span>
                   </div>
                 </div>
-                
+
                 <div>
-                  <Label className="text-sm font-medium text-gray-600">Account Name</Label>
+                  <Label className="text-sm font-medium text-gray-600">
+                    Account Name
+                  </Label>
                   <div className="flex items-center gap-2 mt-1">
                     <User className="h-4 w-4 text-gray-400" />
-                    <span className="text-lg font-semibold text-[#104901]">{verificationData.accountName}</span>
+                    <span className="text-lg font-semibold text-[#104901]">
+                      {verificationData.accountName}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -543,7 +604,10 @@ const Payments = (props: Props) => {
               <Alert>
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>Important:</strong> Please double-check that the account name above matches your bank account. Once you confirm, these details will be permanently saved and locked for security purposes.
+                  <strong>Important:</strong> Please double-check that the
+                  account name above matches your bank account. Once you
+                  confirm, these details will be permanently saved and locked
+                  for security purposes.
                 </AlertDescription>
               </Alert>
             </div>
@@ -579,7 +643,6 @@ const Payments = (props: Props) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
     </div>
   );
 };

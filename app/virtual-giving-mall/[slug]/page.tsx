@@ -199,7 +199,7 @@ export default function CharityDetailPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="max-w-6xl mx-auto mt-16 md:px-10 px-4">
+      <div className="max-w-6xl mx-auto mt-20 md:px-10 px-4">
         {/* Back Button */}
         <Button asChild variant="ghost" className="mb-6">
           <Link href="/virtual-giving-mall">

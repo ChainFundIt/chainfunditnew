@@ -1,18 +1,31 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, Clock, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useState, useEffect } from "react";
+import {
+  DollarSign,
+  TrendingUp,
+  Clock,
+  CheckCircle,
+  XCircle,
+  RefreshCw,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { toast } from 'sonner';
+} from "@/components/ui/select";
+import { toast } from "sonner";
 
 interface Payout {
   id: string;
@@ -41,7 +54,7 @@ export default function CharityPayoutsAdmin() {
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
     fetchPayouts();
@@ -50,45 +63,53 @@ export default function CharityPayoutsAdmin() {
   const fetchPayouts = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ limit: '50' });
-      if (statusFilter !== 'all') {
-        params.append('status', statusFilter);
+      const params = new URLSearchParams({ limit: "50" });
+      if (statusFilter !== "all") {
+        params.append("status", statusFilter);
       }
 
-      const response = await fetch(`/api/charities/payouts?${params.toString()}`);
+      const response = await fetch(
+        `/api/charities/payouts?${params.toString()}`
+      );
       const data = await response.json();
       setPayouts(data.payouts || []);
     } catch (error) {
-      console.error('Error fetching payouts:', error);
-      toast.error('Failed to fetch payouts');
+      console.error("Error fetching payouts:", error);
+      toast.error("Failed to fetch payouts");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleProcessPayout = async (payoutId: string, status: 'completed' | 'failed') => {
+  const handleProcessPayout = async (
+    payoutId: string,
+    status: "completed" | "failed"
+  ) => {
     setProcessing(payoutId);
     try {
       const response = await fetch(`/api/charities/payouts/${payoutId}`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           status,
-          failureReason: status === 'failed' ? 'Manual review failed' : undefined,
+          failureReason:
+            status === "failed" ? "Manual review failed" : undefined,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update payout');
+        throw new Error("Failed to update payout");
       }
 
-      toast.success(`Payout ${status === 'completed' ? 'completed' : 'failed'} successfully`);
+      toast.success(
+        `Payout ${status === "completed" ? "completed" : "failed"} successfully`
+      );
       fetchPayouts();
     } catch (error) {
-      console.error('Error processing payout:', error);
-      toast.error('Failed to process payout');
+      console.error("Error processing payout:", error);
+      toast.error("Failed to process payout");
     } finally {
       setProcessing(null);
     }
@@ -96,42 +117,62 @@ export default function CharityPayoutsAdmin() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'completed':
-        return <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Completed</Badge>;
-      case 'failed':
-        return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Failed</Badge>;
-      case 'processing':
-        return <Badge className="bg-blue-500"><RefreshCw className="h-3 w-3 mr-1" />Processing</Badge>;
+      case "completed":
+        return (
+          <Badge className="bg-green-500">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Completed
+          </Badge>
+        );
+      case "failed":
+        return (
+          <Badge variant="destructive">
+            <XCircle className="h-3 w-3 mr-1" />
+            Failed
+          </Badge>
+        );
+      case "processing":
+        return (
+          <Badge className="bg-blue-500">
+            <RefreshCw className="h-3 w-3 mr-1" />
+            Processing
+          </Badge>
+        );
       default:
-        return <Badge variant="outline"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
+        return (
+          <Badge variant="outline">
+            <Clock className="h-3 w-3 mr-1" />
+            Pending
+          </Badge>
+        );
     }
   };
 
   const formatCurrency = (amount: string, currency: string) => {
     const num = parseFloat(amount);
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency || 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currency || "USD",
     }).format(num);
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(date).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   // Calculate statistics
   const stats = {
     total: payouts.length,
-    pending: payouts.filter(p => p.status === 'pending').length,
-    processing: payouts.filter(p => p.status === 'processing').length,
-    completed: payouts.filter(p => p.status === 'completed').length,
-    failed: payouts.filter(p => p.status === 'failed').length,
+    pending: payouts.filter((p) => p.status === "pending").length,
+    processing: payouts.filter((p) => p.status === "processing").length,
+    completed: payouts.filter((p) => p.status === "completed").length,
+    failed: payouts.filter((p) => p.status === "failed").length,
     totalAmount: payouts.reduce((sum, p) => sum + parseFloat(p.amount), 0),
   };
 
@@ -139,21 +180,27 @@ export default function CharityPayoutsAdmin() {
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Charity Payouts Management</h1>
-          <p className="text-gray-600">Manage and process payouts to charities</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Charity Payouts Management
+          </h1>
+          <p className="text-gray-600">
+            Manage and process payouts to charities
+          </p>
         </div>
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Payouts</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Payouts
+              </CardTitle>
               <DollarSign className="h-4 w-4 text-gray-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.total}</div>
               <p className="text-xs text-gray-500 mt-1">
-                {formatCurrency(stats.totalAmount.toString(), 'USD')} total
+                {formatCurrency(stats.totalAmount.toString(), "NGN")} total
               </p>
             </CardContent>
           </Card>
@@ -164,7 +211,9 @@ export default function CharityPayoutsAdmin() {
               <Clock className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+              <div className="text-2xl font-bold text-yellow-600">
+                {stats.pending}
+              </div>
               <p className="text-xs text-gray-500 mt-1">Awaiting processing</p>
             </CardContent>
           </Card>
@@ -175,8 +224,12 @@ export default function CharityPayoutsAdmin() {
               <CheckCircle className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
-              <p className="text-xs text-gray-500 mt-1">Successfully processed</p>
+              <div className="text-2xl font-bold text-green-600">
+                {stats.completed}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Successfully processed
+              </p>
             </CardContent>
           </Card>
 
@@ -186,7 +239,9 @@ export default function CharityPayoutsAdmin() {
               <XCircle className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">{stats.failed}</div>
+              <div className="text-2xl font-bold text-red-600">
+                {stats.failed}
+              </div>
               <p className="text-xs text-gray-500 mt-1">Failed payouts</p>
             </CardContent>
           </Card>
@@ -232,7 +287,9 @@ export default function CharityPayoutsAdmin() {
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>
-                      <CardTitle className="text-lg">{payout.charity.name}</CardTitle>
+                      <CardTitle className="text-lg">
+                        {payout.charity.name}
+                      </CardTitle>
                       <CardDescription className="mt-1">
                         Reference: {payout.reference}
                       </CardDescription>
@@ -251,8 +308,12 @@ export default function CharityPayoutsAdmin() {
                     <div>
                       <p className="text-sm text-gray-500">Bank Details</p>
                       <p className="text-sm font-medium">{payout.bankName}</p>
-                      <p className="text-xs text-gray-600">{payout.accountNumber}</p>
-                      <p className="text-xs text-gray-600">{payout.accountName}</p>
+                      <p className="text-xs text-gray-600">
+                        {payout.accountNumber}
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        {payout.accountName}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Donations</p>
@@ -265,8 +326,12 @@ export default function CharityPayoutsAdmin() {
                       <p className="text-sm">{formatDate(payout.createdAt)}</p>
                       {payout.processedAt && (
                         <>
-                          <p className="text-xs text-gray-500 mt-1">Processed</p>
-                          <p className="text-xs">{formatDate(payout.processedAt)}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Processed
+                          </p>
+                          <p className="text-xs">
+                            {formatDate(payout.processedAt)}
+                          </p>
                         </>
                       )}
                     </div>
@@ -280,10 +345,13 @@ export default function CharityPayoutsAdmin() {
                     </div>
                   )}
 
-                  {(payout.status === 'pending' || payout.status === 'processing') && (
+                  {(payout.status === "pending" ||
+                    payout.status === "processing") && (
                     <div className="flex gap-2">
                       <Button
-                        onClick={() => handleProcessPayout(payout.id, 'completed')}
+                        onClick={() =>
+                          handleProcessPayout(payout.id, "completed")
+                        }
                         disabled={processing === payout.id}
                         className="bg-green-600 hover:bg-green-700"
                       >
@@ -291,7 +359,7 @@ export default function CharityPayoutsAdmin() {
                         Mark as Completed
                       </Button>
                       <Button
-                        onClick={() => handleProcessPayout(payout.id, 'failed')}
+                        onClick={() => handleProcessPayout(payout.id, "failed")}
                         disabled={processing === payout.id}
                         variant="destructive"
                       >
@@ -309,4 +377,3 @@ export default function CharityPayoutsAdmin() {
     </div>
   );
 }
-

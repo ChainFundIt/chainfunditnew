@@ -272,10 +272,10 @@ export default function VirtualGivingMallPage() {
                   </div>
 
                   {/* Content */}
-                  <div className="p-6">
+                  <div className="p-6 h-[160px]">
                     <div className="mb-4">
                       <h3 className="font-bold text-lg text-gray-900 mb-2 group-hover:text-green-600 transition-colors line-clamp-2">
-                        {charity.name}
+                        {charity.name.slice(0, 30)}
                       </h3>
                       <div className="flex items-center justify-between text-xs text-gray-500">
                         <span className="bg-gray-100 px-2 py-1 rounded-full">

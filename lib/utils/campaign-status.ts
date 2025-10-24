@@ -174,9 +174,11 @@ export function getTimeRemaining(campaign: Campaign): string {
   if (statusInfo.daysOverdue !== undefined) {
     if (statusInfo.daysOverdue === 1) {
       return 'Expired yesterday';
-    } else if (statusInfo.daysOverdue < 7) {
+    } 
+    else if (statusInfo.daysOverdue < 7) {
       return `Expired ${statusInfo.daysOverdue} days ago`;
-    } else {
+    }
+     else {
       return `Expired ${Math.ceil(statusInfo.daysOverdue / 7)} weeks ago`;
     }
   }

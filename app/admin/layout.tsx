@@ -1,0 +1,397 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { 
+  LayoutDashboard,
+  Users,
+  BarChart3,
+  TrendingUp,
+  DollarSign,
+  Settings,
+  Bell,
+  HelpCircle,
+  Share,
+  Plus,
+  ChevronDown,
+  Menu,
+  X,
+  Shield,
+  FileText,
+  PieChart,
+  Activity,
+  Building,
+  Wrench,
+  MessageSquare,
+  Folder,
+  Sparkles,
+  LogOut,
+  User
+} from 'lucide-react';
+
+const navigation = [
+  {
+    name: 'Dashboard',
+    href: '/admin/dashboard/overview',
+    icon: LayoutDashboard,
+    current: true,
+  },
+  {
+    name: 'Users',
+    href: '/admin/dashboard/users',
+    icon: Users,
+    current: false,
+  },
+  {
+    name: 'Campaigns',
+    href: '/admin/dashboard/campaigns',
+    icon: BarChart3,
+    current: false,
+  },
+  {
+    name: 'Chainers',
+    href: '/admin/dashboard/chainers',
+    icon: Share,
+    current: false,
+  },
+  {
+    name: 'Donations',
+    href: '/admin/dashboard/donations',
+    icon: DollarSign,
+    current: false,
+  },
+  {
+    name: 'Payouts',
+    href: '/admin/dashboard/payouts',
+    icon: DollarSign,
+    current: false,
+  },
+  {
+    name: 'Analytics',
+    href: '/admin/dashboard/analytics',
+    icon: BarChart3,
+    current: false,
+  },
+  {
+    name: 'Settings',
+    href: '/admin/settings',
+    icon: Settings,
+    current: false,
+  },
+];
+
+const adminTools = [
+  {
+    name: 'User Management',
+    href: '/admin/dashboard/users',
+    icon: Users,
+  },
+  {
+    name: 'Campaign Moderation',
+    href: '/admin/dashboard/campaigns',
+    icon: BarChart3,
+  },
+  {
+    name: 'Chainer Analytics',
+    href: '/admin/dashboard/chainers',
+    icon: TrendingUp,
+  },
+  {
+    name: 'Payout Approval',
+    href: '/admin/dashboard/payouts',
+    icon: DollarSign,
+  },
+];
+
+const whatsNew = [
+  {
+    title: 'Enhanced Security',
+    description: '2FA authentication now available',
+    icon: Shield,
+  },
+  {
+    title: 'Advanced Analytics',
+    description: 'New reporting dashboard',
+    icon: BarChart3,
+  },
+  {
+    title: 'Bulk Operations',
+    description: 'Process multiple items at once',
+    icon: Wrench,
+  },
+];
+
+interface AdminUser {
+  id: string;
+  email: string;
+  fullName: string;
+  role: 'admin' | 'super_admin';
+  isVerified: boolean;
+  accountLocked: boolean;
+}
+
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [user, setUser] = useState<AdminUser | null>(null);
+  const [loading, setLoading] = useState(true);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  // Check authentication on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/admin/auth/me');
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
+        } else {
+          // Redirect to unified login if not authenticated
+          router.push('/signin?redirect=' + encodeURIComponent(window.location.pathname));
+        }
+      } catch (error) {
+        console.error('Auth check error:', error);
+        router.push('/signin?redirect=' + encodeURIComponent(window.location.pathname));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, [router]);
+
+  // Show loading spinner while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to login if no user
+  if (!user) {
+    return null;
+  }
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      router.push('/signin');
+    } catch (error) {
+      console.error('Logout error:', error);
+      router.push('/signin');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Mobile sidebar */}
+      <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white">
+          <div className="flex h-16 items-center justify-between px-4">
+            <div className="flex items-center space-x-3">
+              <div className="h-8 w-8 bg-purple-600 rounded-lg flex items-center justify-center">
+                <Shield className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-xl font-bold text-gray-900">Admin</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+          <nav className="flex-1 px-4 py-4 space-y-1">
+            {navigation.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                    isActive
+                      ? 'bg-purple-100 text-purple-700'
+                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                >
+                  <item.icon
+                    className={`mr-3 h-5 w-5 ${
+                      isActive ? 'text-purple-500' : 'text-gray-400 group-hover:text-gray-500'
+                    }`}
+                  />
+                  {item.name}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+      </div>
+
+      {/* Desktop sidebar */}
+      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
+        <div className="flex flex-col flex-grow bg-white border-r border-gray-200">
+          {/* Logo */}
+          <div className="flex h-16 items-center px-4 border-b border-gray-200">
+            <div className="flex items-center space-x-3">
+              <div className="h-8 w-8 bg-purple-600 rounded-lg flex items-center justify-center">
+                <Shield className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <span className="text-xl font-bold text-gray-900">Admin</span>
+                <p className="text-xs text-gray-500">ChainFundIt</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <nav className="flex-1 px-4 py-4 space-y-1">
+            {navigation.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                    isActive
+                      ? 'bg-purple-100 text-purple-700'
+                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                >
+                  <item.icon
+                    className={`mr-3 h-5 w-5 ${
+                      isActive ? 'text-purple-500' : 'text-gray-400 group-hover:text-gray-500'
+                    }`}
+                  />
+                  {item.name}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* User Profile Section */}
+          <div className="p-4 border-t border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <User className="h-4 w-4 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">{user.fullName}</p>
+                <p className="text-xs text-gray-500">{user.email}</p>
+                <Badge variant={user.role === 'super_admin' ? 'default' : 'secondary'} className="text-xs">
+                  {user.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+                </Badge>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* What's New Section */}
+          <div className="p-4 border-t border-gray-200">
+            <div className="bg-purple-50 rounded-lg p-4">
+              <div className="flex items-center space-x-2 mb-3">
+                <Sparkles className="h-4 w-4 text-purple-600" />
+                <span className="text-sm font-medium text-purple-900">What's New</span>
+              </div>
+              <div className="space-y-2">
+                {whatsNew.map((item, index) => (
+                  <div key={index} className="flex items-start space-x-2">
+                    <ChevronDown className="h-3 w-3 text-purple-600 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-medium text-purple-900">{item.title}</p>
+                      <p className="text-xs text-purple-700">{item.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-purple-600 mt-2">version: 1.0.0</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="lg:pl-64">
+        {/* Top navigation */}
+        <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="lg:hidden"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+
+          <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
+            <div className="flex flex-1"></div>
+            <div className="flex items-center gap-x-4 lg:gap-x-6">
+              {/* Notifications */}
+              <Button variant="ghost" size="sm" className="relative">
+                <Bell className="h-5 w-5" />
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs">
+                  3
+                </Badge>
+              </Button>
+
+              {/* Help */}
+              <Button variant="ghost" size="sm">
+                <HelpCircle className="h-5 w-5" />
+              </Button>
+
+              {/* Share */}
+              <Button variant="ghost" size="sm">
+                <Share className="h-5 w-5" />
+              </Button>
+
+              {/* Invite */}
+              <Button variant="outline" size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Invite Admin
+              </Button>
+
+              {/* Upgrade */}
+              <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
+                Upgrade
+              </Button>
+
+              {/* User menu */}
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-700">Admin</span>
+                <div className="h-8 w-8 bg-purple-600 rounded-full flex items-center justify-center">
+                  <span className="text-sm font-medium text-white">A</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Page content */}
+        <main className="flex-1">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}

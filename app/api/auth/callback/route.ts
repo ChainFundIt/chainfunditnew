@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { generateUserJWT } from '@/lib/auth';
+import { generateTokenPair } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
@@ -26,20 +26,48 @@ export async function GET(request: NextRequest) {
       const responseData = await result.clone().json().catch(() => null);
       
       if (responseData?.user) {
-        // Generate JWT token
-        const token = generateUserJWT({ 
+        // Generate access and refresh tokens
+        const tokens = await generateTokenPair({ 
           id: responseData.user.id, 
           email: responseData.user.email 
-        });
+        }, request);
 
-        // Create response with redirect to dashboard
-        const response = NextResponse.redirect(new URL('/dashboard', request.url));
+        // Get user role for role-based redirection
+        let redirectUrl = '/dashboard';
+        try {
+          const userResponse = await fetch(`${request.nextUrl.origin}/api/user/me`, {
+            headers: {
+              'Cookie': `auth_token=${tokens.accessToken}; refresh_token=${tokens.refreshToken}`
+            }
+          });
+          if (userResponse.ok) {
+            const userData = await userResponse.json();
+            const userRole = userData.user?.role;
+            if (userRole === 'admin' || userRole === 'super_admin') {
+              redirectUrl = '/admin/dashboard/overview';
+            }
+          }
+        } catch (error) {
+          console.error('Error getting user role for OAuth redirect:', error);
+        }
+
+        // Create response with role-based redirect
+        const response = NextResponse.redirect(new URL(redirectUrl, request.url));
         
-        // Set auth cookie
-        response.cookies.set("auth_token", token, {
+        // Set access token cookie (30 minutes)
+        response.cookies.set("auth_token", tokens.accessToken, {
           httpOnly: true,
           path: "/",
-          maxAge: 60 * 60 * 24 * 2, // 2 days
+          maxAge: 30 * 60, // 30 minutes
+          sameSite: "lax",
+          secure: process.env.NODE_ENV === "production",
+        });
+
+        // Set refresh token cookie (30 days)
+        response.cookies.set("refresh_token", tokens.refreshToken, {
+          httpOnly: true,
+          path: "/",
+          maxAge: 30 * 24 * 60 * 60, // 30 days
           sameSite: "lax",
           secure: process.env.NODE_ENV === "production",
         });

@@ -75,7 +75,7 @@ const PastCampaigns = ({ campaigns }: Props) => {
             />
           )}
           <div className="flex flex-col justify-end">
-            <div className="flex flex-col md:flex-row md:items-center gap-2 mb-2">
+            <div className="flex justify-between flex-col md:flex-row md:items-center gap-2 mb-2">
               <h3 className="text-lg md:text-2xl font-medium">{transformedCampaign.title}</h3>
               {(() => {
                 const statusInfo = getCampaignStatus(campaign);
@@ -83,7 +83,7 @@ const PastCampaigns = ({ campaigns }: Props) => {
                 
                 if (statusInfo.status === 'expired') {
                   return (
-                    <div className="flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded-full text-sm">
+                    <div className="w-fit flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded-full text-sm">
                       <Clock size={14} />
                       <span>{timeRemaining}</span>
                     </div>

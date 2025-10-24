@@ -1,30 +1,230 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/lib/db";
-import { users, accounts, sessions, verificationTokens } from "@/lib/schema";
-import { eq } from "drizzle-orm";
+import { users, accounts, sessions, verificationTokens, refreshTokens } from "@/lib/schema";
+import { eq, and, gt, isNull } from "drizzle-orm";
 import jwt from "jsonwebtoken";
 import { NextRequest } from "next/server";
 import { parse } from "cookie";
+import { randomBytes } from "crypto";
 
 // Simple in-memory cache for user lookups
 const userCache = new Map<string, { user: any; timestamp: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-export function generateUserJWT(user: { id: string; email: string }) {
+// Token configuration
+export const TOKEN_CONFIG = {
+  ACCESS_TOKEN_EXPIRY: "30m", // 30 minutes
+  REFRESH_TOKEN_EXPIRY_DAYS: 30, // 30 days
+  REFRESH_TOKEN_ROTATION: true, // Enable token rotation for security
+};
+
+/**
+ * Generate an access token (short-lived)
+ */
+export function generateAccessToken(user: { id: string; email: string }) {
   const secret = process.env.JWT_SECRET || "dev_secret";
-  return jwt.sign({ sub: user.id, email: user.email }, secret, {
-    expiresIn: "2d",
-  });
+  return jwt.sign(
+    { 
+      sub: user.id, 
+      email: user.email,
+      type: 'access'
+    }, 
+    secret, 
+    {
+      expiresIn: TOKEN_CONFIG.ACCESS_TOKEN_EXPIRY,
+    }
+  );
 }
 
-export function verifyUserJWT(token: string): { sub: string; email: string } | null {
+/**
+ * Generate a refresh token (long-lived)
+ */
+export function generateRefreshToken(user: { id: string; email: string }) {
+  const secret = process.env.JWT_SECRET || "dev_secret";
+  const tokenId = randomBytes(32).toString('hex');
+  
+  return {
+    token: jwt.sign(
+      { 
+        sub: user.id, 
+        email: user.email,
+        type: 'refresh',
+        jti: tokenId, // JWT ID for tracking
+      }, 
+      secret, 
+      {
+        expiresIn: `${TOKEN_CONFIG.REFRESH_TOKEN_EXPIRY_DAYS}d`,
+      }
+    ),
+    tokenId,
+  };
+}
+
+/**
+ * Generate both access and refresh tokens
+ */
+export async function generateTokenPair(
+  user: { id: string; email: string },
+  request?: NextRequest
+) {
+  const accessToken = generateAccessToken(user);
+  const { token: refreshToken, tokenId } = generateRefreshToken(user);
+  
+  // Store refresh token in database
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + TOKEN_CONFIG.REFRESH_TOKEN_EXPIRY_DAYS);
+  
+  const userAgent = request?.headers.get('user-agent') || null;
+  const ipAddress = request?.headers.get('x-forwarded-for') || 
+                    request?.headers.get('x-real-ip') || null;
+  
+  await db.insert(refreshTokens).values({
+    userId: user.id,
+    token: tokenId,
+    expiresAt,
+    userAgent,
+    ipAddress,
+  });
+  
+  return {
+    accessToken,
+    refreshToken,
+    tokenId,
+  };
+}
+
+/**
+ * Verify access token
+ */
+export function verifyAccessToken(token: string): { sub: string; email: string } | null {
   const secret = process.env.JWT_SECRET || "dev_secret";
   try {
-    return jwt.verify(token, secret) as { sub: string; email: string };
+    const payload = jwt.verify(token, secret) as any;
+    if (payload.type !== 'access') return null;
+    return { sub: payload.sub, email: payload.email };
   } catch {
     return null;
   }
+}
+
+/**
+ * Verify refresh token
+ */
+export function verifyRefreshToken(token: string): { sub: string; email: string; jti: string } | null {
+  const secret = process.env.JWT_SECRET || "dev_secret";
+  try {
+    const payload = jwt.verify(token, secret) as any;
+    if (payload.type !== 'refresh') return null;
+    return { sub: payload.sub, email: payload.email, jti: payload.jti };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Validate refresh token against database
+ */
+export async function validateRefreshToken(tokenId: string, userId: string): Promise<boolean> {
+  const result = await db
+    .select()
+    .from(refreshTokens)
+    .where(
+      and(
+        eq(refreshTokens.token, tokenId),
+        eq(refreshTokens.userId, userId),
+        isNull(refreshTokens.isRevoked),
+        gt(refreshTokens.expiresAt, new Date())
+      )
+    )
+    .limit(1);
+  
+  return result.length > 0;
+}
+
+/**
+ * Refresh access token using refresh token
+ */
+export async function refreshAccessToken(
+  refreshToken: string,
+  request?: NextRequest
+): Promise<{ accessToken: string; refreshToken?: string } | null> {
+  // Verify refresh token JWT
+  const payload = verifyRefreshToken(refreshToken);
+  if (!payload) return null;
+  
+  // Validate against database
+  const isValid = await validateRefreshToken(payload.jti, payload.sub);
+  if (!isValid) return null;
+  
+  // Update last used timestamp
+  await db
+    .update(refreshTokens)
+    .set({ lastUsedAt: new Date() })
+    .where(eq(refreshTokens.token, payload.jti));
+  
+  // Generate new access token
+  const accessToken = generateAccessToken({ id: payload.sub, email: payload.email });
+  
+  // Token rotation: issue new refresh token and revoke old one
+  if (TOKEN_CONFIG.REFRESH_TOKEN_ROTATION) {
+    // Revoke old refresh token
+    await revokeRefreshToken(payload.jti);
+    
+    // Generate new refresh token
+    const newTokenPair = await generateTokenPair(
+      { id: payload.sub, email: payload.email },
+      request
+    );
+    
+    return {
+      accessToken: newTokenPair.accessToken,
+      refreshToken: newTokenPair.refreshToken,
+    };
+  }
+  
+  return { accessToken };
+}
+
+/**
+ * Revoke a refresh token
+ */
+export async function revokeRefreshToken(tokenId: string): Promise<void> {
+  await db
+    .update(refreshTokens)
+    .set({ isRevoked: new Date() })
+    .where(eq(refreshTokens.token, tokenId));
+}
+
+/**
+ * Revoke all refresh tokens for a user
+ */
+export async function revokeAllUserRefreshTokens(userId: string): Promise<void> {
+  await db
+    .update(refreshTokens)
+    .set({ isRevoked: new Date() })
+    .where(
+      and(
+        eq(refreshTokens.userId, userId),
+        isNull(refreshTokens.isRevoked)
+      )
+    );
+}
+
+/**
+ * Legacy function - kept for backward compatibility
+ * @deprecated Use generateTokenPair instead
+ */
+export function generateUserJWT(user: { id: string; email: string }) {
+  return generateAccessToken(user);
+}
+
+/**
+ * Legacy function - kept for backward compatibility
+ * @deprecated Use verifyAccessToken instead
+ */
+export function verifyUserJWT(token: string): { sub: string; email: string } | null {
+  return verifyAccessToken(token);
 }
 
 export async function getUserFromRequest(request: NextRequest) {
