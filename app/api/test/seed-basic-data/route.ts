@@ -41,38 +41,96 @@ export async function POST() {
       createdUsers = await db.insert(users).values(testUsers).returning();
     }
     
-    // Create test campaigns if none exist - replace this with ngos from virtual mall api
+    // Create charity-based campaigns if none exist - using charities from virtual mall
     if (campaignCount.count === 0) {
-      const testCampaigns = [
+      const charityCampaigns = [
         {
           creatorId: createdUsers[0]?.id || (await db.select().from(users).limit(1))[0]?.id,
-          title: 'Help Save the Environment',
-          slug: 'help-save-environment',
-          description: 'Supporting environmental conservation efforts',
-          goalAmount: '5000.00',
+          title: 'Support Save the Children',
+          slug: 'support-save-the-children',
+          description: 'Help Save the Children provide emergency relief, healthcare, and education to children in need around the world. Your donation helps us reach the most vulnerable children in over 120 countries.',
+          fundraisingFor: 'Save the Children',
+          goalAmount: '15000.00',
           currency: 'USD',
-          minimumDonation: '10.00',
+          minimumDonation: '25.00',
           chainerCommissionRate: '5.0',
           currentAmount: '0.00',
           status: 'active',
-          coverImageUrl: 'https://example.com/environment.jpg',
+          coverImageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop',
         },
         {
           creatorId: createdUsers[1]?.id || (await db.select().from(users).limit(1))[0]?.id,
-          title: 'Education for All',
-          slug: 'education-for-all',
-          description: 'Providing educational resources to underprivileged children',
-          goalAmount: '10000.00',
+          title: 'Doctors Without Borders Emergency Fund',
+          slug: 'doctors-without-borders-emergency',
+          description: 'Support Doctors Without Borders in providing medical care to people affected by conflict, epidemics, and disasters. Help us deliver life-saving medical assistance where it\'s needed most.',
+          fundraisingFor: 'Doctors Without Borders',
+          goalAmount: '25000.00',
           currency: 'USD',
-          minimumDonation: '10.00',
+          minimumDonation: '50.00',
           chainerCommissionRate: '5.0',
           currentAmount: '0.00',
           status: 'active',
-          coverImageUrl: 'https://example.com/education.jpg',
+          coverImageUrl: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800&h=600&fit=crop',
+        },
+        {
+          creatorId: createdUsers[0]?.id || (await db.select().from(users).limit(1))[0]?.id,
+          title: 'World Wildlife Fund Conservation',
+          slug: 'wwf-conservation',
+          description: 'Join WWF in protecting endangered species and their habitats. Your support helps us combat climate change, protect forests, and ensure a sustainable future for wildlife.',
+          fundraisingFor: 'World Wildlife Fund',
+          goalAmount: '20000.00',
+          currency: 'USD',
+          minimumDonation: '30.00',
+          chainerCommissionRate: '5.0',
+          currentAmount: '0.00',
+          status: 'active',
+          coverImageUrl: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&h=600&fit=crop',
+        },
+        {
+          creatorId: createdUsers[1]?.id || (await db.select().from(users).limit(1))[0]?.id,
+          title: 'American Red Cross Disaster Relief',
+          slug: 'red-cross-disaster-relief',
+          description: 'Support the American Red Cross in providing emergency assistance, disaster relief, and disaster preparedness education to communities in crisis.',
+          fundraisingFor: 'American Red Cross',
+          goalAmount: '30000.00',
+          currency: 'USD',
+          minimumDonation: '25.00',
+          chainerCommissionRate: '5.0',
+          currentAmount: '0.00',
+          status: 'active',
+          coverImageUrl: 'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=800&h=600&fit=crop',
+        },
+        {
+          creatorId: createdUsers[0]?.id || (await db.select().from(users).limit(1))[0]?.id,
+          title: 'Clean Water for Communities',
+          slug: 'clean-water-communities',
+          description: 'Help charity: water bring clean and safe drinking water to people in developing countries. Every dollar donated goes directly to water projects.',
+          fundraisingFor: 'Charity: Water',
+          goalAmount: '12000.00',
+          currency: 'USD',
+          minimumDonation: '20.00',
+          chainerCommissionRate: '5.0',
+          currentAmount: '0.00',
+          status: 'active',
+          coverImageUrl: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&h=600&fit=crop',
+        },
+        {
+          creatorId: createdUsers[1]?.id || (await db.select().from(users).limit(1))[0]?.id,
+          title: 'End Hunger with Heifer International',
+          slug: 'end-hunger-heifer',
+          description: 'Support Heifer International\'s mission to end hunger and poverty while caring for the Earth through sustainable agriculture and livestock programs.',
+          fundraisingFor: 'Heifer International',
+          goalAmount: '18000.00',
+          currency: 'USD',
+          minimumDonation: '35.00',
+          chainerCommissionRate: '5.0',
+          currentAmount: '0.00',
+          status: 'active',
+          coverImageUrl: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800&h=600&fit=crop',
         }
       ];
       
-      createdCampaigns = await db.insert(campaigns).values(testCampaigns).returning();
+      createdCampaigns = await db.insert(campaigns).values(charityCampaigns).returning();
     }
     
     // Get existing users and campaigns
