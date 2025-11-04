@@ -74,6 +74,7 @@ interface DashboardStats {
   totalDonations: number;
   totalRevenue: number;
   pendingPayouts: number;
+  pendingReview: number;
   activeChainers: number;
   recentActivity: ActivityItem[];
   topCampaigns: CampaignMetric[];
@@ -124,6 +125,8 @@ interface DashboardProps {
   onSettings?: () => void;
   onReviewCampaign?: (id: string) => void;
   onReviewUser?: (id: string) => void;
+  onReviewPayouts?: () => void;
+  onReviewCampaigns?: () => void;
 }
 
 // Metric Card Component
@@ -409,6 +412,8 @@ export const ModernDashboard = ({
   stats,
   loading,
   currency = 'USD',
+  onReviewPayouts,
+  onReviewCampaigns,
 }: DashboardProps) => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -504,11 +509,16 @@ export const ModernDashboard = ({
                   <div>
                     <p className="font-medium">Pending Payouts</p>
                     <p className="text-sm text-muted-foreground">
-                      {stats.pendingPayouts} payouts awaiting approval
+                      {stats.pendingPayouts ?? 0} payouts awaiting approval
                     </p>
                   </div>
                 </div>
-                <Button size="sm" variant="outline">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={onReviewPayouts}
+                  disabled={!stats.pendingPayouts || stats.pendingPayouts === 0}
+                >
                   Review
                 </Button>
               </div>
@@ -518,11 +528,16 @@ export const ModernDashboard = ({
                   <div>
                     <p className="font-medium">Campaign Reviews</p>
                     <p className="text-sm text-muted-foreground">
-                      3 campaigns pending review
+                      {stats.pendingReview ?? 0} campaigns pending review
                     </p>
                   </div>
                 </div>
-                <Button size="sm" variant="outline">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={onReviewCampaigns}
+                  disabled={!stats.pendingReview || stats.pendingReview === 0}
+                >
                   Review
                 </Button>
               </div>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { commissionPayouts, chainers, users, campaigns, donations } from '@/lib/schema';
 import { eq, and, count, sum, desc, sql } from 'drizzle-orm';
+import { sendPayoutApprovalNotification, processAmbassadorPayout } from '@/lib/payments/payout-processor';
 
 /**
  * GET /api/admin/payouts/[id]
@@ -162,6 +163,29 @@ export async function PATCH(
           })
           .where(eq(commissionPayouts.id, payoutId))
           .returning();
+        
+        // Send approval notification email
+        try {
+          await sendPayoutApprovalNotification(payoutId, 'ambassador');
+        } catch (emailError) {
+          console.error('Failed to send approval notification:', emailError);
+          // Don't fail the approval for email errors
+        }
+        
+        // Automatically process the payout
+        try {
+          await processAmbassadorPayout(payoutId);
+        } catch (processError) {
+          console.error('Failed to process payout:', processError);
+          // Update status to failed if processing fails
+          await db
+            .update(commissionPayouts)
+            .set({ 
+              status: 'failed',
+              notes: processError instanceof Error ? processError.message : 'Processing failed',
+            })
+            .where(eq(commissionPayouts.id, payoutId));
+        }
         break;
 
       case 'reject':
@@ -223,7 +247,6 @@ export async function PATCH(
           .update(commissionPayouts)
           .set({ 
             ...updateData,
-            updatedAt: new Date(),
           })
           .where(eq(commissionPayouts.id, payoutId))
           .returning();

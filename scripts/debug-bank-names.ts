@@ -100,8 +100,6 @@ async function debugBankNames() {
   } catch (error) {
     console.error('❌ Error debugging bank names:', error);
     process.exit(1);
-  } finally {
-    await db.$disconnect();
   }
 }
 

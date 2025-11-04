@@ -18,6 +18,7 @@ interface DashboardStats {
   totalDonations: number;
   totalRevenue: number;
   pendingPayouts: number;
+  pendingReview: number;
   activeChainers: number;
   recentActivity: ActivityItem[];
   topCampaigns: CampaignMetric[];
@@ -36,6 +37,7 @@ interface ActivityItem {
 
 interface CampaignMetric {
   id: string;
+  slug?: string;
   title: string;
   raised: number;
   goal: number;
@@ -309,11 +311,28 @@ export default function AdminDashboardOverview() {
   };
 
   const handleReviewCampaign = (campaignId: string) => {
-    router.push(`/admin/campaigns?id=${campaignId}`);
+    // Try to get slug from stats if available, otherwise fetch it
+    if (stats?.topCampaigns) {
+      const campaign = stats.topCampaigns.find(c => c.id === campaignId);
+      if (campaign?.slug) {
+        window.open(`/campaign/${campaign.slug}`, '_blank');
+        return;
+      }
+    }
+    // Fallback: redirect to campaigns page with filter
+    router.push(`/admin/campaigns`);
   };
 
   const handleReviewUser = (userId: string) => {
     router.push(`/admin/users?id=${userId}`);
+  };
+
+  const handleReviewPayouts = () => {
+    router.push('/admin/payouts');
+  };
+
+  const handleReviewCampaigns = () => {
+    router.push('/admin/campaigns');
   };
 
   return (
@@ -355,6 +374,8 @@ export default function AdminDashboardOverview() {
           onSettings={handleSettings}
           onReviewCampaign={handleReviewCampaign}
           onReviewUser={handleReviewUser}
+          onReviewPayouts={handleReviewPayouts}
+          onReviewCampaigns={handleReviewCampaigns}
         />
       </div>
     </div>

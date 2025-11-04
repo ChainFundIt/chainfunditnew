@@ -322,7 +322,7 @@ const Main = ({ campaignId }: MainProps) => {
     } finally {
       setLoading(false);
     }
-  }, [campaignId, fetchUpdates, fetchComments]);
+  }, [campaignId, fetchUpdates, fetchComments, fetchChainCount]);
 
   React.useEffect(() => {
     if (campaignId) {
@@ -358,8 +358,8 @@ const Main = ({ campaignId }: MainProps) => {
             </h2>
             <p className="text-lg text-[#757575] mb-4">
               {error === "Campaign not found"
-                ? "The campaign you're looking for doesn't exist or has been removed."
-                : "We couldn't load the campaign. Please try again later."}
+                ? "The campaign you&apos;re looking for doesn&apos;t exist or has been removed."
+                : "We couldn&apos;t load the campaign. Please try again later."}
             </p>
             <button
               onClick={() => window.location.reload()}
@@ -1062,7 +1062,7 @@ const Main = ({ campaignId }: MainProps) => {
                         </p>
                         {donation.message && (
                           <p className="font-normal text-sm text-[#757575] italic mt-1">
-                            "{donation.message}"
+                            {donation.message}
                           </p>
                         )}
                       </section>

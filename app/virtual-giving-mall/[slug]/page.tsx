@@ -25,6 +25,7 @@ import { toast } from 'sonner';
 import { useGeolocationCurrency } from '@/hooks/use-geolocation-currency';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import Image from 'next/image';
 
 interface Charity {
   id: string;
@@ -211,10 +212,12 @@ export default function CharityDetailPage() {
         {/* Cover Image */}
         {charity.coverImage && (
           <div className="h-64 bg-gray-200 rounded-lg mb-6 overflow-hidden">
-            <img 
+            <Image 
               src={charity.coverImage} 
               alt={charity.name} 
               className="w-full h-full object-cover"
+              width={1000}
+              height={1000}
             />
           </div>
         )}
@@ -226,10 +229,12 @@ export default function CharityDetailPage() {
             <div>
               <div className="flex items-start gap-4 mb-4">
                 {charity.logo && (
-                  <img 
+                  <Image 
                     src={charity.logo} 
                     alt={charity.name} 
                     className="h-20 w-20 rounded-lg object-cover"
+                    width={1000}
+                    height={1000}
                   />
                 )}
                 <div className="flex-1">

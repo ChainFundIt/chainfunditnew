@@ -35,6 +35,10 @@ export const users = pgTable('users', {
   twoFactorEnabled: boolean('two_factor_enabled').default(false),
   twoFactorSecret: text('two_factor_secret'),
   twoFactorBackupCodes: text('two_factor_backup_codes'),
+  // Stripe Connect fields
+  stripeAccountId: varchar('stripe_account_id', { length: 255 }),
+  stripeAccountReady: boolean('stripe_account_ready').default(false),
+  stripeAccountOnboardedAt: timestamp('stripe_account_onboarded_at'),
 }, (table) => ({
   emailIdx: index('users_email_idx').on(table.email),
   phoneIdx: index('users_phone_idx').on(table.phone),

@@ -193,8 +193,8 @@ function PaymentSuccessContent() {
             {/* Impact Message */}
             <div className="text-center pt-6 border-t">
               <p className="text-gray-600 italic">
-                "Your contribution helps {charity?.name} continue their important work.
-                Together, we're making a difference! 🌟"
+                Your contribution helps {charity?.name} continue their important work.
+                Together, we&apos;re making a difference! 🌟
               </p>
             </div>
           </CardContent>

@@ -71,7 +71,8 @@ export async function calculateAndDistributeCommissions(donationId: string) {
         donationAmount,
         totalCommission,
         donationData.donorId,
-        donationData.id
+        donationData.id,
+        donationData.currency
       );
     }
 
@@ -82,7 +83,8 @@ export async function calculateAndDistributeCommissions(donationId: string) {
       donationData.campaignId,
       donationAmount,
       totalCommission,
-      donationData.id
+      donationData.id,
+      donationData.currency
     );
 
     console.log('✅ Commission calculation completed for donation:', donationId);
@@ -100,7 +102,8 @@ async function handleDirectReferralCommission(
   donationAmount: number,
   totalCommission: number,
   donorId: string,
-  donationId: string
+  donationId: string,
+  currency: string
 ) {
   try {
     console.log('🎯 Processing direct referral commission for chainer:', chainerId);
@@ -146,6 +149,7 @@ async function handleDirectReferralCommission(
       chainerId: chainerId,
       campaignId: campaignId,
       amount: totalCommission.toString(),
+      currency: currency || 'USD', 
       destination: chainerData.commissionDestination,
       status: 'pending',
       notes: `Commission from donation ${donationId} via direct referral`,
@@ -179,7 +183,8 @@ async function handleMultiLevelReferrals(
   campaignId: string,
   donationAmount: number,
   totalCommission: number,
-  donationId: string
+  donationId: string,
+  currency: string
 ) {
   try {
     console.log('🔗 Checking if donor is also a chainer for this campaign:', donorId);
@@ -230,6 +235,7 @@ async function handleMultiLevelReferrals(
       chainerId: donorChainerData.id,
       campaignId: campaignId,
       amount: selfReferralCommission.toString(),
+      currency: currency || 'USD', // Include currency from donation
       destination: donorChainerData.commissionDestination,
       status: 'pending',
       notes: `Self-referral commission from donation ${donationId} (donor chained this campaign)`,

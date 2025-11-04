@@ -73,21 +73,45 @@ export async function POST(request: NextRequest) {
         await db.insert(emailOtps).values({ email, otp: generatedOtp, expiresAt });
       });
 
+      // Check if Resend is properly configured
+      if (!process.env.RESEND_API_KEY) {
+        console.error('RESEND_API_KEY is not configured');
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Email service is not configured. Please contact support.' 
+        }, { status: 503 });
+      }
+
+      if (!process.env.RESEND_FROM_EMAIL) {
+        console.error('RESEND_FROM_EMAIL is not configured');
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Email service is not configured. Please contact support.' 
+        }, { status: 503 });
+      }
+
       // Send email asynchronously
-      resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL || 'noreply@example.com',
-        to: email,
-        subject: 'Sign in OTP - ChainFundIt',
-        html: `
-          <h2>Your Sign in OTP</h2>
-          <p>Your verification code is: <strong>${generatedOtp}</strong></p>
-          <p>This code will expire in 10 minutes.</p>
-          <p>If you didn't request this code, please ignore this email.</p>
-        `,
-      }).catch(error => {
-        console.error('Resend error:', error);
-        // Don't fail the request if email fails
-      });
+      try {
+        const emailResult = await resend.emails.send({
+          from: process.env.RESEND_FROM_EMAIL,
+          to: email,
+          subject: 'Sign in OTP - ChainFundIt',
+          html: `
+            <h2>Your Sign in OTP</h2>
+            <p>Your verification code is: <strong>${generatedOtp}</strong></p>
+            <p>This code will expire in 10 minutes.</p>
+            <p>If you didn't request this code, please ignore this email.</p>
+          `,
+        });
+        
+        console.log('Email sent successfully:', emailResult);
+      } catch (error) {
+        console.error('Failed to send OTP email:', error);
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Failed to send verification email. Please try again or contact support.' 
+        }, { status: 500 });
+      }
 
       return NextResponse.json({ success: true, message: 'Email OTP sent successfully' });
     }

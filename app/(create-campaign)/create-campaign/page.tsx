@@ -656,7 +656,7 @@ export default function CreateCampaignPage() {
                   }
                 />
                 <p className="font-normal text-base text-[#5F8555]">
-                  No, I don't want my campaign to be chained
+                  No, I don&apos;t want my campaign to be chained
                 </p>
               </section>
               <p className="font-medium text-xs text-[#5F8555] my-2">

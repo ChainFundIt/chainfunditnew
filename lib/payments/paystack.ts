@@ -200,3 +200,66 @@ export async function getPaystackBanks() {
     throw error;
   }
 }
+
+/**
+ * Verify a transfer (payout) status
+ */
+export async function verifyPaystackTransfer(transferCode: string) {
+  try {
+    const response = await axios.get(
+      `${PAYSTACK_BASE_URL}/transfer/${transferCode}`,
+      {
+        headers: {
+          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error('Error verifying Paystack transfer:', error.response?.data || error.message);
+    throw error;
+  }
+}
+
+/**
+ * List all transfers (payouts)
+ */
+export async function listPaystackTransfers(perPage: number = 50, page: number = 1) {
+  try {
+    const response = await axios.get(
+      `${PAYSTACK_BASE_URL}/transfer?perPage=${perPage}&page=${page}`,
+      {
+        headers: {
+          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error('Error listing Paystack transfers:', error.response?.data || error.message);
+    throw error;
+  }
+}
+
+/**
+ * Check if a recipient exists and is valid
+ */
+export async function getPaystackRecipient(recipientCode: string) {
+  try {
+    const response = await axios.get(
+      `${PAYSTACK_BASE_URL}/transferrecipient/${recipientCode}`,
+      {
+        headers: {
+          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error('Error getting Paystack recipient:', error.response?.data || error.message);
+    throw error;
+  }
+}

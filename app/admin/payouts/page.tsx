@@ -1,15 +1,34 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  Search, 
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Search,
   DollarSign,
   CheckCircle,
   XCircle,
@@ -18,12 +37,12 @@ import {
   CheckCircle2,
   Download,
   RefreshCw,
-  Heart
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { formatCurrency } from '@/lib/utils/currency';
-import { useGeolocationCurrency } from '@/hooks/use-geolocation-currency';
-import Link from 'next/link';
+  Heart,
+} from "lucide-react";
+import { toast } from "sonner";
+import { formatCurrency } from "@/lib/utils/currency";
+import { useGeolocationCurrency } from "@/hooks/use-geolocation-currency";
+import Link from "next/link";
 
 interface Payout {
   id: string;
@@ -35,7 +54,13 @@ interface Payout {
   campaignTitle: string;
   amount: number;
   currency: string;
-  status: 'pending' | 'approved' | 'rejected' | 'paid' | 'failed';
+  status:
+    | "pending"
+    | "approved"
+    | "rejected"
+    | "paid"
+    | "failed"
+    | "processing";
   requestDate: string;
   approvedDate?: string;
   paidDate?: string;
@@ -60,7 +85,13 @@ interface CampaignCreatorPayout {
   fees: string;
   netAmount: string;
   currency: string;
-  status: 'pending' | 'approved' | 'rejected' | 'processing' | 'completed' | 'failed';
+  status:
+    | "pending"
+    | "approved"
+    | "rejected"
+    | "processing"
+    | "completed"
+    | "failed";
   payoutProvider: string;
   reference: string;
   bankName: string | null;
@@ -120,32 +151,57 @@ interface PayoutStats {
 
 export default function PayoutsPage() {
   const [payouts, setPayouts] = useState<Payout[]>([]);
-  const [campaignCreatorPayouts, setCampaignCreatorPayouts] = useState<CampaignCreatorPayout[]>([]);
+  const [campaignCreatorPayouts, setCampaignCreatorPayouts] = useState<
+    CampaignCreatorPayout[]
+  >([]);
   const [charityPayouts, setCharityPayouts] = useState<CharityPayout[]>([]);
   const [stats, setStats] = useState<PayoutStats | null>(null);
+  const [campaignCreatorStats, setCampaignCreatorStats] = useState<{
+    totalPayouts: number;
+    pendingPayouts: number;
+    approvedPayouts: number;
+    completedPayouts: number;
+    rejectedPayouts: number;
+    totalAmount: number;
+    pendingAmount: number;
+    approvedAmount: number;
+    paidAmount: number;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [campaignCreatorLoading, setCampaignCreatorLoading] = useState(true);
   const [charityLoading, setCharityLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [campaignCreatorSearchTerm, setCampaignCreatorSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [campaignCreatorStatusFilter, setCampaignCreatorStatusFilter] = useState('all');
-  const [charityStatusFilter, setCharityStatusFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [campaignCreatorSearchTerm, setCampaignCreatorSearchTerm] =
+    useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [campaignCreatorStatusFilter, setCampaignCreatorStatusFilter] =
+    useState("all");
+  const [charityStatusFilter, setCharityStatusFilter] = useState("all");
   const [selectedPayouts, setSelectedPayouts] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [campaignCreatorCurrentPage, setCampaignCreatorCurrentPage] = useState(1);
+  const [campaignCreatorCurrentPage, setCampaignCreatorCurrentPage] =
+    useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [campaignCreatorTotalPages, setCampaignCreatorTotalPages] = useState(1);
   const [processing, setProcessing] = useState<string | null>(null);
   const { locationInfo } = useGeolocationCurrency();
-  const currency = locationInfo?.currency?.code || 'USD';
+  const currency = locationInfo?.currency?.code || "USD";
 
   useEffect(() => {
     fetchPayouts();
     fetchCampaignCreatorPayouts();
     fetchCharityPayouts();
     fetchStats();
-  }, [currentPage, campaignCreatorCurrentPage, searchTerm, campaignCreatorSearchTerm, statusFilter, campaignCreatorStatusFilter, charityStatusFilter]);
+    fetchCampaignCreatorStats();
+  }, [
+    currentPage,
+    campaignCreatorCurrentPage,
+    searchTerm,
+    campaignCreatorSearchTerm,
+    statusFilter,
+    campaignCreatorStatusFilter,
+    charityStatusFilter,
+  ]);
 
   const fetchPayouts = async () => {
     try {
@@ -156,14 +212,14 @@ export default function PayoutsPage() {
       });
 
       const response = await fetch(`/api/admin/payouts?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch payouts');
+      if (!response.ok) throw new Error("Failed to fetch payouts");
 
       const data = await response.json();
       setPayouts(data.payouts);
       setTotalPages(data.totalPages);
     } catch (error) {
-      console.error('Error fetching payouts:', error);
-      toast.error('Failed to fetch payouts');
+      console.error("Error fetching payouts:", error);
+      toast.error("Failed to fetch payouts");
     } finally {
       setLoading(false);
     }
@@ -171,13 +227,26 @@ export default function PayoutsPage() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('/api/admin/payouts/stats');
-      if (!response.ok) throw new Error('Failed to fetch stats');
+      const response = await fetch("/api/admin/payouts/stats");
+      if (!response.ok) throw new Error("Failed to fetch stats");
 
       const data = await response.json();
       setStats(data);
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      console.error("Error fetching stats:", error);
+    }
+  };
+
+  const fetchCampaignCreatorStats = async () => {
+    try {
+      const response = await fetch("/api/admin/payouts/campaigns/stats");
+      if (!response.ok)
+        throw new Error("Failed to fetch campaign creator stats");
+
+      const data = await response.json();
+      setCampaignCreatorStats(data);
+    } catch (error) {
+      console.error("Error fetching campaign creator stats:", error);
     }
   };
 
@@ -207,20 +276,21 @@ export default function PayoutsPage() {
     try {
       const params = new URLSearchParams({
         page: campaignCreatorCurrentPage.toString(),
-        limit: '20',
+        limit: "20",
         search: campaignCreatorSearchTerm,
         status: campaignCreatorStatusFilter,
       });
 
       const response = await fetch(`/api/admin/payouts/campaigns?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch campaign creator payouts');
+      if (!response.ok)
+        throw new Error("Failed to fetch campaign creator payouts");
 
       const data = await response.json();
       setCampaignCreatorPayouts(data.payouts || []);
       setCampaignCreatorTotalPages(data.totalPages || 1);
     } catch (error) {
-      console.error('Error fetching campaign creator payouts:', error);
-      toast.error('Failed to fetch campaign creator payouts');
+      console.error("Error fetching campaign creator payouts:", error);
+      toast.error("Failed to fetch campaign creator payouts");
     } finally {
       setCampaignCreatorLoading(false);
     }
@@ -262,21 +332,21 @@ export default function PayoutsPage() {
 
   const handleBulkAction = async (action: string) => {
     if (selectedPayouts.length === 0) {
-      toast.error('Please select payouts to perform bulk action');
+      toast.error("Please select payouts to perform bulk action");
       return;
     }
 
     try {
-      const response = await fetch('/api/admin/payouts/bulk', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/admin/payouts/bulk", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           payoutIds: selectedPayouts,
           action,
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to perform bulk action');
+      if (!response.ok) throw new Error("Failed to perform bulk action");
 
       const data = await response.json();
       toast.success(data.message);
@@ -284,51 +354,61 @@ export default function PayoutsPage() {
       fetchPayouts();
       fetchStats();
     } catch (error) {
-      console.error('Error performing bulk action:', error);
-      toast.error('Failed to perform bulk action');
+      console.error("Error performing bulk action:", error);
+      toast.error("Failed to perform bulk action");
     }
   };
 
-  const handleCampaignCreatorPayoutAction = async (payoutId: string, action: string, rejectionReason?: string, notes?: string) => {
+  const handleCampaignCreatorPayoutAction = async (
+    payoutId: string,
+    action: string,
+    rejectionReason?: string,
+    notes?: string
+  ) => {
     setProcessing(payoutId);
     try {
       const response = await fetch(`/api/admin/payouts/campaigns/${payoutId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, rejectionReason, notes }),
       });
 
-      if (!response.ok) throw new Error('Failed to perform action');
+      if (!response.ok) throw new Error("Failed to perform action");
 
       const data = await response.json();
       toast.success(data.message);
       fetchCampaignCreatorPayouts();
+      fetchCampaignCreatorStats(); // Refresh campaign creator stats after action
     } catch (error) {
-      console.error('Error performing campaign creator payout action:', error);
-      toast.error('Failed to perform action');
+      console.error("Error performing campaign creator payout action:", error);
+      toast.error("Failed to perform action");
     } finally {
       setProcessing(null);
     }
   };
 
-  const handlePayoutAction = async (payoutId: string, action: string, notes?: string) => {
+  const handlePayoutAction = async (
+    payoutId: string,
+    action: string,
+    notes?: string
+  ) => {
     setProcessing(payoutId);
     try {
       const response = await fetch(`/api/admin/payouts/${payoutId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, notes }),
       });
 
-      if (!response.ok) throw new Error('Failed to perform action');
+      if (!response.ok) throw new Error("Failed to perform action");
 
       const data = await response.json();
       toast.success(data.message);
       fetchPayouts();
       fetchStats();
     } catch (error) {
-      console.error('Error performing action:', error);
-      toast.error('Failed to perform action');
+      console.error("Error performing action:", error);
+      toast.error("Failed to perform action");
     } finally {
       setProcessing(null);
     }
@@ -336,13 +416,13 @@ export default function PayoutsPage() {
 
   const getStatusBadge = (status: string) => {
     const variants = {
-      pending: 'secondary',
-      approved: 'default',
-      paid: 'default',
-      processing: 'default',
-      completed: 'default',
-      rejected: 'destructive',
-      failed: 'destructive',
+      pending: "secondary",
+      approved: "default",
+      paid: "default",
+      processing: "outline",
+      completed: "default",
+      rejected: "destructive",
+      failed: "destructive",
     } as const;
 
     const icons = {
@@ -356,10 +436,18 @@ export default function PayoutsPage() {
     } as const;
 
     const Icon = icons[status as keyof typeof icons] || Clock;
+    const isProcessing = status === "processing";
 
     return (
-      <Badge variant={variants[status as keyof typeof variants] || 'default'}>
-        <Icon className="h-3 w-3 mr-1" />
+      <Badge
+        variant={variants[status as keyof typeof variants] || "default"}
+        className={
+          isProcessing ? "bg-blue-50 text-blue-700 border-blue-200" : ""
+        }
+      >
+        <Icon
+          className={`h-3 w-3 mr-1 ${isProcessing ? "animate-spin" : ""}`}
+        />
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </Badge>
     );
@@ -423,7 +511,10 @@ export default function PayoutsPage() {
     processing: charityPayouts.filter((p) => p.status === "processing").length,
     completed: charityPayouts.filter((p) => p.status === "completed").length,
     failed: charityPayouts.filter((p) => p.status === "failed").length,
-    totalAmount: charityPayouts.reduce((sum, p) => sum + parseFloat(p.amount), 0),
+    totalAmount: charityPayouts.reduce(
+      (sum, p) => sum + parseFloat(p.amount),
+      0
+    ),
   };
 
   if (loading && charityLoading) {
@@ -444,7 +535,9 @@ export default function PayoutsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Payout Management</h1>
-            <p className="text-gray-600">Review and approve all platform payouts</p>
+            <p className="text-gray-600">
+              Review and approve all platform payouts
+            </p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline">
@@ -456,8 +549,12 @@ export default function PayoutsPage() {
 
         <Tabs defaultValue="campaign-creator-payouts" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="campaign-creator-payouts">Campaign Creator Payouts</TabsTrigger>
-            <TabsTrigger value="ambassador-payouts">Ambassador Payouts</TabsTrigger>
+            <TabsTrigger value="campaign-creator-payouts">
+              Campaign Creator Payouts
+            </TabsTrigger>
+            <TabsTrigger value="ambassador-payouts">
+              Ambassador Payouts
+            </TabsTrigger>
             <TabsTrigger value="charity-payouts">Charity Payouts</TabsTrigger>
           </TabsList>
 
@@ -466,38 +563,59 @@ export default function PayoutsPage() {
             {/* Campaign Creator Payouts Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-semibold">Campaign Creator Payouts</h2>
-                <p className="text-gray-600">Review and approve payout requests from campaign creators</p>
+                <h2 className="text-xl font-semibold">
+                  Campaign Creator Payouts
+                </h2>
+                <p className="text-gray-600">
+                  Review and approve payout requests from campaign creators
+                </p>
               </div>
-              <Button onClick={fetchCampaignCreatorPayouts} variant="outline">
+              <Button
+                onClick={() => {
+                  fetchCampaignCreatorPayouts();
+                  fetchCampaignCreatorStats();
+                }}
+                variant="outline"
+              >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
             </div>
 
             {/* Campaign Stats Cards */}
-            {stats && (
+            {campaignCreatorStats && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Payouts</CardTitle>
+                    <CardTitle className="text-sm font-medium">
+                      Total Payouts
+                    </CardTitle>
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{stats.totalPayouts}</div>
+                    <div className="text-2xl font-bold">
+                      {campaignCreatorStats.totalPayouts}
+                    </div>
                     <p className="text-xs text-muted-foreground">
-                      {stats.pendingPayouts} pending
+                      {campaignCreatorStats.pendingPayouts} pending
                     </p>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Pending Amount</CardTitle>
+                    <CardTitle className="text-sm font-medium">
+                      Pending Amount
+                    </CardTitle>
                     <Clock className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{formatCurrency(stats.pendingAmount, currency)}</div>
+                    <div className="text-2xl font-bold">
+                      {formatCurrency(
+                        campaignCreatorStats.pendingAmount,
+                        currency
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       Awaiting approval
                     </p>
@@ -506,11 +624,18 @@ export default function PayoutsPage() {
 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Paid</CardTitle>
+                    <CardTitle className="text-sm font-medium">
+                      Total Paid
+                    </CardTitle>
                     <CheckCircle className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{formatCurrency(stats.paidAmount, currency)}</div>
+                    <div className="text-2xl font-bold">
+                      {formatCurrency(
+                        campaignCreatorStats.paidAmount,
+                        currency
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       Successfully processed
                     </p>
@@ -532,12 +657,17 @@ export default function PayoutsPage() {
                       <Input
                         placeholder="Search by creator name, email, or campaign..."
                         value={campaignCreatorSearchTerm}
-                        onChange={(e) => setCampaignCreatorSearchTerm(e.target.value)}
+                        onChange={(e) =>
+                          setCampaignCreatorSearchTerm(e.target.value)
+                        }
                         className="pl-10"
                       />
                     </div>
                   </div>
-                  <Select value={campaignCreatorStatusFilter} onValueChange={setCampaignCreatorStatusFilter}>
+                  <Select
+                    value={campaignCreatorStatusFilter}
+                    onValueChange={setCampaignCreatorStatusFilter}
+                  >
                     <SelectTrigger className="w-full sm:w-48">
                       <SelectValue placeholder="Status" />
                     </SelectTrigger>
@@ -592,38 +722,61 @@ export default function PayoutsPage() {
                           <TableRow key={payout.id}>
                             <TableCell>
                               <div>
-                                <div className="font-medium">{payout.userName}</div>
-                                <div className="text-sm text-gray-500">{payout.userEmail}</div>
+                                <div className="font-medium">
+                                  {payout.userName}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  {payout.userEmail}
+                                </div>
                               </div>
                             </TableCell>
                             <TableCell>
-                              <div className="font-medium">{payout.campaignTitle}</div>
-                              <div className="text-sm text-gray-500">{payout.reference}</div>
+                              <div className="font-medium">
+                                {payout.campaignTitle}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {payout.reference}
+                              </div>
                             </TableCell>
                             <TableCell>
                               <div className="font-medium">
-                                {formatCurrency(parseFloat(payout.requestedAmount), payout.currency)}
+                                {formatCurrency(
+                                  parseFloat(payout.requestedAmount),
+                                  payout.currency
+                                )}
                               </div>
                             </TableCell>
                             <TableCell>
                               <div className="text-sm text-red-600">
-                                -{formatCurrency(parseFloat(payout.fees), payout.currency)}
+                                {formatCurrency(
+                                  parseFloat(payout.fees),
+                                  payout.currency
+                                )}
                               </div>
                             </TableCell>
                             <TableCell>
                               <div className="font-medium text-green-600">
-                                {formatCurrency(parseFloat(payout.netAmount), payout.currency)}
+                                {formatCurrency(
+                                  parseFloat(payout.netAmount),
+                                  payout.currency
+                                )}
                               </div>
                             </TableCell>
                             <TableCell>
-                              <div className="capitalize">{payout.payoutProvider}</div>
+                              <div className="capitalize">
+                                {payout.payoutProvider}
+                              </div>
                             </TableCell>
                             <TableCell>
                               <div className="text-sm">
-                                <div>{payout.accountName || 'N/A'}</div>
-                                <div className="text-gray-500">{payout.bankName || 'N/A'}</div>
+                                <div>{payout.accountName || "N/A"}</div>
+                                <div className="text-gray-500">
+                                  {payout.bankName || "N/A"}
+                                </div>
                                 <div className="text-gray-500 font-mono">
-                                  {payout.accountNumber ? `****${payout.accountNumber.slice(-4)}` : 'N/A'}
+                                  {payout.accountNumber
+                                    ? `****${payout.accountNumber.slice(-4)}`
+                                    : "N/A"}
                                 </div>
                               </div>
                             </TableCell>
@@ -632,7 +785,9 @@ export default function PayoutsPage() {
                             </TableCell>
                             <TableCell>
                               <div className="text-sm text-gray-500">
-                                {new Date(payout.createdAt).toLocaleDateString()}
+                                {new Date(
+                                  payout.createdAt
+                                ).toLocaleDateString()}
                               </div>
                             </TableCell>
                             <TableCell>
@@ -640,16 +795,26 @@ export default function PayoutsPage() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => window.open(`/campaign/${payout.campaignSlug}`, '_blank')}
+                                  onClick={() =>
+                                    window.open(
+                                      `/campaign/${payout.campaignSlug}`,
+                                      "_blank"
+                                    )
+                                  }
                                 >
                                   <Eye className="h-4 w-4" />
                                 </Button>
-                                {payout.status === 'pending' && (
+                                {payout.status === "pending" && (
                                   <>
                                     <Button
                                       size="sm"
                                       variant="default"
-                                      onClick={() => handleCampaignCreatorPayoutAction(payout.id, 'approve')}
+                                      onClick={() =>
+                                        handleCampaignCreatorPayoutAction(
+                                          payout.id,
+                                          "approve"
+                                        )
+                                      }
                                       disabled={processing === payout.id}
                                     >
                                       <CheckCircle className="h-4 w-4" />
@@ -658,9 +823,15 @@ export default function PayoutsPage() {
                                       size="sm"
                                       variant="destructive"
                                       onClick={() => {
-                                        const reason = prompt('Enter rejection reason:');
+                                        const reason = prompt(
+                                          "Enter rejection reason:"
+                                        );
                                         if (reason) {
-                                          handleCampaignCreatorPayoutAction(payout.id, 'reject', reason);
+                                          handleCampaignCreatorPayoutAction(
+                                            payout.id,
+                                            "reject",
+                                            reason
+                                          );
                                         }
                                       }}
                                       disabled={processing === payout.id}
@@ -669,25 +840,14 @@ export default function PayoutsPage() {
                                     </Button>
                                   </>
                                 )}
-                                {payout.status === 'approved' && (
-                                  <Button
-                                    size="sm"
-                                    variant="default"
-                                    onClick={() => handleCampaignCreatorPayoutAction(payout.id, 'process')}
-                                    disabled={processing === payout.id}
+                                {payout.status === "processing" && (
+                                  <Badge
+                                    variant="outline"
+                                    className="bg-blue-50 text-blue-700"
                                   >
-                                    <RefreshCw className="h-4 w-4" />
-                                  </Button>
-                                )}
-                                {payout.status === 'processing' && (
-                                  <Button
-                                    size="sm"
-                                    variant="default"
-                                    onClick={() => handleCampaignCreatorPayoutAction(payout.id, 'complete')}
-                                    disabled={processing === payout.id}
-                                  >
-                                    <CheckCircle2 className="h-4 w-4" />
-                                  </Button>
+                                    <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                                    Processing...
+                                  </Badge>
                                 )}
                               </div>
                             </TableCell>
@@ -700,13 +860,18 @@ export default function PayoutsPage() {
                     {campaignCreatorTotalPages > 1 && (
                       <div className="flex items-center justify-between mt-4">
                         <div className="text-sm text-gray-500">
-                          Page {campaignCreatorCurrentPage} of {campaignCreatorTotalPages}
+                          Page {campaignCreatorCurrentPage} of{" "}
+                          {campaignCreatorTotalPages}
                         </div>
                         <div className="flex gap-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setCampaignCreatorCurrentPage(Math.max(1, campaignCreatorCurrentPage - 1))}
+                            onClick={() =>
+                              setCampaignCreatorCurrentPage(
+                                Math.max(1, campaignCreatorCurrentPage - 1)
+                              )
+                            }
                             disabled={campaignCreatorCurrentPage === 1}
                           >
                             Previous
@@ -714,8 +879,18 @@ export default function PayoutsPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setCampaignCreatorCurrentPage(Math.min(campaignCreatorTotalPages, campaignCreatorCurrentPage + 1))}
-                            disabled={campaignCreatorCurrentPage === campaignCreatorTotalPages}
+                            onClick={() =>
+                              setCampaignCreatorCurrentPage(
+                                Math.min(
+                                  campaignCreatorTotalPages,
+                                  campaignCreatorCurrentPage + 1
+                                )
+                              )
+                            }
+                            disabled={
+                              campaignCreatorCurrentPage ===
+                              campaignCreatorTotalPages
+                            }
                           >
                             Next
                           </Button>
@@ -734,11 +909,13 @@ export default function PayoutsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold">Ambassador Payouts</h2>
-                <p className="text-gray-600">Review and approve ambassador commission payouts</p>
+                <p className="text-gray-600">
+                  Review and approve ambassador commission payouts
+                </p>
               </div>
               <div className="flex gap-2">
                 <Button
-                  onClick={() => handleBulkAction('approve')}
+                  onClick={() => handleBulkAction("approve")}
                   disabled={selectedPayouts.length === 0}
                   variant="default"
                 >
@@ -746,7 +923,7 @@ export default function PayoutsPage() {
                   Approve Selected
                 </Button>
                 <Button
-                  onClick={() => handleBulkAction('reject')}
+                  onClick={() => handleBulkAction("reject")}
                   disabled={selectedPayouts.length === 0}
                   variant="destructive"
                 >
@@ -761,11 +938,15 @@ export default function PayoutsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Payouts</CardTitle>
+                    <CardTitle className="text-sm font-medium">
+                      Total Payouts
+                    </CardTitle>
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{stats.totalPayouts}</div>
+                    <div className="text-2xl font-bold">
+                      {stats.totalPayouts}
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       {stats.pendingPayouts} pending
                     </p>
@@ -774,11 +955,15 @@ export default function PayoutsPage() {
 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Pending Amount</CardTitle>
+                    <CardTitle className="text-sm font-medium">
+                      Pending Amount
+                    </CardTitle>
                     <Clock className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{formatCurrency(stats.pendingAmount, currency)}</div>
+                    <div className="text-2xl font-bold">
+                      {formatCurrency(stats.pendingAmount, currency)}
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       Awaiting approval
                     </p>
@@ -787,11 +972,15 @@ export default function PayoutsPage() {
 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Paid</CardTitle>
+                    <CardTitle className="text-sm font-medium">
+                      Total Paid
+                    </CardTitle>
                     <CheckCircle className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{formatCurrency(stats.paidAmount, currency)}</div>
+                    <div className="text-2xl font-bold">
+                      {formatCurrency(stats.paidAmount, currency)}
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       Successfully processed
                     </p>
@@ -826,6 +1015,7 @@ export default function PayoutsPage() {
                       <SelectItem value="all">All Status</SelectItem>
                       <SelectItem value="pending">Pending</SelectItem>
                       <SelectItem value="approved">Approved</SelectItem>
+                      <SelectItem value="processing">Processing</SelectItem>
                       <SelectItem value="paid">Paid</SelectItem>
                       <SelectItem value="rejected">Rejected</SelectItem>
                       <SelectItem value="failed">Failed</SelectItem>
@@ -858,10 +1048,13 @@ export default function PayoutsPage() {
                           <TableHead className="w-12">
                             <input
                               type="checkbox"
-                              checked={selectedPayouts.length === payouts.length && payouts.length > 0}
+                              checked={
+                                selectedPayouts.length === payouts.length &&
+                                payouts.length > 0
+                              }
                               onChange={(e) => {
                                 if (e.target.checked) {
-                                  setSelectedPayouts(payouts.map(p => p.id));
+                                  setSelectedPayouts(payouts.map((p) => p.id));
                                 } else {
                                   setSelectedPayouts([]);
                                 }
@@ -886,21 +1079,34 @@ export default function PayoutsPage() {
                                 checked={selectedPayouts.includes(payout.id)}
                                 onChange={(e) => {
                                   if (e.target.checked) {
-                                    setSelectedPayouts([...selectedPayouts, payout.id]);
+                                    setSelectedPayouts([
+                                      ...selectedPayouts,
+                                      payout.id,
+                                    ]);
                                   } else {
-                                    setSelectedPayouts(selectedPayouts.filter(id => id !== payout.id));
+                                    setSelectedPayouts(
+                                      selectedPayouts.filter(
+                                        (id) => id !== payout.id
+                                      )
+                                    );
                                   }
                                 }}
                               />
                             </TableCell>
                             <TableCell>
                               <div>
-                                <div className="font-medium">{payout.chainerName}</div>
-                                <div className="text-sm text-gray-500">{payout.chainerEmail}</div>
+                                <div className="font-medium">
+                                  {payout.chainerName}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  {payout.chainerEmail}
+                                </div>
                               </div>
                             </TableCell>
                             <TableCell>
-                              <div className="font-medium">{payout.campaignTitle}</div>
+                              <div className="font-medium">
+                                {payout.campaignTitle}
+                              </div>
                             </TableCell>
                             <TableCell>
                               <div className="font-medium">
@@ -909,7 +1115,9 @@ export default function PayoutsPage() {
                             </TableCell>
                             <TableCell>
                               <div>
-                                <div className="font-medium">{payout.paymentMethod}</div>
+                                <div className="font-medium">
+                                  {payout.paymentMethod}
+                                </div>
                                 <div className="text-sm text-gray-500">
                                   {payout.bankDetails.bankName}
                                 </div>
@@ -920,7 +1128,9 @@ export default function PayoutsPage() {
                             </TableCell>
                             <TableCell>
                               <div className="text-sm text-gray-500">
-                                {new Date(payout.requestDate).toLocaleDateString()}
+                                {new Date(
+                                  payout.requestDate
+                                ).toLocaleDateString()}
                               </div>
                             </TableCell>
                             <TableCell>
@@ -928,36 +1138,42 @@ export default function PayoutsPage() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => handlePayoutAction(payout.id, 'view')}
+                                  onClick={() =>
+                                    handlePayoutAction(payout.id, "view")
+                                  }
                                 >
                                   <Eye className="h-4 w-4" />
                                 </Button>
-                                {payout.status === 'pending' && (
+                                {payout.status === "pending" && (
                                   <>
                                     <Button
                                       size="sm"
                                       variant="default"
-                                      onClick={() => handlePayoutAction(payout.id, 'approve')}
+                                      onClick={() =>
+                                        handlePayoutAction(payout.id, "approve")
+                                      }
                                     >
                                       <CheckCircle className="h-4 w-4" />
                                     </Button>
                                     <Button
                                       size="sm"
                                       variant="destructive"
-                                      onClick={() => handlePayoutAction(payout.id, 'reject')}
+                                      onClick={() =>
+                                        handlePayoutAction(payout.id, "reject")
+                                      }
                                     >
                                       <XCircle className="h-4 w-4" />
                                     </Button>
                                   </>
                                 )}
-                                {payout.status === 'approved' && (
-                                  <Button
-                                    size="sm"
-                                    variant="default"
-                                    onClick={() => handlePayoutAction(payout.id, 'pay')}
+                                {payout.status === "processing" && (
+                                  <Badge
+                                    variant="outline"
+                                    className="bg-blue-50 text-blue-700"
                                   >
-                                    <DollarSign className="h-4 w-4" />
-                                  </Button>
+                                    <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                                    Processing...
+                                  </Badge>
                                 )}
                               </div>
                             </TableCell>
@@ -976,7 +1192,9 @@ export default function PayoutsPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                            onClick={() =>
+                              setCurrentPage(Math.max(1, currentPage - 1))
+                            }
                             disabled={currentPage === 1}
                           >
                             Previous
@@ -984,7 +1202,11 @@ export default function PayoutsPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                            onClick={() =>
+                              setCurrentPage(
+                                Math.min(totalPages, currentPage + 1)
+                              )
+                            }
                             disabled={currentPage === totalPages}
                           >
                             Next
@@ -1003,7 +1225,9 @@ export default function PayoutsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold">Charity Payouts</h2>
-                <p className="text-gray-600">Manage and process payouts to charities</p>
+                <p className="text-gray-600">
+                  Manage and process payouts to charities
+                </p>
               </div>
               <Button onClick={fetchCharityPayouts} variant="outline">
                 <RefreshCw className="h-4 w-4 mr-2" />
@@ -1015,13 +1239,19 @@ export default function PayoutsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Payouts</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Total Payouts
+                  </CardTitle>
                   <DollarSign className="h-4 w-4 text-gray-500" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{charityStats.total}</div>
                   <p className="text-xs text-gray-500 mt-1">
-                    {formatCharityCurrency(charityStats.totalAmount.toString(), "NGN")} total
+                    {formatCharityCurrency(
+                      charityStats.totalAmount.toString(),
+                      "NGN"
+                    )}{" "}
+                    total
                   </p>
                 </CardContent>
               </Card>
@@ -1035,13 +1265,17 @@ export default function PayoutsPage() {
                   <div className="text-2xl font-bold text-yellow-600">
                     {charityStats.pending}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Awaiting processing</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Awaiting processing
+                  </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Completed</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Completed
+                  </CardTitle>
                   <CheckCircle className="h-4 w-4 text-green-500" />
                 </CardHeader>
                 <CardContent>
@@ -1070,7 +1304,10 @@ export default function PayoutsPage() {
 
             {/* Charity Filters */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <Select value={charityStatusFilter} onValueChange={setCharityStatusFilter}>
+              <Select
+                value={charityStatusFilter}
+                onValueChange={setCharityStatusFilter}
+              >
                 <SelectTrigger className="w-full md:w-48">
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
@@ -1089,7 +1326,9 @@ export default function PayoutsPage() {
               {charityLoading ? (
                 <div className="text-center py-12">
                   <RefreshCw className="h-8 w-8 animate-spin mx-auto text-gray-400" />
-                  <p className="text-gray-500 mt-4">Loading charity payouts...</p>
+                  <p className="text-gray-500 mt-4">
+                    Loading charity payouts...
+                  </p>
                 </div>
               ) : charityPayouts.length === 0 ? (
                 <Card>
@@ -1118,12 +1357,17 @@ export default function PayoutsPage() {
                         <div>
                           <p className="text-sm text-gray-500">Amount</p>
                           <p className="text-lg font-semibold">
-                            {formatCharityCurrency(payout.amount, payout.currency)}
+                            {formatCharityCurrency(
+                              payout.amount,
+                              payout.currency
+                            )}
                           </p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">Bank Details</p>
-                          <p className="text-sm font-medium">{payout.bankName}</p>
+                          <p className="text-sm font-medium">
+                            {payout.bankName}
+                          </p>
                           <p className="text-xs text-gray-600">
                             {payout.accountNumber}
                           </p>
@@ -1139,7 +1383,9 @@ export default function PayoutsPage() {
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">Created</p>
-                          <p className="text-sm">{formatDate(payout.createdAt)}</p>
+                          <p className="text-sm">
+                            {formatDate(payout.createdAt)}
+                          </p>
                           {payout.processedAt && (
                             <>
                               <p className="text-xs text-gray-500 mt-1">
@@ -1156,7 +1402,8 @@ export default function PayoutsPage() {
                       {payout.failureReason && (
                         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
                           <p className="text-sm text-red-800">
-                            <strong>Failure Reason:</strong> {payout.failureReason}
+                            <strong>Failure Reason:</strong>{" "}
+                            {payout.failureReason}
                           </p>
                         </div>
                       )}
@@ -1175,7 +1422,9 @@ export default function PayoutsPage() {
                             Mark as Completed
                           </Button>
                           <Button
-                            onClick={() => handleProcessCharityPayout(payout.id, "failed")}
+                            onClick={() =>
+                              handleProcessCharityPayout(payout.id, "failed")
+                            }
                             disabled={processing === payout.id}
                             variant="destructive"
                           >

@@ -105,8 +105,6 @@ async function setupAdminNotifications() {
   } catch (error) {
     console.error('❌ Error setting up admin notifications:', error);
     process.exit(1);
-  } finally {
-    await db.$disconnect();
   }
 }
 

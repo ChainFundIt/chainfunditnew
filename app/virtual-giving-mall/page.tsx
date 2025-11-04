@@ -85,7 +85,7 @@ export default function VirtualGivingMallPage() {
             Donate to Your Favourite Charity
           </h1>
           <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto">
-            We've made it easy to simply select your favourite charity and
+            We&apos;ve made it easy to simply select your favourite charity and
             support causes close to your heart
           </p>
         </div>

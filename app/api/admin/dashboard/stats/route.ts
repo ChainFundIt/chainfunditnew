@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { users, campaigns, donations, chainers, commissionPayouts } from '@/lib/schema';
-import { eq, gte, lte, desc, count, sum, sql } from 'drizzle-orm';
+import { users, campaigns, donations, chainers, commissionPayouts, campaignPayouts } from '@/lib/schema';
+import { eq, gte, lte, desc, count, sum, sql, inArray } from 'drizzle-orm';
 import { getAdminUser } from '@/lib/admin-auth';
 
 interface DashboardStats {
@@ -10,6 +10,7 @@ interface DashboardStats {
   totalDonations: number;
   totalRevenue: number;
   pendingPayouts: number;
+  pendingReview: number;
   activeChainers: number;
   recentActivity: any[];
   topCampaigns: any[];
@@ -69,11 +70,24 @@ export async function GET(request: NextRequest) {
       .from(donations)
       .where(eq(donations.paymentStatus, 'completed'));
 
-    // Get pending payouts
-    const [pendingPayouts] = await db
+    // Get pending payouts - count both commission payouts and campaign creator payouts
+    const [pendingCommissionPayouts] = await db
       .select({ count: count() })
       .from(commissionPayouts)
       .where(eq(commissionPayouts.status, 'pending'));
+
+    const [pendingCampaignPayouts] = await db
+      .select({ count: count() })
+      .from(campaignPayouts)
+      .where(inArray(campaignPayouts.status, ['pending', 'approved', 'processing']));
+
+    const totalPendingPayouts = pendingCommissionPayouts.count + pendingCampaignPayouts.count;
+
+    // Get pending campaign reviews (campaigns that are not active)
+    const [pendingReview] = await db
+      .select({ count: count() })
+      .from(campaigns)
+      .where(eq(campaigns.isActive, false));
 
     // Get active chainers
     const [activeChainers] = await db
@@ -84,6 +98,7 @@ export async function GET(request: NextRequest) {
     const topCampaigns = await db
       .select({
         id: campaigns.id,
+        slug: campaigns.slug,
         title: campaigns.title,
         goalAmount: campaigns.goalAmount,
         currentAmount: campaigns.currentAmount,
@@ -141,7 +156,8 @@ export async function GET(request: NextRequest) {
       totalCampaigns: totalCampaigns.count,
       totalDonations: totalDonations.count,
       totalRevenue: Number(revenueResult[0]?.total) || 0,
-      pendingPayouts: pendingPayouts.count,
+      pendingPayouts: totalPendingPayouts,
+      pendingReview: pendingReview.count,
       activeChainers: activeChainers.count,
       recentActivity: recentActivity.map(activity => ({
         id: activity.id,
@@ -153,6 +169,7 @@ export async function GET(request: NextRequest) {
       })),
       topCampaigns: topCampaigns.map(campaign => ({
         id: campaign.id,
+        slug: campaign.slug,
         title: campaign.title,
         raised: campaign.currentAmount,
         goal: campaign.goalAmount,

@@ -240,7 +240,7 @@ const Chains = () => {
                 
                 {donation.message && (
                   <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                    <p className="text-gray-700 text-sm italic">"{donation.message}"</p>
+                    <p className="text-gray-700 text-sm italic">{donation.message}</p>
                   </div>
                 )}
               </div>

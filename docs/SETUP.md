@@ -52,6 +52,9 @@ SENTRY_DSN=your-sentry-dsn
 
 # Link Shortening
 DUB_CO_TOKEN=your-dub-co-token
+
+# Cron Jobs (for automated payout processing)
+CRON_SECRET=your-random-secret-key-here
 ```
 
 ## Installation

@@ -49,6 +49,7 @@ import { R2Image } from '@/components/ui/r2-image';
 
 interface Campaign {
   id: string;
+  slug?: string;
   title: string;
   description: string;
   creatorId: string;
@@ -127,16 +128,52 @@ export default function AdminCampaignsPage() {
   const fetchStats = async () => {
     try {
       const response = await fetch('/api/admin/campaigns/stats');
+      if (!response.ok) {
+        throw new Error('Failed to fetch stats');
+      }
       const data = await response.json();
-      setStats(data);
+      // Only set stats if data is valid and doesn't have an error property
+      if (data && !data.error) {
+        setStats(data);
+      } else {
+        // Set default stats structure if API returns error
+        setStats({
+          totalCampaigns: 0,
+          activeCampaigns: 0,
+          completedCampaigns: 0,
+          pendingReview: 0,
+          reportedCampaigns: 0,
+          totalRaised: 0,
+          totalDonations: 0,
+          averageGoal: 0,
+          successRate: 0,
+        });
+      }
     } catch (error) {
       console.error('Error fetching campaign stats:', error);
+      // Set default stats structure on error
+      setStats({
+        totalCampaigns: 0,
+        activeCampaigns: 0,
+        completedCampaigns: 0,
+        pendingReview: 0,
+        reportedCampaigns: 0,
+        totalRaised: 0,
+        totalDonations: 0,
+        averageGoal: 0,
+        successRate: 0,
+      });
     }
   };
 
-  const handleCampaignAction = async (campaignId: string, action: string) => {
+  const handleCampaignAction = async (campaign: Campaign, action: string) => {
+    if (action === 'view') {
+      handleViewCampaign(campaign);
+      return;
+    }
+
     try {
-      const response = await fetch(`/api/admin/campaigns/${campaignId}`, {
+      const response = await fetch(`/api/admin/campaigns/${campaign.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -201,15 +238,27 @@ export default function AdminCampaignsPage() {
   };
 
   const handleCreateCampaign = () => {
-    router.push('/admin/dashboard/campaigns/create');
+    // Admins don't create campaigns through the admin dashboard
+    // Redirect to campaigns page or show message
+    toast.info('Campaigns should be created by users through the main platform');
   };
 
-  const handleViewCampaign = (campaignId: string) => {
-    router.push(`/admin/dashboard/campaigns/${campaignId}`);
+  const handleViewCampaign = (campaign: Campaign) => {
+    if (campaign.slug) {
+      window.open(`/campaign/${campaign.slug}`, '_blank');
+    } else {
+      toast.error('Campaign slug not available');
+    }
   };
 
-  const handleEditCampaign = (campaignId: string) => {
-    router.push(`/admin/dashboard/campaigns/${campaignId}/edit`);
+  const handleEditCampaign = (campaign: Campaign) => {
+    // Admins don't edit campaigns directly
+    // Redirect to campaign view page
+    if (campaign.slug) {
+      window.open(`/campaign/${campaign.slug}`, '_blank');
+    } else {
+      toast.error('Campaign slug not available');
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -268,7 +317,7 @@ export default function AdminCampaignsPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#104901] mx-auto"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#104901] mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading campaigns...</p>
         </div>
       </div>
@@ -307,9 +356,9 @@ export default function AdminCampaignsPage() {
                 <BarChart3 className="h-4 w-4 text-gray-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.totalCampaigns.toLocaleString()}</div>
+                <div className="text-2xl font-bold">{(stats.totalCampaigns ?? 0).toLocaleString()}</div>
                 <p className="text-xs text-gray-500 mt-1">
-                  {stats.activeCampaigns} active
+                  {stats.activeCampaigns ?? 0} active
                 </p>
               </CardContent>
             </Card>
@@ -321,10 +370,10 @@ export default function AdminCampaignsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">
-                  {formatCurrency(stats.totalRaised)}
+                  {formatCurrency(stats.totalRaised ?? 0)}
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  From {stats.totalDonations} donations
+                  From {stats.totalDonations ?? 0} donations
                 </p>
               </CardContent>
             </Card>
@@ -335,7 +384,7 @@ export default function AdminCampaignsPage() {
                 <TrendingUp className="h-4 w-4 text-blue-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-blue-600">{stats.successRate}%</div>
+                <div className="text-2xl font-bold text-blue-600">{stats.successRate ?? 0}%</div>
                 <p className="text-xs text-gray-500 mt-1">
                   Campaigns reaching goal
                 </p>
@@ -348,9 +397,9 @@ export default function AdminCampaignsPage() {
                 <AlertTriangle className="h-4 w-4 text-yellow-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-yellow-600">{stats.pendingReview}</div>
+                <div className="text-2xl font-bold text-yellow-600">{stats.pendingReview ?? 0}</div>
                 <p className="text-xs text-gray-500 mt-1">
-                  {stats.reportedCampaigns} reported
+                  {stats.reportedCampaigns ?? 0} reported
                 </p>
               </CardContent>
             </Card>
@@ -586,7 +635,8 @@ export default function AdminCampaignsPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleCampaignAction(campaign.id, 'view')}
+                            onClick={() => handleCampaignAction(campaign, 'view')}
+                            title="View campaign"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>

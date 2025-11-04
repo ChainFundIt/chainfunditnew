@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { campaignPayouts, users } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 import { getAdminUser } from '@/lib/admin-auth';
+import { sendPayoutApprovalNotification, processCampaignCreatorPayout } from '@/lib/payments/payout-processor';
 
 /**
  * GET /api/admin/payouts/campaigns/[id]
@@ -88,6 +89,30 @@ export async function PATCH(
           })
           .where(eq(campaignPayouts.id, id))
           .returning();
+        
+        // Send approval notification email
+        try {
+          await sendPayoutApprovalNotification(id, 'campaign');
+        } catch (emailError) {
+          console.error('Failed to send approval notification:', emailError);
+          // Don't fail the approval for email errors
+        }
+        
+        // Automatically process the payout
+        try {
+          await processCampaignCreatorPayout(id);
+        } catch (processError) {
+          console.error('Failed to process payout:', processError);
+          // Update status to failed if processing fails
+          await db
+            .update(campaignPayouts)
+            .set({ 
+              status: 'failed',
+              failureReason: processError instanceof Error ? processError.message : 'Processing failed',
+              updatedAt: new Date(),
+            })
+            .where(eq(campaignPayouts.id, id));
+        }
         break;
 
       case 'reject':

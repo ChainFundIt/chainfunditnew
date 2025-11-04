@@ -3,7 +3,8 @@ import { headers } from 'next/headers';
 import { verifyStripeWebhook } from '@/lib/payments/stripe';
 import { db } from '@/lib/db';
 import { charityDonations, charities } from '@/lib/schema/charities';
-import { eq, sql } from 'drizzle-orm';
+import { campaignPayouts, commissionPayouts } from '@/lib/schema';
+import { eq, sql, or } from 'drizzle-orm';
 import Stripe from 'stripe';
 import { notifyAdminsOfCharityDonation } from '@/lib/notifications/charity-donation-alerts';
 
@@ -61,6 +62,13 @@ export async function POST(request: NextRequest) {
       case 'charge.refunded': {
         const charge = event.data.object as Stripe.Charge;
         await handleRefund(charge);
+        break;
+      }
+
+      case 'transfer.created':
+      case 'transfer.reversed': {
+        const transfer = event.data.object as Stripe.Transfer;
+        await handleTransfer(event.type, transfer);
         break;
       }
 
@@ -249,6 +257,72 @@ async function handleRefund(charge: Stripe.Charge) {
     // TODO: Send refund confirmation to donor
   } catch (error) {
     console.error('Error handling refund:', error);
+    throw error;
+  }
+}
+
+/**
+ * Handle transfer events (payouts)
+ */
+async function handleTransfer(eventType: string, transfer: Stripe.Transfer) {
+  try {
+    const payoutId = transfer.metadata?.payoutId;
+    const payoutType = transfer.metadata?.type; // 'campaign' | 'commission'
+
+    if (!payoutId) {
+      console.log('No payout ID in transfer metadata, skipping payout update');
+      return;
+    }
+
+    let status: string;
+    let processedAt: Date | null = null;
+
+    switch (eventType) {
+      case 'transfer.created':
+        // Transfer created - check if it's reversed, otherwise mark as completed
+        if (transfer.reversed) {
+          status = 'failed';
+        } else {
+          status = 'completed';
+          processedAt = new Date();
+        }
+        break;
+      case 'transfer.reversed':
+        status = 'failed'; // Treat reversed as failed
+        break;
+      default:
+        status = 'processing';
+    }
+
+    if (payoutType === 'campaign') {
+      await db
+        .update(campaignPayouts)
+        .set({
+          status,
+          transactionId: transfer.id,
+          processedAt,
+          failureReason: status === 'failed' ? (transfer.reversed ? 'Transfer reversed' : 'Transfer failed') : null,
+          updatedAt: new Date(),
+        })
+        .where(eq(campaignPayouts.id, payoutId));
+
+      console.log(`Campaign payout ${payoutId} updated to ${status} via webhook`);
+    } else if (payoutType === 'commission') {
+      await db
+        .update(commissionPayouts)
+        .set({
+          status,
+          transactionId: transfer.id,
+          processedAt,
+        })
+        .where(eq(commissionPayouts.id, payoutId));
+
+      console.log(`Commission payout ${payoutId} updated to ${status} via webhook`);
+    } else {
+      console.log(`Unknown payout type: ${payoutType}, skipping update`);
+    }
+  } catch (error) {
+    console.error('Error handling transfer webhook:', error);
     throw error;
   }
 }

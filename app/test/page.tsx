@@ -390,8 +390,8 @@ export default function TestPage() {
       <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
         <h3 className="font-semibold text-blue-800 mb-2">How to Test:</h3>
         <ol className="list-decimal list-inside text-sm text-blue-700 space-y-1">
-          <li>Click "Test Campaign Logic" to see how campaigns are automatically categorized</li>
-          <li>Click "Test Donation Statuses" to see different donation statuses</li>
+          <li>Click &quot;Test Campaign Logic&quot; to see how campaigns are automatically categorized</li>
+          <li>Click &quot;Test Donation Statuses&quot; to see different donation statuses</li>
           <li>Check the browser console for detailed test results</li>
           <li>Navigate to the campaigns page to see live/past filtering in action</li>
           <li>View a campaign page to see donation statuses displayed</li>

@@ -200,7 +200,7 @@ export default function NotificationPanel() {
             </div>
 
             {/* Notifications List */}
-            <ScrollArea className="max-h-96">
+            <ScrollArea className="h-96">
               {loading ? (
                 <div className="p-4 text-center text-gray-500">Loading...</div>
               ) : notifications.length === 0 ? (

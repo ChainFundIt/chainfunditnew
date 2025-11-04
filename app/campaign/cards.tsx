@@ -2,16 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import Image from "next/image";
-import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
-import { R2Image } from "@/components/ui/r2-image";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import CardDetailsDrawer from "@/components/homepage/CardDetailsDrawer";
 import CampaignCreatorAvatar from "@/components/ui/campaign-creator-avatar";
 
@@ -162,7 +153,7 @@ const Cards = ({ campaignId }: { campaignId: string }) => {
         </div>
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
-            <p className="text-sm text-[#757575] mb-2">Couldn't load related campaigns</p>
+            <p className="text-sm text-[#757575] mb-2">Couldn&apos;t load related campaigns</p>
             <button 
               onClick={() => window.location.reload()} 
               className="text-[#104901] text-sm underline hover:no-underline"

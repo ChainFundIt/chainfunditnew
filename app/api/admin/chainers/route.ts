@@ -54,6 +54,7 @@ export async function GET(request: NextRequest) {
         userName: users.fullName,
         userEmail: users.email,
         campaignTitle: campaigns.title,
+        currency: campaigns.currency,
       })
       .from(chainers)
       .leftJoin(users, eq(chainers.userId, users.id))
@@ -110,6 +111,9 @@ export async function GET(request: NextRequest) {
 
         return {
           ...chainer,
+          totalRaised: Number(chainer.totalRaised || 0),
+          commissionEarned: Number(chainer.commissionEarned || 0),
+          commissionRate: Number(chainer.commissionRate || 0),
           fraudScore: Math.min(100, fraudScore),
           suspiciousActivity,
           lastActivity: chainer.updatedAt,

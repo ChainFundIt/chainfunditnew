@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { commissionPayouts } from '@/lib/schema';
 import { eq, inArray } from 'drizzle-orm';
+import { sendPayoutApprovalNotification, processAmbassadorPayout } from '@/lib/payments/payout-processor';
 
 /**
  * PATCH /api/admin/payouts/bulk
@@ -27,20 +28,41 @@ export async function PATCH(request: NextRequest) {
     }
 
     let updatedPayouts;
-    const updateData = {
-      updatedAt: new Date(),
-    };
 
     switch (action) {
       case 'approve':
         updatedPayouts = await db
           .update(commissionPayouts)
           .set({ 
-            ...updateData,
             status: 'approved',
           })
           .where(inArray(commissionPayouts.id, payoutIds))
           .returning();
+        
+        // Send approval notifications and process payouts for each
+        for (const payout of updatedPayouts) {
+          try {
+            // Send approval notification email
+            await sendPayoutApprovalNotification(payout.id, 'ambassador');
+          } catch (emailError) {
+            console.error(`Failed to send approval notification for payout ${payout.id}:`, emailError);
+          }
+          
+          // Process the payout
+          try {
+            await processAmbassadorPayout(payout.id);
+          } catch (processError) {
+            console.error(`Failed to process payout ${payout.id}:`, processError);
+            // Update status to failed if processing fails
+            await db
+              .update(commissionPayouts)
+              .set({ 
+                status: 'failed',
+                notes: processError instanceof Error ? processError.message : 'Processing failed',
+              })
+              .where(eq(commissionPayouts.id, payout.id));
+          }
+        }
         break;
 
       case 'reject':
@@ -53,7 +75,6 @@ export async function PATCH(request: NextRequest) {
         updatedPayouts = await db
           .update(commissionPayouts)
           .set({ 
-            ...updateData,
             status: 'rejected',
             notes: actionData.rejectionReason,
           })
@@ -65,7 +86,6 @@ export async function PATCH(request: NextRequest) {
         updatedPayouts = await db
           .update(commissionPayouts)
           .set({ 
-            ...updateData,
             status: 'paid',
             processedAt: new Date(),
           })
@@ -77,7 +97,6 @@ export async function PATCH(request: NextRequest) {
         updatedPayouts = await db
           .update(commissionPayouts)
           .set({ 
-            ...updateData,
             status: 'failed',
           })
           .where(inArray(commissionPayouts.id, payoutIds))
@@ -94,7 +113,6 @@ export async function PATCH(request: NextRequest) {
         updatedPayouts = await db
           .update(commissionPayouts)
           .set({ 
-            ...updateData,
             notes: actionData.notes,
           })
           .where(inArray(commissionPayouts.id, payoutIds))

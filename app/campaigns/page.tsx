@@ -257,13 +257,7 @@ export default function AllCampaignsPage() {
       status: selectedStatus && selectedStatus.trim() ? selectedStatus : undefined, 
       reason: selectedReason && selectedReason.trim() ? selectedReason : undefined 
     });
-  }, [selectedStatus, selectedReason]);
-
-  useEffect(() => {
-    if (error) {
-      toast.error(`Failed to load campaigns: ${error}`);
-    }
-  }, [error]);
+  }, [selectedStatus, selectedReason, updateFilters, campaigns]);
 
 
   return (
@@ -276,7 +270,7 @@ export default function AllCampaignsPage() {
             Discover Amazing Campaigns
           </h1>
           <p className="text-xl md:text-2xl text-white max-w-3xl mx-auto">
-            Support causes you care about and make a difference in people's
+            Support causes you care about and make a difference in people&apos;s
             lives
           </p>
         </div>

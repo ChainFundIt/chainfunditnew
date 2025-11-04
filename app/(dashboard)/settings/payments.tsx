@@ -516,7 +516,7 @@ const Payments = (props: Props) => {
         </CardHeader>
         <CardContent>
           <p className="text-gray-700 mb-4">
-            If you're having trouble with account verification or need
+            If you&apos;re having trouble with account verification or need
             assistance with your account details, please contact our support
             team.
           </p>

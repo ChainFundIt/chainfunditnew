@@ -61,8 +61,8 @@ const faqDataByCategory = {
             actively share and promote across his or her social network.{" "}
           </p>
           <p>
-            The Chainfundit campaign page incorporates a "Chain" feature
-            optionality in addition to the conventional "Donate" and "Share"
+            The Chainfundit campaign page incorporates a &quot;Chain&quot; feature
+            optionality in addition to the conventional &quot;Donate&quot; and &quot;Share&quot;
             functionality that exists on fundraising campaign pages from
             conventional crowdfunding platforms. Chain Ambassadors will receive
             the specified chain commission in any and all successful donations
@@ -107,7 +107,7 @@ const faqDataByCategory = {
       answer: (
         <div className="space-y-2">
           <p>
-            KYC means "Know Your Customer". This is a standard verification
+            KYC means &quot;Know Your Customer&quot;. This is a standard verification
             process to ensure compliance with local regulations. The objective
             of asking for your KYC information is to prevent the platform from
             being used, by criminal elements for money laundering activities.
@@ -139,7 +139,7 @@ const faqDataByCategory = {
       id: 6,
       question: "How do I create a campaign?",
       answer:
-        'Click the "Create Campaign" button, fill in your campaign details, upload images, set your funding goal, and submit. Your campaign will go live immediately.',
+        'Click the &quot;Create Campaign&quot; button, fill in your campaign details, upload images, set your funding goal, and submit. Your campaign will go live immediately.',
     },
     {
       id: 7,
@@ -153,7 +153,7 @@ const faqDataByCategory = {
       id: 8,
       question: "How do I update my profile?",
       answer:
-        'Go to your dashboard, click on "Settings" or "Profile", and update your information. You can change your display name, profile picture, and contact preferences.',
+        'Go to your dashboard, click on &quot;Settings&quot; or &quot;Profile&quot;, and update your information. You can change your display name, profile picture, and contact preferences.',
     },
     {
       id: 9,
@@ -373,7 +373,7 @@ export default function FAQPage() {
               Still have questions?
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Can't find what you're looking for? Our support team is here to
+              Can&apos;t find what you&apos;re looking for? Our support team is here to
               help you.
             </p>
           </div>

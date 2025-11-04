@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { verifyPaystackWebhook } from '@/lib/payments/paystack';
 import { db } from '@/lib/db';
 import { charityDonations, charities } from '@/lib/schema/charities';
+import { campaignPayouts, commissionPayouts } from '@/lib/schema';
 import { eq, sql } from 'drizzle-orm';
 import { notifyAdminsOfCharityDonation } from '@/lib/notifications/charity-donation-alerts';
 
@@ -181,15 +182,48 @@ async function handleTransferSuccess(data: any) {
   try {
     const reference = data.reference;
     const amount = data.amount / 100; // Convert from kobo to Naira
+    const payoutId = data.metadata?.payoutId;
+    const payoutType = data.metadata?.type; // 'campaign' | 'commission'
 
     console.log('Paystack transfer successful:', {
       reference,
       amount,
+      payoutId,
+      payoutType,
       recipient: data.recipient?.details?.account_name,
     });
 
-    // TODO: Update payout status in charity_payouts table
-    // TODO: Send confirmation to charity
+    if (!payoutId) {
+      console.log('No payout ID in transfer metadata, skipping payout update');
+      return;
+    }
+
+    if (payoutType === 'campaign') {
+      // Update campaign payout
+      await db
+        .update(campaignPayouts)
+        .set({
+          status: 'completed',
+          transactionId: reference,
+          processedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(campaignPayouts.reference, reference));
+
+      console.log(`Campaign payout ${payoutId} (${reference}) marked as completed`);
+    } else if (payoutType === 'commission') {
+      // Update commission payout
+      await db
+        .update(commissionPayouts)
+        .set({
+          status: 'completed',
+          transactionId: reference,
+          processedAt: new Date(),
+        })
+        .where(eq(commissionPayouts.id, payoutId));
+
+      console.log(`Commission payout ${payoutId} (${reference}) marked as completed`);
+    }
   } catch (error) {
     console.error('Error handling Paystack transfer success:', error);
     throw error;
@@ -202,14 +236,47 @@ async function handleTransferSuccess(data: any) {
 async function handleTransferFailed(data: any) {
   try {
     const reference = data.reference;
+    const payoutId = data.metadata?.payoutId;
+    const payoutType = data.metadata?.type;
+    const failureReason = data.failure_reason || data.reason || 'Transfer failed';
 
     console.log('Paystack transfer failed:', {
       reference,
-      reason: data.status,
+      payoutId,
+      payoutType,
+      reason: failureReason,
     });
 
-    // TODO: Update payout status to failed
-    // TODO: Notify admin
+    if (!payoutId) {
+      console.log('No payout ID in transfer metadata, skipping payout update');
+      return;
+    }
+
+    if (payoutType === 'campaign') {
+      await db
+        .update(campaignPayouts)
+        .set({
+          status: 'failed',
+          transactionId: reference,
+          failureReason,
+          updatedAt: new Date(),
+        })
+        .where(eq(campaignPayouts.reference, reference));
+
+      console.log(`Campaign payout ${payoutId} (${reference}) marked as failed`);
+    } else if (payoutType === 'commission') {
+      await db
+        .update(commissionPayouts)
+        .set({
+          status: 'failed',
+          transactionId: reference,
+        })
+        .where(eq(commissionPayouts.id, payoutId));
+
+      console.log(`Commission payout ${payoutId} (${reference}) marked as failed`);
+    }
+
+    // TODO: Notify admin of failed payout
   } catch (error) {
     console.error('Error handling Paystack transfer failure:', error);
     throw error;
@@ -222,13 +289,45 @@ async function handleTransferFailed(data: any) {
 async function handleTransferReversed(data: any) {
   try {
     const reference = data.reference;
+    const payoutId = data.metadata?.payoutId;
+    const payoutType = data.metadata?.type;
 
     console.log('Paystack transfer reversed:', {
       reference,
+      payoutId,
+      payoutType,
     });
 
-    // TODO: Update payout status
-    // TODO: Credit back to charity pending amount
+    if (!payoutId) {
+      console.log('No payout ID in transfer metadata, skipping payout update');
+      return;
+    }
+
+    if (payoutType === 'campaign') {
+      await db
+        .update(campaignPayouts)
+        .set({
+          status: 'failed',
+          transactionId: reference,
+          failureReason: 'Transfer reversed',
+          updatedAt: new Date(),
+        })
+        .where(eq(campaignPayouts.reference, reference));
+
+      console.log(`Campaign payout ${payoutId} (${reference}) marked as failed (reversed)`);
+    } else if (payoutType === 'commission') {
+      await db
+        .update(commissionPayouts)
+        .set({
+          status: 'failed',
+          transactionId: reference,
+        })
+        .where(eq(commissionPayouts.id, payoutId));
+
+      console.log(`Commission payout ${payoutId} (${reference}) marked as failed (reversed)`);
+    }
+
+    // TODO: Credit back to charity pending amount if applicable
   } catch (error) {
     console.error('Error handling Paystack transfer reversal:', error);
     throw error;

@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Copy, Download, Shield, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import Image from 'next/image';
 
 interface TwoFactorSetupProps {
   onComplete: () => void;
@@ -122,7 +123,7 @@ export function TwoFactorSetup({ onComplete, onCancel }: TwoFactorSetupProps) {
           <Alert>
             <AlertDescription>
               Two-factor authentication adds an extra layer of security to your admin account. 
-              You'll need an authenticator app like Google Authenticator or Authy.
+              You&apos;ll need an authenticator app like Google Authenticator or Authy.
             </AlertDescription>
           </Alert>
           
@@ -161,10 +162,12 @@ export function TwoFactorSetup({ onComplete, onCancel }: TwoFactorSetupProps) {
           {setupData && (
             <>
               <div className="text-center">
-                <img 
+                <Image
                   src={setupData.qrCodeUrl} 
                   alt="2FA QR Code" 
                   className="mx-auto border rounded"
+                  width={100}
+                  height={100}
                 />
               </div>
               
@@ -197,7 +200,7 @@ export function TwoFactorSetup({ onComplete, onCancel }: TwoFactorSetupProps) {
                   maxLength={6}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Enter the 6-digit code from your authenticator app. Make sure your device's time is synchronized.
+                  Enter the 6-digit code from your authenticator app. Make sure your device&apos;s time is synchronized.
                 </p>
               </div>
               
@@ -216,9 +219,9 @@ export function TwoFactorSetup({ onComplete, onCancel }: TwoFactorSetupProps) {
                     <br /><br />
                     <strong>Troubleshooting:</strong>
                     <ul className="list-disc list-inside mt-2 text-sm">
-                      <li>Make sure your device's time is synchronized</li>
+                      <li>Make sure your device&apos;s time is synchronized</li>
                       <li>Try refreshing the code in your authenticator app</li>
-                      <li>Ensure you're entering the current 6-digit code</li>
+                      <li>Ensure you&apos;re entering the current 6-digit code</li>
                       <li>Check the browser console for debug information</li>
                     </ul>
                   </AlertDescription>

@@ -232,7 +232,7 @@ export default function Preferences() {
                     min="1"
                   />
                   <p className="text-xs text-gray-500">
-                    You'll get special alerts for donations above this amount
+                    You will get special alerts for donations above this amount
                   </p>
                 </div>
               )}
@@ -303,7 +303,7 @@ export default function Preferences() {
                     onChange={(e) => updateSetting('summaryTime', e.target.value)}
                   />
                   <p className="text-xs text-gray-500">
-                    Choose when you'd like to receive your summary reports
+                    Choose when you&apos;d like to receive your summary reports
                   </p>
                 </div>
               )}
@@ -335,9 +335,9 @@ export default function Preferences() {
                   disabled={true}
                 />
               </div>
-              <p className="text-xs text-gray-400 mt-4">
+              {/* <p className="text-xs text-gray-400 mt-4">
                 📌 Push notifications coming soon! You'll be able to receive real-time browser alerts.
-              </p>
+              </p> */}
             </CardContent>
           </Card>
 
@@ -377,7 +377,7 @@ export default function Preferences() {
                     <li>• <strong>Campaign Donations:</strong> Get instant alerts when someone supports your campaign</li>
                     <li>• <strong>Large Donation Alerts:</strong> Special notifications for major contributions to your campaign</li>
                     <li>• <strong>Payout Updates:</strong> Know when your campaign funds are ready to withdraw</li>
-                    <li>• <strong>Summary Reports:</strong> Periodic overviews of your campaign's performance</li>
+                    <li>• <strong>Summary Reports:</strong> Periodic overviews of your campaign&apos;s performance</li>
                   </ul>
                   <p className="text-xs text-blue-700 mt-3">
                     💡 Tip: Keep notifications enabled to stay connected with your supporters!

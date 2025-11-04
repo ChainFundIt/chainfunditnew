@@ -22,7 +22,7 @@ function PaymentCallbackContent() {
     } else {
       setStatus('failed');
     }
-  }, [searchParams]);
+  }, [searchParams]); 
 
   const verifyPayment = async (reference: string) => {
     try {

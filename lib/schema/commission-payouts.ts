@@ -6,6 +6,7 @@ export const commissionPayouts = pgTable('commission_payouts', {
   chainerId: uuid('chainer_id').notNull(),
   campaignId: uuid('campaign_id').notNull(),
   amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
+  currency: varchar('currency', { length: 3 }).default('USD').notNull(), // Multi-currency support
   destination: varchar('destination', { length: 20 }).notNull(), // keep, donate_back, donate_other
   destinationCampaignId: uuid('destination_campaign_id'), // if donate_other
   status: varchar('status', { length: 20 }).default('pending').notNull(), // pending, completed, failed

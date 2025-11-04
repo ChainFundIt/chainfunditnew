@@ -138,7 +138,7 @@ export default function UpdateModal({ isOpen, onClose, campaignId, onUpdateCreat
                 required
               />
               <p className="text-sm text-gray-500 mt-1">
-                Keep your supporters informed about your campaign's progress and any important developments.
+                Keep your supporters informed about your campaign&apos;s progress and any important developments.
               </p>
             </div>
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { adminNotifications } from '@/lib/schema';
-import { eq, desc, and, isNull } from 'drizzle-orm';
+import { eq, desc, and, isNull, count } from 'drizzle-orm';
 import { getAdminUser } from '@/lib/admin-auth';
 
 export async function GET(request: NextRequest) {
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status') || 'unread';
+    const status = searchParams.get('status') || 'all';
     const type = searchParams.get('type');
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = parseInt(searchParams.get('offset') || '0');
@@ -24,11 +24,11 @@ export async function GET(request: NextRequest) {
     // Build query conditions
     const conditions = [isNull(adminNotifications.archivedAt)];
     
-    if (status !== 'all') {
+    if (status && status !== 'all') {
       conditions.push(eq(adminNotifications.status, status as any));
     }
     
-    if (type) {
+    if (type && type !== 'all') {
       conditions.push(eq(adminNotifications.type, type));
     }
 
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
 
     // Get total count
     const [totalResult] = await db
-      .select({ count: adminNotifications.id })
+      .select({ count: count() })
       .from(adminNotifications)
       .where(and(...conditions));
 

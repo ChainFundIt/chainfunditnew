@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
     const campaignsList = await db
       .select({
         id: campaigns.id,
+        slug: campaigns.slug,
         title: campaigns.title,
         description: campaigns.description,
         creatorId: campaigns.creatorId,

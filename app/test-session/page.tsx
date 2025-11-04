@@ -194,7 +194,7 @@ export default function TestSessionPage() {
               <ol className="list-decimal list-inside space-y-1 mt-2">
                 <li>Set a short timeout (e.g., 2 minutes) and warning (1 minute)</li>
                 <li>Wait for the warning modal to appear</li>
-                <li>Test the "Extend Session" button</li>
+                <li>Test the &quot;Extend Session&quot; button</li>
                 <li>Wait for the timeout modal to appear</li>
                 <li>Test the auto-redirect functionality</li>
               </ol>
@@ -255,7 +255,7 @@ export default function TestSessionPage() {
                 <div>
                   <h4 className="font-medium text-[#104901]">Simulate Activity</h4>
                   <p className="text-sm text-gray-600">
-                    Use the "Simulate User Activity" button to reset the session timer and test the activity detection.
+                    Use the &quot;Simulate User Activity&quot; button to reset the session timer and test the activity detection.
                   </p>
                 </div>
               </div>

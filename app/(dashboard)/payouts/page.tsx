@@ -190,15 +190,15 @@ const PayoutsPage = () => {
   };
 
   const handleConfirmPayout = async (campaignId: string, amount: number, currency: string, payoutProvider: string) => {
+    console.log('🚀 Starting payout request...', { campaignId, amount, currency, payoutProvider });
     try {
       setProcessingPayouts(prev => new Set(prev).add(campaignId));
       
-      // Create a timeout promise
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout. Please try again.')), 20000)
-      );
-
-      // Create the fetch promise
+      // Create the fetch promise with explicit timeout
+      console.log('📡 Making API request...');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
       const fetchPromise = fetch('/api/payouts', {
         method: 'POST',
         headers: {
@@ -210,33 +210,82 @@ const PayoutsPage = () => {
           currency,
           payoutProvider,
         }),
+        signal: controller.signal,
       });
 
-      // Race between fetch and timeout
-      const response = await Promise.race([fetchPromise, timeoutPromise]) as Response;
+      // Wait for fetch to complete
+      let response: Response;
+      try {
+        response = await fetchPromise;
+        clearTimeout(timeoutId);
+        console.log('✅ API response received:', response.status, response.ok, response.headers.get('content-type'));
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        console.error('❌ Fetch error:', fetchError);
+        if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+          throw new Error('Request timeout. The server took too long to respond.');
+        }
+        throw fetchError;
+      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Failed to process payout' }));
+        console.error('❌ API error:', errorData);
+        
+        // Handle duplicate payout request (409 Conflict)
+        if (response.status === 409 && errorData.existingPayout) {
+          const existing = errorData.existingPayout;
+          const statusMessages = {
+            pending: 'pending approval',
+            approved: 'approved and awaiting processing',
+            processing: 'currently being processed',
+          };
+          throw new Error(
+            `${errorData.error}\n\n` +
+            `Existing Request Details:\n` +
+            `- Status: ${existing.status}\n` +
+            `- Amount: ${formatCurrency(parseFloat(existing.requestedAmount), currency)}\n` +
+            `- Requested: ${new Date(existing.createdAt).toLocaleDateString()}`
+          );
+        }
+        
         throw new Error(errorData.error || `Server error: ${response.status}`);
       }
 
-      const result = await response.json();
+      // Parse response with timeout to prevent hanging
+      const jsonPromise = response.json();
+      const jsonTimeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('JSON parsing timeout')), 5000)
+      );
+      
+      const result = await Promise.race([jsonPromise, jsonTimeoutPromise]) as any;
+      console.log('📦 Response data:', result);
       
       if (result.success) {
+        console.log('✅ Payout successful, showing toast and refreshing data...');
         toast.success(result.data.message);
-        // Refresh payout data in background
-        fetchPayoutData().catch(err => console.error('Error refreshing payout data:', err));
+        // Refresh payout data in background after a small delay to avoid blocking UI
+        setTimeout(() => {
+          fetchPayoutData().catch(err => console.error('Error refreshing payout data:', err));
+        }, 500);
         // Don't close modal here - let the modal show success dialog
         // The modal will handle closing itself after showing success
       } else {
+        console.error('❌ Payout failed:', result.error);
         // Throw error so modal can handle it
         throw new Error(result.error || 'Failed to process payout');
       }
     } catch (err) {
+      console.error('💥 Payout error caught:', err);
+      // Handle abort errors
+      if (err instanceof Error && err.name === 'AbortError') {
+        throw new Error('Request timeout. The server took too long to respond.');
+      }
       // Re-throw error so modal can handle it
       const errorMessage = err instanceof Error ? err.message : 'Failed to process payout';
       throw new Error(errorMessage);
     } finally {
+      console.log('🏁 Cleaning up processing state...');
       setProcessingPayouts(prev => {
         const newSet = new Set(prev);
         newSet.delete(campaignId);

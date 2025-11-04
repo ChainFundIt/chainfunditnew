@@ -17,14 +17,13 @@ import {
   DollarSign,
   CreditCard,
   Building2,
-  User,
-  Mail,
   Clock,
   CheckCircle,
   AlertCircle,
   ExternalLink,
   Copy,
   Send,
+  Mail,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/currency";
 import { toast } from "sonner";
@@ -35,22 +34,11 @@ interface PayoutDetailsModalProps {
   campaign: {
     id: string;
     title: string;
-    currency: string;
     currencyCode: string;
     totalRaised: number;
     totalRaisedInNGN: number;
     payoutProvider: string | null;
     payoutConfig: any;
-    chainerDonations?: Array<{
-      id: string;
-      amount: string;
-      currency: string;
-      campaignTitle: string;
-      createdAt: string;
-    }>;
-    chainerDonationsTotal?: number;
-    chainerDonationsInNGN?: number;
-    chainerCommissionRate?: number;
     chainerCommissionsTotal?: number;
     chainerCommissionsInNGN?: number;
   };
@@ -62,6 +50,8 @@ interface PayoutDetailsModalProps {
     bankCode?: string;
     accountName?: string;
     accountVerified?: boolean;
+    stripeAccountId?: string;
+    stripeAccountReady?: boolean;
   };
   onConfirmPayout: (
     campaignId: string,
@@ -80,221 +70,199 @@ export function PayoutDetailsModal({
   onConfirmPayout,
   isProcessing = false,
 }: PayoutDetailsModalProps) {
-  const [banks, setBanks] = useState<any[]>([]);
-  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [banks, setBanks] = useState<any[]>([]);
+  const [stripeOnboardingUrl, setStripeOnboardingUrl] = useState<string | null>(null);
+  const [checkingStripe, setCheckingStripe] = useState(false);
   const router = useRouter();
 
-  // Fetch banks list on component mount
+  // Fetch banks when modal opens
   useEffect(() => {
-    const fetchBanks = async () => {
-      try {
-        const response = await fetch("/api/banks");
-        const result = await response.json();
-        if (result.success) {
-          setBanks(result.data || []);
+    if (isOpen && !showSuccess) {
+      const fetchBanks = async () => {
+        try {
+          const response = await fetch("/api/banks");
+          const result = await response.json();
+          if (result.success) {
+            setBanks(result.data || []);
+          }
+        } catch (error) {
+          console.error("Error fetching banks:", error);
         }
-      } catch (error) {
-        console.error("Error fetching banks:", error);
-      }
-    };
-
-    if (isOpen) {
+      };
       fetchBanks();
+      
+      // Check Stripe Connect status if using Stripe
+      if (campaign.payoutProvider === 'stripe') {
+        checkStripeAccountStatus();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, showSuccess, campaign.payoutProvider]);
+
+  const checkStripeAccountStatus = async () => {
+    if (userProfile?.stripeAccountReady) {
+      return; // Already ready
+    }
+
+    setCheckingStripe(true);
+    try {
+      if (!userProfile?.stripeAccountId) {
+        // No account yet - create one
+        const response = await fetch('/api/stripe-connect/create-account', {
+          method: 'POST',
+        });
+        const result = await response.json();
+        if (result.success && result.onboardingUrl) {
+          setStripeOnboardingUrl(result.onboardingUrl);
+        }
+      } else {
+        // Check if account needs onboarding
+        const response = await fetch('/api/stripe-connect/account-link');
+        const result = await response.json();
+        if (result.success && !result.ready && result.onboardingUrl) {
+          setStripeOnboardingUrl(result.onboardingUrl);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking Stripe account:', error);
+    } finally {
+      setCheckingStripe(false);
+    }
+  };
+
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setShowSuccess(false);
+      setError(null);
+      setIsSubmitting(false);
     }
   }, [isOpen]);
 
-  // Helper function to get bank name
-  const getBankName = () => {
-    if (userProfile?.bankName) {
-      return userProfile.bankName;
-    }
-
-    if (userProfile?.bankCode && banks.length > 0) {
-      const bank = banks.find((b) => b.code === userProfile.bankCode);
-      return bank?.name || "Unknown Bank";
-    }
-
-    return "N/A";
-  };
-  // Calculate fees and net amount
+  // Calculate fees - simple, no loops
   const calculateFees = () => {
     const baseAmount = campaign.totalRaised;
     const chainerCommissions = campaign.chainerCommissionsTotal || 0;
-
-    // console.log('Payout modal - Campaign data:', campaign);
-    console.log(
-      "Payout modal - Chainer commissions total:",
-      chainerCommissions
-    );
-
-    // ChainFundIt takes 5% of campaign proceeds
     const chainfunditFeePercentage = 0.05; // 5%
     const chainfunditFee = baseAmount * chainfunditFeePercentage;
-
-    // Provider fees are taken from ChainFundIt's 5%
-    let providerFeePercentage = 0;
+    
+    // Provider fees (simplified)
+    let providerFee = 0;
     let fixedFee = 0;
-
-    const provider = campaign.payoutProvider || "default";
-    switch (provider) {
-      case "stripe":
-        providerFeePercentage = 0.025; // 2.5%
-        fixedFee = 0.3; // $0.30
-        break;
-      case "paystack":
-        providerFeePercentage = 0.01; // 1%
-        fixedFee = 0; // No fixed fee
-        break;
-      default:
-        providerFeePercentage = 0.02; // 2% default
-        fixedFee = 0;
+    
+    if (campaign.payoutProvider === "stripe") {
+      providerFee = chainfunditFee * 0.025; // 2.5% of chainfundit fee
+      fixedFee = 0.3; // $0.30
+    } else if (campaign.payoutProvider === "paystack") {
+      providerFee = chainfunditFee * 0.01; // 1% of chainfundit fee
+      fixedFee = 0;
     }
-
-    const providerFee = chainfunditFee * providerFeePercentage;
-    const netChainfunditFee = chainfunditFee - providerFee; // Provider fee deducted from ChainFundIt's 5%
+    
+    const netChainfunditFee = chainfunditFee - providerFee;
     const totalFees = netChainfunditFee + fixedFee;
     const netAmount = baseAmount - totalFees - chainerCommissions;
-
-    console.log("Fee calculation breakdown:", {
-      baseAmount,
-      chainfunditFee,
-      providerFee,
-      netChainfunditFee,
-      fixedFee,
-      chainerCommissions,
-      totalFees,
-      netAmount,
-      calculation: `${baseAmount} - ${totalFees} - ${chainerCommissions} = ${netAmount}`,
-    });
 
     return {
       baseAmount,
       chainfunditFee,
       providerFee,
-      netChainfunditFee,
       fixedFee,
       chainerCommissions,
       totalFees,
       netAmount,
-      chainfunditFeePercentage: chainfunditFeePercentage * 100,
-      providerFeePercentage: providerFeePercentage * 100,
     };
   };
 
   const fees = calculateFees();
 
+  const getBankName = () => {
+    if (userProfile?.bankName) return userProfile.bankName;
+    if (userProfile?.bankCode && banks.length > 0) {
+      const bank = banks.find((b) => b.code === userProfile.bankCode);
+      return bank?.name || "Unknown Bank";
+    }
+    return "N/A";
+  };
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copied`);
+  };
+
   const handleConfirmPayout = async () => {
+    if (!campaign.payoutProvider) {
+      setError("Payout provider not configured");
+      return;
+    }
+
     setIsSubmitting(true);
-    setSubmitError(null);
+    setError(null);
 
     try {
       await onConfirmPayout(
         campaign.id,
         campaign.totalRaised,
         campaign.currencyCode,
-        campaign.payoutProvider || "default"
+        campaign.payoutProvider
       );
 
-      // Show success dialog instead of closing modal
-      setShowEmailConfirmation(true);
-    } catch (error) {
-      console.error("Payout confirmation error:", error);
-      setSubmitError(
-        error instanceof Error
-          ? error.message
-          : "Failed to process payout request. Please try again."
-      );
-      toast.error("Failed to process payout request", {
-        description:
-          error instanceof Error ? error.message : "Please try again later",
+      // Success - show success screen
+      setShowSuccess(true);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to process payout request";
+      setError(errorMessage);
+      toast.error("Payout request failed", {
+        description: errorMessage,
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success(`${label} copied to clipboard`);
-  };
-
-  const getProviderIcon = (provider: string) => {
-    switch (provider) {
-      case "stripe":
-        return <CreditCard className="h-5 w-5 text-blue-600" />;
-      case "paystack":
-        return <Building2 className="h-5 w-5 text-green-600" />;
-      default:
-        return <DollarSign className="h-5 w-5 text-gray-600" />;
-    }
-  };
-
-  if (showEmailConfirmation) {
+  // Success screen
+  if (showSuccess) {
     return (
-      <Dialog
-        open={isOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            setShowEmailConfirmation(false);
-            onClose();
-          }
-        }}
-      >
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-center text-green-600">
-              <CheckCircle className="h-12 w-12 mx-auto mb-4" />
-              Payout Request Submitted Successfully!
+            <div className="flex justify-center mb-4">
+              <CheckCircle className="h-16 w-16 text-green-600" />
+            </div>
+            <DialogTitle className="text-center text-xl">
+              Payout Request Submitted!
             </DialogTitle>
             <DialogDescription className="text-center">
-              Your payout request has been processed and a confirmation email
-              has been sent to your registered email address.
+              Your payout request has been processed successfully. A confirmation email has been sent to your registered email address.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="space-y-4 mt-4">
             <Card className="bg-green-50 border-green-200">
               <CardContent className="pt-6">
                 <div className="text-center space-y-2">
-                  <p className="text-sm text-gray-600 mb-3">
-                    Check your email for:
+                  <p className="text-sm font-medium text-gray-700 mb-2">
+                    What happens next?
                   </p>
-                  <ul className="text-sm text-gray-700 space-y-1 text-left">
-                    <li>• Payout confirmation details</li>
-                    <li>• Transaction reference number</li>
-                    <li>• Estimated processing time</li>
-                    <li>• Bank account verification status</li>
+                  <ul className="text-sm text-gray-600 space-y-1 text-left">
+                    <li>• Check your email for confirmation details</li>
+                    <li>• Your request is being reviewed by our team</li>
+                    <li>• Funds will be transferred within 1-3 business days</li>
                   </ul>
                 </div>
               </CardContent>
             </Card>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <Clock className="h-5 w-5 text-blue-600 mt-0.5" />
-                <div className="text-sm text-blue-800">
-                  <p className="font-medium mb-1">What's Next?</p>
-                  <p>
-                    Your payout request is being processed. You'll receive an
-                    email notification once the funds have been transferred to
-                    your bank account.
-                  </p>
-                </div>
-              </div>
-            </div>
-
             <div className="flex gap-2">
               <Button
                 onClick={() => {
-                  setShowEmailConfirmation(false);
+                  setShowSuccess(false);
                   onClose();
-                  // Refresh the page to show updated payout data
-                  window.location.reload();
                 }}
-                className="flex-1"
                 variant="outline"
+                className="flex-1"
               >
                 Close
               </Button>
@@ -314,196 +282,110 @@ export function PayoutDetailsModal({
     );
   }
 
+  // Main modal content
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-[#104901]">
-            Payout Details
+            Request Payout
           </DialogTitle>
           <DialogDescription>
-            Review your payout details before confirming the request
+            Review your payout details before confirming
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Campaign Information */}
+        <div className="space-y-4">
+          {/* Campaign Info */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg text-[#104901] flex items-center gap-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                 <DollarSign className="h-5 w-5" />
-                Campaign Information
+                Campaign
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Campaign:</span>
-                <span className="text-right">{campaign.title}</span>
+            <CardContent className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Title:</span>
+                <span className="font-medium">{campaign.title}</span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Total Raised:</span>
-                <div className="text-right">
-                  <div className="font-semibold">
-                    {formatCurrency(
-                      campaign.totalRaised,
-                      campaign.currencyCode
-                    )}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    ₦{campaign.totalRaisedInNGN.toLocaleString()}
-                  </div>
-                </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Total Raised:</span>
+                <span className="font-semibold">
+                  {formatCurrency(campaign.totalRaised, campaign.currencyCode)}
+                </span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Payout Provider:</span>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Provider:</span>
                 <div className="flex items-center gap-2">
-                  {getProviderIcon(campaign.payoutProvider || "default")}
-                  <span className="capitalize">
-                    {campaign.payoutProvider || "N/A"}
-                  </span>
+                  {campaign.payoutProvider === "stripe" ? (
+                    <CreditCard className="h-4 w-4 text-blue-600" />
+                  ) : (
+                    <Building2 className="h-4 w-4 text-green-600" />
+                  )}
+                  <span className="capitalize">{campaign.payoutProvider}</span>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Chainer Payouts  */}
-          {campaign.chainerDonations &&
-            campaign.chainerDonations.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg text-[#104901] flex items-center gap-2">
-                    <User className="h-5 w-5" />
-                    Ambassador Payouts
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium">
-                      Total Ambassador Donations:
-                    </span>
-                    <div className="text-right">
-                      <div className="font-semibold">
-                        {formatCurrency(
-                          campaign.chainerDonationsTotal || 0,
-                          campaign.currencyCode
-                        )}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        ₦
-                        {campaign.chainerDonationsInNGN?.toLocaleString() ||
-                          "0"}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium">Number of Donations:</span>
-                    <span className="font-semibold">
-                      {campaign.chainerDonations.length}
-                    </span>
-                  </div>
-                  {campaign.chainerCommissionRate && (
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">Commission Rate:</span>
-                      <span className="font-semibold text-blue-600">
-                        {campaign.chainerCommissionRate}%
-                      </span>
-                    </div>
-                  )}
-                  {campaign.chainerCommissionsTotal && (
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">Total Commissions:</span>
-                      <div className="text-right">
-                        <div className="font-semibold text-green-600">
-                          {formatCurrency(
-                            campaign.chainerCommissionsTotal,
-                            campaign.currencyCode
-                          )}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          ₦
-                          {campaign.chainerCommissionsInNGN?.toLocaleString() ||
-                            "0"}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
           {/* Fee Breakdown */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg text-[#104901] flex items-center gap-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                 <AlertCircle className="h-5 w-5" />
                 Fee Breakdown
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Gross Amount:</span>
-                <span className="font-semibold">
+            <CardContent className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Gross Amount:</span>
+                <span className="font-medium">
                   {formatCurrency(fees.baseAmount, campaign.currencyCode)}
                 </span>
               </div>
-
-              {/* ChainFundIt Fee */}
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-600">
-                  ChainFundIt Fee ({fees.chainfunditFeePercentage}%):
-                </span>
+              
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">ChainFundIt Fee (5%):</span>
                 <span className="text-red-600">
                   -{formatCurrency(fees.chainfunditFee, campaign.currencyCode)}
                 </span>
               </div>
 
-              {/* Provider Fee (deducted from ChainFundIt's fee) */}
-              {/* <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-600">
-                  {(campaign.payoutProvider ? campaign.payoutProvider.charAt(0).toUpperCase() + campaign.payoutProvider.slice(1) : 'Provider')} Fee ({fees.providerFeePercentage}%):
-                </span>
-                <span className="text-red-600">
-                  -{formatCurrency(fees.providerFee, campaign.currencyCode)}
-                </span>
-              </div> */}
-
-              {/* Chainer Commissions */}
-              {fees.chainerCommissions > 0 && (
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-600">Ambassador Commissions:</span>
-                  <span className="text-blue-600">
-                    -
-                    {formatCurrency(
-                      fees.chainerCommissions,
-                      campaign.currencyCode
-                    )}
+              {fees.providerFee > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Provider Fee:</span>
+                  <span className="text-red-600">
+                    -{formatCurrency(fees.providerFee, campaign.currencyCode)}
                   </span>
                 </div>
               )}
 
-              {/* Fixed Fee */}
               {fees.fixedFee > 0 && (
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-600">Fixed Fee:</span>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Fixed Fee:</span>
                   <span className="text-red-600">
                     -{formatCurrency(fees.fixedFee, campaign.currencyCode)}
                   </span>
                 </div>
               )}
 
-              <Separator />
-              <div className="flex justify-between items-center">
-                <span className="font-medium text-lg">Net Amount:</span>
+              {fees.chainerCommissions > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Ambassador Commissions:</span>
+                  <span className="text-blue-600">
+                    -{formatCurrency(fees.chainerCommissions, campaign.currencyCode)}
+                  </span>
+                </div>
+              )}
+
+              <Separator className="my-2" />
+              
+              <div className="flex justify-between">
+                <span className="font-semibold text-lg">Net Amount:</span>
                 <span className="font-bold text-lg text-green-600">
                   {formatCurrency(fees.netAmount, campaign.currencyCode)}
                 </span>
-              </div>
-              <div className="text-right text-sm text-gray-500">
-                ₦
-                {(
-                  fees.netAmount *
-                  (campaign.totalRaisedInNGN / campaign.totalRaised)
-                ).toLocaleString()}
               </div>
             </CardContent>
           </Card>
@@ -511,77 +393,66 @@ export function PayoutDetailsModal({
           {/* Bank Details */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg text-[#104901] flex items-center gap-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                 <Building2 className="h-5 w-5" />
-                Bank Account Details
+                Bank Account
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent>
               {userProfile?.accountVerified ? (
-                <>
+                <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="font-medium">Account Name:</span>
+                    <span className="text-gray-600">Account Name:</span>
                     <div className="flex items-center gap-2">
-                      <span>{userProfile.accountName || "N/A"}</span>
+                      <span className="font-medium">{userProfile.accountName || "N/A"}</span>
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() =>
-                          copyToClipboard(
-                            userProfile.accountName || "",
-                            "Account name"
-                          )
-                        }
+                        onClick={() => copyToClipboard(userProfile.accountName || "", "Account name")}
                       >
                         <Copy className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="font-medium">Account Number:</span>
+                    <span className="text-gray-600">Account Number:</span>
                     <div className="flex items-center gap-2">
-                      <span className="font-mono">
+                      <span className="font-mono font-medium">
                         {userProfile.accountNumber || "N/A"}
                       </span>
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() =>
-                          copyToClipboard(
-                            userProfile.accountNumber || "",
-                            "Account number"
-                          )
-                        }
+                        onClick={() => copyToClipboard(userProfile.accountNumber || "", "Account number")}
                       >
                         <Copy className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="font-medium">Bank Name:</span>
-                    <span>{getBankName()}</span>
+                    <span className="text-gray-600">Bank:</span>
+                    <span className="font-medium">{getBankName()}</span>
                   </div>
-                  <div className="flex items-center gap-2 mt-3">
+                  <div className="flex items-center gap-2 mt-2">
                     <CheckCircle className="h-4 w-4 text-green-600" />
-                    <Badge
-                      variant="default"
-                      className="bg-green-100 text-green-800"
-                    >
-                      Account Verified
+                    <Badge variant="default" className="bg-green-100 text-green-800">
+                      Verified
                     </Badge>
                   </div>
-                </>
+                </div>
               ) : (
                 <div className="text-center py-4">
                   <AlertCircle className="h-8 w-8 text-amber-500 mx-auto mb-2" />
                   <p className="text-sm text-gray-600 mb-3">
-                    Bank account details not verified. Please complete your
-                    profile setup.
+                    Bank account not verified. Please complete your profile setup.
                   </p>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => router.push("/settings")}
+                    onClick={() => {
+                      onClose();
+                      router.push("/settings");
+                    }}
                   >
                     <ExternalLink className="h-4 w-4 mr-2" />
                     Complete Profile
@@ -591,52 +462,43 @@ export function PayoutDetailsModal({
             </CardContent>
           </Card>
 
-          {/* Processing Information */}
+          {/* Processing Info */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg text-[#104901] flex items-center gap-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                 <Clock className="h-5 w-5" />
-                Processing Information
+                Processing
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Processing Time:</span>
+            <CardContent className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Processing Time:</span>
                 <span>
                   {campaign.payoutConfig?.processingTime || "1-3 business days"}
                 </span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Payment Method:</span>
-                <span className="capitalize">
-                  {campaign.payoutProvider || "N/A"}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Email Notification:</span>
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm">{userProfile?.email || "N/A"}</span>
-                </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Email:</span>
+                <span className="text-sm">{userProfile?.email || "N/A"}</span>
               </div>
             </CardContent>
           </Card>
 
           {/* Error Display */}
-          {submitError && (
+          {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
+                <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
                 <div className="text-sm text-red-800">
-                  <p className="font-medium mb-1">Error Processing Request</p>
-                  <p>{submitError}</p>
+                  <p className="font-medium">Error</p>
+                  <p>{error}</p>
                 </div>
               </div>
             </div>
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-3 pt-2">
             <Button
               onClick={onClose}
               variant="outline"
@@ -647,12 +509,13 @@ export function PayoutDetailsModal({
             </Button>
             <Button
               onClick={handleConfirmPayout}
-              className="flex-1 bg-[#104901] text-white"
+              className="flex-1 bg-[#104901] text-white hover:bg-[#0d3a01]"
               disabled={
                 isSubmitting ||
                 isProcessing ||
-                !userProfile?.accountVerified ||
-                !campaign.payoutProvider
+                !campaign.payoutProvider ||
+                (campaign.payoutProvider === 'paystack' && !userProfile?.accountVerified) ||
+                (campaign.payoutProvider === 'stripe' && !userProfile?.stripeAccountReady)
               }
             >
               {isSubmitting || isProcessing ? (
@@ -663,24 +526,61 @@ export function PayoutDetailsModal({
               ) : (
                 <>
                   <Send className="h-4 w-4 mr-2" />
-                  Confirm Payout Request
+                  Confirm Request
                 </>
               )}
             </Button>
           </div>
 
-          {!userProfile?.accountVerified && (
+          {/* Stripe Connect Account Required */}
+          {campaign.payoutProvider === 'stripe' && !userProfile?.stripeAccountReady && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <CreditCard className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="font-medium text-blue-900 mb-1">Stripe Account Required</p>
+                  <p className="text-sm text-blue-800 mb-3">
+                    You need to link your Stripe account to receive payouts via Stripe Connect.
+                  </p>
+                  {stripeOnboardingUrl ? (
+                    <Button
+                      onClick={() => window.open(stripeOnboardingUrl, '_blank')}
+                      size="sm"
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Link Stripe Account
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={checkStripeAccountStatus}
+                      size="sm"
+                      disabled={checkingStripe}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      {checkingStripe ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Checking...
+                        </>
+                      ) : (
+                        'Set Up Stripe Account'
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Bank Account Verification Required (for Paystack) */}
+          {campaign.payoutProvider === 'paystack' && !userProfile?.accountVerified && (
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
               <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
+                <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
                 <div className="text-sm text-amber-800">
-                  <p className="font-medium mb-1">
-                    Account Verification Required
-                  </p>
-                  <p>
-                    Please verify your bank account details in your profile
-                    settings before requesting a payout.
-                  </p>
+                  <p className="font-medium">Verification Required</p>
+                  <p>Please verify your bank account in settings before requesting a payout.</p>
                 </div>
               </div>
             </div>

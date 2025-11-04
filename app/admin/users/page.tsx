@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,24 +23,17 @@ import {
 import { 
   Users, 
   Search, 
-  Filter, 
   Download, 
-  MoreHorizontal,
   Eye,
   Edit,
   Ban,
   CheckCircle,
   XCircle,
-  Mail,
   Phone,
-  Calendar,
-  MapPin,
   DollarSign,
   TrendingUp,
-  AlertTriangle,
   Shield,
   UserCheck,
-  UserX
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';

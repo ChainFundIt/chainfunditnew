@@ -131,8 +131,6 @@ async function checkAdminNotifications() {
   } catch (error) {
     console.error('❌ Error checking admin notifications:', error);
     process.exit(1);
-  } finally {
-    await db.$disconnect();
   }
 }
 
