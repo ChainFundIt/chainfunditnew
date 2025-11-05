@@ -60,8 +60,7 @@ async function seedDonations() {
     // Insert test donations
     const insertedDonations = await db.insert(donations).values(testDonations).returning();
     
-    console.log(`✅ Successfully created ${insertedDonations.length} test donations`);
-    console.log('Sample donations:');
+
     insertedDonations.slice(0, 3).forEach((donation, index) => {
       console.log(`  ${index + 1}. ${donation.currency} ${donation.amount} - ${donation.paymentStatus}`);
     });

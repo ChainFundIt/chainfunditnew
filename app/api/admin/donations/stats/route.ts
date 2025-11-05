@@ -9,9 +9,7 @@ import { eq, gte, count, sum, sql, desc } from 'drizzle-orm';
  */
 export async function GET(request: NextRequest) {
   try {
-    console.log('🌱 Phase 1: Adding basic stats queries');
     
-    // Phase 1: Basic count queries - no complex aggregations
     const [totalDonations] = await db.select({ count: count() }).from(donations);
     
     const [completedDonations] = await db
@@ -34,7 +32,6 @@ export async function GET(request: NextRequest) {
       .from(donations)
       .where(eq(donations.paymentStatus, 'refunded'));
 
-    // Basic amount queries
     const [totalAmount] = await db
       .select({ total: sum(donations.amount) })
       .from(donations);
@@ -54,14 +51,12 @@ export async function GET(request: NextRequest) {
       .from(donations)
       .where(eq(donations.paymentStatus, 'refunded'));
 
-    // Basic average query
     const [averageDonation] = await db
       .select({ average: sql<number>`AVG(${donations.amount})` })
       .from(donations)
       .where(eq(donations.paymentStatus, 'completed'));
 
    
-    // Phase 2: Add recent donations with joins
     const recentDonations = await db
       .select({
         id: donations.id,
@@ -91,9 +86,7 @@ export async function GET(request: NextRequest) {
       pendingAmount: Number(pendingAmount?.total) || 0,
       refundedAmount: Number(refundedAmount?.total) || 0,
       averageDonation: Number(averageDonation?.average) || 0,
-      // Phase 2: Add recent donations
       recentDonations: recentDonations || [],
-      // Keep these empty for Phase 3
       donationGrowth: [],
       statusDistribution: [],
       currencyDistribution: [],
@@ -101,14 +94,13 @@ export async function GET(request: NextRequest) {
       topDonors: [],
     };
 
-    console.log(`✅ Phase 2: Stats calculated with joins - Total: ${stats.totalDonations}, Amount: $${stats.totalAmount}, Recent: ${recentDonations.length}`);
-
     return NextResponse.json(stats);
 
   } catch (error) {
-    console.error('Error fetching donation stats:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch donation statistics';
+    console.error('Error fetching donation stats:', errorMessage);
     return NextResponse.json(
-      { error: 'Failed to fetch donation statistics' },
+      { error: errorMessage },
       { status: 500 }
     );
   }

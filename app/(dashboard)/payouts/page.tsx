@@ -232,14 +232,8 @@ const PayoutsPage = () => {
         const errorData = await response.json().catch(() => ({ error: 'Failed to process payout' }));
         console.error('❌ API error:', errorData);
         
-        // Handle duplicate payout request (409 Conflict)
         if (response.status === 409 && errorData.existingPayout) {
           const existing = errorData.existingPayout;
-          const statusMessages = {
-            pending: 'pending approval',
-            approved: 'approved and awaiting processing',
-            processing: 'currently being processed',
-          };
           throw new Error(
             `${errorData.error}\n\n` +
             `Existing Request Details:\n` +
@@ -252,7 +246,6 @@ const PayoutsPage = () => {
         throw new Error(errorData.error || `Server error: ${response.status}`);
       }
 
-      // Parse response with timeout to prevent hanging
       const jsonPromise = response.json();
       const jsonTimeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error('JSON parsing timeout')), 5000)
@@ -264,24 +257,18 @@ const PayoutsPage = () => {
       if (result.success) {
         console.log('✅ Payout successful, showing toast and refreshing data...');
         toast.success(result.data.message);
-        // Refresh payout data in background after a small delay to avoid blocking UI
         setTimeout(() => {
           fetchPayoutData().catch(err => console.error('Error refreshing payout data:', err));
         }, 500);
-        // Don't close modal here - let the modal show success dialog
-        // The modal will handle closing itself after showing success
       } else {
         console.error('❌ Payout failed:', result.error);
-        // Throw error so modal can handle it
         throw new Error(result.error || 'Failed to process payout');
       }
     } catch (err) {
       console.error('💥 Payout error caught:', err);
-      // Handle abort errors
       if (err instanceof Error && err.name === 'AbortError') {
         throw new Error('Request timeout. The server took too long to respond.');
       }
-      // Re-throw error so modal can handle it
       const errorMessage = err instanceof Error ? err.message : 'Failed to process payout';
       throw new Error(errorMessage);
     } finally {
@@ -293,8 +280,7 @@ const PayoutsPage = () => {
       });
     }
   };
-
-  // Component for async currency formatting
+  
   const CurrencyDisplay = ({ amount, currency }: { amount: number; currency: string }) => {
     const [formattedAmount, setFormattedAmount] = useState<string>('');
     const [isLoading, setIsLoading] = useState(true);

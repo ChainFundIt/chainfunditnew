@@ -9,14 +9,12 @@ import { eq, like, and, desc, count, sum, sql } from 'drizzle-orm';
  */
 export async function GET(request: NextRequest) {
   try {
-    console.log('🌱 Phase 1: Adding basic donations query');
     
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = (page - 1) * limit;
 
-    // Phase 2: Adding joins for donor names, campaign titles, and ambassador names
     const donationsList = await db
       .select({
         id: donations.id,
@@ -30,11 +28,10 @@ export async function GET(request: NextRequest) {
         createdAt: donations.createdAt,
         processedAt: donations.processedAt,
         paymentIntentId: donations.paymentIntentId,
-        // Join data
         donorName: users.fullName,
         donorEmail: users.email,
         campaignTitle: campaigns.title,
-        chainerName: chainers.userId, // We'll get the actual chainer name in a separate query
+        chainerName: chainers.userId,
       })
       .from(donations)
       .leftJoin(users, eq(donations.donorId, users.id))
@@ -49,7 +46,6 @@ export async function GET(request: NextRequest) {
       .select({ count: count() })
       .from(donations);
 
-    // Phase 2: Get actual chainer names by joining chainers with users
     const donationsWithChainerNames = await Promise.all(
       donationsList.map(async (donation) => {
         let chainerName = null;
@@ -74,9 +70,6 @@ export async function GET(request: NextRequest) {
     const totalCountValue = totalCount?.count || 0;
     const totalPages = Math.ceil(totalCountValue / limit);
 
-    console.log(`✅ Phase 2: Found ${donationsWithChainerNames.length} donations with joins, total: ${totalCountValue}`);
-    console.log('Sample donation data:', donationsWithChainerNames.slice(0, 2));
-
     return NextResponse.json({
       donations: donationsWithChainerNames,
       totalPages,
@@ -85,10 +78,8 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error fetching donations:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch donations' },
-      { status: 500 }
-    );
+    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch donations';
+    console.error('Error fetching donations:', errorMessage);
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

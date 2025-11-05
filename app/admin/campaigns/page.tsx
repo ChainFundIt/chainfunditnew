@@ -1,30 +1,36 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { 
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { 
-  BarChart3, 
-  Search, 
-  Filter, 
-  Download, 
+} from "@/components/ui/select";
+import {
+  BarChart3,
+  Search,
+  Filter,
+  Download,
   Eye,
   CheckCircle,
   XCircle,
@@ -39,13 +45,14 @@ import {
   Shield,
   Play,
   Pause,
-} from 'lucide-react';
+} from "lucide-react";
 import { BsFillStopFill } from "react-icons/bs";
-import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
-import { useGeolocationCurrency } from '@/hooks/use-geolocation-currency';
-import Image from 'next/image';
-import { R2Image } from '@/components/ui/r2-image';
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { useGeolocationCurrency } from "@/hooks/use-geolocation-currency";
+import Image from "next/image";
+import { R2Image } from "@/components/ui/r2-image";
+import Link from "next/link";
 
 interface Campaign {
   id: string;
@@ -57,7 +64,7 @@ interface Campaign {
   goalAmount: number;
   currentAmount: number;
   currency: string;
-  status: 'active' | 'paused' | 'completed' | 'closed';
+  status: "active" | "paused" | "completed" | "closed";
   category: string;
   createdAt: string;
   updatedAt: string;
@@ -67,6 +74,7 @@ interface Campaign {
   donationCount: number;
   chainerCount: number;
   imageUrl?: string;
+  coverImageUrl?: string;
   location?: string;
 }
 
@@ -86,9 +94,9 @@ export default function AdminCampaignsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [stats, setStats] = useState<CampaignStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [selectedCampaigns, setSelectedCampaigns] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -106,7 +114,7 @@ export default function AdminCampaignsPage() {
     try {
       const params = new URLSearchParams({
         page: currentPage.toString(),
-        limit: '20',
+        limit: "20",
         search: searchTerm,
         status: statusFilter,
         category: categoryFilter,
@@ -114,12 +122,12 @@ export default function AdminCampaignsPage() {
 
       const response = await fetch(`/api/admin/campaigns?${params.toString()}`);
       const data = await response.json();
-      
+
       setCampaigns(data.campaigns || []);
       setTotalPages(data.totalPages || 1);
     } catch (error) {
-      console.error('Error fetching campaigns:', error);
-      toast.error('Failed to fetch campaigns');
+      console.error("Error fetching campaigns:", error);
+      toast.error("Failed to fetch campaigns");
     } finally {
       setLoading(false);
     }
@@ -127,9 +135,9 @@ export default function AdminCampaignsPage() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('/api/admin/campaigns/stats');
+      const response = await fetch("/api/admin/campaigns/stats");
       if (!response.ok) {
-        throw new Error('Failed to fetch stats');
+        throw new Error("Failed to fetch stats");
       }
       const data = await response.json();
       // Only set stats if data is valid and doesn't have an error property
@@ -150,7 +158,7 @@ export default function AdminCampaignsPage() {
         });
       }
     } catch (error) {
-      console.error('Error fetching campaign stats:', error);
+      console.error("Error fetching campaign stats:", error);
       // Set default stats structure on error
       setStats({
         totalCampaigns: 0,
@@ -167,144 +175,133 @@ export default function AdminCampaignsPage() {
   };
 
   const handleCampaignAction = async (campaign: Campaign, action: string) => {
-    if (action === 'view') {
+    if (action === "view") {
       handleViewCampaign(campaign);
       return;
     }
 
     try {
       const response = await fetch(`/api/admin/campaigns/${campaign.id}`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ action }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update campaign');
+        throw new Error("Failed to update campaign");
       }
 
       toast.success(`Campaign ${action} successfully`);
       fetchCampaigns();
     } catch (error) {
-      console.error('Error updating campaign:', error);
-      toast.error('Failed to update campaign');
+      console.error("Error updating campaign:", error);
+      toast.error("Failed to update campaign");
     }
   };
 
   const handleBulkAction = async (action: string) => {
     if (selectedCampaigns.length === 0) {
-      toast.error('Please select campaigns first');
+      toast.error("Please select campaigns first");
       return;
     }
 
     try {
-      const response = await fetch('/api/admin/campaigns/bulk', {
-        method: 'PATCH',
+      const response = await fetch("/api/admin/campaigns/bulk", {
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
-          campaignIds: selectedCampaigns, 
-          action 
+        body: JSON.stringify({
+          campaignIds: selectedCampaigns,
+          action,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to perform bulk action');
+        throw new Error("Failed to perform bulk action");
       }
 
       toast.success(`Bulk ${action} completed successfully`);
       setSelectedCampaigns([]);
       fetchCampaigns();
     } catch (error) {
-      console.error('Error performing bulk action:', error);
-      toast.error('Failed to perform bulk action');
+      console.error("Error performing bulk action:", error);
+      toast.error("Failed to perform bulk action");
     }
   };
 
   // Additional button handlers
   const handleExportCampaigns = async () => {
     try {
-      toast.info('Exporting campaigns data...');
+      toast.info("Exporting campaigns data...");
       // In a real app, this would generate and download a CSV/Excel file
       setTimeout(() => {
-        toast.success('Campaigns data exported successfully!');
+        toast.success("Campaigns data exported successfully!");
       }, 2000);
     } catch (error) {
-      toast.error('Failed to export campaigns data');
+      toast.error("Failed to export campaigns data");
     }
-  };
-
-  const handleCreateCampaign = () => {
-    // Admins don't create campaigns through the admin dashboard
-    // Redirect to campaigns page or show message
-    toast.info('Campaigns should be created by users through the main platform');
   };
 
   const handleViewCampaign = (campaign: Campaign) => {
-    if (campaign.slug) {
-      window.open(`/campaign/${campaign.slug}`, '_blank');
-    } else {
-      toast.error('Campaign slug not available');
-    }
-  };
-
-  const handleEditCampaign = (campaign: Campaign) => {
-    // Admins don't edit campaigns directly
-    // Redirect to campaign view page
-    if (campaign.slug) {
-      window.open(`/campaign/${campaign.slug}`, '_blank');
-    } else {
-      toast.error('Campaign slug not available');
-    }
+    router.push(`/campaign/${campaign.slug}`);
   };
 
   const getStatusBadge = (status: string) => {
     const variants = {
-      active: 'default',
-      paused: 'secondary',
-      completed: 'default',
-      closed: 'destructive',
+      active: "default",
+      paused: "secondary",
+      completed: "default",
+      closed: "destructive",
     } as const;
 
     const colors = {
-      active: 'bg-green-100 text-green-800',
-      paused: 'bg-yellow-100 text-yellow-800',
-      completed: 'bg-blue-100 text-blue-800',
-      closed: 'bg-red-100 text-red-800',
+      active: "bg-green-100 text-green-800",
+      paused: "bg-yellow-100 text-yellow-800",
+      completed: "bg-blue-100 text-blue-800",
+      closed: "bg-red-100 text-red-800",
     };
 
     return (
-      <Badge className={colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800'}>
-        {status}
+      <Badge
+        className={
+          colors[status as keyof typeof colors] || "bg-gray-100 text-gray-800"
+        }
+      >
+        {status.toUpperCase()}
       </Badge>
     );
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'active': return <Play className="h-4 w-4 text-green-600" />;
-      case 'paused': return <Pause className="h-4 w-4 text-yellow-600" />;
-      case 'completed': return <CheckCircle className="h-4 w-4 text-blue-600" />;
-      case 'closed': return <BsFillStopFill className="h-4 w-4 text-red-600" />;
-      default: return <Clock className="h-4 w-4 text-gray-600" />;
+      case "active":
+        return <Play className="h-4 w-4 text-green-600" />;
+      case "paused":
+        return <Pause className="h-4 w-4 text-yellow-600" />;
+      case "completed":
+        return <CheckCircle className="h-4 w-4 text-blue-600" />;
+      case "closed":
+        return <BsFillStopFill className="h-4 w-4 text-red-600" />;
+      default:
+        return <Clock className="h-4 w-4 text-gray-600" />;
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
   const formatCurrency = (amount: number, currencyCode?: string) => {
-    const currencyToUse = currencyCode || currency || 'USD';
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
+    const currencyToUse = currencyCode || currency || "USD";
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
       currency: currencyToUse,
     }).format(amount);
   };
@@ -331,15 +328,27 @@ export default function AdminCampaignsPage() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Campaign Management</h1>
-              <p className="text-gray-600 mt-1">Moderate campaigns and review content</p>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Campaign Management
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Moderate campaigns and review content
+              </p>
             </div>
             <div className="flex items-center space-x-3">
-              <Button variant="outline" size="sm" onClick={handleExportCampaigns}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportCampaigns}
+              >
                 <Download className="h-4 w-4 mr-2" />
                 Export Campaigns
               </Button>
-              <Button size="sm" className="bg-[#104901] text-white" onClick={() => router.push('/admin/dashboard/analytics')}>
+              <Button
+                size="sm"
+                className="bg-[#104901] text-white"
+                onClick={() => router.push("/admin/dashboard/analytics")}
+              >
                 <BarChart3 className="h-4 w-4 mr-2" />
                 Analytics
               </Button>
@@ -352,39 +361,49 @@ export default function AdminCampaignsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Campaigns</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Total Campaigns
+                </CardTitle>
                 <BarChart3 className="h-4 w-4 text-gray-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{(stats.totalCampaigns ?? 0).toLocaleString()}</div>
+                <div className="text-2xl font-bold">
+                  {(stats.totalCampaigns).toLocaleString()}
+                </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  {stats.activeCampaigns ?? 0} active
+                  {stats.activeCampaigns} active
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Raised</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Total Raised
+                </CardTitle>
                 <DollarSign className="h-4 w-4 text-green-500" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">
-                  {formatCurrency(stats.totalRaised ?? 0)}
+                  {formatCurrency(stats.totalRaised, currency)}
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  From {stats.totalDonations ?? 0} donations
+                  From {stats.totalDonations} donations
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Success Rate
+                </CardTitle>
                 <TrendingUp className="h-4 w-4 text-blue-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-blue-600">{stats.successRate ?? 0}%</div>
+                <div className="text-2xl font-bold text-blue-600">
+                  {stats.successRate}%
+                </div>
                 <p className="text-xs text-gray-500 mt-1">
                   Campaigns reaching goal
                 </p>
@@ -393,13 +412,17 @@ export default function AdminCampaignsPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Pending Review
+                </CardTitle>
                 <AlertTriangle className="h-4 w-4 text-yellow-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-yellow-600">{stats.pendingReview ?? 0}</div>
+                <div className="text-2xl font-bold text-yellow-600">
+                  {stats.pendingReview}
+                </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  {stats.reportedCampaigns ?? 0} reported
+                  {stats.reportedCampaigns} reported
                 </p>
               </CardContent>
             </Card>
@@ -434,7 +457,10 @@ export default function AdminCampaignsPage() {
                     <SelectItem value="closed">Closed</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <Select
+                  value={categoryFilter}
+                  onValueChange={setCategoryFilter}
+                >
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
@@ -468,7 +494,7 @@ export default function AdminCampaignsPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleBulkAction('pause')}
+                    onClick={() => handleBulkAction("pause")}
                   >
                     <Pause className="h-4 w-4 mr-2" />
                     Pause
@@ -506,7 +532,7 @@ export default function AdminCampaignsPage() {
                         className="rounded border-gray-300"
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setSelectedCampaigns(campaigns.map(c => c.id));
+                            setSelectedCampaigns(campaigns.map((c) => c.id));
                           } else {
                             setSelectedCampaigns([]);
                           }
@@ -532,18 +558,29 @@ export default function AdminCampaignsPage() {
                           checked={selectedCampaigns.includes(campaign.id)}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setSelectedCampaigns([...selectedCampaigns, campaign.id]);
+                              setSelectedCampaigns([
+                                ...selectedCampaigns,
+                                campaign.id,
+                              ]);
                             } else {
-                              setSelectedCampaigns(selectedCampaigns.filter(id => id !== campaign.id));
+                              setSelectedCampaigns(
+                                selectedCampaigns.filter(
+                                  (id) => id !== campaign.id
+                                )
+                              );
                             }
                           }}
                         />
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-3">
-                          {campaign.imageUrl ? (
+                          {campaign.coverImageUrl || campaign.imageUrl ? (
                             <R2Image
-                              src={campaign.imageUrl || ''}
+                              src={
+                                campaign.coverImageUrl ||
+                                campaign.imageUrl ||
+                                ""
+                              }
                               alt={campaign.title}
                               className="h-12 w-12 rounded-lg object-cover"
                               width={48}
@@ -556,34 +593,22 @@ export default function AdminCampaignsPage() {
                           )}
                           <div className="flex-1 min-w-0">
                             <div className="font-medium text-gray-900 truncate">
-                              {campaign.title}
+                              {campaign.title.slice(0, 30)}...
                             </div>
                             <div className="text-sm text-gray-500 truncate">
-                              {campaign.description}
+                              {campaign.description.slice(0, 30)}...
                             </div>
-                            {/* <div className="flex items-center space-x-2 mt-1">
-                              <Badge variant="outline" className="text-xs">
-                                {campaign?.category ? campaign.category.charAt(0).toUpperCase() + campaign.category.slice(1) : ''}
-                              </Badge>
-                              {campaign.hasReports && (
-                                <Badge variant="destructive" className="text-xs">
-                                  <Flag className="h-3 w-3 mr-1" />
-                                  {campaign.reportCount} reports
-                                </Badge>
-                              )}
-                              {campaign.isVerified && (
-                                <span title="Verified">
-                                  <Shield className="h-4 w-4 text-blue-500" />
-                                </span>
-                              )}
-                            </div> */}
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div>
-                          <div className="font-medium text-gray-900">{campaign.creatorName}</div>
-                          <div className="text-sm text-gray-500">ID: {campaign.creatorId.slice(0, 8)}</div>
+                          <div className="font-medium text-gray-900">
+                            {campaign.creatorName}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            ID: {campaign.creatorId.slice(0, 8)}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -595,21 +620,37 @@ export default function AdminCampaignsPage() {
                       <TableCell>
                         <div className="space-y-1">
                           <div className="flex items-center justify-between text-sm">
-                            <span>{formatCurrency(campaign.currentAmount, campaign.currency)}</span>
+                            <span>
+                              {formatCurrency(
+                                campaign.currentAmount,
+                                campaign.currency
+                              )}
+                            </span>
                             <span className="text-gray-500">
-                              {getProgressPercentage(campaign.currentAmount, campaign.goalAmount)}%
+                              {getProgressPercentage(
+                                campaign.currentAmount,
+                                campaign.goalAmount
+                              )}
+                              %
                             </span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div
                               className="bg-purple-600 h-2 rounded-full"
                               style={{
-                                width: `${getProgressPercentage(campaign.currentAmount, campaign.goalAmount)}%`,
+                                width: `${getProgressPercentage(
+                                  campaign.currentAmount,
+                                  campaign.goalAmount
+                                )}%`,
                               }}
                             />
                           </div>
                           <div className="text-xs text-gray-500">
-                            Goal: {formatCurrency(campaign.goalAmount, campaign.currency)}
+                            Goal:{" "}
+                            {formatCurrency(
+                              campaign.goalAmount,
+                              campaign.currency
+                            )}
                           </div>
                         </div>
                       </TableCell>
@@ -635,7 +676,9 @@ export default function AdminCampaignsPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleCampaignAction(campaign, 'view')}
+                            onClick={() =>
+                              handleCampaignAction(campaign, "view")
+                            }
                             title="View campaign"
                           >
                             <Eye className="h-4 w-4" />

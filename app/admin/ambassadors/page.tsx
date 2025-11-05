@@ -161,6 +161,21 @@ export default function ChainersPage() {
   };
 
   const handleChainerAction = async (chainerId: string, action: string) => {
+    if (action === "view") {
+      try {
+        const response = await fetch(`/api/admin/chainers/${chainerId}`);
+        if (!response.ok) throw new Error("Failed to fetch chainer details");
+        const data = await response.json();
+        toast.info(`Viewing ${data.userName || 'chainer'} details`);
+        return;
+      } catch (error) {
+        console.error("Error fetching chainer details:", error);
+        toast.error("Failed to fetch chainer details");
+        return;
+      }
+    }
+
+    // Handle other actions that modify data
     try {
       const response = await fetch(`/api/admin/chainers/${chainerId}`, {
         method: "PATCH",
@@ -168,15 +183,19 @@ export default function ChainersPage() {
         body: JSON.stringify({ action }),
       });
 
-      if (!response.ok) throw new Error("Failed to perform action");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to perform action");
+      }
 
       const data = await response.json();
-      toast.success(data.message);
+      toast.success(data.message || `Chainer ${action} successful`);
       fetchChainers();
       fetchStats();
     } catch (error) {
       console.error("Error performing action:", error);
-      toast.error("Failed to perform action");
+      const errorMessage = error instanceof Error ? error.message : "Failed to perform action";
+      toast.error(errorMessage);
     }
   };
 

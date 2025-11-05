@@ -509,7 +509,7 @@ export function PayoutDetailsModal({
             </Button>
             <Button
               onClick={handleConfirmPayout}
-              className="flex-1 bg-[#104901] text-white hover:bg-[#0d3a01]"
+              className="flex-1 bg-[#104901] text-white"
               disabled={
                 isSubmitting ||
                 isProcessing ||

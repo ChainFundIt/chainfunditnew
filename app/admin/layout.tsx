@@ -89,39 +89,10 @@ const navigation = [
     current: false,
   },
   {
-    name: "Payments",
-    href: "/admin/payments",
-    icon: DollarSign,
-    current: false,
-  },
-  {
     name: "Settings",
     href: "/admin/settings",
     icon: Settings,
     current: false,
-  },
-];
-
-const adminTools = [
-  {
-    name: "User Management",
-    href: "/admin/users",
-    icon: Users,
-  },
-  {
-    name: "Campaign Moderation",
-    href: "/admin/campaigns",
-    icon: BarChart3,
-  },
-  {
-    name: "Ambassador Analytics",
-    href: "/admin/ambassadors",
-    icon: TrendingUp,
-  },
-  {
-    name: "Payout Approval",
-    href: "/admin/payouts",
-    icon: DollarSign,
   },
 ];
 

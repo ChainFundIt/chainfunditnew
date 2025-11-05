@@ -100,10 +100,14 @@ export default function DonationsPage() {
 
   useEffect(() => {
     fetchDonations();
-    fetchCharityDonations();
     fetchCharities();
     fetchStats();
-  }, [currentPage, searchTerm, statusFilter, currencyFilter, charityStatusFilter, selectedCharity]);
+  }, [currentPage, searchTerm, statusFilter, currencyFilter]);
+
+  // Fetch charity donations only when needed (not on every filter change)
+  useEffect(() => {
+    fetchCharityDonations();
+  }, [charityStatusFilter, selectedCharity]);
 
   const fetchDonations = async () => {
     try {
@@ -131,35 +135,22 @@ export default function DonationsPage() {
   const fetchCharityDonations = async () => {
     setCharityLoading(true);
     try {
-      // Fetch donations from all charities
-      const allDonations: CharityDonation[] = [];
-      
-      const charitiesResponse = await fetch('/api/charities?limit=100');
-      const charitiesData = await charitiesResponse.json();
-      
-      for (const charity of charitiesData.charities || []) {
-        const response = await fetch(`/api/charities/${charity.id}/donate`);
-        const data = await response.json();
-        
-        const donationsWithCharity = (data.donations || []).map((d: any) => ({
-          ...d,
-          charity: {
-            name: charity.name,
-            slug: charity.slug,
-          },
-        }));
-        
-        allDonations.push(...donationsWithCharity);
-      }
+      // Use the optimized admin endpoint that fetches all donations in a single query
+      const params = new URLSearchParams({
+        charityId: selectedCharity,
+        status: charityStatusFilter,
+        limit: '1000',
+      });
 
-      // Sort by most recent
-      allDonations.sort((a, b) => 
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
+      const response = await fetch(`/api/admin/charities/donations?${params}`);
+      if (!response.ok) throw new Error('Failed to fetch charity donations');
 
-      setCharityDonations(allDonations);
+      const data = await response.json();
+      setCharityDonations(data.donations || []);
     } catch (error) {
       console.error('Error fetching charity donations:', error);
+      setCharityDonations([]);
+      toast.error('Failed to fetch charity donations');
     } finally {
       setCharityLoading(false);
     }
@@ -217,6 +208,13 @@ export default function DonationsPage() {
   };
 
   const handleDonationAction = async (donationId: string, action: string, reason?: string) => {
+    // Handle "view" action separately - it doesn't require a PATCH request
+    if (action === 'view') {
+      handleViewDonation(donationId);
+      return;
+    }
+
+    // Handle other actions that modify data
     try {
       const response = await fetch(`/api/admin/donations/${donationId}`, {
         method: 'PATCH',
@@ -224,15 +222,19 @@ export default function DonationsPage() {
         body: JSON.stringify({ action, reason }),
       });
 
-      if (!response.ok) throw new Error('Failed to perform action');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to perform action');
+      }
 
       const data = await response.json();
-      toast.success(data.message);
+      toast.success(data.message || `Donation ${action} successful`);
       fetchDonations();
       fetchStats();
     } catch (error) {
       console.error('Error performing action:', error);
-      toast.error('Failed to perform action');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to perform action';
+      toast.error(errorMessage);
     }
   };
 
@@ -385,9 +387,9 @@ export default function DonationsPage() {
                     <TrendingUp className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{formatCurrency(stats?.totalAmount || 0, 'USD')}</div>
+                    <div className="text-2xl font-bold">{formatCurrency(stats?.totalAmount || 0, currency || 'USD')}</div>
                     <p className="text-xs text-muted-foreground">
-                      {formatCurrency(stats?.completedAmount || 0, 'USD')} completed
+                      {formatCurrency(stats?.completedAmount || 0, currency || 'USD')} completed
                     </p>
                   </CardContent>
                 </Card>
@@ -398,7 +400,7 @@ export default function DonationsPage() {
                     <BarChart3 className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{formatCurrency(stats?.averageDonation || 0, 'USD')}</div>
+                    <div className="text-2xl font-bold">{formatCurrency(stats?.averageDonation || 0, currency || 'USD')}</div>
                     <p className="text-xs text-muted-foreground">
                       Per donation
                     </p>
@@ -519,7 +521,7 @@ export default function DonationsPage() {
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <CreditCard className="h-4 w-4" />
-                            <span className="text-sm">{donation.paymentMethod}</span>
+                            <span className="text-sm capitalize">{donation.paymentMethod}</span>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -615,7 +617,7 @@ export default function DonationsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {formatCharityCurrency(charityStats.totalAmount.toString(), 'USD')}
+                    {formatCharityCurrency(charityStats.totalAmount.toString(), currency || 'USD')}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">Combined value</p>
                 </CardContent>
