@@ -9,20 +9,19 @@ const Footer = (props: Props) => {
   return (
     <div className="bg-[#104901] border border-[#B5C7B080] py-8 md:py-12 font-source">
       <div className="p-4 md:p-10">
-        <p className="font-normal text-sm md:text-base text-white">
+        <p className="font-normal text-sm md:text-base text-white text-left ">
           ChainFundIt Limited is a For-Profit Organization operating a
-          “Donation-based” Crowdfunding Platform. <br /> Registered in England
-          (13253451) <br />
-          Please note ChainFundIt has obtained a no-objection from the Financial
-          Conduct Authority (“FCA”) to operate a “donation”-based crowdfunding
-          platform in the United Kingdom (“UK”). <br /> Kindly also note for
-          fundraising campaigns in the United States of America (“US”),
-          ChainFundIt does not offer “equity” or “lending”-based crowdfunding
-          services, thus is therefore not subject to the United States
-          Securities and Exchange Commission (“US SEC”) regulations for
-          crowdfunding.
+          “Donation-based” Crowdfunding Platform. Registered in England
+          (13253451). Please note ChainFundIt has obtained a no-objection from
+          the Financial Conduct Authority (“FCA”) to operate a “donation”-based
+          crowdfunding platform in the United Kingdom (“UK”). <br />
+          <br /> Kindly also note for fundraising campaigns in the United States
+          of America (“US”), ChainFundIt does not offer “equity” or
+          “lending”-based crowdfunding services, thus is therefore not subject
+          to the United States Securities and Exchange Commission (“US SEC”)
+          regulations for crowdfunding.
         </p>
-        <p className="font-medium text-xs md:text-lg text-[#ADADAD] my-2 uppercase">
+        <p className="font-medium text-xs md:text-lg text-[#ADADAD] my-2 uppercase text-left">
           Disclaimer: <br /> We reserve the right to open, extend, shorten or
           even close a fundraising campaign if we suspect any misuse or
           fraudulent activity.
@@ -41,7 +40,9 @@ const Footer = (props: Props) => {
               height={40}
               className="md:w-[48px] md:h-[48px]"
             />
-            <p className="font-bold text-2xl md:text-[40px] text-white">Chainfundit</p>
+            <p className="font-bold text-2xl md:text-[40px] text-white">
+              Chainfundit
+            </p>
           </section>
           <Link
             href="mailto:hello@chainfundit.com"
@@ -54,7 +55,9 @@ const Footer = (props: Props) => {
             <Instagram size={20} className="md:w-6 md:h-6" color="white" />
             <Twitter size={20} className="md:w-6 md:h-6" color="white" />
             <Linkedin size={20} className="md:w-6 md:h-6" color="white" />
-            <span className="font-normal text-base md:text-xl text-white">@chainfundit</span>
+            <span className="font-normal text-base md:text-xl text-white">
+              @chainfundit
+            </span>
           </section>
         </section>
 
@@ -74,9 +77,7 @@ const Footer = (props: Props) => {
             </ul>
           </section>
           <section className="w-full md:w-1/3 flex flex-col gap-2">
-            <p className="font-bold text-base text-white uppercase">
-              discover
-            </p>
+            <p className="font-bold text-base text-white uppercase">discover</p>
             <ul className="flex flex-col gap-2 font-normal text-sm md:text-base text-white">
               <li>
                 <Link href="/about">About us</Link>

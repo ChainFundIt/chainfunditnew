@@ -10,7 +10,6 @@ type Props = {};
 
 const Hero = (props: Props) => {
   const handleCreateCampaign = () => {
-    // Use Link instead of router.push for better compatibility
     window.location.href = "/create-campaign";
   };
 

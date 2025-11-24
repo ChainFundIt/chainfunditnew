@@ -56,7 +56,7 @@ const CustomerStories = (props: Props) => {
       <div className="bg-whitesmoke px-4 py-12 flex flex-col gap-4">
         <div className="w-full flex justify-between items-start">
           <section className="flex flex-col gap-2">
-            <p className="font-semibold text-3xl text-black">
+            <p className="font-semibold md:text-3xl text-xl text-black">
               Loved by over 400 individuals and charities just like you
             </p>
             <span className="font-normal text-base text-black">

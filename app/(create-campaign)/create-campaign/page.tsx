@@ -867,20 +867,24 @@ export default function CreateCampaignPage() {
                     onChange={(e) => handleFieldChange("story", e.target.value)}
                     className="bg-transparent md:w-[1000px] w-full h-[200px] font-medium text-[28xl] text-[#5F8555] placeholder:font-medium placeholder:text-[28xl] placeholder:text-[#5F8555] outline-none"
                   ></textarea>
-                  <span className="font-normal text-base text-[#5F8555]">
+                </section>
+              </div>
+              <section className="absolute bottom-0 w-full space-y-2">
+                <section className="px-4">
+                  <span className="font-normal md:text-base text-sm text-center md:text-left text-[#5F8555]">
                     Tell the world what your campaign is about and why you think
                     they should support you
                   </span>
                 </section>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowAiModal(true)}
-                className="absolute bottom-0 w-full bg-[#5F8555] py-3 px-4 flex gap-2 items-center font-normal text-xl text-[#D9D9D9] rounded-b-xl"
-              >
-                <Airplay />
-                <p>Suggest with AI</p>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAiModal(true)}
+                  className="w-full bg-[#5F8555] py-3 px-4 flex gap-2 items-center font-normal text-xl text-[#D9D9D9] rounded-b-xl"
+                >
+                  <Airplay />
+                  <p>Suggest with AI</p>
+                </button>
+              </section>
             </div>
             {/* Modal for AI suggestion */}
             {showAiModal && (

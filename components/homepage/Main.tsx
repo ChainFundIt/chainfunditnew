@@ -232,7 +232,7 @@ const Main = (props: Props) => {
                     router.push(`/virtual-giving-mall/${card.slug}`)
                   }
                 >
-                  <div className="relative h-[500px] bg-whitesmoke backdrop-blur-sm rounded-2xl overflow-hidden">
+                  <div className="relative h-[550px] bg-whitesmoke backdrop-blur-sm rounded-2xl overflow-hidden">
                     <div className="relative w-full flex items-center justify-center h-[200px] bg-gradient-to-br from-gray-100 to-gray-200">
                       <Image
                         src={card.image}
@@ -312,8 +312,8 @@ const Main = (props: Props) => {
           quick
         </p>
         <div className="flex flex-col md:flex-row gap-24 md:gap-5 w-full h-fit my-5">
-          <section className="bg-[url('/images/main-1.jpg')] bg-cover bg-no-repeat w-full md:w-2/3 h-60 md:h-[500px]">
-            <section className="bg-[linear-gradient(180deg,rgba(255,255,255,0)_70%,#fff_100%)] h-full px-2 md:px-4 py-4 md:py-6 flex flex-col gap-2 md:gap-3">
+          <section className="bg-[url('/images/main-1.jpg')] bg-cover bg-no-repeat w-full md:w-2/3 h-64 md:h-[500px]">
+            <section className="bg-[linear-gradient(180deg,rgba(255,255,255,0)_70%,#fff_100%)] h-full px-2 md:px-4 py-6 md:py-6 flex flex-col gap-3 md:gap-3">
               <div className="w-full md:w-[365px] h-fit p-2 md:p-4 rounded-xl bg-white flex items-start gap-2 md:gap-3 font-dm">
                 <Image
                   src="/images/avatar-1.png"
@@ -349,7 +349,7 @@ const Main = (props: Props) => {
               </div>
 
               <div className="flex flex-col gap-1 justify-end mt-4 mb-5 md:my-0 md:mt-auto">
-                <p className="font-dm font-medium text-lg md:text-xl text-black">
+                <p className="font-dm font-medium text-lg md:text-xl text-black -mb-2">
                   AI-powered writing
                 </p>
                 <span className="font-source font-normal text-base text-black">
@@ -358,8 +358,8 @@ const Main = (props: Props) => {
               </div>
             </section>
           </section>
-          <section className="bg-[url('/images/main-2.jpg')] bg-cover bg-no-repeat w-full md:w-1/3 h-60 md:h-[500px]">
-            <section className="bg-[linear-gradient(180deg,rgba(255,255,255,0)_70%,#fff_100%)] h-full px-2 md:px-4 py-4 md:py-6 flex flex-col gap-2 md:gap-3">
+          <section className="bg-[url('/images/main-2.jpg')] bg-cover bg-no-repeat w-full md:w-1/3 h-64 md:h-[500px]">
+            <section className="bg-[linear-gradient(180deg,rgba(255,255,255,0)_50%,#fff_100%)] h-full px-2 md:px-4 py-4 md:py-6 flex flex-col gap-2 md:gap-3">
               <div className="w-full md:w-[300px] h-fit p-2 md:p-4 rounded-xl bg-white flex items-start gap-2 md:gap-3 font-dm">
                 <Image
                   src="/images/avatar-2.png"
@@ -391,7 +391,7 @@ const Main = (props: Props) => {
         </div>
       </div>
       <div className="px-4 md:px-12 flex flex-col md:flex-row gap-4 md:gap-5 w-full h-fit my-5">
-        <section className="w-full md:w-1/3 h-60 md:h-[650px] relative overflow-hidden">
+        <section className="w-full md:w-1/3 h-64 md:h-[650px] relative overflow-hidden">
           <video
             ref={videoRef}
             className="w-full h-full object-cover"
@@ -403,8 +403,8 @@ const Main = (props: Props) => {
             <source src="/video/chain-podcast.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
-          <section className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0)_70%,whitesmoke_100%)] h-full px-2 md:px-4 py-4 md:py-6">
-            <div className="space-y-1 absolute bottom-5 flex flex-col gap-1 justify-end mt-auto">
+          <section className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0)_50%,whitesmoke_100%)] h-full px-2 md:px-4 py-4 md:py-6">
+            <div className="space-y-1 absolute bottom-2 md:bottom-6 justify-end mt-auto">
               <p className="font-dm font-medium text-lg md:text-xl text-black">
                 Video explainers
               </p>
