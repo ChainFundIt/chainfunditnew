@@ -23,18 +23,26 @@ const Hero = (props: Props) => {
                 <p className="w-6 h-6 bg-[#104901] rounded-sm flex justify-center items-center font-source font-bold text-lg text-white">
                   ₦
                 </p>
-                <span className="font-source font-semibold text-base text-white">Amount raised</span>
+                <span className="font-source font-semibold text-base text-white">
+                  Amount raised
+                </span>
               </div>
-              <p className="font-source font-semibold text-2xl md:text-3xl text-white">400,000</p>
+              <p className="font-source font-semibold text-2xl md:text-3xl text-white">
+                400,000
+              </p>
             </section>
             <section className="w-fit h-fit bg-[#FFFFFF33] rounded-xl backdrop-blur-sm p-2.5">
               <div className="flex gap-2">
                 <p className="w-6 h-6 bg-[#104901] rounded-sm flex justify-center items-center font-source font-bold text-base text-white">
                   <Headphones size={16} />
                 </p>
-                <span className="font-source font-semibold text-base text-white">Campaign goal</span>
+                <span className="font-source font-semibold text-base text-white">
+                  Campaign goal
+                </span>
               </div>
-              <p className="font-source font-semibold text-2xl md:text-3xl text-white">Hearing aids for Bolu</p>
+              <p className="font-source font-semibold text-2xl md:text-3xl text-white">
+                Hearing aids for Bolu
+              </p>
             </section>
           </div>
         </section>
@@ -84,16 +92,15 @@ const Hero = (props: Props) => {
           </div>
 
           <p className="font-source font-bold text-3xl md:text-5xl text-black">
-            Change the world{" "}
+            Raise funds -{" "}
             <span className="font-serif font-semibold italic">
-              one donation{" "}
+              support dreams
             </span>
-            at a time
           </p>
           <span className="font-source font-medium text-base text-black">
             Support causes you love with fundraisers built on modern tools
           </span>
-          <Button 
+          <Button
             className="h-12 md:h-16 flex justify-between font-source font-semibold text-lg md:text-2xl"
             onClick={handleCreateCampaign}
           >
