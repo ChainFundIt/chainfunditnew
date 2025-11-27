@@ -301,7 +301,7 @@ export default function AdminCampaignsPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "active":
-        return <Play className="h-4 w-4 text-green-600" />;
+        return <Play className="h-4 w-4 text-brand-green-dark" />;
       case "paused":
         return <Pause className="h-4 w-4 text-yellow-600" />;
       case "completed":
@@ -337,7 +337,7 @@ export default function AdminCampaignsPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#104901] mx-auto"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green-dark mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading campaigns...</p>
         </div>
       </div>
@@ -370,7 +370,7 @@ export default function AdminCampaignsPage() {
                 </Button>
                 <Button
                   size="sm"
-                  className="bg-[#104901] text-white"
+                  className="bg-brand-green-dark text-white"
                   onClick={() => router.push("/admin/dashboard/analytics")}
                 >
                   <BarChart3 className="h-4 w-4 mr-2" />
@@ -405,10 +405,10 @@ export default function AdminCampaignsPage() {
                   <CardTitle className="text-sm font-medium">
                     Total Raised
                   </CardTitle>
-                  <DollarSign className="h-4 w-4 text-green-500" />
+                  <DollarSign className="h-4 w-4 text-brand-green-light" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">
+                  <div className="text-2xl font-bold text-brand-green-dark">
                     {formatCurrency(stats.totalRaised, currency)}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
@@ -681,12 +681,16 @@ export default function AdminCampaignsPage() {
                         <TableCell>
                           <div className="text-sm space-y-1">
                             <div className="flex items-center">
-                              <DollarSign className="h-3 w-3 mr-1 text-green-600" />
-                              {campaign.donationCount} donations
+                              <DollarSign className="h-3 w-3 mr-1 text-brand-green-dark" />
+                              <span className="text-gray-500 text-xs">
+                                {campaign.donationCount} donations
+                              </span>
                             </div>
                             <div className="flex items-center">
                               <Users className="h-3 w-3 mr-1 text-blue-600" />
-                              {campaign.chainerCount} ambassadors
+                              <span className="text-gray-500 text-xs">
+                                {campaign.chainerCount} ambassadors
+                              </span>
                             </div>
                           </div>
                         </TableCell>
