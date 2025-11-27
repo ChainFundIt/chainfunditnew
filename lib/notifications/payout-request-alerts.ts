@@ -301,7 +301,8 @@ export async function createAdminNotificationForPayoutRequest(
       "@/lib/schema/admin-notifications"
     );
 
-    const actionUrl = `${process.env.NEXT_PUBLIC_APP_URL || ""}/admin/payouts`;
+    // Use relative path for internal navigation to avoid client-side errors
+    const actionUrl = "admin/payouts";
 
     await db.insert(adminNotifications).values({
       title: `Payout request from ${payoutData.userName}`,

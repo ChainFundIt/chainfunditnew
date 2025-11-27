@@ -411,7 +411,7 @@ const Main = ({ campaignId }: MainProps) => {
       <div className="max-w-[1440px] mx-auto mt-16 md:mt-22 h-full p-5 md:p-12 font-source">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#104901] mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green-dark mx-auto mb-4"></div>
             <p className="text-lg text-[#757575]">Loading campaign...</p>
           </div>
         </div>
@@ -438,7 +438,7 @@ const Main = ({ campaignId }: MainProps) => {
             </p>
             <button
               onClick={() => window.location.reload()}
-              className="bg-[#104901] text-white px-6 py-3 rounded-lg hover:bg-[#0d3a01] transition-colors"
+              className="bg-brand-green-dark text-white px-6 py-3 rounded-lg hover:opacity-90 transition-colors"
             >
               Try Again
             </button>
@@ -488,14 +488,14 @@ const Main = ({ campaignId }: MainProps) => {
       {donationStatusNotification && (
         <div className={`mb-6 p-4 rounded-lg border-2 flex items-center justify-between ${
           donationStatusNotification.status === 'success' 
-            ? 'bg-green-50 border-green-200 text-green-800' 
+            ? 'bg-brand-green-light/20 border-brand-green-light text-brand-green-dark' 
             : donationStatusNotification.status === 'failed'
             ? 'bg-red-50 border-red-200 text-red-800'
-            : 'bg-yellow-50 border-yellow-200 text-yellow-800'
+            : 'bg-brand-yellow/20 border-brand-yellow text-brand-green-dark'
         }`}>
           <div className="flex items-center gap-3">
             {donationStatusNotification.status === 'success' ? (
-              <CheckCircle className="h-5 w-5 text-green-600" />
+              <CheckCircle className="h-5 w-5 text-brand-green-dark" />
             ) : donationStatusNotification.status === 'failed' ? (
               <AlertCircle className="h-5 w-5 text-red-600" />
             ) : (
@@ -567,7 +567,7 @@ const Main = ({ campaignId }: MainProps) => {
                     onClick={() => setSelectedImage(idx)}
                     className={`relative md:w-[137px] w-[60px] md:h-[84px] h-[60px] border-2 ${
                       selectedImage === idx
-                        ? "border-[#104901]"
+                        ? "border-brand-green-dark"
                         : "border-transparent"
                     } overflow-hidden focus:outline-none`}
                     aria-label={`Show image ${idx + 1}`}
@@ -599,7 +599,7 @@ const Main = ({ campaignId }: MainProps) => {
                         window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
                       }
                     }}
-                    className="relative md:w-[137px] w-[60px] md:h-[84px] h-[60px] border-2 border-transparent overflow-hidden focus:outline-none hover:border-[#104901] transition-colors group"
+                    className="relative md:w-[137px] w-[60px] md:h-[84px] h-[60px] border-2 border-transparent overflow-hidden focus:outline-none hover:border-brand-green-dark transition-colors group"
                     aria-label="Watch YouTube video"
                   >
                     <Image
@@ -635,11 +635,11 @@ const Main = ({ campaignId }: MainProps) => {
 
           <p className="font-medium text-2xl text-[#757575] md:my-1 my-3">
             Organised by{" "}
-            <span className="font-semibold text-[#104901]">
+            <span className="font-semibold text-brand-green-dark">
               {campaignData.creatorName || "Unknown Creator"}
             </span>{" "}
             for{" "}
-            <span className="font-semibold text-[#104901]">
+            <span className="font-semibold text-brand-green-dark">
               {campaignData.fundraisingFor || "Unknown Cause"}
             </span>
           </p>
@@ -649,7 +649,7 @@ const Main = ({ campaignId }: MainProps) => {
               <p className="font-medium text-sm md:text-xl text-[#757575]">
                 Category:
               </p>
-              <span className="font-medium text-sm md:text-xl text-[#104901]">
+              <span className="font-medium text-sm md:text-xl text-brand-green-dark">
                 {campaignData.reason}
               </span>
             </section>
@@ -688,7 +688,7 @@ const Main = ({ campaignId }: MainProps) => {
           {/* Progress bar */}
           <div className="w-full bg-[#D9D9D9] h-2 my-1">
             <div
-              className="bg-[#104901] h-full transition-all duration-500"
+              className="bg-brand-green-dark h-full transition-all duration-500"
               style={{
                 width: `${percent}%`,
               }}
@@ -717,7 +717,7 @@ const Main = ({ campaignId }: MainProps) => {
                 onClick={() => setActiveTab("why-support")}
                 className={`md:px-5 px-2 py-3 border-x border-t border-[#C0BFC4] rounded-t-lg font-semibold text-lg md:text-3xl ${
                   activeTab === "why-support"
-                    ? "bg-[#E7EDE6] text-[#104901]"
+                    ? "bg-[#E7EDE6] text-brand-green-dark"
                     : "text-[#868686]"
                 }`}
               >
@@ -727,13 +727,13 @@ const Main = ({ campaignId }: MainProps) => {
                 onClick={() => setActiveTab("updates")}
                 className={`md:px-5 px-2 py-3 border-r border-t border-[#C0BFC4] rounded-tr-lg font-semibold text-lg md:text-3xl relative ${
                   activeTab === "updates"
-                    ? "bg-[#E7EDE6] text-[#104901]"
+                    ? "bg-[#E7EDE6] text-brand-green-dark"
                     : "text-[#868686]"
                 }`}
               >
                 Updates
                 {updates.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-[#104901] text-white text-sm rounded-full w-6 h-6 flex items-center justify-center border border-white">
+                  <span className="absolute -top-1 -right-1 bg-brand-green-dark text-white text-sm rounded-full w-6 h-6 flex items-center justify-center border border-white">
                     {updates.length}
                   </span>
                 )}
@@ -742,13 +742,13 @@ const Main = ({ campaignId }: MainProps) => {
                 onClick={() => setActiveTab("documents")}
                 className={`md:px-5 px-2 py-3 border-r border-t border-[#C0BFC4] font-semibold text-lg md:text-3xl relative ${
                   activeTab === "documents"
-                    ? "bg-[#E7EDE6] text-[#104901]"
+                    ? "bg-[#E7EDE6] text-brand-green-dark"
                     : "text-[#868686]"
                 }`}
               >
                 Documents
                 {campaignDocuments.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-[#104901] text-white text-sm rounded-full w-6 h-6 flex items-center justify-center border border-white">
+                  <span className="absolute -top-1 -right-1 bg-brand-green-dark text-white text-sm rounded-full w-6 h-6 flex items-center justify-center border border-white">
                     {campaignDocuments.length}
                   </span>
                 )}
@@ -757,16 +757,16 @@ const Main = ({ campaignId }: MainProps) => {
 
             {/* Tab Content */}
             {activeTab === "why-support" && (
-              <div className="bg-whitesmoke border-x border-b border-[#C0BFC4] font-normal text-sm md:text-xl text-[#104901] p-3 md:p-6 space-y-4">
+              <div className="bg-whitesmoke border-x border-b border-[#C0BFC4] font-normal text-sm md:text-xl text-brand-green-dark p-3 md:p-6 space-y-4">
                 <p className="">{campaignData.description}</p>
               </div>
             )}
 
             {activeTab === "updates" && (
-              <div className="bg-whitesmoke border-x border-b border-[#C0BFC4] font-normal text-sm md:text-xl text-[#104901] p-3 md:p-6">
+              <div className="bg-whitesmoke border-x border-b border-[#C0BFC4] font-normal text-sm md:text-xl text-brand-green-dark p-3 md:p-6">
                 {loadingUpdates ? (
                   <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#104901] mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green-dark mx-auto mb-4"></div>
                     <p className="text-[#757575]">Loading updates...</p>
                   </div>
                 ) : updates.length > 0 ? (
@@ -777,7 +777,7 @@ const Main = ({ campaignId }: MainProps) => {
                         className="bg-white rounded-xl p-4 border border-[#C0BFC4]"
                       >
                         <div className="flex items-start justify-between mb-3">
-                          <h4 className="font-semibold text-lg text-[#104901]">
+                          <h4 className="font-semibold text-lg text-brand-green-dark">
                             {update.title}
                           </h4>
                           <span className="text-sm text-[#757575]">

@@ -101,7 +101,7 @@ const CustomerStories = (props: Props) => {
                   />
                 </div>
                 <div className="md:w-[225px] w-[420px] h-full flex flex-col justify-between p-6 bg-white">
-                  <p className="text-3xl font-semibold text-green-800">
+                  <p className="text-3xl font-semibold text-brand-green-dark">
                     {story.name}
                   </p>
                   <span className="text-base text-black">

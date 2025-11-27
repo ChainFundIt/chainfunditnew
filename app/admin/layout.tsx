@@ -165,7 +165,7 @@ export default function AdminLayout({
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#104901] mx-auto"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green-dark mx-auto"></div>
           <p className="mt-2 text-gray-600">Loading dashboard...</p>
         </div>
       </div>
@@ -248,7 +248,6 @@ export default function AdminLayout({
           <nav className="flex-1 px-4 py-4 space-y-1">
             {navigation
               .filter((item) => {
-                // Filter out super admin items for non-super admins
                 if (item.superAdminOnly && user?.role !== "super_admin") {
                   return false;
                 }
@@ -269,7 +268,7 @@ export default function AdminLayout({
                     <item.icon
                       className={`mr-3 h-5 w-5 ${
                         isActive
-                          ? "text-[#104901]"
+                          ? "text-brand-green-dark"
                           : "text-gray-400 group-hover:text-gray-500"
                       }`}
                     />
@@ -396,8 +395,8 @@ export default function AdminLayout({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={handleLogoutClick}
-                  className="h-8 w-8 bg-[#104901] rounded-full flex items-center justify-center"
+                  onClick={() => router.push("/admin/settings")}
+                  className="h-8 w-8 bg-brand-green-dark hover:opacity-90 rounded-full flex items-center justify-center"
                 >
                   <span className="text-sm font-medium text-white">
                     {user?.fullName?.charAt(0) || "A"}

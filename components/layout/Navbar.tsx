@@ -27,7 +27,7 @@ const Navbar = (props: Props) => {
             width={30}
             height={30}
           />
-          <p className="font-semibold text-xl text-[#104901]">Chainfundit</p>
+          <p className="font-semibold text-xl text-brand-green-dark">Chainfundit</p>
         </Link>
         {/* Hamburger for mobile */}
         <button

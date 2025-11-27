@@ -13,22 +13,23 @@ import {
 import { NotificationsList } from "@/components/homepage/notifications-list";
 import BenefitsCarousel from "./BenefitsCarousel";
 import { useCharities } from "@/hooks/use-charities";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Play, Pause, Volume2, VolumeX } from "lucide-react";
 import { Button } from "../ui/button";
 import Link from "next/link";
 type Props = {};
 
 const Main = (props: Props) => {
   const images = [
-    "/images/main-3.png", // Image 1: multi-currency
-    "/images/teamwork.png", // Image 2: two people lifting
-    "/images/secure.png", // Image 3: secure payments
+    "/images/main-3.png", 
+    "/images/teamwork.png", 
+    "/images/secure.png", 
   ];
 
   const router = useRouter();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
   const [isVideoPlaying, setIsVideoPlaying] = useState(true);
+  const [isMuted, setIsMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const {
@@ -49,6 +50,13 @@ const Main = (props: Props) => {
         videoRef.current.play();
       }
       setIsVideoPlaying(!isVideoPlaying);
+    }
+  };
+
+  const toggleMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted;
+      setIsMuted(!isMuted);
     }
   };
 
@@ -118,7 +126,7 @@ const Main = (props: Props) => {
   return (
     <div className="my-6">
       {/* benefits */}
-      <BenefitsCarousel />
+      <BenefitsCarousel themeOverride="christmas" />
       {/* charity cards */}
       <div className="p-4 md:p-12 w-full h-fit flex flex-col gap-5 my-5 bg-whitesmoke">
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0">
@@ -132,7 +140,7 @@ const Main = (props: Props) => {
           </section>
 
           <Select value={selectedFilter} onValueChange={setSelectedFilter}>
-            <SelectTrigger className="w-full md:w-[250px] h-12 md:h-14 px-4 md:px-6 font-source font-normal text-base text-black border-2 border-[#0F4201] rounded-none">
+            <SelectTrigger className="w-full md:w-[250px] h-12 md:h-14 px-4 md:px-6 font-source font-normal text-base text-black border-2 border-brand-green-dark rounded-none">
               <SelectValue placeholder="All charities" />
             </SelectTrigger>
             <SelectContent>
@@ -162,8 +170,8 @@ const Main = (props: Props) => {
           {/* Loading State */}
           {charitiesLoading && (
             <div className="flex items-center justify-center w-full py-16">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#104901] mb-4"></div>
-              <p className="text-[#104901] text-xl ml-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green-dark mb-4"></div>
+              <p className="text-brand-green-dark text-xl ml-4">
                 Loading charities...
               </p>
             </div>
@@ -188,7 +196,7 @@ const Main = (props: Props) => {
               <h3 className="font-bold text-2xl text-red-600 mb-3">
                 Error Loading Charities
               </h3>
-              <p className="text-red-500 text-center mb-4">{charitiesError}</p>
+              <Button onClick={() => window.location.reload()}>Retry</Button>
             </div>
           )}
 
@@ -197,7 +205,7 @@ const Main = (props: Props) => {
             !charitiesError &&
             cardDetails.length === 0 && (
             <div className="flex flex-col items-center justify-center w-full py-16">
-              <div className="text-[#104901] mb-4">
+              <div className="text-brand-green-dark mb-4">
                 <svg
                   className="w-16 h-16"
                   fill="currentColor"
@@ -210,10 +218,10 @@ const Main = (props: Props) => {
                   />
                 </svg>
               </div>
-              <h3 className="font-bold text-2xl text-[#104901] mb-3">
+              <h3 className="font-bold text-2xl text-brand-green-dark mb-3">
                 No Charities Available
               </h3>
-              <p className="text-[#104901] text-center">
+              <p className="text-brand-green-dark text-center">
                 Check back later for inspiring charities!
               </p>
             </div>
@@ -242,14 +250,14 @@ const Main = (props: Props) => {
                         className="object-cover group-hover:scale-110 transition-transform duration-500"
                       />
                       {card.isVerified && (
-                        <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-[#104901] shadow-sm">
+                        <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-brand-green-dark shadow-sm">
                           <ShieldCheck className="h-3 w-3" />
                           Verified
                         </span>
                       )}
                     </div>
                     <div className="p-6 h-full bg-[#F5F5F5]">
-                      <h3 className="font-bold text-[#104901] mb-3 text-xl">
+                      <h3 className="font-bold text-brand-green-dark mb-3 text-xl">
                         {card.title.length > 40
                           ? `${card.title.slice(0, 40)}...`
                           : card.title}
@@ -259,7 +267,7 @@ const Main = (props: Props) => {
                       </p>
                       <div className="space-y-3">
                         <div className="flex justify-between text-sm">
-                          <span className="text-[#104901] opacity-80">
+                          <span className="text-brand-green-dark opacity-80">
                             Category
                           </span>
                           <span className="font-semibold text-right">
@@ -267,7 +275,7 @@ const Main = (props: Props) => {
                           </span>
                         </div>
                         <div className="flex justify-between text-sm">
-                          <span className="text-[#104901] opacity-80">
+                          <span className="text-brand-green-dark opacity-80">
                             Location
                           </span>
                           <span className="font-semibold text-right">
@@ -287,7 +295,7 @@ const Main = (props: Props) => {
                           </span>
                         </div>
                           <div className="flex justify-center items-center">
-                            <Button variant="outline" className="text-[#104901] font-semibold">
+                            <Button variant="outline" className="text-brand-green-dark font-semibold">
                               <Link href={`/virtual-giving-mall/${card.slug}`}>
                                 View details
                               </Link>
@@ -330,7 +338,7 @@ const Main = (props: Props) => {
                   </p>
                 </section>
               </div>
-              <div className="w-full md:w-[365px] h-fit p-2 md:p-4 rounded-xl bg-white flex items-start gap-2 md:gap-3 font-dm">
+              {/* <div className="w-full md:w-[365px] h-fit p-2 md:p-4 rounded-xl bg-white flex items-start gap-2 md:gap-3 font-dm">
                 <section className="flex flex-col gap-1">
                   <span className="font-normal text-base text-black">
                     Chainfundit
@@ -346,7 +354,7 @@ const Main = (props: Props) => {
                   height={40}
                   className="md:w-[50px] md:h-[50px]"
                 />
-              </div>
+              </div> */}
 
               <div className="flex flex-col gap-1 justify-end mt-4 mb-5 md:my-0 md:mt-auto">
                 <p className="font-dm font-medium text-lg md:text-xl text-black -mb-2">
@@ -391,19 +399,44 @@ const Main = (props: Props) => {
         </div>
       </div>
       <div className="px-4 md:px-12 flex flex-col md:flex-row gap-4 md:gap-5 w-full h-fit my-5">
-        <section className="w-full md:w-1/3 h-64 md:h-[650px] relative overflow-hidden">
+        <section className="w-full md:w-1/3 h-64 md:h-[650px] relative overflow-hidden group">
           <video
             ref={videoRef}
             className="w-full h-full object-cover"
             autoPlay
-            muted
+            muted={isMuted}
             loop
             playsInline
           >
             <source src="/video/chain-podcast.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
-          <section className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0)_50%,whitesmoke_100%)] h-full px-2 md:px-4 py-4 md:py-6">
+          {/* Custom controls at the top */}
+          <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/60 to-transparent px-3 md:px-4 py-2 md:py-3 flex items-center gap-2 md:gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+            <button
+              onClick={toggleVideoPlayPause}
+              className="text-white hover:text-gray-200 transition-colors p-1"
+              aria-label={isVideoPlaying ? "Pause" : "Play"}
+            >
+              {isVideoPlaying ? (
+                <Pause className="w-5 h-5 md:w-6 md:h-6" />
+              ) : (
+                <Play className="w-5 h-5 md:w-6 md:h-6" />
+              )}
+            </button>
+            <button
+              onClick={toggleMute}
+              className="text-white hover:text-gray-200 transition-colors p-1"
+              aria-label={isMuted ? "Unmute" : "Mute"}
+            >
+              {isMuted ? (
+                <VolumeX className="w-5 h-5 md:w-6 md:h-6" />
+              ) : (
+                <Volume2 className="w-5 h-5 md:w-6 md:h-6" />
+              )}
+            </button>
+          </div>
+          <section className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0)_50%,whitesmoke_100%)] h-full px-2 md:px-4 py-4 md:py-6 pointer-events-none">
             <div className="space-y-1 absolute bottom-2 md:bottom-6 justify-end mt-auto">
               <p className="font-dm font-medium text-lg md:text-xl text-black">
                 Video explainers

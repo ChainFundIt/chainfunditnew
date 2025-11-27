@@ -11,7 +11,10 @@ import {
   normalizeActionUrl,
   isInternalActionUrl,
   shouldOpenInNewTab,
+  extractInternalPath,
 } from '@/lib/notifications/url-utils';
+
+const HTTP_PROTOCOL_REGEX = /^https?:\/\//i;
 
 interface Notification {
   id: string;
@@ -268,11 +271,23 @@ export default function NotificationPanel() {
                               notification.actionLabel?.trim() || 'View Details';
                             const linkClasses = 'text-xs text-blue-600 hover:text-blue-800';
 
-                            if (isInternalActionUrl(actionUrl)) {
+                            // Extract internal path - always try to get relative path for same-domain URLs
+                            const internalPath = extractInternalPath(actionUrl);
+                            
+                            // Check if it's a relative path or same-domain URL that we can extract
+                            const isRelativePath = actionUrl.startsWith('/') || actionUrl.startsWith('#');
+                            const isSameDomain = typeof window !== 'undefined' && 
+                              HTTP_PROTOCOL_REGEX.test(actionUrl) && 
+                              internalPath !== actionUrl && 
+                              internalPath.startsWith('/');
+                            
+                            // Use Next.js Link for relative paths or same-domain URLs
+                            if (isRelativePath || isSameDomain) {
+                              const href = isSameDomain ? internalPath : actionUrl;
                               return (
                                 <div className="mt-2">
                                   <Link
-                                    href={actionUrl}
+                                    href={href}
                                     className={linkClasses}
                                     onClick={() => setIsOpen(false)}
                                   >
@@ -282,6 +297,7 @@ export default function NotificationPanel() {
                               );
                             }
 
+                            // External URL - use regular anchor tag
                             const openInNewTab = shouldOpenInNewTab(actionUrl);
                             return (
                               <div className="mt-2">

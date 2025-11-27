@@ -24,7 +24,7 @@ export async function POST(
       donorName,
       message,
       isAnonymous,
-      donationId, // If donation already created
+      donationId,
     } = body;
 
     // Verify charity exists and is active

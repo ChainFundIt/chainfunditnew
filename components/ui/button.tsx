@@ -7,19 +7,19 @@ import { cn } from "@/lib/utils"
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
-    variants: {
-      variant: {
-        default:
-            "bg-[#104901] text-primary-foreground shadow border-2 border-white rounded-none hover:bg-white hover:text-[#104901] hover:border-[#104901]",
-        destructive:
-          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
-        outline:
-          "border-2 border-[#0F4201] bg-transparent shadow-sm rounded-none hover:bg-accent hover:text-accent-foreground",
-        secondary:
-          "bg-[#5F8555] text-secondary-foreground shadow-sm rounded-none",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
-      },
+      variants: {
+        variant: {
+          default:
+            "bg-brand-green-dark text-primary-foreground shadow border-2 border-white rounded-none hover:bg-white hover:text-brand-green-dark hover:border-brand-green-dark",
+          destructive:
+            "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+          outline:
+            "border-2 border-brand-green-dark bg-transparent shadow-sm rounded-none hover:bg-accent hover:text-accent-foreground",
+          secondary:
+            "bg-brand-green-light text-secondary-foreground shadow-sm rounded-none",
+          ghost: "hover:bg-accent hover:text-accent-foreground",
+          link: "text-primary underline-offset-4 hover:underline",
+        },
       size: {
         default: "h-9 px-4 py-2",
         sm: "h-8 px-3 text-xs",

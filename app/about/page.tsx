@@ -99,8 +99,9 @@ export default function AboutPage() {
             About ChainFundIt
           </h1>
           <p className="text-xl md:text-2xl text-white/90 max-w-4xl mx-auto mb-8">
-            We&apos;re on a mission to democratize fundraising and make it easier for
-            people to support causes they care about, anywhere in the world.
+            We&apos;re on a mission to democratize fundraising and make it
+            easier for people to support causes they care about, anywhere in the
+            world.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Badge className="bg-white/20 text-white border-white/30 px-4 py-2 text-lg">
@@ -128,25 +129,14 @@ export default function AboutPage() {
               </h2>
               <div className="space-y-4 text-lg text-gray-700">
                 <p>
-                  Our innovative platform is dedicated to promoting a clear
-                  message to inspire action, as well as creative and constant
-                  promotion and consistent communication between campaign
-                  organizers (i.e., family members, friends, colleagues, social
-                  groups, individuals, and businesses), campaign ambassadors,
-                  and campaign donors.
-                </p>
-                <p>
-                  ChainFundIt promotes donation-based campaigns to raise funds
-                  for medical and life emergencies, business and financial
-                  support, funeral expenses, and birthday gifts.
-                </p>
-                <p>
-                  The innovative and unique “Chainfunding” feature of
-                  ChainFundIt is poised to become the “uber” of the crowdfunding
-                  world. It is a technological enabler for accelerating
-                  donation-based fundraising campaigns, introducing the chain
-                  feature by “chaining” (sharing a campaign to generate
-                  interest), and providing regular progress updates.
+                  Our platform empowers campaign organizers, ambassadors, and
+                  donors with clear communication, creative promotion, and
+                  consistent engagement. ChainFundIt supports donation-based
+                  campaigns for medical needs, emergencies, financial support,
+                  funerals, and gifts. Its unique “Chainfunding” feature
+                  accelerates fundraising by enabling users to “chain” (share)
+                  campaigns, spark interest, and track progress—positioning
+                  ChainFundIt as the future of crowdfunding.
                 </p>
               </div>
               <div className="mt-8">
@@ -266,7 +256,8 @@ export default function AboutPage() {
               Our Journey
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              From humble beginnings to global impact - here&apos;s how we&apos;ve grown.
+              From humble beginnings to global impact - here&apos;s how
+              we&apos;ve grown.
             </p>
           </div>
 
@@ -355,7 +346,7 @@ export default function AboutPage() {
           </div>
         </div> */}
 
-        <div className="bg-gradient-to-r from-green-600 to-[#104901] rounded-2xl p-12 text-center text-white">
+        <div className="bg-gradient-to-r from-brand-green-light to-brand-green-dark rounded-2xl p-12 text-center text-white">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Ready to Make an Impact?
           </h2>

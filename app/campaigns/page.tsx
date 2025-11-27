@@ -269,7 +269,7 @@ export default function AllCampaignsPage() {
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50">
       <Navbar />
       {/* Hero Section */}
-      <div className="mt-20 relative bg-gradient-to-r from-green-600 to-[#104901] text-white py-16">
+      <div className="mt-20 relative bg-gradient-to-r from-brand-green-light to-brand-green-dark text-white py-16">
         <div className="relative container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-4">
             Discover Amazing Campaigns
@@ -330,7 +330,7 @@ export default function AllCampaignsPage() {
                 value={selectedReason}
                 onValueChange={(value) => setSelectedReason(value)}
               >
-                <SelectTrigger className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                <SelectTrigger className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-green-dark">
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
@@ -357,7 +357,7 @@ export default function AllCampaignsPage() {
                 value={selectedStatus}
                 onValueChange={(value) => setSelectedStatus(value)}
               >
-                <SelectTrigger className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                <SelectTrigger className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-green-dark">
                   <SelectValue placeholder="All Statuses" />
                 </SelectTrigger>
                 <SelectContent>
@@ -384,7 +384,7 @@ export default function AllCampaignsPage() {
                 value={sortBy}
                 onValueChange={(value) => setSortBy(value as any)}
               >
-                <SelectTrigger className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                <SelectTrigger className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-green-dark">
                   <SelectValue placeholder="All Statuses" />
                 </SelectTrigger>
                 <SelectContent>

@@ -20,7 +20,7 @@ const Hero = (props: Props) => {
           <div className="flex flex-col md:flex-row gap-4 md:gap-8 mt-auto ml-4 md:ml-16 -mb-3">
             <section className="w-fit h-fit bg-[#FFFFFF33] rounded-xl backdrop-blur-sm p-2.5 mb-2 md:mb-0">
               <div className="flex gap-2">
-                <p className="w-6 h-6 bg-[#104901] rounded-sm flex justify-center items-center font-source font-bold text-lg text-white">
+                <p className="w-6 h-6 bg-brand-green-dark rounded-sm flex justify-center items-center font-source font-bold text-lg text-white">
                   ₦
                 </p>
                 <span className="font-source font-semibold text-base text-white">
@@ -33,7 +33,7 @@ const Hero = (props: Props) => {
             </section>
             <section className="w-fit h-fit bg-[#FFFFFF33] rounded-xl backdrop-blur-sm p-2.5">
               <div className="flex gap-2">
-                <p className="w-6 h-6 bg-[#104901] rounded-sm flex justify-center items-center font-source font-bold text-base text-white">
+                <p className="w-6 h-6 bg-brand-green-dark rounded-sm flex justify-center items-center font-source font-bold text-base text-white">
                   <Headphones size={16} />
                 </p>
                 <span className="font-source font-semibold text-base text-white">

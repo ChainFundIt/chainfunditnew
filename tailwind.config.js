@@ -80,6 +80,11 @@ module.exports = {
   				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
   				border: 'hsl(var(--sidebar-border))',
   				ring: 'hsl(var(--sidebar-ring))'
+  			},
+  			brand: {
+  				'green-dark': '#104901',
+  				'green-light': '#59ad4a',
+  				yellow: '#ffcf55'
   			}
   		},
   		boxShadow: {

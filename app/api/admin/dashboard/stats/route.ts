@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { users, campaigns, donations, chainers, commissionPayouts, campaignPayouts } from '@/lib/schema';
 import { eq, gte, lte, desc, count, sum, sql, inArray } from 'drizzle-orm';
 import { getAdminUser } from '@/lib/admin-auth';
+import { formatCurrency } from '@/lib/utils/currency';
 
 interface DashboardStats {
   totalUsers: number;
@@ -129,6 +130,7 @@ export async function GET(request: NextRequest) {
         id: donations.id,
         type: sql<string>`'donation'`,
         amount: donations.amount,
+        currency: donations.currency,
         status: donations.paymentStatus,
         createdAt: donations.createdAt
       })
@@ -159,14 +161,20 @@ export async function GET(request: NextRequest) {
       pendingPayouts: totalPendingPayouts,
       pendingReview: pendingReview.count,
       activeChainers: activeChainers.count,
-      recentActivity: recentActivity.map(activity => ({
-        id: activity.id,
-        type: activity.type,
-        description: `Donation of $${activity.amount}`,
-        timestamp: activity.createdAt.toISOString(),
-        amount: activity.amount,
-        status: activity.status === 'completed' ? 'success' : 'pending'
-      })),
+      recentActivity: recentActivity.map(activity => {
+        const amount = Number(activity.amount) || 0;
+        const currency = activity.currency || 'USD';
+        const formattedAmount = formatCurrency(amount, currency);
+        return {
+          id: activity.id,
+          type: activity.type,
+          description: `Donation of ${formattedAmount}`,
+          timestamp: activity.createdAt.toISOString(),
+          amount: amount,
+          currency: currency,
+          status: activity.status === 'completed' ? 'success' : 'pending'
+        };
+      }),
       topCampaigns: topCampaigns.map(campaign => ({
         id: campaign.id,
         slug: campaign.slug,
@@ -184,11 +192,16 @@ export async function GET(request: NextRequest) {
         commission: chainer.commissionEarned,
         conversionRate: chainer.totalReferrals > 0 ? Math.round((chainer.totalReferrals / chainer.totalReferrals) * 100) : 0
       })),
-      revenueTrend: revenueTrend.map(item => ({
-        date: item.date,
-        amount: item.amount || 0,
-        donations: item.count
-      }))
+      revenueTrend: revenueTrend.map(item => {
+        const dateStr = typeof item.date === 'string' ? item.date : (item.date as Date).toString() || '';
+        const date = dateStr ? new Date(dateStr).toISOString().split('T')[0] : '';
+        return {
+          date: date,
+          amount: Number(item.amount) || 0,
+          donations: item.count || 0,
+          visitors: item.count || 0
+        };
+      })
     };
 
     return NextResponse.json(stats);

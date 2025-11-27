@@ -33,7 +33,10 @@ import {
   normalizeActionUrl,
   isInternalActionUrl,
   shouldOpenInNewTab,
+  extractInternalPath,
 } from '@/lib/notifications/url-utils';
+
+const HTTP_PROTOCOL_REGEX = /^https?:\/\//i;
 
 interface Notification {
   id: string;
@@ -425,10 +428,25 @@ export default function AdminNotificationsPage() {
               const actionUrl = normalizeActionUrl(notification.actionUrl);
               const actionLabel = notification.actionLabel?.trim() || 'View Details';
               const linkClasses = 'text-blue-600 hover:text-blue-800 text-sm font-medium';
+              
+              // Extract internal path - always try to get relative path for same-domain URLs
+              const internalPath = actionUrl ? extractInternalPath(actionUrl) : null;
+              
+              // Check if it's a relative path or same-domain URL that we can extract
+              const isRelativePath = actionUrl ? (actionUrl.startsWith('/') || actionUrl.startsWith('#')) : false;
+              const isSameDomain = typeof window !== 'undefined' && actionUrl && 
+                HTTP_PROTOCOL_REGEX.test(actionUrl) && 
+                internalPath && 
+                internalPath !== actionUrl && 
+                internalPath.startsWith('/');
+              
               const actionLink = actionUrl
-                ? isInternalActionUrl(actionUrl)
+                ? (isRelativePath || isSameDomain)
                   ? (
-                    <Link href={actionUrl} className={linkClasses}>
+                    <Link 
+                      href={isSameDomain ? internalPath! : actionUrl} 
+                      className={linkClasses}
+                    >
                       {actionLabel} →
                     </Link>
                   )

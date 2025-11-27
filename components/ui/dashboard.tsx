@@ -88,6 +88,7 @@ interface ActivityItem {
   description: string;
   timestamp: string;
   amount?: number;
+  currency?: string;
   status: 'success' | 'pending' | 'failed';
 }
 
@@ -259,36 +260,42 @@ const RevenueChart = ({ data, loading }: { data: RevenueData[]; loading: boolean
         </div>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="h-64">
-          <AreaChart data={data}>
-            <defs>
-              <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.05}/>
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="date" 
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-            />
-            <YAxis 
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-            />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Area
-              type="monotone"
-              dataKey="visitors"
-              stroke="#3B82F6"
-              fill="url(#revenueGradient)"
-              strokeWidth={2}
-            />
-          </AreaChart>
-        </ChartContainer>
+        {data && data.length > 0 ? (
+          <ChartContainer config={chartConfig} className="h-64">
+            <AreaChart data={data}>
+              <defs>
+                <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.05}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis 
+                dataKey="date" 
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+              />
+              <YAxis 
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+              />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Area
+                type="monotone"
+                dataKey="visitors"
+                stroke="#3B82F6"
+                fill="url(#revenueGradient)"
+                strokeWidth={2}
+              />
+            </AreaChart>
+          </ChartContainer>
+        ) : (
+          <div className="h-64 flex items-center justify-center text-gray-500">
+            <p>No visitor data available for the selected period</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -345,7 +352,15 @@ const CampaignPerformanceChart = ({ data, loading }: { data: CampaignMetric[]; l
 };
 
 // Activity Feed Component
-const ActivityFeed = ({ activities, loading }: { activities: ActivityItem[]; loading: boolean }) => {
+const ActivityFeed = ({ activities, loading, currency = 'USD' }: { activities: ActivityItem[]; loading: boolean; currency?: string }) => {
+  const formatCurrency = (amount: number, activityCurrency?: string) => {
+    const currencyToUse = activityCurrency || currency;
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currencyToUse,
+    }).format(amount);
+  };
+
   if (loading) {
     return (
       <Card>
@@ -396,7 +411,7 @@ const ActivityFeed = ({ activities, loading }: { activities: ActivityItem[]; loa
               </div>
               {activity.amount && (
                 <Badge variant="outline" className="text-xs">
-                  ${activity.amount.toLocaleString()}
+                  {formatCurrency(activity.amount, activity.currency)}
                 </Badge>
               )}
             </div>
@@ -432,7 +447,7 @@ export const ModernDashboard = ({
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <RevenueChart data={[]} loading />
-          <ActivityFeed activities={[]} loading />
+          <ActivityFeed activities={[]} loading currency={currency} />
         </div>
       </div>
     );
@@ -490,7 +505,7 @@ export const ModernDashboard = ({
       {/* Charts and Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <CampaignPerformanceChart data={stats.topCampaigns} loading={false} />
-        <ActivityFeed activities={stats.recentActivity} loading={false} />
+        <ActivityFeed activities={stats.recentActivity} loading={false} currency={currency} />
       </div>
 
       {/* Additional Metrics */}

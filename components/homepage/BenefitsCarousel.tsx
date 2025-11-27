@@ -1,40 +1,32 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import useEmblaCarousel from "embla-carousel-react";
+import { themes, type ThemeKey } from "@/lib/utils/carousel-themes";
+import { getCurrentTheme } from "@/lib/utils/theme-detection";
 
-const images = [
-  "/images/currencies.png",
-  "/images/teamwork.png",
-  "/images/secure.png",
-];
+interface BenefitsCarouselProps {
+  /** Optional manual theme override for testing */
+  themeOverride?: ThemeKey;
+}
 
-const features = [
-  {
-    title: "Multi-currency is our thing",
-    desc: "Raise donations anywhere, in your preferred currency. Explore our Crypto options and raise more donations",
-    bg: "#104901",
-    textColor: "text-white",
-  },
-  {
-    title: "Chained campaigns",
-    desc: "Our influencer network drives traffic to your campaigns to push your closer to your goal even faster",
-    bg: "#5F8555",
-    textColor: "text-[#C0BFC4]",
-  },
-  {
-    title: "Secure payments",
-    desc: "Industry-standard safety measures secure funds raised and your payouts",
-    bg: "#5F8555",
-    textColor: "text-[#C0BFC4]",
-  },
-];
-
-const BenefitsCarousel = () => {
+const BenefitsCarousel = ({ themeOverride }: BenefitsCarouselProps) => {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
   const [current, setCurrent] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  const currentTheme = useMemo(() => getCurrentTheme(themeOverride), [themeOverride]);
+  const activeTheme = themes[currentTheme];
+  const images = activeTheme.images;
+  const features = activeTheme.features;
+
+  useEffect(() => {
+    setIsTransitioning(true);
+    const timer = setTimeout(() => setIsTransitioning(false), 500);
+    return () => clearTimeout(timer);
+  }, [currentTheme]);
 
   const scrollTo = useCallback((index: number) => {
     if (!emblaApi) return;
@@ -85,7 +77,6 @@ const BenefitsCarousel = () => {
   const handleFeatureClick = (index: number) => {
     setIsAutoPlaying(false);
     scrollTo(index);
-    // Resume autoplay after 6 seconds of inactivity
     setTimeout(() => setIsAutoPlaying(true), 6000);
   };
 
@@ -103,17 +94,30 @@ const BenefitsCarousel = () => {
         .animate-fill-bar {
           animation: fill-bar 4s linear forwards;
         }
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .theme-transition {
+          animation: fade-in 0.5s ease-in-out;
+        }
       `}</style>
       
       <div className="w-full md:px-12 px-4 py-10 h-[650px] overflow-hidden">
         <div className="flex md:gap-10 w-full">
-          <div className="md:w-[60%] md:block hidden h-full bg-cover bg-no-repeat relative">
+          <div className="md:w-[60%] md:block hidden h-[650px] bg-cover bg-no-repeat relative">
             <div className="overflow-hidden" ref={emblaRef}>
               <div className="flex">
                 {images.map((img, idx) => (
                   <div
-                    key={idx}
-                    className="min-w-full h-[650px] bg-cover bg-no-repeat relative"
+                    key={`${currentTheme}-${idx}`}
+                    className="min-w-full h-[650px] bg-cover bg-no-repeat relative transition-opacity duration-500"
                     style={{ backgroundImage: `url(${img})` }}
                   >
                     <div className="flex justify-center gap-4 mt-6 px-8 w-full absolute top-0 left-0">
@@ -141,39 +145,55 @@ const BenefitsCarousel = () => {
           </div>
 
           <div className="md:w-[40%] w-full h-[650px] flex flex-col mx-auto gap-10">
-            <section className="flex flex-col gap-2">
-              <h4 className="font-source font-semibold text-4xl text-black">
-                Maximise your fundraising efforts
+            <section className={`flex flex-col gap-2 ${isTransitioning ? 'theme-transition' : ''}`}>
+              <h4 className="font-source font-semibold text-4xl text-black transition-all duration-500">
+                {activeTheme.mainHeading}
               </h4>
-              <p className="font-source font-normal text-xl text-black">
-                We&apos;ll handle the grueling campaign management, so you can do what
-                matters most - getting donations
+              <p className="font-source font-normal text-xl text-black transition-all duration-500">
+                {activeTheme.mainDescription}
               </p>
             </section>
             <ul className="flex flex-col gap-2">
-              {features.map((item, i) => (
+              {features.map((item, i) => {
+                const isActive = current === i;
+                return (
                 <li
-                  key={i}
-                  className={`md:w-[500px] w-full h-fit p-5 flex flex-col gap-2 transition-all duration-300 cursor-pointer ${
-                    current === i
-                      ? "scale-[1.05] shadow-lg border-2 border-[#104901]"
-                      : "opacity-70 hover:opacity-90"
-                  }`}
-                  style={{ backgroundColor: current === i ? "#104901" : item.bg }}
+                  key={`${currentTheme}-${i}`}
+                  className={`md:w-[500px] w-full h-fit p-5 flex flex-col gap-2 transition-all duration-500 cursor-pointer ${
+                    isActive
+                      ? "scale-[1.05] shadow-lg border-2 border-brand-green-dark bg-brand-green-dark"
+                      : "bg-brand-green-light backdrop-blur-sm"
+                  } ${isTransitioning ? 'theme-transition' : ''}`}
+                  style={{
+                    opacity: isActive ? 1 : 0.7
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.opacity = '0.9';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.opacity = '0.7';
+                    }
+                  }}
                   onClick={() => handleFeatureClick(i)}
                 >
                   <p
-                    className={`font-source font-medium text-xl ${item.textColor}`}
+                    className={`font-source font-medium text-xl ${item.textColor} transition-all duration-300`}
                   >
                     {item.title}
                   </p>
+                  {isActive && (
                   <span
-                    className={`font-source font-normal text-base ${item.textColor}`}
+                    className={`font-source font-normal text-base ${item.textColor} transition-all duration-300 animate-in fade-in slide-in-from-top-2`}
                   >
                     {item.desc}
                   </span>
+                  )}
                 </li>
-              ))}
+                );
+              })}
             </ul>
           </div>
         </div>
