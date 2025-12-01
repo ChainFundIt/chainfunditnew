@@ -705,13 +705,14 @@ export default function CreateCampaignPage() {
                 </p>
                 <input
                   type="number"
-                  min={0}
                   max={10}
-                  value={formData.chainerCommissionRate}
+                  min={0}
+                  value={formData.chainerCommissionRate || ""}
                   onChange={(e) =>
-                    handleFieldChange("chainerCommissionRate", +e.target.value)
+                    handleFieldChange("chainerCommissionRate", +e.target.value || 0)
                   }
-                  className="w-[300px] p-3 rounded-xl bg-[#E5ECDE] font-medium text-lg md:text-3xl text-[#5F8555] placeholder:text-[#5F8555] outline-none"
+                  className="w-[300px] p-3 rounded-xl bg-[#E5ECDE] font-medium text-lg md:text-3xl text-[#5F8555] placeholder:text-[#5F8555] outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  placeholder="Enter percentage"
                 />
               </section>
             )}

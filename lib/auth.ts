@@ -296,8 +296,50 @@ setInterval(() => {
   }
 }, CACHE_TTL);
 
+// Build providers array with proper typing
+const providers: Array<
+  | { type: "email-otp"; apiKey: string | undefined }
+  | { type: "phone-otp"; apiKey: string | undefined }
+  | { type: "oauth"; id: "google" | "discord"; clientId: string; clientSecret: string }
+> = [
+  {
+    type: "email-otp",
+    apiKey: process.env.RESEND_API_KEY,
+  },
+  {
+    type: "phone-otp",
+    apiKey: process.env.TWILIO_AUTH_TOKEN,
+  },
+];
+
+// Add OAuth providers if credentials are available
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  providers.push({
+    type: "oauth",
+    id: "google",
+    clientId: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  });
+}
+
+if (process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET) {
+  providers.push({
+    type: "oauth",
+    id: "discord",
+    clientId: process.env.DISCORD_CLIENT_ID,
+    clientSecret: process.env.DISCORD_CLIENT_SECRET,
+  });
+}
+
+// Debug: Log registered providers (only in development)
+if (process.env.NODE_ENV === "development") {
+  console.log("[BetterAuth] Registered providers:", providers.map(p => ({ type: p.type, id: (p as any).id })));
+}
+
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET || "your-secret-key-change-in-production",
+  baseURL: process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  basePath: "/api/auth",
   appName: "ChainFundIt",
   database: drizzleAdapter(db, {
     provider: "pg", // PostgreSQL
@@ -305,34 +347,13 @@ export const auth = betterAuth({
   plugins: [
     twoFactor({
       issuer: "ChainFundIt",
-    }),
+    }) as any,
   ],
-  providers: [
-    {
-      type: "email-otp",
-      apiKey: process.env.RESEND_API_KEY,
-    },
-    {
-      type: "phone-otp",
-      apiKey: process.env.TWILIO_AUTH_TOKEN,
-    },
-    {
-      type: "oauth",
-      id: "discord",
-      clientId: process.env.DISCORD_CLIENT_ID!,
-      clientSecret: process.env.DISCORD_CLIENT_SECRET!,
-    },
-    // {
-    //     type: "oauth",
-    //     id: "apple",
-    //     clientId: process.env.APPLE_CLIENT_ID!,
-    //     clientSecret: process.env.APPLE_CLIENT_SECRET!,
-    // },
-  ],
+  providers,
   callbacks: {
     async signIn({ user, account, profile }: any) {
       // Handle OAuth sign-in
-      if (account?.provider === "discord") {
+      if (account?.provider === "google" || account?.provider === "discord") {
         // Update user profile with OAuth data
         if (profile) {
           await db.update(users)

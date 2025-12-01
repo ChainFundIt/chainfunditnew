@@ -52,7 +52,10 @@ const Footer = (props: Props) => {
             campaigns@chainfundit.com
           </Link>
           <section className="flex gap-2 items-center flex-wrap">
-            <Link href="https://www.facebook.com/share/1YrZpf7FbC/?mibextid=wwXIfr" target="_blank">
+            <Link
+              href="https://www.facebook.com/share/1YrZpf7FbC/?mibextid=wwXIfr"
+              target="_blank"
+            >
               <Facebook size={20} className="md:w-6 md:h-6" color="white" />
             </Link>
             <Link href="https://www.instagram.com/chainfundit" target="_blank">
@@ -61,10 +64,16 @@ const Footer = (props: Props) => {
             <Link href="https://x.com/chainfundit?s=11" target="_blank">
               <Twitter size={20} className="md:w-6 md:h-6" color="white" />
             </Link>
-            <Link href="https://www.linkedin.com/company/chainfundit11/" target="_blank">
+            <Link
+              href="https://www.linkedin.com/company/chainfundit11/"
+              target="_blank"
+            >
               <Linkedin size={20} className="md:w-6 md:h-6" color="white" />
             </Link>
-            <Link href="https://www.tiktok.com/@chainfundit?_r=1&_t=ZS-91f2JUhl7um" target="_blank">
+            <Link
+              href="https://www.tiktok.com/@chainfundit?_r=1&_t=ZS-91f2JUhl7um"
+              target="_blank"
+            >
               <BsTiktok size={20} className="md:w-6 md:h-6" color="white" />
             </Link>
             <span className="font-normal text-base md:text-xl text-white">
@@ -100,10 +109,12 @@ const Footer = (props: Props) => {
               <li>
                 <Link href="/create-campaign">Join the Chain Reaction</Link>
               </li>
-              <li>Careers</li>
-              <li>Success stories</li>
-              <li>Pricing</li>
-              <li>Blog</li>
+              <li>
+                <Link href="/careers">Careers</Link>
+              </li>
+              <li><Link href='/success-stories'>Success stories</Link></li>
+              <li><Link href='/pricing'>Pricing</Link></li>
+              <li><Link href='/blog'>Blog</Link></li>
             </ul>
           </section>
           <section className="w-full md:w-1/3 flex flex-col gap-2">
@@ -111,13 +122,21 @@ const Footer = (props: Props) => {
               resources
             </p>
             <ul className="flex flex-col gap-2 font-normal text-sm md:text-base text-white">
-              <li>Privacy policy</li>
-              <Link href="/terms-and-conditions">Terms and Conditions</Link>
-              <li>Ambassador Agreement</li>
-              <li>Fundraising tips</li>
-              <li>Fundraising ideas</li>
-              <li>Contact us</li>
-              <li>Disclaimer</li>
+              <li><Link href='/privacy-policy'>Privacy policy</Link></li>
+              <li><Link href="/terms-and-conditions">Terms and Conditions</Link></li>
+              <li>
+                <Link href="/ambassador-agreement">Ambassador Agreement</Link>
+              </li>
+              <li>
+                <Link href="/fundraising-tips">Fundraising tips</Link>
+              </li>
+              <li>
+                <Link href="/fundraising-ideas">Fundraising ideas</Link>
+              </li>
+              <li>
+                <Link href="/contact-us">Contact us</Link>
+              </li>
+              <li><Link href='/disclaimer'>Disclaimer</Link></li>
             </ul>
           </section>
         </div>

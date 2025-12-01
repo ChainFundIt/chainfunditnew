@@ -240,66 +240,96 @@ export default function VirtualGivingMallPage() {
                 : "space-y-4"
             }
           >
-            {filteredCharities.map((charity) => (
-              <Card
-                key={charity.id}
-                className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-              >
-                <CardContent className="p-0">
-                  {/* Logo Section */}
-                  <div
-                    className="bg-white h-36 rounded-t-lg flex items-center justify-center relative overflow-hidden bg-contain bg-center bg-no-repeat"
-                    style={{
-                      backgroundImage: charity.logo ? `url(${charity.logo})` : 'none',
-                      backgroundColor: charity.logo ? 'white' : '#f3f4f6',
-                    }}
-                  >
-                    {!charity.logo && (
-                      <div className="text-gray-400 text-center p-4">
-                        <Heart className="h-12 w-12 mx-auto mb-2" />
-                        <p className="text-xs font-medium">{charity.name}</p>
-                      </div>
-                    )}
-                    
-                    {charity.isVerified && (
-                      <div className="absolute top-2 right-2 z-10">
-                        <Badge className="bg-white/90 backdrop-blur-sm text-green-600 border-green-600 shadow-sm">
-                          <Shield className="h-3 w-3 mr-1" />
-                          Verified
-                        </Badge>
-                      </div>
-                    )}
-                  </div>
+            {filteredCharities.map((charity) => {
+              const CategoryIcon = categoryIcons[charity.category || 'General'] || Heart;
+              return (
+                <Card
+                  key={charity.id}
+                  className="group overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-white rounded-2xl"
+                >
+                  <CardContent className="p-0">
+                    {/* Logo Section with Gradient Overlay */}
+                    <div
+                      className="relative h-48 flex items-center justify-center overflow-hidden bg-gradient-to-br from-green-50 via-blue-50 to-purple-50"
+                      style={{
+                        backgroundImage: charity.logo 
+                          ? `linear-gradient(135deg, rgba(16, 73, 1, 0.05) 0%, rgba(34, 197, 94, 0.05) 100%), url(${charity.logo})` 
+                          : 'linear-gradient(135deg, rgba(16, 73, 1, 0.1) 0%, rgba(34, 197, 94, 0.1) 100%)',
+                        backgroundSize: charity.logo ? 'contain' : 'auto',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat',
+                      }}
+                    >
+                      {/* Animated gradient overlay on hover */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-green-600/0 via-green-500/0 to-blue-500/0 group-hover:from-green-600/10 group-hover:via-green-500/10 group-hover:to-blue-500/10 transition-all duration-500"></div>
+                      
+                      {!charity.logo && (
+                        <div className="text-center p-4 relative z-10">
+                          <div className="relative inline-block">
+                            <div className="absolute inset-0 bg-gradient-to-br from-green-400 to-blue-500 rounded-full blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
+                            <div className="relative bg-gradient-to-br from-green-500 to-blue-600 p-4 rounded-full">
+                              <Heart className="h-12 w-12 text-white" />
+                            </div>
+                          </div>
+                          <p className="text-xs font-semibold text-gray-600 mt-3 max-w-[120px] mx-auto line-clamp-2">
+                            {charity.name}
+                          </p>
+                        </div>
+                      )}
+                      
+                      {charity.isVerified && (
+                        <div className="absolute top-3 right-3 z-20">
+                          <Badge className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg backdrop-blur-sm px-2.5 py-1 flex items-center gap-1.5">
+                            <Shield className="h-3.5 w-3.5" />
+                            <span className="text-xs font-semibold">Verified</span>
+                          </Badge>
+                        </div>
+                      )}
 
-                  {/* Content */}
-                  <div className="p-6 h-[160px]">
-                    <div className="mb-4">
-                      <h3 className="font-bold text-lg text-gray-900 mb-2 group-hover:text-green-600 transition-colors line-clamp-2">
-                        {charity.name.slice(0, 30)}
-                      </h3>
-                      <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span className="bg-gray-100 px-2 py-1 rounded-full">
-                          {charity.category || 'General'}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Heart className="h-3 w-3 text-red-500" />
-                        </span>
+                      {/* Category Badge */}
+                      <div className="absolute bottom-3 left-3 z-20">
+                        <Badge className="bg-white/95 backdrop-blur-md text-gray-700 border border-gray-200 shadow-md px-3 py-1.5 flex items-center gap-1.5 hover:bg-white transition-colors">
+                          <CategoryIcon className="h-3.5 w-3.5 text-green-600" />
+                          <span className="text-xs font-medium">
+                            {charity.category || 'General'}
+                          </span>
+                        </Badge>
                       </div>
                     </div>
 
-                    {/* Donate Button */}
-                    <Button
-                      asChild
-                      className="w-full text-white font-semibold py-3 rounded-lg transition-all duration-200 hover:shadow-lg"
-                    >
-                      <Link href={`/virtual-giving-mall/${charity.slug}`}>
-                        Donate Now
-                      </Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    {/* Content Section */}
+                    <div className="p-6 bg-white">
+                      <div className="mb-5">
+                        <h3 className="font-bold text-xl text-gray-900 mb-3 group-hover:text-green-600 transition-colors duration-300 line-clamp-2 min-h-[3rem]">
+                          {charity.name}
+                        </h3>
+                        
+                        {/* Decorative divider */}
+                        <div className="flex items-center gap-2 mb-4">
+                          <div className="h-0.5 bg-gradient-to-r from-green-500 to-transparent flex-1"></div>
+                          <Heart className="h-4 w-4 text-red-400 fill-red-400" />
+                          <div className="h-0.5 bg-gradient-to-l from-green-500 to-transparent flex-1"></div>
+                        </div>
+                      </div>
+
+                      {/* Donate Button with enhanced design */}
+                      <Button
+                        asChild
+                        className="w-full bg-gradient-to-r from-green-600 to-[#104901] hover:text-white text-white font-bold py-3.5 rounded-xl transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] shadow-md group/button"
+                      >
+                        <Link href={`/virtual-giving-mall/${charity.slug}`} className="flex items-center justify-center gap-2">
+                          <span>Donate Now</span>
+                          <Heart className="h-4 w-4 group-hover/button:scale-110 transition-transform duration-300" />
+                        </Link>
+                      </Button>
+                    </div>
+
+                    {/* Bottom accent border */}
+                    <div className="h-1 bg-gradient-to-r from-green-500 via-green-400 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
 
