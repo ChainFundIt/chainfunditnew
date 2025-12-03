@@ -307,8 +307,6 @@ const sections = [
               .
             </p>
             <p className="text-gray-700 leading-relaxed mb-4">
-          <>
-            <p className="text-gray-700 leading-relaxed mb-4">
               By using our site, you agree to our use of cookies in accordance
               with this policy, unless you disable them through your browser
               settings or our cookie preference tools (where available).
