@@ -612,19 +612,7 @@ export default function CreateCampaignPage() {
                   inputMode="numeric"
                   id="goal"
                   name="goal"
-                  placeholder={
-                    formData.currency
-                      ? `${
-                          {
-                            GBP: "£",
-                            USD: "$",
-                            NGN: "₦",
-                            EUR: "€",
-                            CAD: "C$",
-                          }[formData.currency]
-                        } Your goal`
-                      : "Your goal"
-                  }
+                  placeholder="Your goal"
                   value={formData.goal === 0 ? "" : formData.goal}
                   onChange={(e) =>
                     handleFieldChange(
