@@ -239,7 +239,7 @@ const sections = [
               To exercise these rights, email{" "}
               <Link
                 href="mailto:mngt@chainfundit.com"
-                className="text-[#104901]"
+                className="text-[#104901] hover:underline"
               >
                 mngt@chainfundit.com
               </Link>
@@ -293,8 +293,20 @@ const sections = [
     content: [
       {
         subtitle:
-          "This Cookie Policy explains how ChainFundIt Limited uses cookies and similar tracking technologies on our website: www.chainfundit.com.",
+          "This Cookie Policy explains how ChainFundIt Limited uses cookies and similar tracking technologies on our website.",
         text: (
+          <>
+            <p className="text-gray-700 leading-relaxed mb-4">
+              Our website:{" "}
+              <Link
+                href="https://www.chainfundit.com"
+                className="text-[#104901] hover:underline"
+              >
+                www.chainfundit.com
+              </Link>
+              .
+            </p>
+            <p className="text-gray-700 leading-relaxed mb-4">
           <>
             <p className="text-gray-700 leading-relaxed mb-4">
               By using our site, you agree to our use of cookies in accordance
@@ -527,9 +539,28 @@ export default function PrivacyPolicyPage() {
                 Regulation (NDPR), and other relevant laws.
               </p>
               <p className="text-gray-700 leading-relaxed">
-                By using <strong>www.chainfundit.com</strong>, you agree to this
-                Privacy Policy, our <strong>Terms and Conditions</strong>, and
-                our <strong>Cookie Policy</strong>.
+                By using{" "}
+                <Link
+                  href="https://www.chainfundit.com"
+                  className="text-[#104901] hover:underline"
+                >
+                  <strong>www.chainfundit.com</strong>
+                </Link>
+                , you agree to this Privacy Policy, our{" "}
+                <Link
+                  href="/terms-and-conditions"
+                  className="text-[#104901] hover:underline"
+                >
+                  <strong>Terms and Conditions</strong>
+                </Link>
+                , and our{" "}
+                <Link
+                  href="/privacy-policy#cookies"
+                  className="text-[#104901] hover:underline"
+                >
+                  <strong>Cookie Policy</strong>
+                </Link>
+                .
               </p>
             </CardContent>
           </Card>
@@ -544,11 +575,22 @@ export default function PrivacyPolicyPage() {
               <p>
                 ChainFundIt Limited <br /> Company No. 13253451 <br />{" "}
                 Registered in England & Wales <br /> 71–75 Shelton Street,
-                Covent Garden, London, WC2H 9JQ <br /> General Support
-                Email: campaigns@chainfundit.com <br /> Privacy Matters
-                Contact: mngt@chainfundit.com <br /> <br /> We are the{" "}
-                <strong>data controller</strong> for personal data collected
-                through our platform.
+                Covent Garden, London, WC2H 9JQ <br /> General Support Email:{" "}
+                <Link
+                  href="mailto:campaigns@chainfundit.com"
+                  className="text-[#104901] hover:underline"
+                >
+                  campaigns@chainfundit.com
+                </Link>{" "}
+                <br /> Privacy Matters Contact:{" "}
+                <Link
+                  href="mailto:mngt@chainfundit.com"
+                  className="text-[#104901] hover:underline"
+                >
+                  mngt@chainfundit.com
+                </Link>{" "}
+                <br /> <br /> We are the <strong>data controller</strong> for
+                personal data collected through our platform.
               </p>
             </CardContent>
           </Card>

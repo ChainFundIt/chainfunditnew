@@ -55,8 +55,21 @@ const sections = [
               <li>
                 By using the platform, including opening an account, creating or
                 donating to a campaign, or accessing ChainFundIt in any way, you
-                agree to these Terms, the Privacy Policy, the Cookie Policy,
-                and the applicable terms of any payment service provider used
+                agree to these Terms, the{" "}
+                <Link
+                  href="/privacy-policy"
+                  className="text-[#104901] hover:underline"
+                >
+                  Privacy Policy
+                </Link>
+                , the{" "}
+                <Link
+                  href="/privacy-policy#cookies"
+                  className="text-[#104901] hover:underline"
+                >
+                  Cookie Policy
+                </Link>
+                , and the applicable terms of any payment service provider used
                 in connection with our platform.
               </li>
               <li>
@@ -114,11 +127,17 @@ const sections = [
               You agree to only use the platform in accordance with these Terms
               and applicable laws.
             </li>
-            <li>
-              You may not use ChainFundIt to fundraise for or promote any
-              illegal, deceptive, or prohibited activity (see Section F and
-              Prohibited Campaigns Policy).
-            </li>
+              <li>
+                You may not use ChainFundIt to fundraise for or promote any
+                illegal, deceptive, or prohibited activity (see Section F and{" "}
+                <a
+                  href="#f.1.-prohibited-campaigns-policy"
+                  className="text-[#104901] hover:underline"
+                >
+                  Prohibited Campaigns Policy
+                </a>
+                ).
+              </li>
           </ul>
         ),
       },
@@ -292,6 +311,7 @@ const sections = [
   {
     title: "F.1. Prohibited Campaigns Policy",
     icon: Ban,
+    id: "f.1.-prohibited-campaigns-policy",
     content: [
       {
         subtitle:
@@ -389,8 +409,14 @@ const sections = [
                     transparency.
                   </li>
                   <li>
-                    Any content that violates our Terms & Conditions or local
-                    laws.
+                    Any content that violates our{" "}
+                    <Link
+                      href="/terms-and-conditions"
+                      className="text-[#104901] hover:underline"
+                    >
+                      Terms & Conditions
+                    </Link>{" "}
+                    or local laws.
                   </li>
                 </ul>
               </div>
@@ -583,7 +609,11 @@ export default function TermsAndConditionsPage() {
         {sections.map((section, index) => {
           const Icon = section.icon;
           return (
-            <div key={index} className="mb-8">
+            <div
+              key={index}
+              id={section.id}
+              className="mb-8 scroll-mt-20"
+            >
               <Card>
                 <CardContent className="p-8">
                   <div className="flex items-center gap-3 mb-6">

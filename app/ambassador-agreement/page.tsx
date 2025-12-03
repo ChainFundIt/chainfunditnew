@@ -682,8 +682,16 @@ export default function AmbassadorAgreementPage() {
               <p className="text-gray-700 leading-relaxed">
                 This Agreement sets out the terms and conditions under which you
                 may participate as a Chain Ambassador in ChainFundIt's
-                ambassador program. By accepting this Agreement, you agree to be
-                bound by all terms and conditions set forth herein.
+                ambassador program. By accepting this Agreement, you agree to
+                be bound by all terms and conditions set forth herein. This
+                Agreement should be read in conjunction with our{" "}
+                <Link
+                  href="/terms-and-conditions"
+                  className="text-[#104901] hover:underline"
+                >
+                  Terms and Conditions
+                </Link>
+                .
               </p>
             </CardContent>
           </Card>
