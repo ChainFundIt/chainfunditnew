@@ -4,8 +4,8 @@ import React from "react";
 import Cards from '../cards';
 import Footer from '@/components/layout/Footer';
 import { db } from '@/lib/db';
-import { campaigns } from '@/lib/schema/campaigns';
-import { eq, or } from 'drizzle-orm';
+import { campaigns } from '@/lib/schema';
+import { eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 
 interface PageProps {
@@ -32,6 +32,10 @@ const page = async ({ params }: PageProps) => {
   }
 
   const campaignData = campaign[0];
+
+  // Note: Private campaigns are filtered out from public listings,
+  // but can be accessed via direct link (when shared by creator)
+  // So we allow access here - the visibility check is handled in listings
 
   return (
     <div className='h-full'>

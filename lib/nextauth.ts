@@ -32,6 +32,9 @@ export const nextAuthOptions: NextAuthOptions = {
           .where(eq(users.email, user.email))
           .limit(1);
 
+        // Cast profile to any since NextAuth profile types vary by provider
+        const profileData = profile as any;
+
         if (existingUser.length === 0) {
           // Create new user
           const [newUser] = await db
@@ -41,10 +44,10 @@ export const nextAuthOptions: NextAuthOptions = {
               fullName:
                 user.name ||
                 profile?.name ||
-                profile?.username ||
+                profileData?.username ||
                 user.email.split("@")[0] ||
                 "User",
-              avatar: user.image || profile?.picture || profile?.image || profile?.avatar || null,
+              avatar: user.image || profileData?.picture || profileData?.image || profileData?.avatar || null,
               isVerified: true,
               hasCompletedProfile: true,
             })
@@ -59,10 +62,10 @@ export const nextAuthOptions: NextAuthOptions = {
               fullName:
                 user.name ||
                 profile?.name ||
-                profile?.username ||
+                profileData?.username ||
                 existingUser[0].fullName ||
                 user.email.split("@")[0],
-              avatar: user.image || profile?.picture || profile?.image || profile?.avatar || existingUser[0].avatar,
+              avatar: user.image || profileData?.picture || profileData?.image || profileData?.avatar || existingUser[0].avatar,
               isVerified: true,
               hasCompletedProfile: true,
               updatedAt: new Date(),
@@ -98,9 +101,9 @@ export const nextAuthOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (token.userId && session.user) {
-        session.user.id = token.userId as string;
-        session.user.email = token.email as string;
-        session.user.role = token.role as string;
+        (session.user as any).id = token.userId as string;
+        (session.user as any).email = token.email as string;
+        (session.user as any).role = token.role as string;
       }
       return session;
     },

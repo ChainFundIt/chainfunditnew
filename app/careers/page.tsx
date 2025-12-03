@@ -21,87 +21,42 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-const jobOpenings = [
-  {
-    id: 1,
-    title: "Senior Full Stack Developer",
-    department: "Engineering",
-    location: "Remote / London, UK",
-    type: "Full-time",
-    description:
-      "We're looking for an experienced full-stack developer to help build and scale our crowdfunding platform. You'll work on both frontend and backend systems, collaborating with a talented team to deliver exceptional user experiences.",
-    requirements: [
-      "5+ years of experience in full-stack development",
-      "Proficiency in React, Next.js, and TypeScript",
-      "Experience with Node.js and PostgreSQL",
-      "Strong understanding of RESTful APIs",
-      "Experience with payment processing integrations",
-    ],
-  },
-  {
-    id: 2,
-    title: "Marketing Manager",
-    department: "Marketing",
-    location: "London, UK",
-    type: "Full-time",
-    description:
-      "Join our marketing team to help grow ChainFundIt's presence and reach. You'll develop and execute marketing strategies, manage campaigns, and help tell our story to the world.",
-    requirements: [
-      "3+ years of marketing experience",
-      "Experience with digital marketing and social media",
-      "Strong analytical and communication skills",
-      "Experience with content creation and SEO",
-      "Knowledge of crowdfunding or fintech industry",
-    ],
-  },
-  {
-    id: 3,
-    title: "Customer Success Specialist",
-    department: "Support",
-    location: "Remote",
-    type: "Full-time",
-    description:
-      "Help our users succeed with their fundraising campaigns. You'll provide exceptional customer support, answer questions, and help users navigate our platform effectively.",
-    requirements: [
-      "2+ years of customer support experience",
-      "Excellent communication and problem-solving skills",
-      "Empathetic and patient approach",
-      "Experience with CRM systems",
-      "Ability to work flexible hours",
-    ],
-  },
-];
-
 const benefits = [
   {
     icon: DollarSign,
     title: "Competitive Salary",
-    description: "We offer competitive compensation packages based on experience and location.",
+    description:
+      "We offer competitive compensation packages based on experience and location.",
   },
   {
     icon: Heart,
     title: "Health & Wellness",
-    description: "Comprehensive health insurance and wellness programs to keep you healthy.",
+    description:
+      "Comprehensive health insurance and wellness programs to keep you healthy.",
   },
   {
     icon: Zap,
     title: "Flexible Work",
-    description: "Remote work options and flexible hours to support work-life balance.",
+    description:
+      "Remote work options and flexible hours to support work-life balance.",
   },
   {
     icon: TrendingUp,
     title: "Career Growth",
-    description: "Opportunities for professional development and career advancement.",
+    description:
+      "Opportunities for professional development and career advancement.",
   },
   {
     icon: Users,
     title: "Great Team",
-    description: "Work with a passionate, diverse team committed to making a difference.",
+    description:
+      "Work with a passionate, diverse team committed to making a difference.",
   },
   {
     icon: Shield,
     title: "Impact",
-    description: "Be part of a platform that helps people achieve their fundraising goals.",
+    description:
+      "Be part of a platform that helps people achieve their fundraising goals.",
   },
 ];
 
@@ -123,8 +78,8 @@ export default function CareersPage() {
           <Briefcase className="h-16 w-16 mx-auto mb-6" />
           <h1 className="text-4xl md:text-6xl font-bold mb-6">Careers</h1>
           <p className="text-xl md:text-2xl text-white/90 max-w-4xl mx-auto">
-            Join our mission to democratize fundraising and make a positive impact
-            on the world.
+            Join our mission to democratize fundraising and make a positive
+            impact on the world.
           </p>
         </div>
       </div>
@@ -191,62 +146,15 @@ export default function CareersPage() {
               Open Positions
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Explore our current job openings and find the perfect role for you.
+              Explore our current job openings and find the perfect role for
+              you.
             </p>
           </div>
 
           <div className="space-y-6">
-            {jobOpenings.map((job) => (
-              <Card
-                key={job.id}
-                className="hover:shadow-xl transition-all duration-300"
-              >
-                <CardContent className="p-8">
-                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
-                    <div>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                        {job.title}
-                      </h3>
-                      <div className="flex flex-wrap gap-3 mb-4">
-                        <Badge className="bg-green-600 text-white">
-                          {job.department}
-                        </Badge>
-                        <Badge variant="outline" className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {job.location}
-                        </Badge>
-                        <Badge variant="outline" className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {job.type}
-                        </Badge>
-                      </div>
-                    </div>
-                    <Button className="bg-green-600 hover:bg-green-700 text-white">
-                      Apply Now
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Button>
-                  </div>
-
-                  <p className="text-gray-700 mb-6 leading-relaxed">
-                    {job.description}
-                  </p>
-
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">
-                      Requirements:
-                    </h4>
-                    <ul className="space-y-2">
-                      {job.requirements.map((req, idx) => (
-                        <li key={idx} className="flex items-start gap-3">
-                          <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                          <span className="text-gray-700">{req}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            <p className="text-xl text-gray-600 text-center">
+              There are no open positions at the moment. Check back soon!
+            </p>
           </div>
         </div>
 
@@ -259,15 +167,9 @@ export default function CareersPage() {
                 Don't see a role that fits?
               </h3>
               <p className="text-gray-600 mb-6">
-                We're always looking for talented individuals. Send us your resume
-                and we'll keep you in mind for future opportunities.
+                We're always looking for talented individuals. Send us your
+                resume and we'll keep you in mind for future opportunities.
               </p>
-              <Button
-                variant="outline"
-                className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
-              >
-                Submit General Application
-              </Button>
             </CardContent>
           </Card>
         </div>
@@ -279,8 +181,8 @@ export default function CareersPage() {
             Ready to Make an Impact?
           </h2>
           <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-            Join our team and help us build the future of crowdfunding. We'd love
-            to hear from you!
+            Join our team and help us build the future of crowdfunding. We'd
+            love to hear from you!
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="mailto:careers@chainfundit.com">
@@ -309,4 +211,3 @@ export default function CareersPage() {
     </div>
   );
 }
-

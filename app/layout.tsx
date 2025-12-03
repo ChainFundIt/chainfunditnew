@@ -4,6 +4,7 @@ import "./globals.css";
 import PerformanceMonitor from "@/components/performance/PerformanceMonitor";
 import ClientToaster from "@/components/ui/client-toaster";
 import { GoogleAnalytics } from "@/components/layout/GoogleAnalytics";
+import { CookieBanner } from "@/components/layout/CookieBanner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,9 +39,30 @@ export default function RootLayout({
               window.dataLayer = window.dataLayer || [];
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
-              gtag('config', 'G-7VNFF33E8Z', {
-                page_path: window.location.pathname,
+              
+              // Check for existing consent
+              const consent = localStorage.getItem('chainfundit_cookie_consent');
+              let analyticsGranted = false;
+              if (consent) {
+                try {
+                  const consentData = JSON.parse(consent);
+                  analyticsGranted = consentData.accepted === true;
+                } catch (e) {
+                  analyticsGranted = false;
+                }
+              }
+              
+              // Set default consent state (denied until user accepts)
+              gtag('consent', 'default', {
+                analytics_storage: analyticsGranted ? 'granted' : 'denied',
               });
+              
+              // Only configure if consent is granted
+              if (analyticsGranted) {
+                gtag('config', 'G-7VNFF33E8Z', {
+                  page_path: window.location.pathname,
+                });
+              }
             `,
           }}
         />
@@ -51,6 +73,7 @@ export default function RootLayout({
           <GoogleAnalytics />
           <PerformanceMonitor />
           <ClientToaster />
+          <CookieBanner />
         </div>
       </body>
     </html>

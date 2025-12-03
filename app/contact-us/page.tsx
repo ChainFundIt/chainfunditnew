@@ -54,13 +54,13 @@ const supportTopics = [
     icon: Shield,
     title: "Account Issues",
     description: "Help with your account or security",
-    link: "/settings",
+    link: "/contact-us",
   },
   {
     icon: Users,
     title: "Campaign Help",
     description: "Support for your fundraising campaign",
-    link: "/create-campaign",
+    link: "/fundraising-tips",
   },
   {
     icon: FileText,
@@ -86,7 +86,9 @@ export default function ContactUsPage() {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     setFormData({
       ...formData,
@@ -103,8 +105,8 @@ export default function ContactUsPage() {
           <MessageSquare className="h-16 w-16 mx-auto mb-6" />
           <h1 className="text-4xl md:text-6xl font-bold mb-6">Contact Us</h1>
           <p className="text-xl md:text-2xl text-white/90 max-w-4xl mx-auto">
-            We're here to help! Get in touch with our team for support, questions,
-            or feedback.
+            We're here to help! Get in touch with our team for support,
+            questions, or feedback.
           </p>
         </div>
       </div>
@@ -247,7 +249,7 @@ export default function ContactUsPage() {
 
                   <Button
                     type="submit"
-                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                    className="w-full bg-green-600 text-white"
                   >
                     <Send className="h-4 w-4 mr-2" />
                     Send Message
@@ -269,18 +271,26 @@ export default function ContactUsPage() {
                   <div className="flex items-start gap-4">
                     <MapPin className="h-5 w-5 text-green-600 flex-shrink-0 mt-1" />
                     <div>
-                      <p className="font-semibold text-gray-900">Address</p>
+                      <p className="font-semibold text-gray-900">🇬🇧 United Kingdom</p>
                       <p className="text-gray-600">
-                        ChainFundIt Limited
+                        ChainFundIt Limited, <br /> 71-75, Shelton Street,
+                        Covent Garden, <br /> London. WC2H 9JQ <br /> United
+                        Kingdom.
                         <br />
-                        Registered in England (13253451)
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">🇺🇸 United States of America</p>
+                      <p className="text-gray-600">
+                        ChainFundit Limited, <br /> 16192 Coastal Highway,
+                        Lewes, Delaware. <br /> 19958 <br /> County of Sussex.{" "}
+                        <br /> United States of America.
                       </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
                     <Mail className="h-5 w-5 text-green-600 flex-shrink-0 mt-1" />
                     <div>
-                      <p className="font-semibold text-gray-900">Email</p>
                       <Link
                         href="mailto:support@chainfundit.com"
                         className="text-green-600 hover:underline"
@@ -292,7 +302,6 @@ export default function ContactUsPage() {
                   <div className="flex items-start gap-4">
                     <Clock className="h-5 w-5 text-green-600 flex-shrink-0 mt-1" />
                     <div>
-                      <p className="font-semibold text-gray-900">Business Hours</p>
                       <p className="text-gray-600">
                         Monday - Friday: 9:00 AM - 6:00 PM GMT
                         <br />
@@ -347,14 +356,14 @@ export default function ContactUsPage() {
                   Response Times
                 </h3>
                 <p className="text-gray-700 mb-4">
-                  We aim to respond to all inquiries within 24 hours during business
-                  days. For urgent matters, please call our support line or use the
-                  live chat feature.
+                  We aim to respond to all inquiries within 24 hours during
+                  business days. For urgent matters, please call our support
+                  line or send us a text on WhatsApp.
                 </p>
                 <p className="text-gray-700">
-                  <strong>Emergency Support:</strong> For critical issues affecting
-                  active campaigns, we provide priority support. Contact us
-                  immediately if you need urgent assistance.
+                  <strong>Emergency Support:</strong> For critical issues
+                  affecting active campaigns, we provide priority support.
+                  Contact us immediately if you need urgent assistance on WhatsApp.
                 </p>
               </div>
             </div>
@@ -366,4 +375,3 @@ export default function ContactUsPage() {
     </div>
   );
 }
-

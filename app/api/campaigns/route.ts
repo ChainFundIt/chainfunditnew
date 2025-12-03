@@ -46,9 +46,17 @@ export async function GET(request: NextRequest) {
     }
     // Removed default compliance filter - showing all campaigns regardless of compliance status
     
-    // For public campaigns page, only show public campaigns (not private ones)
-    // Unless creatorId is specified (user viewing their own campaigns)
-    if (!creatorId) {
+    // Visibility logic:
+    // - If creatorId is specified, show all campaigns for that creator (public and private)
+    //   This is used for dashboard where users see their own campaigns
+    // - Otherwise, only show public campaigns in listings
+    //   Private campaigns are only accessible via direct link (when shared by creator)
+    if (creatorId) {
+      // When viewing a specific creator's campaigns (e.g., in dashboard),
+      // show all campaigns (public and private) for that creator
+    } else {
+      // For public listing, only show public campaigns
+      // Private campaigns are filtered out but can be accessed via direct link
       conditions.push(eq(campaigns.visibility, 'public'));
     }
     

@@ -104,10 +104,10 @@ const Footer = (props: Props) => {
                 <Link href="/about">About us</Link>
               </li>
               <li>
-                <Link href="/faq">How ChainFundIt works</Link>
+                <Link href="/how-it-works">How ChainFundIt works</Link>
               </li>
               <li>
-                <Link href="/create-campaign">Join the Chain Reaction</Link>
+                <Link href="/join-the-chain-reaction">Join the Chain Reaction</Link>
               </li>
               <li>
                 <Link href="/careers">Careers</Link>

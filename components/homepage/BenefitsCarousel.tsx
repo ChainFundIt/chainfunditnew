@@ -110,14 +110,14 @@ const BenefitsCarousel = ({ themeOverride }: BenefitsCarouselProps) => {
       `}</style>
       
       <div className="w-full md:px-12 px-4 py-10 h-[650px] overflow-hidden">
-        <div className="flex md:gap-10 w-full">
-          <div className="md:w-[60%] md:block hidden h-[650px] bg-cover bg-no-repeat relative">
+        <div className="flex md:flex-row flex-col md:gap-10 w-full">
+          <div className="md:w-[60%] w-full md:h-[650px] h-[400px] bg-cover bg-no-repeat relative">
             <div className="overflow-hidden" ref={emblaRef}>
               <div className="flex">
                 {images.map((img, idx) => (
                   <div
                     key={`${currentTheme}-${idx}`}
-                    className="min-w-full h-[650px] bg-cover bg-no-repeat relative transition-opacity duration-500"
+                    className="min-w-full h-[650px] bg-cover bg-center bg-no-repeat relative transition-opacity duration-500"
                     style={{ backgroundImage: `url(${img})` }}
                   >
                     <div className="flex justify-center gap-4 mt-6 px-8 w-full absolute top-0 left-0">
@@ -144,7 +144,7 @@ const BenefitsCarousel = ({ themeOverride }: BenefitsCarouselProps) => {
             </div>
           </div>
 
-          <div className="md:w-[40%] w-full h-[650px] flex flex-col mx-auto gap-10">
+          <div className="md:w-[40%] w-full md:h-[650px] h-[400px] flex flex-col mx-auto gap-10">
             <section className={`flex flex-col gap-2 ${isTransitioning ? 'theme-transition' : ''}`}>
               <h4 className="font-source font-semibold text-4xl text-black transition-all duration-500">
                 {activeTheme.mainHeading}
