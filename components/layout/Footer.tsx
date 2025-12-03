@@ -31,7 +31,7 @@ const Footer = (props: Props) => {
 
       <hr color="#B5C7B080" className="w-full" />
 
-      <div className="p-4 md:p-10 w-full flex flex-col md:flex-row md:justify-between md:items-center gap-8 md:gap-0">
+      <div className="p-4 md:p-10 w-full flex flex-col md:flex-row md:justify-between md:items-start gap-8 md:gap-0">
         <section className="w-full md:w-1/3 flex flex-col gap-2 mb-6 md:mb-0">
           <section className="flex gap-2 items-center">
             <Image
@@ -83,21 +83,7 @@ const Footer = (props: Props) => {
         </section>
 
         <div className="w-full md:w-2/3 flex flex-col md:flex-row md:justify-between gap-6 md:gap-0">
-          <section className="w-full md:w-1/3 flex flex-col gap-2">
-            <p className="font-bold text-base text-white uppercase">
-              chainfund for
-            </p>
-            <ul className="flex flex-col gap-2 font-normal text-sm md:text-base text-white">
-              <li>Medical Emergencies</li>
-              <li>Business</li>
-              <li>Memorials</li>
-              <li>Events & Weddings</li>
-              <li>Education</li>
-              <li>Sports</li>
-              <li>Charity</li>
-            </ul>
-          </section>
-          <section className="w-full md:w-1/3 flex flex-col gap-2">
+          <section className="w-full md:w-1/2 flex flex-col gap-2">
             <p className="font-bold text-base text-white uppercase">discover</p>
             <ul className="flex flex-col gap-2 font-normal text-sm md:text-base text-white">
               <li>
@@ -107,23 +93,35 @@ const Footer = (props: Props) => {
                 <Link href="/how-it-works">How ChainFundIt works</Link>
               </li>
               <li>
-                <Link href="/join-the-chain-reaction">Join the Chain Reaction</Link>
+                <Link href="/join-the-chain-reaction">
+                  Join the Chain Reaction
+                </Link>
               </li>
               <li>
                 <Link href="/careers">Careers</Link>
               </li>
-              <li><Link href='/success-stories'>Success stories</Link></li>
-              <li><Link href='/pricing'>Pricing</Link></li>
-              <li><Link href='/blog'>Blog</Link></li>
+              <li>
+                <Link href="/success-stories">Success stories</Link>
+              </li>
+              <li>
+                <Link href="/pricing">Pricing</Link>
+              </li>
+              <li>
+                <Link href="/blog">Blog</Link>
+              </li>
             </ul>
           </section>
-          <section className="w-full md:w-1/3 flex flex-col gap-2">
+          <section className="w-full md:w-1/2 flex flex-col gap-2">
             <p className="font-bold text-base text-white uppercase">
               resources
             </p>
             <ul className="flex flex-col gap-2 font-normal text-sm md:text-base text-white">
-              <li><Link href='/privacy-policy'>Privacy policy</Link></li>
-              <li><Link href="/terms-and-conditions">Terms and Conditions</Link></li>
+              <li>
+                <Link href="/privacy-policy">Privacy policy</Link>
+              </li>
+              <li>
+                <Link href="/terms-and-conditions">Terms and Conditions</Link>
+              </li>
               <li>
                 <Link href="/ambassador-agreement">Ambassador Agreement</Link>
               </li>
@@ -136,7 +134,9 @@ const Footer = (props: Props) => {
               <li>
                 <Link href="/contact-us">Contact us</Link>
               </li>
-              <li><Link href='/disclaimer'>Disclaimer</Link></li>
+              <li>
+                <Link href="/disclaimer">Disclaimer</Link>
+              </li>
             </ul>
           </section>
         </div>
