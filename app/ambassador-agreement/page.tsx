@@ -234,7 +234,7 @@ const sections = [
               commission should be addressed to{" "}
               <Link
                 href="mailto:ambassadors@chainfundit.com"
-                className="text-[#104901] hover:underline"
+                className="text-[#104901] hover:underline font-semibold"
               >
                 ambassadors@chainfundit.com
               </Link>
@@ -300,7 +300,7 @@ const sections = [
               you will be processed in accordance with our{" "}
               <Link
                 href="/privacy-policy"
-                className="text-[#104901] hover:underline"
+                className="text-[#104901] hover:underline font-semibold"
               >
                 privacy policy
               </Link>
@@ -662,7 +662,7 @@ export default function AmbassadorAgreementPage() {
                   <strong>Contact:</strong>{" "}
                   <Link
                     href="mailto:ambassadors@chainfundit.com"
-                    className="text-[#104901] hover:underline"
+                    className="text-[#104901] hover:underline font-semibold"
                   >
                     ambassadors@chainfundit.com
                   </Link>
@@ -687,7 +687,7 @@ export default function AmbassadorAgreementPage() {
                 Agreement should be read in conjunction with our{" "}
                 <Link
                   href="/terms-and-conditions"
-                  className="text-[#104901] hover:underline"
+                  className="text-[#104901] hover:underline font-semibold"
                 >
                   Terms and Conditions
                 </Link>

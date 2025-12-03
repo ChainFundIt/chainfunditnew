@@ -239,7 +239,7 @@ const sections = [
               To exercise these rights, email{" "}
               <Link
                 href="mailto:mngt@chainfundit.com"
-                className="text-[#104901] hover:underline"
+                className="text-[#104901] hover:underline font-semibold"
               >
                 mngt@chainfundit.com
               </Link>
@@ -300,7 +300,7 @@ const sections = [
               Our website:{" "}
               <Link
                 href="https://www.chainfundit.com"
-                className="text-[#104901] hover:underline"
+                className="text-[#104901] hover:underline font-semibold"
               >
                 www.chainfundit.com
               </Link>
@@ -540,21 +540,21 @@ export default function PrivacyPolicyPage() {
                 By using{" "}
                 <Link
                   href="https://www.chainfundit.com"
-                  className="text-[#104901] hover:underline"
+                  className="text-[#104901] hover:underline font-semibold"
                 >
                   <strong>www.chainfundit.com</strong>
                 </Link>
                 , you agree to this Privacy Policy, our{" "}
                 <Link
                   href="/terms-and-conditions"
-                  className="text-[#104901] hover:underline"
+                  className="text-[#104901] hover:underline font-semibold"
                 >
                   <strong>Terms and Conditions</strong>
                 </Link>
                 , and our{" "}
                 <Link
                   href="/privacy-policy#cookies"
-                  className="text-[#104901] hover:underline"
+                  className="text-[#104901] hover:underline font-semibold"
                 >
                   <strong>Cookie Policy</strong>
                 </Link>
@@ -576,14 +576,14 @@ export default function PrivacyPolicyPage() {
                 Covent Garden, London, WC2H 9JQ <br /> General Support Email:{" "}
                 <Link
                   href="mailto:campaigns@chainfundit.com"
-                  className="text-[#104901] hover:underline"
+                  className="text-[#104901] hover:underline font-semibold"
                 >
                   campaigns@chainfundit.com
                 </Link>{" "}
                 <br /> Privacy Matters Contact:{" "}
                 <Link
                   href="mailto:mngt@chainfundit.com"
-                  className="text-[#104901] hover:underline"
+                  className="text-[#104901] hover:underline font-semibold"
                 >
                   mngt@chainfundit.com
                 </Link>{" "}
@@ -641,7 +641,7 @@ export default function PrivacyPolicyPage() {
                   <strong>Email:</strong>{" "}
                   <Link
                     href="mailto:campaigns@chainfundit.com"
-                    className="text-[#104901]"
+                    className="text-[#104901] font-semibold"
                   >
                     campaigns@chainfundit.com
                   </Link>
@@ -650,7 +650,7 @@ export default function PrivacyPolicyPage() {
                   <strong>For data privacy matters or rights requests:</strong>{" "}
                   <Link
                     href="mailto:mngt@chainfundit.com"
-                    className="text-[#104901]"
+                    className="text-[#104901] font-semibold"
                   >
                     mngt@chainfundit.com
                   </Link>
@@ -659,7 +659,7 @@ export default function PrivacyPolicyPage() {
                   <strong>Website:</strong>{" "}
                   <Link
                     href="https://www.chainfundit.com"
-                    className="text-[#104901]"
+                    className="text-[#104901] font-semibold"
                   >
                     www.chainfundit.com
                   </Link>

@@ -58,14 +58,14 @@ const sections = [
                 agree to these Terms, the{" "}
                 <Link
                   href="/privacy-policy"
-                  className="text-[#104901] hover:underline"
+                  className="text-[#104901] hover:underline font-semibold"
                 >
                   Privacy Policy
                 </Link>
                 , the{" "}
                 <Link
                   href="/privacy-policy#cookies"
-                  className="text-[#104901] hover:underline"
+                  className="text-[#104901] hover:underline font-semibold"
                 >
                   Cookie Policy
                 </Link>
@@ -132,7 +132,7 @@ const sections = [
                 illegal, deceptive, or prohibited activity (see Section F and{" "}
                 <a
                   href="#f.1.-prohibited-campaigns-policy"
-                  className="text-[#104901] hover:underline"
+                  className="text-[#104901] hover:underline font-semibold"
                 >
                   Prohibited Campaigns Policy
                 </a>
@@ -412,7 +412,7 @@ const sections = [
                     Any content that violates our{" "}
                     <Link
                       href="/terms-and-conditions"
-                      className="text-[#104901] hover:underline"
+                      className="text-[#104901] hover:underline font-semibold"
                     >
                       Terms & Conditions
                     </Link>{" "}
@@ -663,7 +663,7 @@ export default function TermsAndConditionsPage() {
                   <strong>Email:</strong>{" "}
                   <Link
                     href="mailto:campaigns@chainfundit.com"
-                    className="text-[#104901] hover:underline"
+                    className="text-[#104901] hover:underline font-semibold"
                   >
                     campaigns@chainfundit.com
                   </Link>
@@ -672,7 +672,7 @@ export default function TermsAndConditionsPage() {
                   <strong>Website:</strong>{" "}
                   <Link
                     href="https://www.chainfundit.com"
-                    className="text-[#104901] hover:underline"
+                    className="text-[#104901] hover:underline font-semibold"
                   >
                     www.chainfundit.com
                   </Link>
