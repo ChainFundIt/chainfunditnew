@@ -1,14 +1,23 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import CardDetailsDrawer from "@/components/homepage/CardDetailsDrawer";
 import CampaignCreatorAvatar from "@/components/ui/campaign-creator-avatar";
+import { EmojiFallbackImage } from "@/components/ui/emoji-fallback-image";
+import { R2Image } from "@/components/ui/r2-image";
+import { needsEmojiFallback } from "@/lib/utils/campaign-emojis";
+import { getTimeRemaining } from "@/lib/utils/campaign-status";
 
 
 
-const Cards = ({ campaignId }: { campaignId: string }) => {
+const Cards = ({ 
+  campaignId, 
+  campaignReason 
+}: { 
+  campaignId: string;
+  campaignReason: string | null;
+}) => {
   const [selectedCard, setSelectedCard] = useState<any>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [relatedCampaigns, setRelatedCampaigns] = useState<any[]>([]);
@@ -21,13 +30,27 @@ const Cards = ({ campaignId }: { campaignId: string }) => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch('/api/campaigns?limit=5');
-        const result = await response.json();
+        // First, try to fetch campaigns with the same reason/category
+        let url = `/api/campaigns?limit=6&excludeId=${campaignId}`;
+        if (campaignReason) {
+          url += `&reason=${encodeURIComponent(campaignReason)}`;
+        }
         
-        if (result.success && result.data.length > 0) {
-          // Transform API data to match cardDetails format
-          const transformedCampaigns = result.data.map((campaign: any) => {
-            // Format currency symbol
+        let response = await fetch(url);
+        let result = await response.json();
+        
+        if (!result.success || !result.data || result.data.length < 3) {
+          const fallbackUrl = `/api/campaigns?limit=6&excludeId=${campaignId}&status=active`;
+          response = await fetch(fallbackUrl);
+          result = await response.json();
+        }
+        
+        if (result.success && result.data && result.data.length > 0) {
+          const filteredCampaigns = result.data
+            .filter((campaign: any) => campaign.id !== campaignId)
+            .slice(0, 5);
+          
+          const transformedCampaigns = filteredCampaigns.map((campaign: any) => {
             const getCurrencySymbol = (currency: string) => {
               switch (currency.toUpperCase()) {
                 case 'USD': return '$';
@@ -46,36 +69,42 @@ const Cards = ({ campaignId }: { campaignId: string }) => {
             
             const currencySymbol = getCurrencySymbol(campaign.currency);
             
-            // Get the first image from gallery or use cover image as fallback
             const getImageUrl = () => {
-              // Check if gallery has valid images
               if (campaign.galleryImages && campaign.galleryImages.length > 0) {
                 const firstImage = campaign.galleryImages[0];
-                // Check if it's a valid image URL
                 if (firstImage && firstImage !== 'undefined') {
                   return firstImage;
                 }
               }
               
-              // Check cover image
               if (campaign.coverImageUrl && campaign.coverImageUrl !== 'undefined') {
                 return campaign.coverImageUrl;
               }
               
-              // Use fallback image
               return "/images/card-img1.png";
             };
             
             return {
               id: campaign.id,
+              slug: campaign.slug, 
               title: campaign.title,
               description: campaign.description,
               raised: `${currencySymbol}${campaign.currentAmount.toLocaleString()} raised`,
               image: getImageUrl(),
+              coverImageUrl: campaign.coverImageUrl,
+              reason: campaign.reason || 'Uncategorized', 
               extra: `Goal: ${currencySymbol}${campaign.goalAmount.toLocaleString()}. ${Math.round((campaign.currentAmount / campaign.goalAmount) * 100)}% funded!`,
               date: new Date(campaign.createdAt).toLocaleDateString(),
-              timeLeft: "5 days left", // This would need to be calculated
-              avatar: campaign.creatorAvatar || "/images/avatar-7.png",
+              timeLeft: getTimeRemaining({
+                id: campaign.id,
+                createdAt: campaign.createdAt,
+                duration: campaign.duration || 'Not applicable',
+                currentAmount: campaign.currentAmount,
+                goalAmount: campaign.goalAmount,
+                status: campaign.status,
+                isActive: campaign.isActive,
+              } as any),
+              avatar: campaign.creatorAvatar,
               creator: campaign.creatorName,
               createdFor: campaign.fundraisingFor,
               percentage: `${Math.round((campaign.currentAmount / campaign.goalAmount) * 100)}%`,
@@ -85,7 +114,6 @@ const Cards = ({ campaignId }: { campaignId: string }) => {
           });
           setRelatedCampaigns(transformedCampaigns);
         } else {
-          // If no campaigns found, show empty state
           setRelatedCampaigns([]);
         }
       } catch (err) {
@@ -97,8 +125,10 @@ const Cards = ({ campaignId }: { campaignId: string }) => {
       }
     };
 
-    fetchRelatedCampaigns();
-  }, [campaignId]);
+    if (campaignId) {
+      fetchRelatedCampaigns();
+    }
+  }, [campaignId, campaignReason]);
 
   const scrollLeft = () => {
     if (scrollContainerRef.current) {
@@ -119,8 +149,12 @@ const Cards = ({ campaignId }: { campaignId: string }) => {
   };
 
   const handleCardClick = (card: any) => {
-    setSelectedCard(card);
-    setIsDrawerOpen(true);
+    if (card.slug) {
+      window.location.href = `/campaign/${card.slug}`;
+    } else {
+      setSelectedCard(card);
+      setIsDrawerOpen(true);
+    }
   };
 
   // Show loading state
@@ -217,13 +251,23 @@ const Cards = ({ campaignId }: { campaignId: string }) => {
             onClick={() => handleCardClick(card)}
           >
             <div className="relative">
-              <Image
-                src={card.image}
-                alt={card.title}
-                width={400}
-                height={200}
-                className="w-full h-48 object-cover"
-              />
+              {needsEmojiFallback(card.coverImageUrl || card.image) ? (
+                <EmojiFallbackImage
+                  category={card.reason}
+                  title={card.title}
+                  className="w-full h-48"
+                  width={400}
+                  height={192}
+                />
+              ) : (
+                <R2Image
+                  src={card.image}
+                  alt={card.title}
+                  width={400}
+                  height={192}
+                  className="w-full h-48 object-cover"
+                />
+              )}
               <div className="absolute top-4 left-4">
                 <span className="bg-[#104901] text-white px-3 py-1 rounded-full text-sm font-medium">
                   {card.percentage}

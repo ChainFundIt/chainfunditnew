@@ -122,22 +122,10 @@ export async function GET(
     }
 
     const campaign = campaignData[0];
-    const isOwner = userId === campaign.creatorId;
 
     // Note: Private campaigns are filtered out from public listings,
     // but can be accessed via direct link (when shared by creator)
     // So we don't block access here - the visibility check is handled in listings
-
-    if (!isOwner && campaign.complianceStatus !== 'approved') {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Campaign is awaiting compliance review',
-          complianceStatus: campaign.complianceStatus,
-        },
-        { status: 403 }
-      );
-    }
 
     // Get donation statistics
     const donationStats = await db

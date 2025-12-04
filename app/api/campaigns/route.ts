@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { campaigns, users, donations } from '@/lib/schema';
-import { eq, and, or, inArray, count, sum, desc } from 'drizzle-orm';
+import { eq, and, or, inArray, count, sum, desc, ne } from 'drizzle-orm';
 import { parse } from 'cookie';
 import { verifyUserJWT } from '@/lib/auth';
 import { generateSlug, generateUniqueSlug } from '@/lib/utils/slug';
-import { runSyncScreeningForCampaign, initializeScreeningForCampaign } from '@/lib/compliance/screening-service';
 
 async function getUserFromRequest(request: NextRequest) {
   const cookie = request.headers.get('cookie') || '';
@@ -27,6 +26,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const offset = parseInt(searchParams.get('offset') || '0');
     const creatorId = searchParams.get('creatorId');
+    const excludeId = searchParams.get('excludeId');
 
 
     // Build query with filters
@@ -40,11 +40,10 @@ export async function GET(request: NextRequest) {
     if (creatorId) {
       conditions.push(eq(campaigns.creatorId, creatorId));
     }
-    // Compliance status filter - removed for now, can be added back later
-    if (complianceStatus) {
-      conditions.push(eq(campaigns.complianceStatus, complianceStatus));
+    if (excludeId) {
+      conditions.push(ne(campaigns.id, excludeId));
     }
-    // Removed default compliance filter - showing all campaigns regardless of compliance status
+    // Compliance status filter removed
     
     // Visibility logic:
     // - If creatorId is specified, show all campaigns for that creator (public and private)
@@ -275,27 +274,6 @@ export async function POST(request: NextRequest) {
       ? generateUniqueSlug(baseSlug, existingSlugs.map(c => c.slug))
       : baseSlug;
 
-    const syncResult = await runSyncScreeningForCampaign({
-      title,
-      description,
-      reason,
-      fundraisingFor,
-      goalAmount: goalAmountNum,
-      currency,
-      creatorEmail: user[0].email,
-    });
-
-    const initialComplianceStatus =
-      syncResult.decision === 'block'
-        ? 'blocked'
-        : syncResult.decision === 'review'
-        ? 'in_review'
-        : 'pending_screening';
-
-    const complianceSummary = syncResult.summary;
-    const complianceFlags = syncResult.flags;
-    const complianceRiskScore = syncResult.riskScore.toFixed(2);
-
     // Create campaign
     const newCampaign = await db.insert(campaigns).values({
       creatorId: userId,
@@ -319,18 +297,14 @@ export async function POST(request: NextRequest) {
       status: 'active',
       visibility: visibility || 'public',
       isActive: true,
-      complianceStatus: initialComplianceStatus,
-      complianceSummary,
-      complianceFlags,
-      riskScore: complianceRiskScore,
-      reviewRequired: initialComplianceStatus === 'in_review',
-      lastScreenedAt: initialComplianceStatus === 'pending_screening' ? null : new Date(),
-      blockedAt: initialComplianceStatus === 'blocked' ? new Date() : null,
+      complianceStatus: 'approved',
+      complianceSummary: null,
+      complianceFlags: null,
+      riskScore: '0',
+      reviewRequired: false,
+      lastScreenedAt: null,
+      blockedAt: null,
     }).returning();
-
-    if (initialComplianceStatus !== 'blocked') {
-      await initializeScreeningForCampaign(newCampaign[0].id, syncResult);
-    }
 
     return NextResponse.json({
       success: true,

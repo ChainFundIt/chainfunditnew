@@ -106,10 +106,10 @@ interface CampaignComment {
 }
 
 interface MainProps {
-  campaignId: string;
+  campaignSlug: string;
 }
 
-const Main = ({ campaignId }: MainProps) => {
+const Main = ({ campaignSlug }: MainProps) => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [activeTab, setActiveTab] = useState("why-support");
   const [chainModalOpen, setChainModalOpen] = useState(false);
@@ -135,12 +135,13 @@ const Main = ({ campaignId }: MainProps) => {
     id: string;
     referralCode: string;
   } | null>(null);
+  const [campaignId, setCampaignId] = useState<string | null>(null);
 
-  // Fetch donations data
+  // Fetch donations data (only after campaign is loaded)
   const { donations, loading: loadingDonations } =
-    useCampaignDonations(campaignId);
+    useCampaignDonations(campaignId || '');
   const { topChainers, loading: loadingTopChainers } =
-    useTopChainers(campaignId);
+    useTopChainers(campaignId || '');
 
   // Handle donation status from URL parameters
   useEffect(() => {
@@ -209,7 +210,7 @@ const Main = ({ campaignId }: MainProps) => {
           if (data.success && data.data.length > 0) {
             const chainer = data.data[0];
             // Only set if the chainer is for this campaign
-            if (chainer.campaignId === campaignId) {
+            if (chainer.campaignId === campaignId || (campaign && chainer.campaignId === campaign.id)) {
               setReferralChainer({
                 id: chainer.id,
                 referralCode: ref
@@ -224,13 +225,15 @@ const Main = ({ campaignId }: MainProps) => {
   }, [campaignId]);
 
   // Fetch campaign updates
-  const fetchUpdates = React.useCallback(async (options?: { silent?: boolean }) => {
+  const fetchUpdates = React.useCallback(async (options?: { silent?: boolean; campaignIdOverride?: string }) => {
     const isSilent = options?.silent ?? false;
+    const idToUse = options?.campaignIdOverride || campaignId;
+    if (!idToUse) return;
     try {
       if (!isSilent) {
         setLoadingUpdates(true);
       }
-      const response = await fetch(`/api/campaigns/${campaignId}/updates`);
+      const response = await fetch(`/api/campaigns/${idToUse}/updates`);
 
       if (response.ok) {
         const result = await response.json();
@@ -253,13 +256,15 @@ const Main = ({ campaignId }: MainProps) => {
 
   // Fetch campaign comments
   const fetchComments = React.useCallback(
-    async (options?: { silent?: boolean }) => {
+    async (options?: { silent?: boolean; campaignIdOverride?: string }) => {
       const isSilent = options?.silent ?? false;
+      const idToUse = options?.campaignIdOverride || campaignId;
+      if (!idToUse) return;
       try {
         if (!isSilent) {
           setLoadingComments(true);
         }
-        const response = await fetch(`/api/campaigns/${campaignId}/comments`);
+        const response = await fetch(`/api/campaigns/${idToUse}/comments`);
 
         if (response.ok) {
           const result = await response.json();
@@ -279,18 +284,20 @@ const Main = ({ campaignId }: MainProps) => {
         }
       }
     },
-    [campaignId]
+    [campaignId] // Use campaignId once loaded
   );
 
   // Fetch campaign chain count
   const fetchChainCount = React.useCallback(
-    async (options?: { silent?: boolean }) => {
+    async (options?: { silent?: boolean; campaignIdOverride?: string }) => {
       const isSilent = options?.silent ?? false;
+      const idToUse = options?.campaignIdOverride || campaignId;
+      if (!idToUse) return;
       try {
         if (!isSilent) {
           setLoadingChains(true);
         }
-        const response = await fetch(`/api/campaigns/${campaignId}/chains`);
+        const response = await fetch(`/api/campaigns/${idToUse}/chains`);
 
         if (response.ok) {
           const result = await response.json();
@@ -310,7 +317,7 @@ const Main = ({ campaignId }: MainProps) => {
         }
       }
     },
-    [campaignId]
+    [campaignId] // Use campaignId once loaded
   );
 
   // Fetch campaign data and updates
@@ -324,7 +331,8 @@ const Main = ({ campaignId }: MainProps) => {
         }
 
         // Always fetch from API to get canEdit property and latest data
-        const response = await fetch(`/api/campaigns/${campaignId}?t=${Date.now()}`);
+        // Use slug for the initial fetch
+        const response = await fetch(`/api/campaigns/${campaignSlug}?t=${Date.now()}`);
 
         if (!response.ok) {
           if (response.status === 404) {
@@ -351,6 +359,8 @@ const Main = ({ campaignId }: MainProps) => {
         }
 
         setCampaign(campaignData);
+        const loadedCampaignId = campaignData.id;
+        setCampaignId(loadedCampaignId); // Store campaign ID for other API calls
         setError(null);
 
         // Track campaign view
@@ -365,11 +375,11 @@ const Main = ({ campaignId }: MainProps) => {
           });
         }
 
-        // Fetch campaign updates, comments, and chain count
+        // Fetch campaign updates, comments, and chain count using the loaded campaign ID
         await Promise.all([
-          fetchUpdates({ silent: isSilent }),
-          fetchComments({ silent: isSilent }),
-          fetchChainCount({ silent: isSilent }),
+          fetchUpdates({ silent: isSilent, campaignIdOverride: loadedCampaignId }),
+          fetchComments({ silent: isSilent, campaignIdOverride: loadedCampaignId }),
+          fetchChainCount({ silent: isSilent, campaignIdOverride: loadedCampaignId }),
         ]);
       } catch (error) {
         if (!isSilent) {
@@ -384,14 +394,14 @@ const Main = ({ campaignId }: MainProps) => {
         }
       }
     },
-    [campaignId, fetchUpdates, fetchComments, fetchChainCount]
+    [campaignSlug, fetchUpdates, fetchComments, fetchChainCount]
   );
 
   React.useEffect(() => {
-    if (campaignId) {
+    if (campaignSlug) {
       fetchCampaign();
     }
-  }, [campaignId, fetchCampaign]);
+  }, [campaignSlug, fetchCampaign]);
 
   React.useEffect(() => {
     if (!campaignId) {
@@ -445,8 +455,8 @@ const Main = ({ campaignId }: MainProps) => {
             </h2>
             <p className="text-lg text-[#757575] mb-4">
               {error === "Campaign not found"
-                ? "The campaign you&apos;re looking for doesn&apos;t exist or has been removed."
-                : "We couldn&apos;t load the campaign. Please try again later."}
+                ? "The campaign you're looking for doesnt exist or has been removed."
+                : "We couldn't load the campaign. Please try again later."}
             </p>
             <button
               onClick={() => window.location.reload()}
@@ -1254,13 +1264,13 @@ const Main = ({ campaignId }: MainProps) => {
       <UpdateModal
         isOpen={updateModalOpen}
         onClose={() => setUpdateModalOpen(false)}
-        campaignId={campaignId}
+        campaignId={campaignId || campaign?.id || ''}
         onUpdateCreated={fetchUpdates}
       />
       <CommentModal
         isOpen={commentModalOpen}
         onClose={() => setCommentModalOpen(false)}
-        campaignId={campaignId}
+        campaignId={campaignId || campaign?.id || ''}
         onCommentCreated={fetchComments}
       />
       <ClientToaster />

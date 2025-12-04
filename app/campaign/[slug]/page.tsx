@@ -40,8 +40,11 @@ const page = async ({ params }: PageProps) => {
   return (
     <div className='h-full'>
       <Navbar />
-      <Main campaignId={campaignData.id} />
-      <Cards campaignId={campaignData.id} />
+      <Main campaignSlug={slug} />
+      <Cards 
+        campaignId={campaignData.id} 
+        campaignReason={campaignData.reason || null}
+      />
       <Footer />
     </div>
   );
