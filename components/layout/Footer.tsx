@@ -12,14 +12,20 @@ type Props = {};
 const Footer = (props: Props) => {
   const router = useRouter();
   return (
-    <div className="rounded-t-[48px] bg-[#104109] md:px-20 pt-20 pb-10 flex items-center justify-center">
-      <div className="md:max-w-[80rem] w-390px md:px-8 px:4 flex flex-col gap-16">
-        <div className="flex gap-12 md:flex-row flex-col">
-          <div className="flex flex-col gap-6 md:w-[268px] w-[358px]">
-            <div className="flex gap-2 items-center">
-              <CompanyIcon color="white" />
-              <div className="font-jakarta font-bold text-xl leading-7 text-white">
-                ChainFundit
+    <div className="pt-10">
+      <div className="rounded-t-[48px] bg-[#1C1917] md:px-20 pt-20 pb-10 flex items-center justify-center">
+        <div className="md:max-w-[1280px] w-390px md:px-8 px:4 flex flex-col gap-16">
+          <div className="flex gap-12 md:flex-row flex-col">
+            <div className="flex flex-col gap-6 md:w-[268px] w-[358px]">
+              <div className="flex gap-2 items-center">
+                <CompanyIcon color="white" />
+                <div className="font-jakarta font-bold text-xl leading-7 text-white">
+                  ChainFundit
+                </div>
+              </div>
+              <div className="font-jakarta font-normal text-base leading-[26px] text-[#A8A29E]">
+                Empowering global change through transparent, secure, and rapid
+                fundraising technology. Join the movement today.
               </div>
             </div>
             <div className="font-jakarta font-normal text-base leading-[26px] text-white">

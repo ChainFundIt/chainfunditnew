@@ -64,7 +64,7 @@ const Navbar = (props: Props) => {
     "U";
 
   return (
-    <nav className="px-2 md:px-10 py-3 md:py-5 flex flex-col md:flex-row justify-between items-center font-source border-b border-[#C0BFC4] w-full">
+    <nav className=" px-2 md:px-10 py-3 md:py-5 flex flex-col md:flex-row justify-between items-center font-source border-b border-[#C0BFC4] w-full ">
       <div className="flex w-full md:w-auto justify-between items-center">
         <Link href="/" className="flex gap-1 items-center">
           <Image
@@ -103,7 +103,7 @@ const Navbar = (props: Props) => {
         <li>
           <Link href="/faq" className="">
             FAQs
-          </Link> 
+          </Link>
         </li>
       </ul>
       <section className="hidden md:flex gap-5 items-center">
