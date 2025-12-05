@@ -1,13 +1,16 @@
+"use client";
 import CompanyIcon from "@/public/icons/CompanyLogo";
 import { Facebook, Instagram, Linkedin, Twitter } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React from "react";
 import { BsTiktok } from "react-icons/bs";
 
 type Props = {};
 
 const Footer = (props: Props) => {
+  const router = useRouter();
   return (
     <div className="pt-10">
       <div className="rounded-t-[48px] bg-[#104109] md:px-20 pt-20 pb-10 flex items-center justify-center">
@@ -27,20 +30,40 @@ const Footer = (props: Props) => {
             </div>
             <div className="font-jakarta flex flex-col gap-6 md:w-[268px] w-[358px]">
               <div className="font-bold text-lg leading-7 text-[#ECFDF5]">
-                Platform
+                Discover
               </div>
               <div className="flex flex-col gap-4 font-normal text-base leading-6 text-white ">
-                <div className="hover:text-[#59ad4a] cursor-pointer">
-                  Browse Campaigns
+                <div
+                  className="hover:text-[#59ad4a] cursor-pointer"
+                  onClick={() => {
+                    router.push("/how-it-works");
+                  }}
+                >
+                  How ChainFundIt works
                 </div>
-                <div className="hover:text-[#59ad4a] cursor-pointer">
-                  Start a Fundraiser
+                <div
+                  className="hover:text-[#59ad4a] cursor-pointer"
+                  onClick={() => {
+                    router.push("/join-the-chain-reaction");
+                  }}
+                >
+                  Join the Chain Reaction
                 </div>
-                <div className="hover:text-[#59ad4a] cursor-pointer">
-                  Pricing and Fees
+                <div
+                  className="hover:text-[#59ad4a] cursor-pointer"
+                  onClick={() => {
+                    router.push("/success-stories");
+                  }}
+                >
+                  Success stories
                 </div>
-                <div className="hover:text-[#59ad4a] cursor-pointer">
-                  Success Stories
+                <div
+                  className="hover:text-[#59ad4a] cursor-pointer"
+                  onClick={() => {
+                    router.push("/ambassador-agreement");
+                  }}
+                >
+                  Ambassador Agreement
                 </div>
               </div>
             </div>
@@ -49,15 +72,37 @@ const Footer = (props: Props) => {
                 Resources
               </div>
               <div className="flex flex-col gap-4 font-normal text-base leading-6 text-white">
-                <div className="hover:text-[#59ad4a] cursor-pointer">
-                  Help Center
+                <div
+                  className="hover:text-[#59ad4a] cursor-pointer"
+                  onClick={() => {
+                    router.push("/disclaimer");
+                  }}
+                >
+                  Disclaimer
                 </div>
-                <div className="hover:text-[#59ad4a] cursor-pointer">
-                  Safety & Security
+                <div
+                  className="hover:text-[#59ad4a] cursor-pointer"
+                  onClick={() => {
+                    router.push("/pricing");
+                  }}
+                >
+                  Pricing
                 </div>
-                <div className="hover:text-[#59ad4a] cursor-pointer">Blog</div>
-                <div className="hover:text-[#59ad4a] cursor-pointer">
-                  Partners
+                <div
+                  className="hover:text-[#59ad4a] cursor-pointer"
+                  onClick={() => {
+                    router.push("/fundraising-tips");
+                  }}
+                >
+                  Fundraising Tips
+                </div>
+                <div
+                  className="hover:text-[#59ad4a] cursor-pointer"
+                  onClick={() => {
+                    router.push("/fundraising-ideas");
+                  }}
+                >
+                  Fundraising Ideas
                 </div>
               </div>
             </div>
@@ -66,9 +111,38 @@ const Footer = (props: Props) => {
                 Contact
               </div>
               <div className="flex flex-col gap-4 font-normal text-base leading-6 text-white">
-                <div>support@chainfundit.com</div>
-                <div>+1 (555) 123-4567</div>
-                <div>123 Innovation Dr, Tech City, TC 90210</div>
+                <div
+                  className="hover:text-[#59ad4a] cursor-pointer"
+                  onClick={() => {
+                    router.push("/contact-us");
+                  }}
+                >
+                  Contact Us
+                </div>
+                <div
+                  className="hover:text-[#59ad4a] cursor-pointer"
+                  onClick={() => {
+                    router.push("/blog");
+                  }}
+                >
+                  Blog
+                </div>
+                <div
+                  className="hover:text-[#59ad4a] cursor-pointer"
+                  onClick={() => {
+                    router.push("/privacy-policy");
+                  }}
+                >
+                  Privacy Policy
+                </div>
+                <div
+                  className="hover:text-[#59ad4a] cursor-pointer"
+                  onClick={() => {
+                    router.push("/terms-and-conditions");
+                  }}
+                >
+                  Terms and Conditions
+                </div>
               </div>
             </div>
           </div>
@@ -99,6 +173,22 @@ const Footer = (props: Props) => {
                 className="h-8 w-8 bg-[#104109] flex items-center justify-center rounded-full hover:bg-[#065f46] cursor-pointer"
               >
                 <Facebook size={20} color="#A8A29E" />
+              </Link>
+
+              <Link
+                href="https://www.instagram.com/chainfundit"
+                target="_blank"
+                className="h-8 w-8 bg-[#104109] flex items-center justify-center rounded-full hover:bg-[#065f46] cursor-pointer"
+              >
+                <Instagram size={20} color="#A8A29E" />
+              </Link>
+
+              <Link
+                href="https://www.tiktok.com/@chainfundit?_r=1&_t=ZS-91f2JUhl7um"
+                target="_blank"
+                className="h-8 w-8 bg-[#104109] flex items-center justify-center rounded-full hover:bg-[#065f46] cursor-pointer"
+              >
+                <BsTiktok size={20} color="#A8A29E" />
               </Link>
             </div>
           </div>
