@@ -5,6 +5,7 @@ import { eq, and, or, inArray, count, sum, desc, ne } from 'drizzle-orm';
 import { parse } from 'cookie';
 import { verifyUserJWT } from '@/lib/auth';
 import { generateSlug, generateUniqueSlug } from '@/lib/utils/slug';
+import { sendCampaignCreationEmail } from '@/lib/notifications/campaign-creation-email';
 
 async function getUserFromRequest(request: NextRequest) {
   const cookie = request.headers.get('cookie') || '';
@@ -305,6 +306,28 @@ export async function POST(request: NextRequest) {
       lastScreenedAt: null,
       blockedAt: null,
     }).returning();
+
+    // Send confirmation email to user (non-blocking - don't fail campaign creation if email fails)
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
+                      (request.headers.get('origin') || 'https://chainfundit.com');
+      const campaignUrl = `${baseUrl}/campaign/${uniqueSlug}`;
+      
+      await sendCampaignCreationEmail({
+        userEmail: userEmail,
+        userName: user[0].fullName || user[0].email?.split('@')[0] || 'there',
+        campaignTitle: title,
+        campaignSlug: uniqueSlug,
+        goalAmount: goalAmountNum.toString(),
+        currency,
+        campaignUrl,
+        visibility: visibility || 'public',
+        isChained: isChainedBool,
+      });
+    } catch (emailError) {
+      // Log error but don't fail the request
+      console.error('Failed to send campaign creation email:', emailError);
+    }
 
     return NextResponse.json({
       success: true,

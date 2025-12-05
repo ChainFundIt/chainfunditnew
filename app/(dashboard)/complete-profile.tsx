@@ -4,9 +4,10 @@ import { toast } from 'sonner';
 
 type Props = {
   formRef: React.RefObject<HTMLFormElement>;
+  onSuccess?: () => void;
 };
 
-const CompleteProfile = ({ formRef }: Props) => {
+const CompleteProfile = ({ formRef, onSuccess }: Props) => {
   const [preview, setPreview] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,7 +48,8 @@ const CompleteProfile = ({ formRef }: Props) => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to update profile");
       toast.success("Profile updated!");
-      // Optionally, trigger a UI update or redirect here
+      // Close the modal on successful submission
+      onSuccess?.();
     } catch (err: any) {
       setSubmitError(err.message || "Failed to update profile");
       toast.error(err.message || "Failed to update profile");

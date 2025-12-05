@@ -40,7 +40,18 @@ export async function POST(request: NextRequest) {
 
     // Return the URL - use the configured public access key URL
     const baseUrl = process.env.R2_PUBLIC_ACCESS_KEY;
-    const fileUrl = `${baseUrl}/${fileName}`;
+    
+    if (!baseUrl) {
+      console.error('R2_PUBLIC_ACCESS_KEY environment variable is not set');
+      return NextResponse.json(
+        { error: 'Upload configuration error: R2_PUBLIC_ACCESS_KEY is not configured' },
+        { status: 500 }
+      );
+    }
+    
+    // Ensure baseUrl doesn't have a trailing slash and fileName doesn't have a leading slash
+    const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+    const fileUrl = `${cleanBaseUrl}/${fileName}`;
     
     return NextResponse.json({ 
       url: fileUrl,

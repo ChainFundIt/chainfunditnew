@@ -42,6 +42,7 @@ import {
   Linkedin,
   ExternalLink,
   HelpCircle,
+  MessageCircle,
 } from "lucide-react";
 import {
   Select,
@@ -225,7 +226,7 @@ export default function CreateCampaignPage() {
 
   const handleFieldChange = (field: keyof CampaignFormData, value: any) => {
     if (field === "currency") {
-      setFormData((prev) => ({ ...prev, currency: value })); // store code directly
+      setFormData((prev) => ({ ...prev, currency: value }));
     } else {
       setFormData((prev) => ({ ...prev, [field]: value }));
     }
@@ -279,7 +280,7 @@ export default function CreateCampaignPage() {
       payload.append(
         "chainerCommissionRate",
         formData.chainerCommissionRate.toString()
-      ); // Use form data
+      );
       payload.append("isChained", formData.isChained.toString());
       payload.append("visibility", formData.visibility);
 
@@ -326,7 +327,6 @@ export default function CreateCampaignPage() {
         shortUrl: shortUrl || campaignUrl,
       });
       
-      // Track campaign creation
       trackCampaign("campaign_created", {
         campaign_id: data.data.id,
         campaign_title: formData.title,
@@ -368,7 +368,6 @@ export default function CreateCampaignPage() {
       createdCampaign?.shortUrl || `chainfund.it/${createdCampaign?.slug}`;
     const shareText = `Check out my campaign: ${formData.title}`;
 
-    // Track campaign share
     track("campaign_shared", {
       campaign_id: createdCampaign?.id,
       campaign_title: formData.title,
@@ -394,9 +393,13 @@ export default function CreateCampaignPage() {
           campaignUrl
         )}`;
         break;
+      case "whatsapp":
+        shareUrl = `https://wa.me/?text=${encodeURIComponent(shareText)} ${encodeURIComponent(campaignUrl)}`;
+        break;
       case "instagram":
-        // Instagram doesn't support direct sharing via URL, copy to clipboard
-        navigator.clipboard.writeText(`${shareText} ${campaignUrl}`);
+          shareUrl = `https://www.instagram.com/sharer/sharer.php?u=${encodeURIComponent(campaignUrl)}`;
+        break;
+      default:
         return;
     }
 
@@ -1086,6 +1089,9 @@ export default function CreateCampaignPage() {
                 Share campaign
               </span>
               <div className="flex gap-3">
+                <button onClick={() => handleShareCampaign("whatsapp")} className="w-12 h-12 rounded-full flex items-center justify-center text-[#104901] hover:bg-[#104901] hover:text-white transition-colors">
+                  <MessageCircle size={32} />
+                </button>
                 <button
                   onClick={() => handleShareCampaign("facebook")}
                   className="w-12 h-12 rounded-full flex items-center justify-center text-[#104901] hover:bg-[#104901] hover:text-white transition-colors"

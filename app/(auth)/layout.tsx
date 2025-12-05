@@ -19,7 +19,7 @@ const carouselData = [
   },
   {
     image: "/images/signin-3.jpg",
-    buttonText: "Activate tax incentives",
+    buttonText: "Solve life issues",
     text: "Start raising funds for causes you love on the Chainfundit platform, using modern tools for fundraising  like Stripe, PayPal, Paystack and more to get your funds quickly.",
   },
 ];

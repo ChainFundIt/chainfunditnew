@@ -203,7 +203,10 @@ export default function DashboardPage() {
             </p>
           </DialogHeader>
           <div className="py-4 md:py-5">
-            <CompleteProfile formRef={formRef} />
+            <CompleteProfile 
+              formRef={formRef} 
+              onSuccess={() => setShowCompleteProfile(false)}
+            />
           </div>
           <DialogFooter>
             <Button
@@ -339,7 +342,7 @@ export default function DashboardPage() {
                     >
                       <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl overflow-hidden">
                         <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200">
-                          {needsEmojiFallback(campaign.coverImageUrl) ? (
+                          {needsEmojiFallback(campaign.coverImageUrl) || !campaign.coverImageUrl ? (
                             <EmojiFallbackImage
                               category={campaign.reason || 'Uncategorized'}
                               title={campaign.title}
@@ -348,7 +351,7 @@ export default function DashboardPage() {
                             />
                           ) : (
                             <R2Image
-                              src={campaign.coverImageUrl!}
+                              src={campaign.coverImageUrl}
                               alt={campaign.title}
                               fill
                               className="object-cover group-hover:scale-110 transition-transform duration-500"

@@ -93,6 +93,83 @@ export function getIntelligentProviders(currency: string): {
   };
 }
 
+// Check if a Stripe key is a test key
+export function isStripeTestKey(key: string | undefined): boolean {
+  if (!key) return false;
+  return key.startsWith('sk_test_') || key.startsWith('pk_test_');
+}
+
+// Check if a Paystack key is a test key
+export function isPaystackTestKey(key: string | undefined): boolean {
+  if (!key) return false;
+  return key.startsWith('sk_test_') || key.startsWith('pk_test_');
+}
+
+// Get payment mode status
+export function getPaymentModeStatus(): {
+  stripe: {
+    secretKeyMode: 'test' | 'live' | 'missing' | 'unknown';
+    publishableKeyMode: 'test' | 'live' | 'missing' | 'unknown';
+    isTestMode: boolean;
+  };
+  paystack: {
+    secretKeyMode: 'test' | 'live' | 'missing' | 'unknown';
+    publicKeyMode: 'test' | 'live' | 'missing' | 'unknown';
+    isTestMode: boolean;
+  };
+} {
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+  const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+  const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY;
+  const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || process.env.PAYSTACK_PUBLIC_KEY;
+
+  const getStripeSecretMode = (): 'test' | 'live' | 'missing' | 'unknown' => {
+    if (!stripeSecretKey) return 'missing';
+    if (stripeSecretKey.startsWith('sk_test_')) return 'test';
+    if (stripeSecretKey.startsWith('sk_live_')) return 'live';
+    return 'unknown';
+  };
+
+  const getStripePublishableMode = (): 'test' | 'live' | 'missing' | 'unknown' => {
+    if (!stripePublishableKey) return 'missing';
+    if (stripePublishableKey.startsWith('pk_test_')) return 'test';
+    if (stripePublishableKey.startsWith('pk_live_')) return 'live';
+    return 'unknown';
+  };
+
+  const getPaystackSecretMode = (): 'test' | 'live' | 'missing' | 'unknown' => {
+    if (!paystackSecretKey) return 'missing';
+    if (paystackSecretKey.startsWith('sk_test_')) return 'test';
+    if (paystackSecretKey.startsWith('sk_live_')) return 'live';
+    return 'unknown';
+  };
+
+  const getPaystackPublicMode = (): 'test' | 'live' | 'missing' | 'unknown' => {
+    if (!paystackPublicKey) return 'missing';
+    if (paystackPublicKey.startsWith('pk_test_')) return 'test';
+    if (paystackPublicKey.startsWith('pk_live_')) return 'live';
+    return 'unknown';
+  };
+
+  const stripeSecretMode = getStripeSecretMode();
+  const stripePublishableMode = getStripePublishableMode();
+  const paystackSecretMode = getPaystackSecretMode();
+  const paystackPublicMode = getPaystackPublicMode();
+
+  return {
+    stripe: {
+      secretKeyMode: stripeSecretMode,
+      publishableKeyMode: stripePublishableMode,
+      isTestMode: stripeSecretMode === 'test' || stripePublishableMode === 'test',
+    },
+    paystack: {
+      secretKeyMode: paystackSecretMode,
+      publicKeyMode: paystackPublicMode,
+      isTestMode: paystackSecretMode === 'test' || paystackPublicMode === 'test',
+    },
+  };
+}
+
 // Environment validation
 export function validatePaymentConfig() {
   const errors: string[] = [];

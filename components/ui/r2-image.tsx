@@ -13,6 +13,17 @@ interface R2ImageProps {
 }
 
 export function R2Image({ src, alt, ...props }: R2ImageProps) {
+  // Validate src - return null if invalid
+  if (!src || typeof src !== 'string' || src.trim() === '') {
+    return null;
+  }
+
+  // Try to validate URL format for non-relative paths
+  if (!src.startsWith('/') && !src.startsWith('http://') && !src.startsWith('https://')) {
+    // If it's not a relative path or absolute URL, it's invalid
+    return null;
+  }
+
   // Check if the image is from R2 (Cloudflare R2) or local uploads
   const isR2Image = src.includes('r2.dev') || src.includes('pub-');
   const isLocalImage = src.startsWith('/uploads/');

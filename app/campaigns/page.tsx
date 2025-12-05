@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { useAllCampaigns } from "@/hooks/use-all-campaigns";
-import { CampaignCard } from "@/components/campaign/CampaignCard";
+import { useUnifiedItems } from "@/hooks/use-unified-items";
+import { UnifiedItemCard } from "@/components/campaign/UnifiedItemCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,10 +27,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Navbar from "./Navbar";
-import { useGeolocation, useCampaignFiltering, useCurrencyConversion } from "@/hooks/use-geolocation";
+import { useGeolocation, useCampaignFiltering } from "@/hooks/use-geolocation";
 import Footer from "@/components/layout/Footer";
+import { getRelatedCategories } from "@/lib/utils/category-mapping";
 
-const campaignReasons = [
+// Combined categories for campaigns and charities
+const allCategories = [
   "Emergency",
   "Business",
   "Memorials",
@@ -43,91 +45,39 @@ const campaignReasons = [
   "Charity",
   "Community",
   "Creative",
+  "Health", // Charity category
+  "Children", // Charity category
+  "Children & Youth", // Charity category
+  "Housing", // Charity category
+  "Housing & Shelter", // Charity category
+  "Environment", // Charity category
+  "Arts", // Charity category
+  "Disaster Relief", // Charity category
+  "Employment & Training", // Charity category
+  "Global", // Charity category
   "Uncategorized",
 ];
 
 const campaignStatuses = ["active", "closed", "trending"];
-
-function CampaignCardWithConversion({ 
-  campaign, 
-  viewMode, 
-  geolocation, 
-  formatAmount 
-}: {
-  campaign: any;
-  viewMode: 'grid' | 'list';
-  geolocation: any;
-  formatAmount: (amount: number, currency: string) => Promise<any>;
-}) {
-  const [convertedAmounts, setConvertedAmounts] = React.useState<{
-    currentAmount: { amount: number; currency: string; originalAmount?: number; originalCurrency?: string };
-    goalAmount: { amount: number; currency: string; originalAmount?: number; originalCurrency?: string };
-  } | null>(null);
-
-  React.useEffect(() => {
-    const convertAmounts = async () => {
-      try {
-        if (!campaign || typeof campaign.currentAmount !== 'number' || typeof campaign.goalAmount !== 'number') {
-          console.warn('Invalid campaign data:', campaign);
-          return;
-        }
-
-        const convertedCurrentAmount = await formatAmount(campaign.currentAmount, campaign.currency);
-        const convertedGoalAmount = await formatAmount(campaign.goalAmount, campaign.currency);
-        
-        setConvertedAmounts({
-          currentAmount: convertedCurrentAmount,
-          goalAmount: convertedGoalAmount,
-        });
-      } catch (error) {
-        console.error('Failed to convert amounts:', error);
-        setConvertedAmounts({
-          currentAmount: { amount: campaign.currentAmount || 0, currency: campaign.currency || 'USD' },
-          goalAmount: { amount: campaign.goalAmount || 0, currency: campaign.currency || 'USD' },
-        });
-      }
-    };
-
-    convertAmounts();
-  }, [campaign?.currentAmount, campaign?.goalAmount, campaign?.currency, formatAmount]);
-
-  try {
-    return (
-      <CampaignCard
-        campaign={campaign}
-        viewMode={viewMode}
-        geolocation={geolocation}
-        convertedAmounts={convertedAmounts}
-      />
-    );
-  } catch (error) {
-    console.error('Error rendering campaign card:', error, campaign);
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-red-600 text-sm">Error loading campaign</p>
-      </div>
-    );
-  }
-}
+const itemTypes = ["all", "campaign", "charity"];
 
 export default function AllCampaignsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
-  const [selectedReason, setSelectedReason] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [selectedType, setSelectedType] = useState<"all" | "campaign" | "charity">("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState<
     "newest" | "oldest" | "amount" | "popular"
   >("newest");
   const [timeoutError, setTimeoutError] = useState(false);
 
-  const { campaigns, loading, error, fetchCampaigns, hasMore, loadMore, updateFilters } =
-    useAllCampaigns();
+  const { items, loading, error, hasMore, loadMore, updateFilters } = useUnifiedItems();
   
   // Geolocation and filtering
   const { geolocation, loading: locationLoading, error: locationError } = useGeolocation();
   const { shouldShowCampaign } = useCampaignFiltering(geolocation);
-  const { formatAmount } = useCurrencyConversion(geolocation);
 
   // Debounce search query
   useEffect(() => {
@@ -155,46 +105,67 @@ export default function AllCampaignsPage() {
     }
   }, [loading]);
 
-  const filteredCampaigns = useMemo(() => {
+  const filteredItems = useMemo(() => {
     try {
-      let filtered = [...campaigns];
+      let filtered = [...items];
 
-      if (geolocation && !locationLoading) {
-        const beforeFilter = filtered.length;
-        const filteredByGeo = filtered.filter((campaign) => {
-          const currency = campaign?.currency || '';
-          return shouldShowCampaign(currency);
-        });
-        
-        if (filteredByGeo.length > 0 || beforeFilter === 0) {
-          filtered = filteredByGeo;
-        }
+      // Filter by type
+      if (selectedType !== "all") {
+        filtered = filtered.filter(item => item.type === selectedType);
       }
 
+      // Filter by geolocation (only for campaigns with currency)
+      if (geolocation && !locationLoading) {
+        filtered = filtered.filter((item) => {
+          if (item.type === 'campaign' && item.currency) {
+            return shouldShowCampaign(item.currency);
+          }
+          // Charities are shown regardless of geolocation
+          return item.type === 'charity';
+        });
+      }
+
+      // Filter by search query
       if (debouncedSearchQuery.trim()) {
         const query = debouncedSearchQuery.toLowerCase().trim();
-        filtered = filtered.filter((campaign) => {
+        filtered = filtered.filter((item) => {
           try {
             return (
-              (campaign.title?.toLowerCase() || '').includes(query) ||
-              (campaign.description?.toLowerCase() || '').includes(query) ||
-              (campaign.creatorName?.toLowerCase() || '').includes(query)
+              (item.title?.toLowerCase() || '').includes(query) ||
+              (item.description?.toLowerCase() || '').includes(query) ||
+              (item.creatorName?.toLowerCase() || '').includes(query) ||
+              (item.mission?.toLowerCase() || '').includes(query)
             );
           } catch (error) {
-            console.warn('Error filtering campaign:', error, campaign);
+            console.warn('Error filtering item:', error, item);
             return false;
           }
         });
       }
 
-      if (selectedStatus === "trending") {
-        filtered = filtered.filter(
-          (campaign) =>
-            campaign.status === "active" &&
-            (campaign.stats?.totalDonations || 0) > 10
+      // Filter by category/reason
+      if (selectedCategory) {
+        const relatedCategories = getRelatedCategories(selectedCategory);
+        filtered = filtered.filter((item) => 
+          relatedCategories.includes(item.category)
         );
       }
 
+      // Filter by status (only for campaigns)
+      if (selectedStatus === "trending") {
+        filtered = filtered.filter(
+          (item) =>
+            item.type === "campaign" &&
+            item.status === "active" &&
+            (item.stats?.totalDonations || 0) > 10
+        );
+      } else if (selectedStatus && selectedStatus !== "trending") {
+        filtered = filtered.filter(
+          (item) => item.type === "campaign" && item.status === selectedStatus
+        );
+      }
+
+      // Sort
       switch (sortBy) {
         case "newest":
           filtered = filtered.sort(
@@ -209,30 +180,40 @@ export default function AllCampaignsPage() {
           );
           break;
         case "amount":
-          filtered = filtered.sort(
-            (a, b) => (b.stats?.totalAmount || 0) - (a.stats?.totalAmount || 0)
-          );
+          filtered = filtered.sort((a, b) => {
+            const amountA = a.type === 'campaign' 
+              ? (a.currentAmount || 0)
+              : (Number(a.totalReceived) || 0);
+            const amountB = b.type === 'campaign'
+              ? (b.currentAmount || 0)
+              : (Number(b.totalReceived) || 0);
+            return amountB - amountA;
+          });
           break;
         case "popular":
-          filtered = filtered.sort(
-            (a, b) =>
-              (b.stats?.totalDonations || 0) - (a.stats?.totalDonations || 0)
-          );
+          filtered = filtered.sort((a, b) => {
+            const donationsA = a.stats?.totalDonations || 0;
+            const donationsB = b.stats?.totalDonations || 0;
+            return donationsB - donationsA;
+          });
           break;
       }
 
       return filtered;
     } catch (error) {
-      console.error('Error filtering campaigns:', error);
-      return campaigns;
+      console.error('Error filtering items:', error);
+      return items;
     }
   }, [
-    campaigns,
+    items,
     debouncedSearchQuery,
+    selectedCategory,
     selectedStatus,
+    selectedType,
     sortBy,
     geolocation,
     shouldShowCampaign,
+    locationLoading,
   ]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -249,8 +230,9 @@ export default function AllCampaignsPage() {
     try {
       setSearchQuery("");
       setDebouncedSearchQuery("");
-      setSelectedReason("");
+      setSelectedCategory("");
       setSelectedStatus("");
+      setSelectedType("all");
       setSortBy("newest");
     } catch (error) {
       console.error('Error clearing filters:', error);
@@ -260,9 +242,11 @@ export default function AllCampaignsPage() {
   useEffect(() => {
     updateFilters({ 
       status: selectedStatus && selectedStatus.trim() ? selectedStatus : undefined, 
-      reason: selectedReason && selectedReason.trim() ? selectedReason : undefined 
+      reason: selectedCategory && selectedCategory.trim() ? selectedCategory : undefined,
+      category: selectedCategory && selectedCategory.trim() ? selectedCategory : undefined,
+      type: selectedType,
     });
-  }, [selectedStatus, selectedReason, updateFilters, campaigns]);
+  }, [selectedStatus, selectedCategory, selectedType, updateFilters]);
 
 
   return (
@@ -272,7 +256,7 @@ export default function AllCampaignsPage() {
       <div className="mt-20 relative bg-gradient-to-r from-brand-green-light to-brand-green-dark text-white py-16">
         <div className="relative container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-4">
-            Discover Amazing Campaigns
+            Discover Campaigns & Charities
           </h1>
           <p className="text-xl md:text-2xl text-white max-w-3xl mx-auto">
             Support causes you care about and make a difference in people&apos;s
@@ -304,7 +288,7 @@ export default function AllCampaignsPage() {
                 htmlFor="search"
                 className="text-sm font-medium text-gray-700 mb-2 block"
               >
-                Search Campaigns
+                Search Campaigns & Charities
               </Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -318,26 +302,53 @@ export default function AllCampaignsPage() {
               </div>
             </div>
 
-            {/* Reason Filter */}
+            {/* Category Filter */}
             <div className="lg:w-48">
               <Label
-                htmlFor="reason"
+                htmlFor="category"
                 className="text-sm font-medium text-gray-700 mb-2 block"
               >
                 Category
               </Label>
               <Select
-                value={selectedReason}
-                onValueChange={(value) => setSelectedReason(value)}
+                value={selectedCategory}
+                onValueChange={(value) => setSelectedCategory(value)}
               >
                 <SelectTrigger className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-green-dark">
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    {campaignReasons.map((reason) => (
-                      <SelectItem key={reason} value={reason}>
-                        {reason}
+                    {allCategories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Type Filter */}
+            <div className="lg:w-48">
+              <Label
+                htmlFor="type"
+                className="text-sm font-medium text-gray-700 mb-2 block"
+              >
+                Type
+              </Label>
+              <Select
+                value={selectedType}
+                onValueChange={(value) => setSelectedType(value as "all" | "campaign" | "charity")}
+              >
+                <SelectTrigger className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-green-dark">
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {itemTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type.charAt(0).toUpperCase() + type.slice(1)}
                       </SelectItem>
                     ))}
                   </SelectGroup>
@@ -400,7 +411,7 @@ export default function AllCampaignsPage() {
           </div>
 
           {/* Clear Filters */}
-          {(searchQuery || selectedReason || selectedStatus) && (
+          {(searchQuery || selectedCategory || selectedStatus || selectedType !== "all") && (
             <div className="mt-4 flex justify-center">
               <Button
                 variant="outline"
@@ -417,8 +428,7 @@ export default function AllCampaignsPage() {
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-4">
             <span className="text-gray-600">
-              {filteredCampaigns.length} campaign
-              {filteredCampaigns.length !== 1 ? "s" : ""} found
+              {filteredItems.length} {filteredItems.length === 1 ? 'item' : 'items'} found
             </span>
           </div>
 
@@ -464,7 +474,7 @@ export default function AllCampaignsPage() {
                 <Button
                   onClick={() => {
                     setTimeoutError(false);
-                    fetchCampaigns();
+                    loadMore();
                   }}
                   className="bg-[#5F8555] text-white"
                 >
@@ -474,21 +484,21 @@ export default function AllCampaignsPage() {
             ) : (
               <>
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5F8555] mb-4"></div>
-                <p className="text-gray-600">Loading campaigns...</p>
+                <p className="text-gray-600">Loading campaigns & charities...</p>
               </>
             )}
           </div>
-        ) : filteredCampaigns.length === 0 ? (
+        ) : filteredItems.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-gray-400 mb-4">
               <Search className="h-16 w-16 mx-auto" />
             </div>
             <h3 className="text-xl font-semibold text-gray-600 mb-2">
-              No campaigns found
+              No items found
             </h3>
             <p className="text-gray-500 mb-2">
-              {campaigns.length > 0 
-                ? `${campaigns.length} campaign(s) were filtered out. Try adjusting your search criteria or filters.`
+              {items.length > 0 
+                ? `${items.length} item(s) were filtered out. Try adjusting your search criteria or filters.`
                 : 'Try adjusting your search criteria or filters'}
             </p>
             {error && (
@@ -504,13 +514,12 @@ export default function AllCampaignsPage() {
                   : "space-y-4"
               }`}
             >
-              {filteredCampaigns.map((campaign) => (
-                <CampaignCardWithConversion
-                  key={campaign.id}
-                  campaign={campaign}
+              {filteredItems.map((item) => (
+                <UnifiedItemCard
+                  key={`${item.type}-${item.id}`}
+                  item={item}
                   viewMode={viewMode}
                   geolocation={geolocation}
-                  formatAmount={formatAmount}
                 />
               ))}
             </div>
@@ -522,7 +531,7 @@ export default function AllCampaignsPage() {
                   onClick={loadMore}
                   className="bg-[#5F8555] text-white px-8 py-3"
                 >
-                  More Campaigns
+                  Load More
                 </Button>
               </div>
             )}

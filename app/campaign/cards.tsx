@@ -8,8 +8,11 @@ import { EmojiFallbackImage } from "@/components/ui/emoji-fallback-image";
 import { R2Image } from "@/components/ui/r2-image";
 import { needsEmojiFallback } from "@/lib/utils/campaign-emojis";
 import { getTimeRemaining } from "@/lib/utils/campaign-status";
-
-
+import { getRelatedItems } from "@/lib/utils/unified-items";
+import { UnifiedItem } from "@/lib/types/unified-item";
+import { normalizeCampaign, normalizeCharity } from "@/lib/utils/unified-items";
+import { Shield } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const Cards = ({ 
   campaignId, 
@@ -26,33 +29,47 @@ const Cards = ({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    const fetchRelatedCampaigns = async () => {
+    const fetchRelatedItems = async () => {
       setLoading(true);
       setError(null);
       try {
-        // First, try to fetch campaigns with the same reason/category
-        let url = `/api/campaigns?limit=6&excludeId=${campaignId}`;
-        if (campaignReason) {
-          url += `&reason=${encodeURIComponent(campaignReason)}`;
+        // Fetch both campaigns and charities
+        const [campaignsResponse, charitiesResponse] = await Promise.all([
+          fetch(`/api/campaigns?limit=10&excludeId=${campaignId}`),
+          fetch(`/api/charities?limit=10&active=true&verified=true`),
+        ]);
+
+        const campaignsResult = await campaignsResponse.json();
+        const charitiesResult = await charitiesResponse.json();
+
+        // Normalize both into unified items
+        const allItems: UnifiedItem[] = [];
+        
+        if (campaignsResult.success && campaignsResult.data) {
+          const normalizedCampaigns = campaignsResult.data
+            .filter((c: any) => c.id !== campaignId)
+            .map(normalizeCampaign);
+          allItems.push(...normalizedCampaigns);
         }
-        
-        let response = await fetch(url);
-        let result = await response.json();
-        
-        if (!result.success || !result.data || result.data.length < 3) {
-          const fallbackUrl = `/api/campaigns?limit=6&excludeId=${campaignId}&status=active`;
-          response = await fetch(fallbackUrl);
-          result = await response.json();
+
+        if (charitiesResult.charities) {
+          const normalizedCharities = charitiesResult.charities.map(normalizeCharity);
+          allItems.push(...normalizedCharities);
         }
-        
-        if (result.success && result.data && result.data.length > 0) {
-          const filteredCampaigns = result.data
-            .filter((campaign: any) => campaign.id !== campaignId)
-            .slice(0, 5);
-          
-          const transformedCampaigns = filteredCampaigns.map((campaign: any) => {
+
+        // Get related items based on category/reason
+        const relatedItems = campaignReason 
+          ? getRelatedItems(allItems, campaignReason, campaignId, 5)
+          : allItems.slice(0, 5);
+
+        if (relatedItems.length > 0) {
+          // Transform to card format
+          const transformedItems = relatedItems.map((item: UnifiedItem) => {
+            const isCampaign = item.type === 'campaign';
+            const isCharity = item.type === 'charity';
+            
             const getCurrencySymbol = (currency: string) => {
-              switch (currency.toUpperCase()) {
+              switch (currency?.toUpperCase()) {
                 case 'USD': return '$';
                 case 'CAD': return 'C$';
                 case 'EUR': return '€';
@@ -63,62 +80,83 @@ const Cards = ({
                 case 'CHF': return 'CHF';
                 case 'CNY': return '¥';
                 case 'INR': return '₹';
-                default: return currency;
+                default: return currency || '$';
               }
             };
-            
-            const currencySymbol = getCurrencySymbol(campaign.currency);
+
+            const currencySymbol = isCampaign ? getCurrencySymbol(item.currency || 'USD') : '$';
             
             const getImageUrl = () => {
-              if (campaign.galleryImages && campaign.galleryImages.length > 0) {
-                const firstImage = campaign.galleryImages[0];
-                if (firstImage && firstImage !== 'undefined') {
-                  return firstImage;
-                }
-              }
-              
-              if (campaign.coverImageUrl && campaign.coverImageUrl !== 'undefined') {
-                return campaign.coverImageUrl;
-              }
-              
-              return "/images/card-img1.png";
+              return item.coverImage || item.image || "/images/card-img1.png";
             };
-            
-            return {
-              id: campaign.id,
-              slug: campaign.slug, 
-              title: campaign.title,
-              description: campaign.description,
-              raised: `${currencySymbol}${campaign.currentAmount.toLocaleString()} raised`,
-              image: getImageUrl(),
-              coverImageUrl: campaign.coverImageUrl,
-              reason: campaign.reason || 'Uncategorized', 
-              extra: `Goal: ${currencySymbol}${campaign.goalAmount.toLocaleString()}. ${Math.round((campaign.currentAmount / campaign.goalAmount) * 100)}% funded!`,
-              date: new Date(campaign.createdAt).toLocaleDateString(),
-              timeLeft: getTimeRemaining({
-                id: campaign.id,
-                createdAt: campaign.createdAt,
-                duration: campaign.duration || 'Not applicable',
-                currentAmount: campaign.currentAmount,
-                goalAmount: campaign.goalAmount,
-                status: campaign.status,
-                isActive: campaign.isActive,
-              } as any),
-              avatar: campaign.creatorAvatar,
-              creator: campaign.creatorName,
-              createdFor: campaign.fundraisingFor,
-              percentage: `${Math.round((campaign.currentAmount / campaign.goalAmount) * 100)}%`,
-              total: `${currencySymbol}${campaign.goalAmount.toLocaleString()} total`,
-              donors: campaign.stats?.uniqueDonors || 0,
-            };
+
+            if (isCampaign) {
+              return {
+                id: item.id,
+                slug: item.slug,
+                type: 'campaign',
+                title: item.title,
+                description: item.description,
+                raised: `${currencySymbol}${(item.currentAmount || 0).toLocaleString()} raised`,
+                image: getImageUrl(),
+                coverImageUrl: item.coverImage,
+                reason: item.category,
+                extra: item.goalAmount 
+                  ? `Goal: ${currencySymbol}${item.goalAmount.toLocaleString()}. ${Math.round(((item.currentAmount || 0) / item.goalAmount) * 100)}% funded!`
+                  : '',
+                date: new Date(item.createdAt).toLocaleDateString(),
+                timeLeft: getTimeRemaining({
+                  id: item.id,
+                  createdAt: item.createdAt,
+                  duration: 'Not applicable',
+                  currentAmount: item.currentAmount || 0,
+                  goalAmount: item.goalAmount || 0,
+                  status: item.status || 'active',
+                  isActive: item.isActive ?? true,
+                } as any),
+                avatar: item.creatorAvatar,
+                creator: item.creatorName || 'Unknown',
+                createdFor: '',
+                percentage: item.goalAmount 
+                  ? `${Math.round(((item.currentAmount || 0) / item.goalAmount) * 100)}%`
+                  : '0%',
+                total: item.goalAmount 
+                  ? `${currencySymbol}${item.goalAmount.toLocaleString()} total`
+                  : '',
+                donors: item.stats?.uniqueDonors || 0,
+              };
+            } else {
+              // Charity
+              return {
+                id: item.id,
+                slug: item.slug,
+                type: 'charity',
+                title: item.title,
+                description: item.description,
+                raised: `${currencySymbol}${Number(item.totalReceived || 0).toLocaleString()} raised`,
+                image: getImageUrl(),
+                coverImageUrl: item.coverImage,
+                reason: item.category,
+                extra: item.mission || '',
+                date: new Date(item.createdAt).toLocaleDateString(),
+                timeLeft: 'Ongoing',
+                avatar: item.logo,
+                creator: item.title,
+                createdFor: '',
+                percentage: '100%',
+                total: `${currencySymbol}${Number(item.totalReceived || 0).toLocaleString()} total`,
+                donors: 0,
+                isVerified: item.isVerified,
+              };
+            }
           });
-          setRelatedCampaigns(transformedCampaigns);
+          setRelatedCampaigns(transformedItems);
         } else {
           setRelatedCampaigns([]);
         }
       } catch (err) {
-        console.error('Error fetching related campaigns:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch related campaigns');
+        console.error('Error fetching related items:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch related items');
         setRelatedCampaigns([]);
       } finally {
         setLoading(false);
@@ -126,7 +164,7 @@ const Cards = ({
     };
 
     if (campaignId) {
-      fetchRelatedCampaigns();
+      fetchRelatedItems();
     }
   }, [campaignId, campaignReason]);
 
@@ -149,9 +187,15 @@ const Cards = ({
   };
 
   const handleCardClick = (card: any) => {
+    // Navigate based on type
     if (card.slug) {
-      window.location.href = `/campaign/${card.slug}`;
+      if (card.type === 'charity') {
+        window.location.href = `/virtual-giving-mall/${card.slug}`;
+      } else {
+        window.location.href = `/campaign/${card.slug}`;
+      }
     } else {
+      // Fallback to drawer if slug is not available
       setSelectedCard(card);
       setIsDrawerOpen(true);
     }
@@ -268,10 +312,18 @@ const Cards = ({
                   className="w-full h-48 object-cover"
                 />
               )}
-              <div className="absolute top-4 left-4">
-                <span className="bg-[#104901] text-white px-3 py-1 rounded-full text-sm font-medium">
-                  {card.percentage}
-                </span>
+              <div className="absolute top-4 left-4 flex gap-2">
+                {card.type === 'charity' && card.isVerified && (
+                  <Badge className="bg-green-600 text-white">
+                    <Shield className="h-3 w-3 mr-1" />
+                    Verified
+                  </Badge>
+                )}
+                {card.type === 'campaign' && (
+                  <span className="bg-[#104901] text-white px-3 py-1 rounded-full text-sm font-medium">
+                    {card.percentage}
+                  </span>
+                )}
               </div>
             </div>
             <div className="p-4">
