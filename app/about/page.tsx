@@ -127,7 +127,7 @@ export default function AboutPage() {
             </div>
 
             <Button
-              className="bg-[#1C1917] px-8 py-4 rounded-full h-auto"
+              className="bg-[#104109] px-8 py-4 rounded-full h-auto"
               onClick={() => {
                 journeyRef.current?.scrollIntoView({ behavior: "smooth" });
               }}
@@ -291,7 +291,7 @@ export default function AboutPage() {
               alt="Our Mission Image"
               height={384}
               width={576}
-              className="rounded-[40px] md:w-[576px] md:h-[384px] w-[358px] h-[238px]"
+              className="rounded-[40px] md:w-[700px] md:h-[466px] w-[358px] h-[238px]"
             />
 
             {!isMobile && (
@@ -311,9 +311,9 @@ export default function AboutPage() {
           </div>
 
           {/* Right Content */}
-          <div className="flex flex-col gap-6 md:items-start items-center md:text-left text-center">
+          <div className="flex flex-col gap-6 md:items-start items-center md:text-left text-center md:w-[45rem]">
             <div className="font-jakarta px-3 py-1 bg-[#E7E5E4] rounded-lg font-bold text-[12px] leading-4 w-fit">
-              Our Mission
+              Our Mission and Vision
             </div>
 
             <div className="font-jakarta font-extrabold md:text-[48px] md:leading-[48px] text-[30px] leading-[38px]">
@@ -321,20 +321,19 @@ export default function AboutPage() {
             </div>
 
             <div className="font-jakarta font-normal text-[18px] leading-[30px] text-[#78716c]">
-              We value transparency and keep our supporters informed about the
-              tangible outcomes of their contributions. ChainFundit empowers
-              campaign organizers with clear communication and consistent
-              engagement.
+              To democratize fundraising by providing a transparent, accessible,
+              and secure platform that connects passionate individuals with
+              meaningful causes, enabling positive impact at scale.
             </div>
 
             <div className="font-jakarta font-normal text-[18px] leading-[30px] text-[#78716c] pb-2">
-              Its unique "Chainfunding" feature accelerates fundraising by
-              enabling users to share campaigns, spark interest, and track
-              progressâ€”positioning ChainFundit as the future of crowdfunding.
+              A world where anyone can easily support causes they care about,
+              where fundraising is transparent and accessible, and where
+              collective action creates lasting positive change.
             </div>
 
             <Button
-              className="bg-[#1C1917] px-8 py-4 rounded-full h-auto w-fit"
+              className="bg-[#104109] px-8 py-4 rounded-full h-auto w-fit"
               onClick={() => {
                 router.push("/signup");
               }}
@@ -357,74 +356,93 @@ export default function AboutPage() {
             <div className="flex gap-2 px-4 py-2 bg-red-50 rounded-full">
               <OurJourney />
               <div className="font-jakarta text-red-500 font-bold text-[12px] leading-4">
-                Our Journey
+                Your safety is our priority.
               </div>
             </div>
 
-            <div className="font-jakarta font-extrabold md:text-[48px] md:leading-[48px]  text-[30px] leading-[36px]text-center text-[#1C1917]">
-              How we've grown
+            <div className="font-jakarta font-extrabold md:text-[48px] md:leading-[48px]  text-[30px] leading-[36px] text-center text-[#1C1917]">
+              Donor Trust & Safety Statement
+            </div>
+            <div className="font-jakarta font-normal md:text-[20px] md:leading-7 text-center text-[#78716c]  md:max-w-[57rem] text-[18px] leading-[30px]">
+              At ChainFundIt, we believe in building a trusted space for donors
+              and fundraisers alike. Here’s how we help keep your giving safe
+              and impactful.
             </div>
           </div>
 
           {/* Cards Row */}
           <div className="flex gap-8 md:flex-row flex-col">
             {/* Card 1 */}
-            <div className="relative overflow-hidden rounded-[32px]">
+            <div className="relative overflow-hidden rounded-[32px] group">
               <Image
-                src="/images/Founded.png"
-                alt="Founded"
+                src="/images/Founded.jpg"
+                alt="First Campaign"
                 width={280}
                 height={380}
-                className="object-cover object-center rounded-[32px] brightness-75 transition-transform duration-300 hover:scale-110 md:w-[280px] w-[358px]"
+                className="object-cover md:h-[390px]  object-center rounded-[32px] brightness-75 transition-transform duration-300 group-hover:scale-110 md:w-[280px] w-[358px]"
               />
-              <div className="absolute bottom-8 left-6 z-10 font-jakarta font-bold text-[20px] leading-[28px] flex flex-col gap-1">
-                <div className="text-yellow-400">2020</div>
-                <div className="text-white">Founded</div>
+              <div className="absolute left-6 right-6 bottom-6 z-10 font-jakarta font-bold md:text-[20px] text-[24px] leading-[28px] flex text-center flex-col gap-1 transition-transform duration-500 translate-y-[calc(100%-28px)] group-hover:translate-y-0 overflow-hidden">
+                <div className="text-yellow-400">We Review Campaigns</div>
+                <div className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-normal break-words">
+                  Every campaign goes through platform checks to ensure it
+                  aligns with our content guidelines and legal standards.
+                </div>
               </div>
             </div>
 
             {/* Card 2 */}
-            <div className="relative overflow-hidden rounded-[32px]">
+            <div className="relative overflow-hidden rounded-[32px] group">
               <Image
-                src="/images/FirstCampaign.png"
+                src="/images/FirstCampaign.jpg"
                 alt="First Campaign"
                 width={280}
                 height={380}
-                className="object-cover object-center rounded-[32px] brightness-75 transition-transform duration-300 hover:scale-110 md:w-[280px] w-[358px]"
+                className="object-cover md:h-[390px]  object-center rounded-[32px] brightness-75 transition-transform duration-300 group-hover:scale-110 md:w-[280px] w-[358px]"
               />
-              <div className="absolute bottom-8 left-6 z-10 font-jakarta font-bold text-[20px] leading-[28px] flex flex-col gap-1">
-                <div className="text-yellow-400">2021</div>
-                <div className="text-white">First Campaign</div>
+              <div className="absolute left-6 right-6 bottom-6 z-10 font-jakarta font-bold  md:text-[20px] text-[24px] leading-[28px] flex text-center flex-col gap-1 transition-transform duration-500 translate-y-[calc(100%-28px)] group-hover:translate-y-0 overflow-hidden">
+                <div className="text-yellow-400">Require Verification</div>
+                <div className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-normal break-words">
+                  Organisers must provide verified bank details and identity
+                  documentation before receiving funds.
+                </div>
               </div>
             </div>
 
             {/* Card 3 */}
-            <div className="relative overflow-hidden rounded-[32px]">
+            <div className="relative overflow-hidden rounded-[32px] group">
               <Image
-                src="/images/GlobalExpansion.png"
-                alt="Global Expansion"
+                src="/images/GlobalExpansion.jpg"
+                alt="First Campaign"
                 width={280}
                 height={380}
-                className="object-cover object-center rounded-[32px] brightness-75 transition-transform duration-300 hover:scale-110 md:w-[280px] w-[358px]"
+                className="object-cover md:h-[390px]  object-center rounded-[32px] brightness-75 transition-transform duration-300 group-hover:scale-110 md:w-[280px] w-[358px]"
               />
-              <div className="absolute bottom-8 left-6 z-10 font-jakarta font-bold text-[20px] leading-[28px] flex flex-col gap-1">
-                <div className="text-yellow-400">2023</div>
-                <div className="text-white">Global Expansion</div>
+              <div className="absolute left-6 right-6 bottom-6 z-10 font-jakarta font-bold  md:text-[20px] text-[24px] leading-[28px] flex text-center flex-col gap-1 transition-transform duration-500 translate-y-[calc(100%-28px)] group-hover:translate-y-0 overflow-hidden">
+                <div className="text-yellow-400">Addressing Concerns</div>
+                <div className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-normal break-words">
+                  If a campaign looks suspicious or misuses donations, our team
+                  investigates and may suspend or remove it. You can report any
+                  campaign through the platform.
+                </div>
               </div>
             </div>
 
             {/* Card 4 */}
-            <div className="relative overflow-hidden rounded-[32px]">
+            <div className="relative overflow-hidden rounded-[32px] group">
               <Image
-                src="/images/Innovation.png"
-                alt="Innovation"
+                src="/images/Innovation.jpg"
+                alt="First Campaign"
                 width={280}
                 height={380}
-                className="object-cover object-center rounded-[32px] brightness-75 transition-transform duration-300 hover:scale-110 md:w-[280px] w-[358px] "
+                className="object-cover md:h-[390px]  object-center rounded-[32px] brightness-75 transition-transform duration-300 group-hover:scale-110 md:w-[280px] w-[358px]"
               />
-              <div className="absolute bottom-8 left-6 z-10 font-jakarta font-bold text-[20px] leading-[28px] flex flex-col gap-1">
-                <div className="text-yellow-400">2024</div>
-                <div className="text-white">Innovation</div>
+              <div className="absolute left-6 right-6 bottom-6 z-10 font-jakarta font-bold  md:text-[20px] text-[24px] leading-[28px] flex text-center flex-col gap-1 transition-transform duration-500 translate-y-[calc(100%-28px)] group-hover:translate-y-0 overflow-hidden">
+                <div className="text-yellow-400">Refund Review Policy</div>
+                <div className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-normal break-words">
+                  While donations are typically final, we review refund requests
+                  if there’s evidence of fraud, error, or clear policy
+                  violations.
+                </div>
               </div>
             </div>
           </div>
