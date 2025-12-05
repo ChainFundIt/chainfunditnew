@@ -326,7 +326,7 @@ export default function CreateCampaignPage() {
         ...data.data,
         shortUrl: shortUrl || campaignUrl,
       });
-      
+
       trackCampaign("campaign_created", {
         campaign_id: data.data.id,
         campaign_title: formData.title,
@@ -334,7 +334,7 @@ export default function CreateCampaignPage() {
         campaign_goal: formData.goal,
         campaign_currency: formData.currency,
       });
-      
+
       setShowSuccessModal(true);
     } catch (err) {
       alert("Failed to create campaign. Please try again.");
@@ -397,7 +397,7 @@ export default function CreateCampaignPage() {
         shareUrl = `https://wa.me/?text=${encodeURIComponent(shareText)} ${encodeURIComponent(campaignUrl)}`;
         break;
       case "instagram":
-          shareUrl = `https://www.instagram.com/sharer/sharer.php?u=${encodeURIComponent(campaignUrl)}`;
+        shareUrl = `https://www.instagram.com/sharer/sharer.php?u=${encodeURIComponent(campaignUrl)}`;
         break;
       default:
         return;
@@ -700,7 +700,10 @@ export default function CreateCampaignPage() {
                   min={0}
                   value={formData.chainerCommissionRate || ""}
                   onChange={(e) =>
-                    handleFieldChange("chainerCommissionRate", +e.target.value || 0)
+                    handleFieldChange(
+                      "chainerCommissionRate",
+                      +e.target.value || 0
+                    )
                   }
                   className="w-[300px] p-3 rounded-xl bg-[#E5ECDE] font-medium text-lg md:text-3xl text-[#5F8555] placeholder:text-[#5F8555] outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   placeholder="Enter percentage"
@@ -1010,11 +1013,11 @@ export default function CreateCampaignPage() {
               </div>
               <div className="space-y-3">
                 <p className="text-[#5F8555] text-base leading-relaxed">
-                  Having your campaign chained means you can allow others, who may
-                  be interested in earning a commission to help promote your
+                  Having your campaign chained means you can allow others, who
+                  may be interested in earning a commission to help promote your
                   campaign, potentially increasing donations. The ambassador
-                  commission rate must be a valid percentage between 0% and 10% of
-                  campaign proceeds.
+                  commission rate must be a valid percentage between 0% and 10%
+                  of campaign proceeds.
                 </p>
               </div>
             </div>
@@ -1089,7 +1092,10 @@ export default function CreateCampaignPage() {
                 Share campaign
               </span>
               <div className="flex gap-3">
-                <button onClick={() => handleShareCampaign("whatsapp")} className="w-12 h-12 rounded-full flex items-center justify-center text-[#104901] hover:bg-[#104901] hover:text-white transition-colors">
+                <button
+                  onClick={() => handleShareCampaign("whatsapp")}
+                  className="w-12 h-12 rounded-full flex items-center justify-center text-[#104901] hover:bg-[#104901] hover:text-white transition-colors"
+                >
                   <MessageCircle size={32} />
                 </button>
                 <button

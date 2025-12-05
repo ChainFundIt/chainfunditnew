@@ -70,7 +70,7 @@ const Notification = ({ name, message, paymentChannel, logo, alt }: Item) => {
             />
           </div>
           <div className="flex flex-col gap-2">
-            <span className="font-source font-normal text-base text-black">
+            <span className="font-jakarta font-normal text-base text-black">
               {name}
             </span>
             <p className="font-dm font-semibold md:text-lg text-xs text-black">

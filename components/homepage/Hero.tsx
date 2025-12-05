@@ -1,112 +1,150 @@
 "use client";
 
 import React from "react";
-import { ArrowRight, Headphones } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Shield, Globe, CheckCircle } from "lucide-react";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import "@/components/layout/animations.css";
 
-type Props = {};
-
-const Hero = (props: Props) => {
-  const handleCreateCampaign = () => {
-    window.location.href = "/create-campaign";
-  };
+const Hero = () => {
+  const { ref: leftRef, isInView: leftInView } = useScrollAnimation();
+  const { ref: rightRef, isInView: rightInView } = useScrollAnimation();
 
   return (
-    <div className="mt-24 md:mt-28 mb-6 font-source px-4 md:px-12">
-      <div className="flex flex-col md:flex-row gap-5 w-full h-fit my-5">
-        <section className="w-full md:w-2/3 bg-[url('/images/bolu.png')] bg-cover bg-no-repeat h-60 md:h-[600px] flex">
-          <div className="flex flex-col md:flex-row gap-4 md:gap-8 mt-auto ml-4 md:ml-16 -mb-3">
-            <section className="w-fit h-fit bg-[#FFFFFF33] rounded-xl backdrop-blur-sm p-2.5 mb-2 md:mb-0">
-              <div className="flex gap-2">
-                <p className="w-6 h-6 bg-brand-green-dark rounded-sm flex justify-center items-center font-source font-bold text-lg text-white">
-                  ₦
-                </p>
-                <span className="font-source font-semibold text-base text-white">
-                  Amount raised
+    <div className="w-full bg-white">
+      <div className="py-12 md:py-20 px-4 md:px-12">
+        <div className="flex flex-col lg:flex-row gap-8 md:gap-16 items-center justify-between">
+          {/* Left Section */}
+          <div
+            ref={leftRef}
+            className={`w-full lg:w-1/2 text-left transition-all duration-500 ${
+              leftInView ? "animate-slide-in-left" : "opacity-0"
+            }`}
+          >
+            {/* Badge */}
+            <div className="mb-4 flex items-center gap-2">
+              <div className="rounded-full bg-[#104901] bg-opacity-5 px-3 py-1 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-[#104901] flex-shrink-0"></div>
+                <span className="font-jakarta font-medium text-xs md:text-sm text-[#104901] uppercase tracking-wide">
+                  Over 1,000+ active campaigns
                 </span>
               </div>
-              <p className="font-source font-semibold text-2xl md:text-3xl text-white">
-                400,000
-              </p>
-            </section>
-            <section className="w-fit h-fit bg-[#FFFFFF33] rounded-xl backdrop-blur-sm p-2.5">
-              <div className="flex gap-2">
-                <p className="w-6 h-6 bg-brand-green-dark rounded-sm flex justify-center items-center font-source font-bold text-base text-white">
-                  <Headphones size={16} />
-                </p>
-                <span className="font-source font-semibold text-base text-white">
-                  Campaign goal
-                </span>
-              </div>
-              <p className="font-source font-semibold text-2xl md:text-3xl text-white">
-                Hearing aids for Bolu
-              </p>
-            </section>
-          </div>
-        </section>
-        <section className="w-full md:w-1/3 flex flex-col mt-4 md:mt-auto gap-3">
-          <div className="flex gap-2 items-center">
-            <ul className="flex">
-              <li className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-white">
-                <Image
-                  src="/images/avatar-3.png"
-                  alt="avatar"
-                  width={32}
-                  height={32}
-                  className="md:w-10 md:h-10"
-                />
-              </li>
-              <li className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-white -ml-3">
-                <Image
-                  src="/images/avatar-4.png"
-                  alt="avatar"
-                  width={32}
-                  height={32}
-                  className="md:w-10 md:h-10"
-                />
-              </li>
-              <li className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-white -ml-3">
-                <Image
-                  src="/images/avatar-5.png"
-                  alt="avatar"
-                  width={32}
-                  height={32}
-                  className="md:w-10 md:h-10"
-                />
-              </li>
-              <li className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-white -ml-3">
-                <Image
-                  src="/images/avatar-6.png"
-                  alt="avatar"
-                  width={32}
-                  height={32}
-                  className="md:w-10 md:h-10"
-                />
-              </li>
-            </ul>
-            <p className="font-source font-normal text-xs md:text-sm text-black">
-              Over 100 life-changing experiences created on Chainfundit
+            </div>
+            {/* Heading */}
+            <h1 className="font-jakarta font-bold text-3xl md:text-4xl lg:text-5xl xl:text-6xl text-black leading-tight mb-2">
+              Raise funds,
+            </h1>
+            <h1 className="font-jakarta font-bold text-3xl md:text-4xl lg:text-5xl xl:text-6xl text-[#104901] leading-tight mb-6">
+              support dreams.
+            </h1>
+
+            {/* Subheading */}
+            <p className="font-jakarta font-regular text-sm md:text-base lg:text-lg text-[#666666] mb-8 leading-relaxed max-w-sm lg:max-w-md">
+              Support causes you love with a modern fundraising platform built
+              for transparency, speed, and global impact.
             </p>
+
+            {/* Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-12">
+              <Button
+                onClick={() => (window.location.href = "/campaigns")}
+                className="px-6 md:px-8 py-3 md:py-3 bg-[#0d5e0f] text-white font-semibold text-sm md:text-base rounded-full hover:bg-[#0a4709] transition duration-300 flex items-center gap-2 h-auto whitespace-nowrap"
+              >
+                Donate Now <ArrowRight size={17} />
+              </Button>
+
+              {/* Watch Story Button with Container */}
+              <div className="relative inline-flex items-center py-2 px-4 text-sm md:text-base font-semibold text-black border-2 border-gray-400 rounded-full hover:bg-gray-100 cursor-pointer">
+                {/* Play Button Icon with white circle background and black border */}
+                <div className="w-6 h-6 rounded-full border-2 border-black flex items-center justify-center mr-2 bg-white">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    width="12"
+                    height="12"
+                    className="text-black"
+                  >
+                    <path d="M8 5v14l11-7z" fill="currentColor" />
+                  </svg>
+                </div>
+
+                {/* Watch Story Text */}
+                <span>Watch Story</span>
+              </div>
+            </div>
+
+            {/* Features */}
+            <div className="flex flex-wrap gap-4 md:gap-6 lg:gap-8">
+              <div className="flex items-center gap-2">
+                <Shield size={18} className="text-[#104901] flex-shrink-0" />
+                <span className="font-jakarta font-medium text-xs md:text-sm text-black">
+                  Secure
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Globe size={18} className="text-[#104901] flex-shrink-0" />
+                <span className="font-jakarta font-medium text-xs md:text-sm text-black">
+                  Global
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle
+                  size={18}
+                  className="text-[#104901] flex-shrink-0"
+                />
+                <span className="font-jakarta font-medium text-xs md:text-sm text-black">
+                  Verified
+                </span>
+              </div>
+            </div>
           </div>
 
-          <p className="font-source font-bold text-3xl md:text-5xl text-black">
-            Raise funds -{" "}
-            <span className="font-serif font-semibold italic">
-              support dreams
-            </span>
-          </p>
-          <span className="font-source font-medium text-base text-black">
-            Support causes you love with fundraisers built on modern tools
-          </span>
-          <Button
-            className="h-12 md:h-16 flex justify-between font-source font-semibold text-lg md:text-2xl"
-            onClick={handleCreateCampaign}
+          {/* Right Section - Image */}
+          <div
+            ref={rightRef}
+            className={`w-full lg:w-1/2 flex justify-center items-center transition-all duration-500 ${
+              rightInView ? "animate-slide-in-right" : "opacity-0"
+            }`}
           >
-            Create Campaign <ArrowRight size={24} className="md:text-3xl" />{" "}
-          </Button>
-        </section>
+            <div className="relative w-full max-w-lg lg:max-w-2xl">
+              {/* Main Image */}
+              <Image
+                src="/images/Happy children.png"
+                alt="Featured Campaign"
+                width={800}
+                height={600}
+                priority
+                className="w-full h-auto object-cover rounded-3xl"
+              />
+
+              {/* Overlay Card */}
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-[85%] bg-white rounded-2xl shadow-xl px-5 py-4">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="font-jakarta font-regular text-xs text-[#666]">
+                    <b>Urgent Cause</b>
+                  </p>
+
+                  <span className="text-xs font-semibold text-[#F97316] bg-[#F97316]/10 px-2 py-1 rounded-full whitespace-nowrap">
+                    85% Funded
+                  </span>
+                </div>
+
+                <h4 className="font-jakarta font-bold text-lg text-black">
+                  Hearing aids for Bolu
+                </h4>
+
+                {/* Progress bar */}
+                <div className="w-full h-2 bg-[#E5E5E5] rounded-full overflow-hidden mt-3">
+                  <div
+                    className="h-full bg-[#13C870] rounded-full"
+                    style={{ width: "85%" }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

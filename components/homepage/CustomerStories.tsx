@@ -1,130 +1,113 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { Star } from "lucide-react";
 import Image from "next/image";
-import React, { useState } from "react";
+import React from "react";
+import { motion } from "framer-motion";
+
 type Props = {};
 
 const CustomerStories = (props: Props) => {
-  const [currentSlide, setCurrentSlide] = useState(0);
-
-  const stories = [
+  const testimonials = [
     {
       id: 1,
-      name: "Thomas",
-      image: "/images/story-1.png",
-      description:
-        "A new chapter began at a new home for the Thomases and their young family.",
+      name: "Sarah Jenkins",
+      role: "Regular Donor",
+      avatar: "/images/avatar-sarah.png",
+      quote:
+        "The transparency of ChainFundit is unmatched. I can see exactly where my money goes and the impact it makes.",
+      rating: 5,
     },
     {
       id: 2,
-      name: "Bolu",
-      image: "/images/story-2.jpg",
-      description:
-        "Hearing aids help a young girl experience the world for the first time.",
+      name: "Michael Chen",
+      role: "Campaign Organizer",
+      avatar: "/images/avatar-michael.png",
+      quote:
+        "Setting up a campaign was incredibly easy. The dashboard analytics helped me understand my donor base better.",
+      rating: 5,
     },
     {
       id: 3,
-      name: "Mariam",
-      image: "/images/story-3.jpg",
-      description:
-        "Mariam raised funds for a prosthetic arm. Just taking part in life is truly a win for her!",
+      name: "Amara Okeke",
+      role: "Non-Profit Director",
+      avatar: "/images/avatar-amara.png",
+      quote:
+        "We've scaled our fundraising efforts by 200% since switching to this platform. The support team is fantastic.",
+      rating: 4,
     },
   ];
 
-  const nextSlide = () => {
-    setCurrentSlide((prev) => {
-      if (prev < stories.length - 1) {
-        return prev + 1;
-      }
-      return prev; // Do not wrap around
-    });
-  };
-
-  const prevSlide = () => {
-    setCurrentSlide((prev) => {
-      if (prev > 0) {
-        return prev - 1;
-      }
-      return prev;
-    });
-  };
-
   return (
-    <div className="w-full font-source my-6">
-      <div className="bg-whitesmoke px-4 py-12 flex flex-col gap-4">
-        <div className="w-full flex justify-between items-start">
-          <section className="flex flex-col gap-2">
-            <p className="font-semibold md:text-3xl text-xl text-black">
-              Loved by over 400 individuals and charities just like you
-            </p>
-            <span className="font-normal text-base text-black">
-              Campaign creators share how their lives changed partnering with
-              Chainfundit
-            </span>
-          </section>
-          <section className="flex gap-3 self-start mt-2">
-            <Button
-              className="w-14 h-14"
-              onClick={prevSlide}
-              disabled={currentSlide === 0}
-            >
-              <ArrowLeft size={32} />
-            </Button>
-            <Button
-              className="w-14 h-14"
-              onClick={nextSlide}
-              disabled={currentSlide >= stories.length - 2}
-            >
-              <ArrowRight size={32} />
-            </Button>
-          </section>
-        </div>
+    <div className="w-full font-jakarta my-12">
+      {/* Testimonials Section */}
+      <div className="px-4 md:px-12 py-12 md:py-20 w-full bg-white flex flex-col gap-12">
 
-        <div className="w-full overflow-x-hidden">
-          <div
-            className="flex gap-6 pr-16 transition-transform duration-500 ease-in-out"
-            style={{ transform: `translateX(-${currentSlide * (645 + 24)}px)` }} // 645px width + 24px gap
-          >
-            {stories.map((story) => (
-              <div
-                key={story.id}
-                className="w-[645px] h-[380px] flex md:flex-row flex-col border border-[#B5C7B0] bg-[#F5F5F5]"
-              >
-                <div className="w-[420px] h-full relative">
-                  <Image
-                    src={story.image}
-                    alt={`${story.name}'s story`}
-                    fill
-                    className="object-cover"
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="flex flex-col items-center gap-4 text-center"
+        >
+          <div className="inline-flex items-center gap-2 bg-[#59AD4A] rounded-full px-4 py-2">
+            <span className="text-[#104901]">★</span>
+            <span className="font-jakarta font-bold text-xs md:text-sm text-[#104901] uppercase tracking-wider">
+              Trust & Impact
+            </span>
+          </div>
+          <h2 className="font-jakarta font-bold text-3xl md:text-5xl text-black">
+            Hear from those who believe
+          </h2>
+        </motion.div>
+
+        {/* Testimonials Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {testimonials.map((testimonial, index) => (
+            <motion.div
+              key={testimonial.id}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.15 }}
+              viewport={{ once: true }}
+              className="bg-white border border-[#E8E8E8] rounded-2xl p-6 md:p-8 flex flex-col gap-6"
+            >
+              {/* Star Rating */}
+              <div className="flex gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    size={20}
+                    className={
+                      i < testimonial.rating
+                        ? "fill-[#FFD700] text-[#FFD700]"
+                        : "text-[#E8E8E8]"
+                    }
                   />
-                </div>
-                <div className="md:w-[225px] w-[420px] h-full flex flex-col justify-between p-6 bg-white">
-                  <p className="text-3xl font-semibold text-brand-green-dark">
-                    {story.name}
+                ))}
+              </div>
+
+              {/* Quote */}
+              <p className="font-jakarta font-regular text-base text-[#666666] leading-relaxed">
+                "{testimonial.quote}"
+              </p>
+
+              {/* User Info */}
+              <div className="border-t border-[#E8E8E8] pt-6 flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B6B] to-[#FFB366] flex-shrink-0" />
+                <div>
+                  <p className="font-jakarta font-bold text-sm text-black">
+                    {testimonial.name}
                   </p>
-                  <span className="text-base text-black">
-                    {story.description}
-                  </span>
+                  <p className="font-jakarta font-regular text-xs text-[#999999] uppercase tracking-wide">
+                    {testimonial.role}
+                  </p>
                 </div>
               </div>
-            ))}
-          </div>
+            </motion.div>
+          ))}
         </div>
-      </div>
-
-      <div className="my-5 md:pl-5 px-3 w-full h-[340px] bg-[url('/images/logo-bg.png')] bg-contain bg-no-repeat bg-right flex md:flex-row flex-col justify-between">
-        <section className="flex items-center md:w-2/3 w-full">
-          <p className="font-bold text-5xl text-black">
-            Launch your campaign for free and begin raising funds in minutes.
-          </p>
-        </section>
-        <section className="w-full md:w-1/3 flex items-center">
-                      <Button onClick={() => {window.location.href = '/signup'}} className="w-[426px] h-24 flex justify-between items-center font-semibold text-2xl">
-            Get Started <ArrowRight />
-          </Button>
-        </section>
       </div>
     </div>
   );

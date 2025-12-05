@@ -4,6 +4,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { ChevronDown } from "lucide-react";
 
 export function FaqsAccordion() {
   return (
@@ -13,67 +14,72 @@ export function FaqsAccordion() {
       className="w-full flex flex-col gap-3"
       defaultValue="item-1"
     >
-      <AccordionItem value="item-1 bg-white border border-black rounded-none">
-        <AccordionTrigger className="font-semibold text-xl text-black">
-          How to start a campaign?
+      <AccordionItem 
+        value="item-1" 
+        className="bg-white border border-[#E8E8E8] rounded-xl overflow-hidden data-[state=open]:border-[#1ABD73] data-[state=open]:shadow-sm transition-all duration-300"
+      >
+        <AccordionTrigger className="font-jakarta font-bold text-base md:text-lg text-black hover:no-underline px-6 md:px-8 py-4 md:py-5 flex justify-between items-center group">
+          <span className="text-left">How do you ensure donation security?</span>
         </AccordionTrigger>
-        <AccordionContent className="flex flex-col gap-4 text-balance">
-          <p className="font-normal text-base">
-            Starting a campaign on Chainfundit is simple. Just create an
-            account, set your fundraising goal, and share your campaign link.
-            Our platform guides you through each step to ensure your success.
+        <AccordionContent className="px-6 md:px-8 py-4 md:py-5 border-t border-[#E8E8E8] bg-white">
+          <p className="font-jakarta font-regular text-base text-[#666666] leading-relaxed">
+            We use industry-standard encryption and partner with top-tier payment processors to ensure every transaction is secure and verified.
           </p>
         </AccordionContent>
       </AccordionItem>
-      <AccordionItem value="item-2 bg-white border border-black rounded-none">
-        <AccordionTrigger className="font-semibold text-xl text-black">
-          Can I edit my campaign?
+
+      <AccordionItem 
+        value="item-2" 
+        className="bg-white border border-[#E8E8E8] rounded-xl overflow-hidden data-[state=open]:border-[#1ABD73] data-[state=open]:shadow-sm transition-all duration-300"
+      >
+        <AccordionTrigger className="font-jakarta font-bold text-base md:text-lg text-black hover:no-underline px-6 md:px-8 py-4 md:py-5 flex justify-between items-center group">
+          <span className="text-left">Is there a fee for starting a campaign?</span>
         </AccordionTrigger>
-        <AccordionContent className="flex flex-col gap-4 text-balance">
-          <p className="font-normal text-base">
-            Yes, you can edit your campaign at any time. Simply log in to your
-            account, navigate to your campaign page, and make the necessary
-            changes. This allows you to keep your supporters updated with the
-            latest information.
+        <AccordionContent className="px-6 md:px-8 py-4 md:py-5 border-t border-[#E8E8E8] bg-white">
+          <p className="font-jakarta font-regular text-base text-[#666666] leading-relaxed">
+            Starting a campaign on Chainfundit is completely free! We only charge a small platform fee on donations received to cover transaction costs and keep our service running.
           </p>
         </AccordionContent>
       </AccordionItem>
-      <AccordionItem value="item-3 bg-white border border-black rounded-none">
-        <AccordionTrigger className="font-semibold text-xl text-black">
-          What payment methods are accepted?
+
+      <AccordionItem 
+        value="item-3" 
+        className="bg-white border border-[#E8E8E8] rounded-xl overflow-hidden data-[state=open]:border-[#1ABD73] data-[state=open]:shadow-sm transition-all duration-300"
+      >
+        <AccordionTrigger className="font-jakarta font-bold text-base md:text-lg text-black hover:no-underline px-6 md:px-8 py-4 md:py-5 flex justify-between items-center group">
+          <span className="text-left">How can I withdraw my funds?</span>
         </AccordionTrigger>
-        <AccordionContent className="flex flex-col gap-4 text-balance">
-          <p className="font-normal text-base">
-            Chainfundit accepts various payment methods, including credit and
-            debit cards, PayPal, Paystack, and other digital wallets. This
-            flexibility ensures that your donors can contribute easily and
-            securely. Check our website for a full list of accepted methods.
+        <AccordionContent className="px-6 md:px-8 py-4 md:py-5 border-t border-[#E8E8E8] bg-white">
+          <p className="font-jakarta font-regular text-base text-[#666666] leading-relaxed">
+            Once your campaign ends, you can request a withdrawal directly from your dashboard. Funds are typically transferred to your bank account within 3-5 business days.
           </p>
         </AccordionContent>
       </AccordionItem>
-      <AccordionItem value="item-4 bg-white border border-black rounded-none">
-        <AccordionTrigger className="font-semibold text-xl text-black">
-          How are funds disbursed?
+
+      <AccordionItem 
+        value="item-4" 
+        className="bg-white border border-[#E8E8E8] rounded-xl overflow-hidden data-[state=open]:border-[#1ABD73] data-[state=open]:shadow-sm transition-all duration-300"
+      >
+        <AccordionTrigger className="font-jakarta font-bold text-base md:text-lg text-black hover:no-underline px-6 md:px-8 py-4 md:py-5 flex justify-between items-center group">
+          <span className="text-left">Can I donate anonymously?</span>
         </AccordionTrigger>
-        <AccordionContent className="flex flex-col gap-4 text-balance">
-          <p className="font-normal text-base">
-            Funds raised through your campaign are typically disbursed within a
-            few business days. Once your campaign ends, you can request a
-            transfer to your bank account. We ensure a smooth and transparent
-            process for all fund disbursements.
+        <AccordionContent className="px-6 md:px-8 py-4 md:py-5 border-t border-[#E8E8E8] bg-white">
+          <p className="font-jakarta font-regular text-base text-[#666666] leading-relaxed">
+            Yes! When making a donation, you have the option to donate anonymously. Your personal information will not be displayed publicly if you choose this option.
           </p>
         </AccordionContent>
       </AccordionItem>
-      <AccordionItem value="item-5 bg-white border border-black rounded-none">
-        <AccordionTrigger className="font-semibold text-xl text-black">
-          Is there a fee?
+
+      <AccordionItem 
+        value="item-5" 
+        className="bg-white border border-[#E8E8E8] rounded-xl overflow-hidden data-[state=open]:border-[#1ABD73] data-[state=open]:shadow-sm transition-all duration-300"
+      >
+        <AccordionTrigger className="font-jakarta font-bold text-base md:text-lg text-black hover:no-underline px-6 md:px-8 py-4 md:py-5 flex justify-between items-center group">
+          <span className="text-left">Can I edit my campaign?</span>
         </AccordionTrigger>
-        <AccordionContent className="flex flex-col gap-4 text-balance">
-          <p className="font-normal text-base">
-            Yes, Chainfundit charges a small fee on each donation to cover
-            transaction costs. This fee is clearly outlined during the setup
-            process. We strive to keep our fees low to maximize the funds you
-            receive for your cause.
+        <AccordionContent className="px-6 md:px-8 py-4 md:py-5 border-t border-[#E8E8E8] bg-white">
+          <p className="font-jakarta font-regular text-base text-[#666666] leading-relaxed">
+            Yes, you can edit your campaign at any time. Simply log in to your account, navigate to your campaign page, and make the necessary changes to keep your supporters updated.
           </p>
         </AccordionContent>
       </AccordionItem>

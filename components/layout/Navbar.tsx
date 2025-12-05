@@ -6,6 +6,7 @@ import Link from "next/link";
 import React, { useState } from "react";
 import SessionStatusIndicator from "@/components/dashboard/SessionStatusIndicator";
 import { useAuth } from "@/hooks/use-auth";
+import DashboardIcon from "@/public/icons/DashboardIcon";
 
 type Props = {};
 
@@ -18,16 +19,18 @@ const Navbar = (props: Props) => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 z-50 w-full bg-white shadow font-source px-4 py-4 md:px-12 md:py-5">
-      <div className="flex justify-between items-center">
-        <Link href="/" className="flex gap-1 items-center">
+    <nav className="sticky top-0 px-20 py-3 border-b border-[#E7E5E4]  bg-[white] z-10">
+      <div className="px-8 flex justify-between">
+        <Link href="/" className="flex gap-2 items-center">
           <Image
             src="/images/logo.svg"
             alt="Chainfundit Logo"
-            width={30}
-            height={30}
+            width={36}
+            height={36}
           />
-          <p className="font-semibold text-xl text-brand-green-dark">Chainfundit</p>
+          <div className="font-bold text-[20px] leading-[28px] text-[#064e3b] font-jakarta">
+            ChainFundit
+          </div>
         </Link>
         {/* Hamburger for mobile */}
         <button
@@ -40,37 +43,49 @@ const Navbar = (props: Props) => {
           <span className="block w-6 h-0.5 bg-black"></span>
         </button>
         {/* Desktop nav */}
-        <ul className="hidden md:flex justify-between gap-6 font-semibold text-base text-black">
-          <li>
-            <Link href="/dashboard">My Dashboard</Link>
-          </li>
-          <li>
+        <ul className="flex gap-8 items-center justify-center">
+          <li className="font-jakarta font-medium text-[14px]  leading-[20px] text-[#57534E] hover:text-[#065f46]">
             <Link href="/campaigns">Campaigns</Link>
           </li>
-          <li>
+          <li className="font-jakarta font-medium text-[14px] leading-[20px] text-[#57534E] hover:text-[#065f46]">
             <Link href="/virtual-giving-mall">Virtual Giving Mall</Link>
           </li>
-          <li>
-            <Link href="/about">About</Link>
+          <li className="font-jakarta font-medium text-[14px] leading-[20px] text-[#57534E] hover:text-[#065f46]">
+            <Link href="/about">About Us</Link>
           </li>
-          <li>
+          <li className="font-jakarta font-medium text-[14px] leading-[20px] text-[#57534E] hover:text-[#065f46]">
             <Link href="/faq" className="">
               FAQs
             </Link>
           </li>
         </ul>
-        <section className="hidden md:flex items-center gap-3">
+
+        <section className="flex gap-4 items-center">
           <SessionStatusIndicator />
           {!user && !loading && (
-            <Link href="/signin" className="font-medium text-base text-black">
+            <Link
+              href="/signin"
+              className="flex gap-2 px-4 py-2 font-jakarta font-medium items-center  text-[14px] leading-[20px] justify-center rounded-full text-[#57534E] hover:bg-gray-100 "
+            >
               Sign in
             </Link>
           )}
+
+          {user && !loading && (
+            <Link
+              href="/dashboard"
+              className="flex gap-2 px-4 py-2 font-jakarta font-medium items-center text-[14px] leading-[20px] justify-center rounded-full text-[#57534E] hover:bg-gray-100 "
+            >
+              <DashboardIcon color="#57534E" width="16" height="16" />
+              Dashboard
+            </Link>
+          )}
+
           <Button
-            className="px-4 py-3 border-2 border-white text-base font-semibold rounded-none"
+            className="bg-[#064E3B] py-[10px] px-[24px] rounded-full font-jakarta font-bold text-[14px] leading-[20px] hover:bg-gray-100"
             onClick={handleCreateCampaign}
           >
-            Create Campaign
+            Start Campaign
           </Button>
         </section>
       </div>

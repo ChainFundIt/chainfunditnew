@@ -1,120 +1,78 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
-import Image from "next/image";
+import React from "react";
 
 type Props = {};
 
 const Partners = (props: Props) => {
-  const sliderRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const slider = sliderRef.current;
-    if (!slider) return;
-
-    let animationId: number;
-    let startTime: number;
-    const duration = 30000; // 30 seconds
-
-    const animate = (currentTime: number) => {
-      if (!startTime) startTime = currentTime;
-      const elapsed = currentTime - startTime;
-      const progress = (elapsed % duration) / duration;
-      
-      // Calculate the translateX value
-      const translateX = -progress * 50; // Move from 0% to -50%
-      slider.style.transform = `translateX(${translateX}%)`;
-      
-      animationId = requestAnimationFrame(animate);
-    };
-
-    animationId = requestAnimationFrame(animate);
-
-    return () => {
-      if (animationId) {
-        cancelAnimationFrame(animationId);
-      }
-    };
-  }, []);
-
-  const partners = [
+  const metrics = [
     {
-      src: "/images/together-to-win.png",
-      alt: "Together to win",
+      number: "5k+",
+      label: "Beneficiaries",
+      description: "Lives impacted directly",
+      bgColor: "bg-[#FFCF55]",
+      textColor: "text-black",
     },
     {
-      src: "/images/tahmamuq.png",
-      alt: "Tahmamuq",
+      number: "12M+",
+      label: "Total Raised",
+      description: "Donated by global community",
+      bgColor: "bg-[#59AD4A]",
+      textColor: "text-white",
     },
     {
-      src: "/images/100bmol.png",
-      alt: "100bmol",
+      number: "250+",
+      label: "Campaigns",
+      description: "Successful fundraisers",
+      bgColor: "bg-[#EDECE0]",
+      textColor: "text-black",
     },
     {
-      src: "/images/nspcc.png",
-      alt: "NSPCC",
-    },
-    {
-      src: "/images/cece-yara.png",
-      alt: "Cece Yara",
-    },
-    {
-      src: "/images/meningitis.png",
-      alt: "Meningitis",
+      number: "14+",
+      label: "Countries",
+      description: "Global reach and support",
+      bgColor: "bg-[#104109]",
+      textColor: "text-white",
     },
   ];
 
   return (
-    <div className="w-full h-[200px] bg-whitesmoke px-4 md:px-10 py-6 flex flex-col md:flex-row gap-4 md:gap-5 items-start md:items-center">
-      {/* Fixed "Our Partners" text */}
-      <p className="font-source font-semibold text-xl md:text-3xl text-black whitespace-nowrap mb-3 md:mb-0">
-        Our Partners
-      </p>
-      {/* Infinite sliding partners carousel with blur masks */}
-      <div className="flex-1 overflow-hidden">
-        <div className="relative w-full overflow-hidden" style={{ height: "80px" }}>
-          {/* Left gradient mask */}
-          <div className="absolute left-0 top-0 h-full w-10 bg-gradient-to-r from-whitesmoke to-transparent z-10" />
-          {/* Right gradient mask */}
-          <div className="absolute right-0 top-0 h-full w-10 bg-gradient-to-l from-whitesmoke to-transparent z-10" />
-          
-          {/* Slider track */}
-          <div 
-            ref={sliderRef}
-            className="flex gap-3 items-center h-full"
-            style={{
-              width: 'max-content',
-              transform: 'translateX(0%)',
-              transition: 'transform 0.1s linear'
-            }}
-          >
-            {/* First set of partners */}
-            {partners.map((partner, idx) => (
-              <div key={`first-${idx}`} className="flex-shrink-0 min-w-[200px] flex items-center justify-center">
-                <Image
-                  src={partner.src}
-                  alt={partner.alt}
-                  width={200}
-                  height={80}
-                  className="object-contain"
-                />
-              </div>
-            ))}
-            
-            {/* Duplicate set for seamless loop */}
-            {partners.map((partner, idx) => (
-              <div key={`second-${idx}`} className="flex-shrink-0 min-w-[200px] flex items-center justify-center">
-                <Image
-                  src={partner.src}
-                  alt={partner.alt}
-                  width={200}
-                  height={80}
-                  className="object-contain"
-                />
-              </div>
-            ))}
-          </div>
+    <div className="w-full px-4 md:px-12 py-12 md:py-20 bg-white flex flex-col gap-12">
+      {/* Header */}
+      <div className="flex flex-col items-center gap-4 text-center max-w-2xl mx-auto">
+        <div className="inline-block bg-[#E8F5F0] rounded-full px-4 py-2">
+          <span className="font-jakarta font-bold text-xs md:text-sm text-[#104901] uppercase tracking-wider">
+            Impact Metrics
+          </span>
         </div>
+        <h2 className="font-jakarta font-bold text-3xl md:text-5xl text-black leading-tight">
+          Programs that change lives
+        </h2>
+        <p className="font-jakarta font-regular text-base md:text-lg text-[#666666] leading-relaxed">
+          Together, we make real impact in communities around the world. Help us bring hope and support.
+        </p>
+      </div>
+
+      {/* Metrics Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {metrics.map((metric, index) => (
+          <div
+            key={index}
+            className={`${metric.bgColor} ${metric.textColor} rounded-2xl p-6 md:p-8 flex flex-col gap-4 transition-all duration-300 hover:shadow-lg hover:scale-105`}
+          >
+            <div>
+              <p className={`font-jakarta font-bold text-4xl md:text-5xl ${metric.textColor} mb-2`}>
+                {metric.number}
+              </p>
+              <p className={`font-jakarta font-bold text-lg md:text-xl ${metric.textColor}`}>
+                {metric.label}
+              </p>
+            </div>
+            <p className={`font-jakarta font-regular text-sm md:text-base ${metric.textColor} opacity-80`}>
+              {metric.description}
+            </p>
+          </div>
+        ))}
       </div>
     </div>
   );

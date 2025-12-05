@@ -1,204 +1,164 @@
 "use client";
+import React from "react";
+import Image from "next/image";
+import { Zap, Check, Globe, Shield } from "lucide-react";
+import { motion } from "framer-motion";
 
-import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
-import useEmblaCarousel from "embla-carousel-react";
-import { themes, type ThemeKey } from "@/lib/utils/carousel-themes";
-import { getCurrentTheme } from "@/lib/utils/theme-detection";
+type Props = {};
 
-interface BenefitsCarouselProps {
-  /** Optional manual theme override for testing */
-  themeOverride?: ThemeKey;
-}
-
-const BenefitsCarousel = ({ themeOverride }: BenefitsCarouselProps) => {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
-  const [current, setCurrent] = useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-
-  const currentTheme = useMemo(() => getCurrentTheme(themeOverride), [themeOverride]);
-  const activeTheme = themes[currentTheme];
-  const images = activeTheme.images;
-  const features = activeTheme.features;
-
-  useEffect(() => {
-    setIsTransitioning(true);
-    const timer = setTimeout(() => setIsTransitioning(false), 500);
-    return () => clearTimeout(timer);
-  }, [currentTheme]);
-
-  const scrollTo = useCallback((index: number) => {
-    if (!emblaApi) return;
-    emblaApi.scrollTo(index);
-  }, [emblaApi]);
-
-  const autoplay = useCallback(() => {
-    if (!emblaApi || !isAutoPlaying) return;
-    emblaApi.scrollNext();
-  }, [emblaApi, isAutoPlaying]);
-
-  const startAutoplay = useCallback(() => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(autoplay, 4000);
-  }, [autoplay]);
-
-  const stopAutoplay = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isAutoPlaying) {
-      startAutoplay();
-    } else {
-      stopAutoplay();
-    }
-
-    return () => stopAutoplay();
-  }, [isAutoPlaying, startAutoplay, stopAutoplay]);
-
-  useEffect(() => {
-    if (!emblaApi) return;
-    
-    const onSelect = () => {
-      setCurrent(emblaApi.selectedScrollSnap());
-    };
-
-    emblaApi.on("select", onSelect);
-    
-    return () => {
-      emblaApi.off("select", onSelect);
-    };
-  }, [emblaApi]);
-
-  const handleFeatureClick = (index: number) => {
-    setIsAutoPlaying(false);
-    scrollTo(index);
-    setTimeout(() => setIsAutoPlaying(true), 6000);
-  };
+const BenefitsCarousel = (props: Props) => {
+  const features = [
+    {
+      title: "Multi-currency support",
+      desc: "Raise donations in any currency. Explore crypto options to reach more donors worldwide",
+      isHighlighted: true,
+    },
+    {
+      title: "Influencer network",
+      desc: "Get amplified reach through our creator network to accelerate your fundraising goals",
+      isHighlighted: false,
+    },
+    {
+      title: "Secure payments",
+      desc: "Industry-leading security protects your funds and payouts with enterprise-grade encryption",
+      isHighlighted: false,
+    },
+  ];
 
   return (
-    <>
-      <style jsx>{`
-        @keyframes fill-bar {
-          from {
-            width: 0%;
-          }
-          to {
-            width: 100%;
-          }
-        }
-        .animate-fill-bar {
-          animation: fill-bar 4s linear forwards;
-        }
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .theme-transition {
-          animation: fade-in 0.5s ease-in-out;
-        }
-      `}</style>
-      
-      <div className="w-full md:px-12 px-4 py-10 h-[650px] overflow-hidden">
-        <div className="flex md:flex-row flex-col md:gap-10 w-full">
-          <div className="md:w-[60%] w-full md:h-[650px] h-[400px] bg-cover bg-no-repeat relative">
-            <div className="overflow-hidden" ref={emblaRef}>
-              <div className="flex">
-                {images.map((img, idx) => (
-                  <div
-                    key={`${currentTheme}-${idx}`}
-                    className="min-w-full h-[650px] bg-cover bg-center bg-no-repeat relative transition-opacity duration-500"
-                    style={{ backgroundImage: `url(${img})` }}
-                  >
-                    <div className="flex justify-center gap-4 mt-6 px-8 w-full absolute top-0 left-0">
-                      {images.map((_, i) => (
-                        <div
-                          key={i}
-                          className="w-[170px] h-[2px] bg-[#8E8C95] rounded overflow-hidden cursor-pointer"
-                          onClick={() => handleFeatureClick(i)}
-                        >
-                          <div
-                            className={`h-full bg-white transition-all duration-200 ${
-                              current === i ? "animate-fill-bar" : "w-0"
-                            }`}
-                            style={{
-                              animationPlayState: isAutoPlaying ? 'running' : 'paused'
-                            }}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+    <div className="w-full bg-[#59AD4A] px-4 md:px-12 py-16 md:py-24">
+      <div className="flex flex-col lg:flex-row gap-8 md:gap-12 items-stretch lg:items-center">
+        {/* =======================
+            LEFT CONTENT
+        ======================= */}
+        <div className="flex-1 text-white flex flex-col gap-8 justify-center">
+          {/* Badge */}
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="inline-flex items-center gap-2 w-fit bg-white/20 rounded-full px-4 py-2"
+          >
+            <Zap className="w-5 h-5" />
+            <span className="font-jakarta font-bold text-xs md:text-sm uppercase tracking-wide">
+              Powering Next-Gen Fundraising
+            </span>
+          </motion.div>
+
+          {/* Title */}
+          <motion.h2
+            initial={{ opacity: 0, y: -20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+            className="font-jakarta font-bold text-3xl md:text-4xl lg:text-5xl leading-tight"
+          >
+            Discover the Impact of Transparent Giving
+          </motion.h2>
+
+          {/* Description */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="font-jakarta font-regular text-base md:text-lg leading-relaxed opacity-90"
+          >
+            We've built a platform that removes the barriers to kindness.
+            Connect directly with causes, track every dollar, and see the change
+            you create in real-time.
+          </motion.p>
+
+          {/* Features List */}
+          <motion.div
+            className="flex flex-col gap-4"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={{
+              hidden: {},
+              visible: {
+                transition: { staggerChildren: 0.15 },
+              },
+            }}
+          >
+            {features.map((feature, i) => (
+              <motion.div
+                key={i}
+                variants={{
+                  hidden: { opacity: 0, x: -25 },
+                  visible: { opacity: 1, x: 0 },
+                }}
+                transition={{ duration: 0.5 }}
+                className="flex items-start gap-4"
+              >
+                <div className="w-6 h-6 rounded-full bg-white/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Check className="w-4 h-4 text-white" />
+                </div>
+                <span className="font-jakarta font-medium text-base md:text-lg text-white">
+                  {feature.title}
+                </span>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+
+        {/* =======================
+            RIGHT IMAGE + FLOATING CARDS
+        ======================= */}
+        <motion.div
+          className="flex-1 w-full"
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+        >
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl w-full">
+            {/* Main Image */}
+            <Image
+              src="/images/Volunteers helping.png"
+              alt="Transparent Giving Impact"
+              width={600}
+              height={380}
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 40vw"
+              priority
+              className="w-full h-auto object-cover"
+            />
+
+            {/* Floating Card - Top Left */}
+            <div className="absolute top-4 left-4 bg-white rounded-xl shadow-lg p-4 flex items-start gap-3 w-52">
+              <div className="w-8 h-8 bg-[#E6FCEB] text-[#1A8F3A] flex items-center justify-center rounded-full">
+                <Globe size={18} />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-800">
+                  Global Reach
+                </p>
+                <p className="text-[10px] text-gray-500 leading-tight">
+                  Support causes in 14+ countries instantly.
+                </p>
+              </div>
+            </div>
+
+            {/* Floating Card - Bottom Right */}
+            <div className="absolute bottom-4 right-4 bg-white rounded-xl shadow-lg p-4 flex items-start gap-3 w-52">
+              <div className="w-8 h-8 bg-[#E8F1FF] text-[#2563EB] flex items-center justify-center rounded-full">
+                <Shield size={18} />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-800">
+                  100% Secure
+                </p>
+                <p className="text-[10px] text-gray-500 leading-tight">
+                  Bank-grade encryption for every donation.
+                </p>
               </div>
             </div>
           </div>
-
-          <div className="md:w-[40%] w-full md:h-[650px] h-[400px] flex flex-col mx-auto gap-10">
-            <section className={`flex flex-col gap-2 ${isTransitioning ? 'theme-transition' : ''}`}>
-              <h4 className="font-source font-semibold text-4xl text-black transition-all duration-500">
-                {activeTheme.mainHeading}
-              </h4>
-              <p className="font-source font-normal text-xl text-black transition-all duration-500">
-                {activeTheme.mainDescription}
-              </p>
-            </section>
-            <ul className="flex flex-col gap-2">
-              {features.map((item, i) => {
-                const isActive = current === i;
-                return (
-                <li
-                  key={`${currentTheme}-${i}`}
-                  className={`md:w-[500px] w-full h-fit p-5 flex flex-col gap-2 transition-all duration-500 cursor-pointer ${
-                    isActive
-                      ? "scale-[1.05] shadow-lg border-2 border-brand-green-dark bg-brand-green-dark"
-                      : "bg-brand-green-light backdrop-blur-sm"
-                  } ${isTransitioning ? 'theme-transition' : ''}`}
-                  style={{
-                    opacity: isActive ? 1 : 0.7
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.opacity = '0.9';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.opacity = '0.7';
-                    }
-                  }}
-                  onClick={() => handleFeatureClick(i)}
-                >
-                  <p
-                    className={`font-source font-medium text-xl ${item.textColor} transition-all duration-300`}
-                  >
-                    {item.title}
-                  </p>
-                  {isActive && (
-                  <span
-                    className={`font-source font-normal text-base ${item.textColor} transition-all duration-300 animate-in fade-in slide-in-from-top-2`}
-                  >
-                    {item.desc}
-                  </span>
-                  )}
-                </li>
-                );
-              })}
-            </ul>
-          </div>
-        </div>
+        </motion.div>
       </div>
-    </>
+    </div>
   );
 };
 
