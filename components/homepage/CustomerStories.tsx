@@ -1,6 +1,6 @@
 "use client";
 
-import { Star } from "lucide-react";
+import { Star, StarIcon } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 import { motion } from "framer-motion";
@@ -13,7 +13,7 @@ const CustomerStories = (props: Props) => {
       id: 1,
       name: "Sarah Jenkins",
       role: "Regular Donor",
-      avatar: "/images/avatar-sarah.png",
+      avatar: "/images/avatar_sarah.png",
       quote:
         "The transparency of ChainFundit is unmatched. I can see exactly where my money goes and the impact it makes.",
       rating: 5,
@@ -22,7 +22,7 @@ const CustomerStories = (props: Props) => {
       id: 2,
       name: "Michael Chen",
       role: "Campaign Organizer",
-      avatar: "/images/avatar-michael.png",
+      avatar: "/images/avatar_michael.png",
       quote:
         "Setting up a campaign was incredibly easy. The dashboard analytics helped me understand my donor base better.",
       rating: 5,
@@ -31,7 +31,7 @@ const CustomerStories = (props: Props) => {
       id: 3,
       name: "Amara Okeke",
       role: "Non-Profit Director",
-      avatar: "/images/avatar-amara.png",
+      avatar: "/images/avatar_amara.png",
       quote:
         "We've scaled our fundraising efforts by 200% since switching to this platform. The support team is fantastic.",
       rating: 4,
@@ -39,10 +39,8 @@ const CustomerStories = (props: Props) => {
   ];
 
   return (
-    <div className="w-full font-jakarta my-12">
-      {/* Testimonials Section */}
-      <div className="px-4 md:px-12 py-12 md:py-20 w-full bg-white flex flex-col gap-12">
-
+    <div className="font-jakarta flex items-center justify-center bg-white py-20 px-4">
+      <div className="flex flex-col gap-16 md:max-w-[80rem] w-full">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -51,19 +49,19 @@ const CustomerStories = (props: Props) => {
           viewport={{ once: true }}
           className="flex flex-col items-center gap-4 text-center"
         >
-          <div className="inline-flex items-center gap-2 bg-[#59AD4A] rounded-full px-4 py-2">
-            <span className="text-[#104901]">★</span>
-            <span className="font-jakarta font-bold text-xs md:text-sm text-[#104901] uppercase tracking-wider">
+          <div className="px-4 py-2 rounded-full bg-[#DCFCE7] flex gap-2 w-fit items-center">
+            <StarIcon color="#104109" size={16} />
+            <div className="font-bold text-sm leading-5 text-[#104109]">
               Trust & Impact
-            </span>
+            </div>
           </div>
-          <h2 className="font-jakarta font-bold text-3xl md:text-5xl text-black">
+          <div className="font-bold text-5xl leading-[48px]">
             Hear from those who believe
-          </h2>
+          </div>
         </motion.div>
 
         {/* Testimonials Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="flex flex-col md:flex-row gap-8 items-stretch">
           {testimonials.map((testimonial, index) => (
             <motion.div
               key={testimonial.id}
@@ -71,7 +69,7 @@ const CustomerStories = (props: Props) => {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.15 }}
               viewport={{ once: true }}
-              className="bg-white border border-[#E8E8E8] rounded-2xl p-6 md:p-8 flex flex-col gap-6"
+              className="bg-[#FDFBF7] rounded-[32px] p-8 flex flex-col gap-6"
             >
               {/* Star Rating */}
               <div className="flex gap-1">
@@ -89,18 +87,27 @@ const CustomerStories = (props: Props) => {
               </div>
 
               {/* Quote */}
-              <p className="font-jakarta font-regular text-base text-[#666666] leading-relaxed">
+              <p className="font-medium text-lg leading-[30px] text-[#1C1917]">
                 "{testimonial.quote}"
               </p>
-
+              
+              {/* Spacer to push user info to bottom */}
+              <div className="flex-grow" />
+              
               {/* User Info */}
-              <div className="border-t border-[#E8E8E8] pt-6 flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B6B] to-[#FFB366] flex-shrink-0" />
+              <div className="flex items-center gap-4">
+                <Image 
+                  src={testimonial.avatar} 
+                  alt={testimonial.name}
+                  width={48}
+                  height={48}
+                  className="w-12 h-12 rounded-full object-cover flex-shrink-0" 
+                />
                 <div>
-                  <p className="font-jakarta font-bold text-sm text-black">
+                  <p className="font-bold text-base leading-6 text-[#1C1917]">
                     {testimonial.name}
                   </p>
-                  <p className="font-jakarta font-regular text-xs text-[#999999] uppercase tracking-wide">
+                  <p className="font-bold text-xs leading-4 text-[#A8A29E]">
                     {testimonial.role}
                   </p>
                 </div>
