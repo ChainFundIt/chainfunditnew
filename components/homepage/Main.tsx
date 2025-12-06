@@ -77,7 +77,9 @@ const Main = () => {
     };
   });
 
-  {/* Animations */}
+  {
+    /* Animations */
+  }
   const fadeUp = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
@@ -306,82 +308,99 @@ const Main = () => {
 
       {/* Make a Difference Section */}
       <motion.div
-        className="w-full bg-[#FFCF55] px-4 md:px-12 py-16 md:py-24"
+        className="font-jakarta flex items-center justify-center bg-[#FFCF55] py-24 px-4"
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7 }}
         viewport={{ once: true }}
       >
-        <div className="flex flex-col items-center gap-8 text-center">
-          {/* HEADING Animation */}
-          <motion.h2
-            className="font-jakarta font-bold text-3xl md:text-5xl text-black"
+        <div className="flex flex-col gap-16 md:max-w-[56rem] w-full">
+          {/* HEADING */}
+          <motion.div
+            className="font-extrabold text-5xl md:text-6xl leading-tight text-center text-[#1C1917]"
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
             Together, We Can Make a Difference
-          </motion.h2>
+          </motion.div>
 
-          {/* PARAGRAPH Animation */}
-          <motion.p
-            className="font-jakarta font-regular text-base md:text-lg text-black opacity-90 max-w-2xl"
+          {/* PARAGRAPH */}
+          <motion.div
+            className="font-medium text-xl leading-7 text-center text-[#292524]"
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1 }}
           >
             Your support empowers us to provide essential resources to those who
             need it most. Join the movement today.
-          </motion.p>
+          </motion.div>
 
           {/* BUTTONS */}
           <motion.div
-            className="flex flex-col sm:flex-row gap-4 items-center justify-center"
+            className="flex flex-col md:flex-row gap-4 items-center justify-center"
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
           >
             <Button
-              onClick={() => (window.location.href = "/campaigns")}
-              className="px-8 py-6 bg-black text-white font-jakarta font-semibold text-base rounded-full hover:bg-[#333] transition duration-300"
+              onClick={() => router.push("/campaigns")}
+              className="bg-[#104109] px-8 py-4 rounded-full h-auto font-bold text-lg leading-7 border-none w-full md:w-fit"
             >
               Donate Now
             </Button>
-
             <Button
-              onClick={() => (window.location.href = "/volunteer")}
-              className="px-8 py-6 bg-white text-black font-jakarta font-semibold text-base rounded-full hover:bg-[#f0f0f0] border-2 border-white transition duration-300"
+              onClick={() => router.push("/volunteer")}
+              className="bg-white px-8 py-4 rounded-full h-auto font-bold text-lg leading-7 text-[#104109] w-full md:w-fit"
             >
               Become a Volunteer
             </Button>
           </motion.div>
 
-          {/* ===============================
-            FLOATING AVATARS
-          =============================== */}
+          {/* PEOPLE INVOLVED */}
           <motion.div
-            className="bg-white/50 backdrop-blur-sm rounded-full px-6 py-3 flex items-center gap-3 mt-4"
+            className="bg-[#FFFFFF4D] rounded-full px-6 py-3 flex items-center gap-4 justify-center w-fit mx-auto"
             animate={{ y: [0, -4, 0] }}
             transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
           >
             <div className="flex -space-x-2">
               {/* Circles remain identical */}
-              <div className="w-8 h-8 rounded-full bg-[#FF6B6B] border-2 border-white"></div>
-              <div className="w-8 h-8 rounded-full bg-[#4ECDC4] border-2 border-white"></div>
-              <div className="w-8 h-8 rounded-full bg-[#FFD93D] border-2 border-white"></div>
-              <div className="w-8 h-8 rounded-full bg-[#6BCB77] border-2 border-white"></div>
-              <div className="w-8 h-8 rounded-full bg-[#4D96FF] border-2 border-white flex items-center justify-center">
-                <span className="text-white font-jakarta font-bold text-xs">
-                  1k+
-                </span>
+              <Image
+                src="/images/peopleInvolved_0.png"
+                alt="People Involved"
+                height={40}
+                width={40}
+                className="w-10 h-10 rounded-full border-2 border-white z-10"
+              />
+              <Image
+                src="/images/peopleInvolved_1.png"
+                alt="People Involved"
+                height={40}
+                width={40}
+                className="w-10 h-10 rounded-full border-2 border-white z-20"
+              />
+              <Image
+                src="/images/peopleInvolved_2.png"
+                alt="People Involved"
+                height={40}
+                width={40}
+                className="w-10 h-10 rounded-full border-2 border-white z-30"
+              />
+              <Image
+                src="/images/peopleInvolved_3.png"
+                alt="People Involved"
+                height={40}
+                width={40}
+                className="w-10 h-10 rounded-full border-2 border-white z-40"
+              />
+              <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center z-0">
+                <span className="font-bold text-xs leading-4">1k+</span>
               </div>
             </div>
 
-            <div>
-              <p className="font-jakarta font-bold text-sm text-black">
-                PEOPLE INVOLVED
-              </p>
-              <p className="font-jakarta font-regular text-xs text-black opacity-70">
+            <div className="flex flex-col">
+              <p className="font-bold text-xs leading-4">PEOPLE INVOLVED</p>
+              <p className="font-medium text-xs leading-4">
                 Creating change daily
               </p>
             </div>

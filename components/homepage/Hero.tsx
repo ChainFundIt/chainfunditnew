@@ -58,7 +58,7 @@ const Hero = () => {
           <div className="flex flex-col md:flex-row gap-4">
             <Button
               onClick={() => router.push("/campaigns")}
-              className="bg-[#104109] px-8 py-4 rounded-full h-auto font-bold text-lg leading-7"
+              className="bg-[#104109] px-8 py-4 rounded-full h-auto font-bold text-lg leading-7 border-none"
             >
               Donate Now <ArrowRight size={20} />
             </Button>
