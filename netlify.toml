@@ -1,0 +1,16 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Netlify Scheduled Functions Configuration
+# These functions are defined in netlify/functions/ directory
+# They will automatically trigger your Next.js API routes at the specified times
+#
+# Alternative: Use external cron services (see SUMMARY_REPORTS_SETUP.md)
+# - /api/cron/send-daily-summaries (schedule: 0 9 * * *)
+# - /api/cron/send-weekly-summaries (schedule: 0 9 * * 1)
+# - /api/cron/payouts (schedule: 0 * * * *)
+

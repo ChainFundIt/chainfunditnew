@@ -149,7 +149,73 @@ const DonateModal: React.FC<DonateModalProps> = ({
 
     try {
       const currencyCode = getCurrencyCode(selectedCurrency);
-      
+      const isRecurring = period !== 'one-time';
+
+      // Track payment initiated
+      track("payment_initiated", {
+        campaign_id: campaign.id,
+        donation_amount: amountNum,
+        donation_currency: currencyCode,
+        payment_method: paymentProvider,
+        is_anonymous: anonymous,
+        period: period,
+      });
+
+      // Handle recurring donations (subscriptions)
+      if (isRecurring) {
+        // Check if user is logged in (required for recurring donations)
+        const response = await fetch('/api/auth/session');
+        const session = await response.json();
+        
+        if (!session || !session.user) {
+          toast.error("You must be logged in to set up recurring donations. Please sign in first.");
+          return;
+        }
+
+        // Initialize subscription
+        const subscriptionResponse = await fetch('/api/payments/subscriptions/initialize', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            campaignId: campaign.id,
+            amount: amountNum,
+            currency: currencyCode,
+            paymentProvider,
+            period: period,
+            message: comments,
+            isAnonymous: anonymous,
+            chainerId: referralChainer?.id || null,
+          }),
+        });
+
+        const subscriptionResult = await subscriptionResponse.json();
+
+        if (subscriptionResult.success) {
+          if (subscriptionResult.provider === 'paystack' && subscriptionResult.authorizationUrl) {
+            // Redirect to Paystack authorization page
+            window.location.href = subscriptionResult.authorizationUrl;
+          } else if (subscriptionResult.provider === 'stripe' && subscriptionResult.clientSecret) {
+            // Store Stripe subscription data and show payment form
+            setStripePaymentData({
+              clientSecret: subscriptionResult.clientSecret,
+              donationId: subscriptionResult.subscriptionId, // Using subscriptionId for tracking
+              amount: amountNum,
+              currency: selectedCurrency,
+            });
+            setStep("stripe-payment");
+          } else {
+            toast.success("Recurring donation subscription created successfully!");
+            setStep("thankyou");
+          }
+        } else {
+          toast.error(subscriptionResult.error || "Failed to create subscription. Please try again.");
+        }
+        return;
+      }
+
+      // Handle one-time donations (existing flow)
       const donationData = {
         campaignId: campaign.id,
         amount: amountNum,
@@ -159,15 +225,6 @@ const DonateModal: React.FC<DonateModalProps> = ({
         isAnonymous: anonymous,
         chainerId: referralChainer?.id || null,
       };
-
-      // Track payment initiated
-      track("payment_initiated", {
-        campaign_id: campaign.id,
-        donation_amount: amountNum,
-        donation_currency: currencyCode,
-        payment_method: paymentProvider,
-        is_anonymous: anonymous,
-      });
 
       // Initialize donation and redirect to payment gateway
       const result = await initializeDonation(donationData, false);
@@ -197,6 +254,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
         toast.error(result.error || "Donation failed. Please try again.");
       }
     } catch (error) {
+      console.error('Payment error:', error);
       toast.error("An error occurred while processing your donation. Please try again.");
     }
   };

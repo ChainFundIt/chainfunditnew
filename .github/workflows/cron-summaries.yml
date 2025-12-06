@@ -1,0 +1,105 @@
+name: Cron Jobs
+
+on:
+  schedule:
+    # Daily summaries - 9:00 AM UTC every day
+    - cron: '0 9 * * *'
+    # Weekly summaries - 9:00 AM UTC every Monday
+    - cron: '0 9 * * 1'
+    # Process recurring donations - 2:00 AM UTC every day
+    - cron: '0 2 * * *'
+  # Allow manual triggering for testing
+  workflow_dispatch:
+    inputs:
+      summary_type:
+        description: 'Type of summary to send'
+        required: false
+        default: 'both'
+        type: choice
+        options:
+          - both
+          - daily
+          - weekly
+
+jobs:
+  send-daily-summaries:
+    runs-on: ubuntu-latest
+    if: |
+      github.event.schedule == '0 9 * * *' || 
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.summary_type == 'both' || github.event.inputs.summary_type == 'daily'))
+    steps:
+      - name: Send Daily Summaries
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: ${{ secrets.APP_URL }}
+        run: |
+          echo "Sending daily summaries..."
+          response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST "$APP_URL/api/cron/send-daily-summaries" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Content-Type: application/json")
+          
+          http_status=$(echo "$response" | grep "HTTP_STATUS" | cut -d: -f2)
+          body=$(echo "$response" | sed '/HTTP_STATUS/d')
+          
+          echo "$body"
+          if [ "$http_status" -eq 200 ]; then
+            echo "✅ Daily summaries sent successfully"
+          else
+            echo "❌ Failed to send daily summaries (HTTP $http_status)"
+            exit 1
+          fi
+
+  process-recurring-donations:
+    runs-on: ubuntu-latest
+    if: |
+      github.event.schedule == '0 2 * * *' || 
+      (github.event_name == 'workflow_dispatch')
+    steps:
+      - name: Process Recurring Donations
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: ${{ secrets.APP_URL }}
+        run: |
+          echo "Processing recurring donations..."
+          response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST "$APP_URL/api/cron/process-recurring-donations" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Content-Type: application/json")
+          
+          http_status=$(echo "$response" | grep "HTTP_STATUS" | cut -d: -f2)
+          body=$(echo "$response" | sed '/HTTP_STATUS/d')
+          
+          echo "$body"
+          if [ "$http_status" -eq 200 ]; then
+            echo "✅ Recurring donations processed successfully"
+          else
+            echo "❌ Failed to process recurring donations (HTTP $http_status)"
+            exit 1
+          fi
+
+  send-weekly-summaries:
+    runs-on: ubuntu-latest
+    if: |
+      github.event.schedule == '0 9 * * 1' || 
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.summary_type == 'both' || github.event.inputs.summary_type == 'weekly'))
+    steps:
+      - name: Send Weekly Summaries
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: ${{ secrets.APP_URL }}
+        run: |
+          echo "Sending weekly summaries..."
+          response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST "$APP_URL/api/cron/send-weekly-summaries" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Content-Type: application/json")
+          
+          http_status=$(echo "$response" | grep "HTTP_STATUS" | cut -d: -f2)
+          body=$(echo "$response" | sed '/HTTP_STATUS/d')
+          
+          echo "$body"
+          if [ "$http_status" -eq 200 ]; then
+            echo "✅ Weekly summaries sent successfully"
+          else
+            echo "❌ Failed to send weekly summaries (HTTP $http_status)"
+            exit 1
+          fi
+

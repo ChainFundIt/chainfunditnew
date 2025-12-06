@@ -6,6 +6,7 @@ import { eq, sum, and } from 'drizzle-orm';
 import { verifyPaystackPayment } from '@/lib/payments/paystack';
 import { checkAndUpdateGoalReached } from '@/lib/utils/campaign-validation';
 import { toast } from 'sonner';
+import { sendDonorConfirmationEmailById } from '@/lib/notifications/donor-confirmation-email';
 
 // Helper function to update campaign currentAmount based on completed donations
 async function updateCampaignAmount(campaignId: string) {
@@ -88,7 +89,13 @@ export async function GET(request: NextRequest) {
 
     // Check if donation is already completed
     if (donation[0].paymentStatus === 'completed') {
-      const redirectUrl = `${process.env.NEXT_PUBLIC_APP_URL}/campaign/${donation[0].campaignId}?donation_status=success&donation_id=${donation[0].id}`;
+      // Get campaign slug for redirect
+      const campaign = await db.query.campaigns.findFirst({
+        where: eq(campaigns.id, donation[0].campaignId),
+        columns: { slug: true },
+      });
+      const campaignSlug = campaign?.slug || donation[0].campaignId;
+      const redirectUrl = `${process.env.NEXT_PUBLIC_APP_URL}/campaign/${campaignSlug}?donation_status=success&donation_id=${donation[0].id}`;
       return NextResponse.redirect(redirectUrl);
     }
 
@@ -109,8 +116,18 @@ export async function GET(request: NextRequest) {
     // Update campaign currentAmount
     await updateCampaignAmount(donation[0].campaignId);
 
+    // Send confirmation email to donor
+    await sendDonorConfirmationEmailById(donation[0].id);
+
+    // Get campaign slug for redirect
+    const campaign = await db.query.campaigns.findFirst({
+      where: eq(campaigns.id, donation[0].campaignId),
+      columns: { slug: true },
+    });
+    const campaignSlug = campaign?.slug || donation[0].campaignId;
+
     // Redirect to campaign page with success status
-    const redirectUrl = `${process.env.NEXT_PUBLIC_APP_URL}/campaign/${donation[0].campaignId}?donation_status=success&donation_id=${donation[0].id}`;
+    const redirectUrl = `${process.env.NEXT_PUBLIC_APP_URL}/campaign/${campaignSlug}?donation_status=success&donation_id=${donation[0].id}`;
     
     return NextResponse.redirect(redirectUrl);
 

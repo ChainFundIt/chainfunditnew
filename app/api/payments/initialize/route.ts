@@ -115,41 +115,75 @@ export async function POST(request: NextRequest) {
     let paymentResult;
     
     if (paymentProvider === 'stripe') {
+      // Validate Stripe configuration before proceeding
+      if (!process.env.STRIPE_SECRET_KEY) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'Stripe is not properly configured. Please contact support.',
+            details: 'STRIPE_SECRET_KEY is missing'
+          },
+          { status: 500 }
+        );
+      }
+
+      // Check if publishable key would be available (for client-side)
+      // Note: This is a server-side check, but NEXT_PUBLIC_ vars are build-time only
+      // We'll return a more helpful error if payment intent creation fails
+      
       const amountInCents = Math.round(amount * 100); // Convert to cents
       
-      // Create payment intent (simulate mode removed - using real payments)
-      const paymentIntent = await createStripePaymentIntent(
-        amount,
-        currency,
-        {
-          donationId,
-          campaignId,
-          donorEmail: user.email!,
-          donorName: user.fullName || '',
-          campaignTitle: campaign.title,
-        }
-      );
+      try {
+        // Create payment intent (simulate mode removed - using real payments)
+        const paymentIntent = await createStripePaymentIntent(
+          amount,
+          currency,
+          {
+            donationId,
+            campaignId,
+            donorEmail: user.email!,
+            donorName: user.fullName || '',
+            campaignTitle: campaign.title,
+          }
+        );
 
-      paymentResult = {
-        success: true,
-        clientSecret: paymentIntent.client_secret,
-        paymentIntentId: paymentIntent.id,
-      };
-
-      if (paymentResult.success) {
-        // Update donation with payment intent ID
-        await db
-          .update(donations)
-          .set({ paymentIntentId: paymentResult.paymentIntentId })
-          .where(eq(donations.id, donationId));
-
-        return NextResponse.json({
+        paymentResult = {
           success: true,
-          provider: 'stripe',
-          clientSecret: paymentResult.clientSecret,
-          donationId,
-          paymentIntentId: paymentResult.paymentIntentId,
-        });
+          clientSecret: paymentIntent.client_secret,
+          paymentIntentId: paymentIntent.id,
+        };
+
+        if (paymentResult.success) {
+          // Update donation with payment intent ID
+          await db
+            .update(donations)
+            .set({ paymentIntentId: paymentResult.paymentIntentId })
+            .where(eq(donations.id, donationId));
+
+          return NextResponse.json({
+            success: true,
+            provider: 'stripe',
+            clientSecret: paymentResult.clientSecret,
+            donationId,
+            paymentIntentId: paymentResult.paymentIntentId,
+          });
+        }
+      } catch (stripeError: any) {
+        console.error('Stripe payment intent creation failed:', stripeError);
+        
+        // Delete the donation record since payment initialization failed
+        await db.delete(donations).where(eq(donations.id, donationId));
+        
+        // Return a more helpful error message
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'Failed to initialize Stripe payment. Please ensure Stripe is properly configured.',
+            details: stripeError.message || 'Unknown Stripe error',
+            code: stripeError.code || 'STRIPE_ERROR'
+          },
+          { status: 500 }
+        );
       }
     } 
     else if (paymentProvider === 'paystack') {
