@@ -52,7 +52,7 @@ echo ""
 # Check all required variables
 check_env_var "NEXT_PUBLIC_APP_URL"
 check_env_var "STRIPE_SECRET_KEY"
-check_env_var "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"
+check_env_var "STRIPE_PUBLISHABLE_KEY"
 check_env_var "STRIPE_WEBHOOK_SECRET"
 check_env_var "PAYSTACK_SECRET_KEY"
 check_env_var "NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY"

@@ -16,7 +16,7 @@ import { track } from '@/lib/analytics';
 // Initialize Stripe
 // Note: NEXT_PUBLIC_ variables are embedded at build time
 // If this is undefined in production, the env var was not set during build
-const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+const stripePublishableKey = process.env.STRIPE_PUBLISHABLE_KEY;
 
 // Only initialize Stripe if we have a valid key
 const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
@@ -284,7 +284,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
 const StripePaymentForm: React.FC<StripePaymentFormProps> = (props) => {
   // Don't render if Stripe key is missing
   if (!stripePublishableKey) {
-    console.error('Stripe configuration error: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not set');
+    console.error('Stripe configuration error: STRIPE_PUBLISHABLE_KEY is not set');
     return (
       <div className="text-center py-8">
         <XCircle className="h-8 w-8 text-red-500 mx-auto mb-4" />
@@ -292,7 +292,7 @@ const StripePaymentForm: React.FC<StripePaymentFormProps> = (props) => {
         <p className="text-sm text-gray-500 mt-2">Please contact support</p>
         {process.env.NODE_ENV === 'development' && (
           <p className="text-xs text-gray-400 mt-2">
-            Missing NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY environment variable
+            Missing STRIPE_PUBLISHABLE_KEY environment variable
           </p>
         )}
       </div>
