@@ -241,6 +241,10 @@ function OtpPageInner() {
       // On success, clear login localStorage (if any)
       localStorage.removeItem("otp_login_type");
       localStorage.removeItem("otp_login_identifier");
+      
+      // Note: Auto-favorite is handled by AutoFavoriteHandler component
+      // which runs after authentication is complete
+      
       toast.success("Verification successful! Redirecting...");
       
       // Track OTP verification and signup/login

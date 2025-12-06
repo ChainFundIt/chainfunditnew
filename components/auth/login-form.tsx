@@ -22,6 +22,7 @@ export function LoginForm({
   const [isLoading, setIsLoading] = useState(false);
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect");
+  const message = searchParams.get("message");
 
   // Handle error parameters from URL (e.g., OAuth failures)
   useEffect(() => {
@@ -42,6 +43,13 @@ export function LoginForm({
       toast.error(errorMessage);
     }
   }, [searchParams]);
+
+  // Handle message parameter (e.g., favorite prompt)
+  useEffect(() => {
+    if (message) {
+      toast.info(message);
+    }
+  }, [message]);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {

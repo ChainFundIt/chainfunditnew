@@ -67,7 +67,7 @@ function generateRecommendations(status: ReturnType<typeof getPaymentModeStatus>
   if (status.stripe.secretKeyMode === 'test' || status.stripe.publishableKeyMode === 'test') {
     recommendations.push('Stripe is in TEST mode. To switch to production:');
     recommendations.push('  - Replace STRIPE_SECRET_KEY with a key starting with "sk_live_"');
-    recommendations.push('  - Replace STRIPE_PUBLISHABLE_KEY with a key starting with "pk_live_"');
+    recommendations.push('  - Replace NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY with a key starting with "pk_live_"');
   }
   
   if (status.stripe.secretKeyMode === 'missing') {
@@ -75,7 +75,7 @@ function generateRecommendations(status: ReturnType<typeof getPaymentModeStatus>
   }
   
   if (status.stripe.publishableKeyMode === 'missing') {
-    recommendations.push('STRIPE_PUBLISHABLE_KEY is missing');
+    recommendations.push('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is missing');
     recommendations.push('  ⚠️ IMPORTANT: NEXT_PUBLIC_ variables must be set at BUILD TIME');
     recommendations.push('  - For Vercel: Add the variable in Project Settings > Environment Variables');
     recommendations.push('  - For other platforms: Ensure the variable is set before running `npm run build`');

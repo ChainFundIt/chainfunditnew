@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Heart, Share2, Eye, Calendar, User, Target, Shield, Globe, Stethoscope, GraduationCap, Home, TreePine, Music, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +11,7 @@ import { EmojiFallbackImage } from '@/components/ui/emoji-fallback-image';
 import { itemNeedsEmojiFallback } from '@/lib/utils/unified-items';
 import { UnifiedItem } from '@/lib/types/unified-item';
 import { GeolocationData } from '@/lib/utils/geolocation';
+import { useAuth } from '@/hooks/use-auth';
 
 // Category icon mapping
 const categoryIcons: Record<string, any> = {
@@ -51,13 +53,22 @@ export function UnifiedItemCard({ item, viewMode, geolocation }: UnifiedItemCard
   const [isFavourited, setIsFavourited] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
   const [isToggling, setIsToggling] = useState(false);
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   
   const progressPercentage = isCampaign && item.goalAmount 
     ? Math.min(100, Math.round((item.currentAmount || 0) / item.goalAmount) * 100)
     : 0;
 
-  // Check favourite status on mount
+  // Check favourite status on mount (only if user is authenticated)
   useEffect(() => {
+    if (authLoading) return;
+    
+    if (!user) {
+      setIsChecking(false);
+      return;
+    }
+
     const checkFavouriteStatus = async () => {
       try {
         const response = await fetch(
@@ -75,13 +86,29 @@ export function UnifiedItemCard({ item, viewMode, geolocation }: UnifiedItemCard
     };
 
     checkFavouriteStatus();
-  }, [item.id, item.type]);
+  }, [item.id, item.type, user, authLoading]);
 
   const handleToggleFavourite = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
     if (isToggling) return;
+
+    // Check if user is authenticated
+    if (!user) {
+      // Store pending favorite action
+      localStorage.setItem('pending_favorite', JSON.stringify({
+        itemType: item.type,
+        itemId: item.id,
+        itemTitle: item.title,
+      }));
+      
+      // Redirect to signin with message
+      const currentPath = window.location.pathname + window.location.search;
+      const itemTypeLabel = item.type === 'campaign' ? 'campaign' : 'charity';
+      router.push(`/signin?redirect=${encodeURIComponent(currentPath)}&message=${encodeURIComponent(`Log in to add this ${itemTypeLabel} to your favorites`)}`);
+      return;
+    }
 
     setIsToggling(true);
     try {

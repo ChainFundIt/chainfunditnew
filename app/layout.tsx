@@ -5,6 +5,7 @@ import PerformanceMonitor from "@/components/performance/PerformanceMonitor";
 import ClientToaster from "@/components/ui/client-toaster";
 import { GoogleAnalytics } from "@/components/layout/GoogleAnalytics";
 import { CookieBanner } from "@/components/layout/CookieBanner";
+import { AutoFavoriteHandler } from "@/components/auth/auto-favorite-handler";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -74,6 +75,7 @@ export default function RootLayout({
           <PerformanceMonitor />
           <ClientToaster />
           <CookieBanner />
+          <AutoFavoriteHandler />
         </div>
       </body>
     </html>
