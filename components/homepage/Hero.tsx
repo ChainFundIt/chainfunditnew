@@ -1,24 +1,21 @@
 "use client";
-
 import React from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Shield, Globe, CheckCircle } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import "@/components/layout/animations.css";
-
 const Hero = () => {
   const { ref: leftRef, isInView: leftInView } = useScrollAnimation();
   const { ref: rightRef, isInView: rightInView } = useScrollAnimation();
-
   return (
     <div className="w-full bg-white">
       <div className="py-12 md:py-20 px-4 md:px-12">
-        <div className="flex flex-col lg:flex-row gap-8 md:gap-16 items-center justify-between">
+        <div className="flex flex-col lg:flex-row gap-6 md:gap-8 lg:gap-2 items-center justify-center max-w-7xl mx-auto">
           {/* Left Section */}
           <div
             ref={leftRef}
-            className={`w-full lg:w-1/2 text-left transition-all duration-500 ${
+            className={`w-full lg:w-auto flex-shrink-0 flex-grow basis-1/2 text-left transition-all duration-500 ${
               leftInView ? "animate-slide-in-left" : "opacity-0"
             }`}
           >
@@ -38,13 +35,11 @@ const Hero = () => {
             <h1 className="font-jakarta font-bold text-3xl md:text-4xl lg:text-5xl xl:text-6xl text-[#104901] leading-tight mb-6">
               support dreams.
             </h1>
-
             {/* Subheading */}
             <p className="font-jakarta font-regular text-sm md:text-base lg:text-lg text-[#666666] mb-8 leading-relaxed max-w-sm lg:max-w-md">
               Support causes you love with a modern fundraising platform built
               for transparency, speed, and global impact.
             </p>
-
             {/* Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-12">
               <Button
@@ -53,7 +48,6 @@ const Hero = () => {
               >
                 Donate Now <ArrowRight size={17} />
               </Button>
-
               {/* Watch Story Button with Container */}
               <div className="relative inline-flex items-center py-2 px-4 text-sm md:text-base font-semibold text-black border-2 border-gray-400 rounded-full hover:bg-gray-100 cursor-pointer">
                 {/* Play Button Icon with white circle background and black border */}
@@ -68,12 +62,10 @@ const Hero = () => {
                     <path d="M8 5v14l11-7z" fill="currentColor" />
                   </svg>
                 </div>
-
                 {/* Watch Story Text */}
                 <span>Watch Story</span>
               </div>
             </div>
-
             {/* Features */}
             <div className="flex flex-wrap gap-4 md:gap-6 lg:gap-8">
               <div className="flex items-center gap-2">
@@ -99,43 +91,38 @@ const Hero = () => {
               </div>
             </div>
           </div>
-
           {/* Right Section - Image */}
           <div
             ref={rightRef}
-            className={`w-full lg:w-1/2 flex justify-center items-center transition-all duration-500 ${
+            className={`w-full lg:w-auto flex-shrink-0 flex-grow basis-1/2 flex justify-center items-center transition-all duration-500 ${
               rightInView ? "animate-slide-in-right" : "opacity-0"
             }`}
           >
-            <div className="relative w-full max-w-lg lg:max-w-2xl">
+            <div className="relative w-full max-w-sm md:max-w-md lg:max-w-lg">
               {/* Main Image */}
               <Image
                 src="/images/Happy children.png"
                 alt="Featured Campaign"
-                width={800}
-                height={600}
+                width={500}
+                height={400}
                 priority
                 className="w-full h-auto object-cover rounded-3xl"
               />
-
               {/* Overlay Card */}
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-[85%] bg-white rounded-2xl shadow-xl px-5 py-4">
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[90%] bg-white rounded-2xl shadow-xl px-4 py-3">
                 <div className="flex items-center justify-between mb-1">
                   <p className="font-jakarta font-regular text-xs text-[#666]">
                     <b>Urgent Cause</b>
                   </p>
-
                   <span className="text-xs font-semibold text-[#F97316] bg-[#F97316]/10 px-2 py-1 rounded-full whitespace-nowrap">
                     85% Funded
                   </span>
                 </div>
-
-                <h4 className="font-jakarta font-bold text-lg text-black">
+                <h4 className="font-jakarta font-bold text-base md:text-lg text-black">
                   Hearing aids for Bolu
                 </h4>
-
                 {/* Progress bar */}
-                <div className="w-full h-2 bg-[#E5E5E5] rounded-full overflow-hidden mt-3">
+                <div className="w-full h-2 bg-[#E5E5E5] rounded-full overflow-hidden mt-2">
                   <div
                     className="h-full bg-[#13C870] rounded-full"
                     style={{ width: "85%" }}
@@ -149,5 +136,4 @@ const Hero = () => {
     </div>
   );
 };
-
 export default Hero;
