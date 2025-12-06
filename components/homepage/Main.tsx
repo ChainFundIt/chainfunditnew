@@ -118,7 +118,7 @@ const Main = (props: Props) => {
       {/* ===============================
         Campaign Discovery Section
       =============================== */}
-      <div className="w-full px-4 md:px-12 py-12 md:py-20 bg-white">
+      <div className="w-full px-4 md:px-12 py-12 md:py-20 bg-[#F5F5F4]">
         {/* Header */}
         <motion.div
           className="flex flex-col gap-6 mb-12"
@@ -274,9 +274,15 @@ const Main = (props: Props) => {
                         $15,000 goal
                       </span>
                     </div>
-                    <div className="w-full bg-[#E8E8E8] h-2 rounded-full overflow-hidden">
+                    <div className="w-full bg-[#E8E8E8] h-2 rounded-full overflow-hidden mb-4">
                       <div className="bg-[#1ABD73] h-full w-[83%] rounded-full"></div>
                     </div>
+                    <button
+                      onClick={() => router.push(`/virtual-giving-mall/${card.slug}`)}
+                      className="w-full py-2.5 px-4 bg-[#F5F5F4] text-black font-jakarta font-semibold text-sm rounded-lg hover:bg-[#59AD4A] hover:text-white transition-colors duration-300"
+                    >
+                      View Campaign
+                    </button>
                   </div>
                 </div>
               </motion.div>
