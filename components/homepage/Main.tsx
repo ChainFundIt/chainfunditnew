@@ -3,27 +3,17 @@
 import React, { useState, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { NotificationsList } from "@/components/homepage/notifications-list";
-import BenefitsCarousel from "./BenefitsCarousel";
-import { useCharities } from "@/hooks/use-charities";
-import { ShieldCheck, Search } from "lucide-react";
-import { Button } from "../ui/button";
-import Link from "next/link";
 import { motion } from "framer-motion";
+import { ShieldCheck, Search } from "lucide-react";
 
-type Props = {};
+import { useCharities } from "@/hooks/use-charities";
 
-const Main = (props: Props) => {
+import { Button } from "../ui/button";
+import BenefitsCarousel from "./BenefitsCarousel";
+
+const Main = () => {
   const router = useRouter();
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   const {
     charities,
@@ -87,9 +77,7 @@ const Main = (props: Props) => {
     };
   });
 
-  // ===============================
-  // Animation Variants
-  // ===============================
+  {/* Animations */}
   const fadeUp = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
@@ -102,10 +90,8 @@ const Main = (props: Props) => {
   };
 
   return (
-    <div className="my-6">
-      {/* ===============================
-        Benefits Carousel
-      =============================== */}
+    <div>
+      {/* Next-Gen Fundraising Section */}
       <motion.div
         variants={fadeUp}
         initial="hidden"
@@ -115,9 +101,7 @@ const Main = (props: Props) => {
         <BenefitsCarousel />
       </motion.div>
 
-      {/* ===============================
-        Campaign Discovery Section
-      =============================== */}
+      {/* Campaign Discovery Section */}
       <div className="w-full px-4 md:px-12 py-12 md:py-20 bg-[#F5F5F4]">
         {/* Header */}
         <motion.div
@@ -278,7 +262,9 @@ const Main = (props: Props) => {
                       <div className="bg-[#1ABD73] h-full w-[83%] rounded-full"></div>
                     </div>
                     <button
-                      onClick={() => router.push(`/virtual-giving-mall/${card.slug}`)}
+                      onClick={() =>
+                        router.push(`/virtual-giving-mall/${card.slug}`)
+                      }
                       className="w-full py-2.5 px-4 bg-[#F5F5F4] text-black font-jakarta font-semibold text-sm rounded-lg hover:bg-[#59AD4A] hover:text-white transition-colors duration-300"
                     >
                       View Campaign
@@ -318,9 +304,7 @@ const Main = (props: Props) => {
         </motion.div>
       </div>
 
-      {/* ===============================
-        BIG YELLOW CTA + ANIMATIONS
-      =============================== */}
+      {/* Make a Difference Section */}
       <motion.div
         className="w-full bg-[#FFCF55] px-4 md:px-12 py-16 md:py-24"
         initial={{ opacity: 0, y: 50 }}

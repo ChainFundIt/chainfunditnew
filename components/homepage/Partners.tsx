@@ -41,7 +41,7 @@ const Partners = () => {
         <div className="flex flex-col items-center gap-4 text-center">
           {/* Badge */}
           <div className="px-3 py-1 bg-[#ECFDF5] rounded-full">
-            <div className="font-jakarta font-bold text-xs leading-4 uppercase text-[#059669]">
+            <div className="font-bold text-xs leading-4 uppercase text-[#059669]">
               IMPACT METRICS
             </div>
           </div>
