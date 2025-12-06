@@ -1,18 +1,73 @@
-import React from 'react'
+"use client";
+
+import React, { useState, useEffect } from 'react';
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Plus, Eye, Link as LinkIcon, Users } from "lucide-react";
+import { Plus, Eye, Link as LinkIcon, Users, Heart } from "lucide-react";
 import Link from "next/link";
-import { Campaign, transformCampaign } from "./types";
+import { UnifiedItem } from '@/lib/types/unified-item';
+import { UnifiedItemCard } from '@/components/campaign/UnifiedItemCard';
 import { formatCurrency } from "@/lib/utils/currency";
 
-type Props = {
-  campaigns: Campaign[];
-}
+const Favourites = () => {
+  const [favourites, setFavourites] = useState<UnifiedItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-const Favourites = ({ campaigns }: Props) => {
-  const isEmpty = campaigns.length === 0;
-  const transformedCampaigns = campaigns.map(transformCampaign);
+  useEffect(() => {
+    const fetchFavourites = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await fetch('/api/favourites');
+        const data = await response.json();
+        
+        if (data.success) {
+          setFavourites(data.data || []);
+        } else {
+          setError(data.error || 'Failed to load favourites');
+        }
+      } catch (err) {
+        console.error('Error fetching favourites:', err);
+        setError('Failed to load favourites');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFavourites();
+  }, []);
+
+  const isEmpty = favourites.length === 0;
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#104901] mb-4"></div>
+        <p className="text-[#104901] text-lg font-medium">Loading favourites...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="text-red-500 mb-4">
+          <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+        </div>
+        <h3 className="font-bold text-2xl text-red-600 mb-3">Error Loading Favourites</h3>
+        <p className="text-red-500 text-center mb-6">{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="bg-[#104901] hover:bg-[#0d3d01] text-white px-6 py-3 rounded-lg font-medium transition-colors"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
 
   if (isEmpty) {
     return (
@@ -29,90 +84,40 @@ const Favourites = ({ campaigns }: Props) => {
 
         <section>
           <h3 className="font-semibold text-3xl text-[#104901]">
-            No favourite campaigns
+            No favourites yet
           </h3>
           <p className="font-normal text-xl text-[#104901]">
-            Want to start your own fundraiser? Click the button below.
+            Start favouriting campaigns and charities you care about by clicking the heart icon.
           </p>
         </section>
 
-        <Link href="/create-campaign">
-          <Button className="w-[300px] h-16 flex justify-between font-semibold text-2xl items-center">
-            Create a Campaign <Plus size={24} />
-          </Button>
-        </Link>
+        <div className="flex gap-4">
+          <Link href="/campaigns">
+            <Button className="w-[300px] h-16 flex justify-between font-semibold text-2xl items-center">
+              Browse Campaigns <Plus size={24} />
+            </Button>
+          </Link>
+          <Link href="/virtual-giving-mall">
+            <Button className="w-[300px] h-16 flex justify-between font-semibold text-2xl items-center">
+              Browse Charities <Heart size={24} />
+            </Button>
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col gap-6 font-source 2xl:container 2xl:mx-auto">
-      {transformedCampaigns.map((campaign) => (
-        <div
-          key={campaign.id}
-          className="border border-[#D9D9D9] bg-white py-4 pl-4 pr-6 flex justify-between items-start"
-          style={{ boxShadow: "0px 4px 8px 0px #0000001A" }}
-        >
-          <Image
-            src={campaign.image}
-            alt={campaign.title}
-            width={270}
-            height={190}
-            className="object-cover"
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {favourites.map((item) => (
+          <UnifiedItemCard
+            key={`${item.type}-${item.id}`}
+            item={item}
+            viewMode="grid"
           />
-          <div className="flex flex-col justify-end">
-            <h3 className="text-2xl font-medium">{campaign.title}</h3>
-            <span className="font-normal text-base">
-              {campaign.description.slice(0, 60)}...
-            </span>
-            <section className="flex justify-between">
-              <p className="text-lg font-medium my-1 text-black">
-                {formatCurrency(campaign.amountRaised, campaign.currency)} raised
-              </p>
-              <p className="font-medium text-lg text-[#757575] my-1">
-                {formatCurrency(campaign.goal, campaign.currency)} total
-              </p>
-            </section>
-            <div className="w-full bg-[#D9D9D9] h-2 my-1">
-              <div
-                className="bg-[#104901] h-full transition-all duration-500"
-                style={{
-                  width: `${Math.min(
-                    100,
-                    Math.round((campaign.amountRaised / campaign.goal) * 100)
-                  )}%`,
-                }}
-              ></div>
-            </div>
-            <section className="flex justify-between items-center">
-              <p className="text-lg text-[#868686] flex gap-1 items-center">
-                <Users size={20} />
-                {campaign.donors} donors
-              </p>
-              <p className="text-lg text-[#868686] flex gap-1 items-center">
-                <LinkIcon size={20} /> {campaign.chains} chains
-              </p>
-            </section>
-            <div className="mt-3 flex gap-2">
-              <Link href={`/campaign/${campaign.slug}`}>
-                <Button
-                  className="bg-whitesmoke font-medium text-lg text-[#474553] border-[#474553]"
-                  variant="outline"
-                >
-                  View
-                  <Eye />
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      ))}
-
-      <Link href="/create-campaign">
-        <Button className="w-[300px] h-16 flex justify-between font-semibold text-2xl items-center mt-6">
-          Create a Campaign <Plus size={24} />
-        </Button>
-      </Link>
+        ))}
+      </div>
     </div>
   );
 }

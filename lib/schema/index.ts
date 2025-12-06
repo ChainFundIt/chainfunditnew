@@ -22,3 +22,4 @@ export * from './campaign-payouts';
 export * from './campaign-screenings';
 export * from './user-kyc-verifications';
 export * from './recurring-donations';
+export * from './favourites';

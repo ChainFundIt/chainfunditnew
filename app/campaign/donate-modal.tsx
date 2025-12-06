@@ -124,6 +124,18 @@ const DonateModal: React.FC<DonateModalProps> = ({
   };
 
   const handleDonate = () => {
+    // Validate email is provided
+    if (!email.trim()) {
+      toast.error("Email is required");
+      return;
+    }
+
+    // Validate email format
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
     // Track donation started
     if (campaign && amount) {
       trackDonation("donation_started", {
@@ -496,68 +508,18 @@ const DonateModal: React.FC<DonateModalProps> = ({
                 </div>
               </div>
 
-              {/* Contact Details */}
-              <div>
-                <h3 className="font-normal text-base text-[#5F8555]">
-                  Contact details
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label
-                      htmlFor="fullName"
-                      className="text-sm font-medium text-gray-700"
-                    >
-                      Full name
-                    </Label>
-                    <Input
-                      id="fullName"
-                      value={fullName}
-                      placeholder="Full name"
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="mt-2 h-11 bg-whitesmoke rounded-lg border border-[#C0BFC4] text-[#5F8555] placeholder:text-xl placeholder:text-[#5F8555] text-xl shadow-none"
-                    />
-                  </div>
-                  <div>
-                    <Label
-                      htmlFor="email"
-                      className="text-sm font-medium text-gray-700"
-                    >
-                      Email
-                    </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      placeholder="Email"
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="mt-2 h-11 bg-whitesmoke rounded-lg border border-[#C0BFC4] text-[#5F8555] placeholder:text-xl placeholder:text-[#5F8555] text-xl shadow-none"
-                    />
-                  </div>
-                  <div>
-                    <Label
-                      htmlFor="phone"
-                      className="text-sm font-medium text-gray-700"
-                    >
-                      Phone number
-                    </Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={phone}
-                      placeholder="Phone number"
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="mt-2 h-11 bg-whitesmoke rounded-lg border border-[#C0BFC4] text-[#5F8555] placeholder:text-xl placeholder:text-[#5F8555] text-xl shadow-none"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Anonymous Donation */}
+              {/* Anonymous Donation Checkbox */}
               <div className="flex items-start gap-3">
                 <Checkbox
                   id="anonymous"
                   checked={anonymous}
-                  onCheckedChange={(checked: boolean) => setAnonymous(checked)}
+                  onCheckedChange={(checked: boolean) => {
+                    setAnonymous(checked);
+                    if (checked) {
+                      setFullName("");
+                      setPhone("");
+                    }
+                  }}
                 />
                 <div className="">
                   <Label
@@ -571,6 +533,85 @@ const DonateModal: React.FC<DonateModalProps> = ({
                     record of your donation will be stored in our database.
                   </p>
                 </div>
+              </div>
+
+              {/* Contact Details */}
+              <div>
+                <h3 className="font-normal text-base text-[#5F8555]">
+                  Contact details
+                </h3>
+                {anonymous ? (
+                  // Anonymous: Only show email field
+                  <div className="mt-2">
+                    <Label
+                      htmlFor="email"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Email <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      placeholder="Email"
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className="mt-2 h-11 bg-whitesmoke rounded-lg border border-[#C0BFC4] text-[#5F8555] placeholder:text-xl placeholder:text-[#5F8555] text-xl shadow-none"
+                    />
+                  </div>
+                ) : (
+                  // Not anonymous: Show full contact details
+                  <div className="grid grid-cols-2 gap-4 mt-2">
+                    <div>
+                      <Label
+                        htmlFor="fullName"
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        Full name
+                      </Label>
+                      <Input
+                        id="fullName"
+                        value={fullName}
+                        placeholder="Full name"
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="mt-2 h-11 bg-whitesmoke rounded-lg border border-[#C0BFC4] text-[#5F8555] placeholder:text-xl placeholder:text-[#5F8555] text-xl shadow-none"
+                      />
+                    </div>
+                    <div>
+                      <Label
+                        htmlFor="email"
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        Email <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={email}
+                        placeholder="Email"
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="mt-2 h-11 bg-whitesmoke rounded-lg border border-[#C0BFC4] text-[#5F8555] placeholder:text-xl placeholder:text-[#5F8555] text-xl shadow-none"
+                      />
+                    </div>
+                    <div>
+                      <Label
+                        htmlFor="phone"
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        Phone number
+                      </Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={phone}
+                        placeholder="Phone number"
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="mt-2 h-11 bg-whitesmoke rounded-lg border border-[#C0BFC4] text-[#5F8555] placeholder:text-xl placeholder:text-[#5F8555] text-xl shadow-none"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Comments */}

@@ -107,13 +107,13 @@ const Main = (props: Props) => {
     }
   });
 
-  const displayCharities = filteredCharities.slice(0, 3);
+  const displayCharities = filteredCharities.slice(0, 4);
 
   // Transform charity data to match the expected format
   const cardDetails = displayCharities.map((charity) => {
     const focusAreas =
       charity.focusAreas && charity.focusAreas.length > 0
-        ? charity.focusAreas.slice(0, 3).join(", ")
+        ? charity.focusAreas.slice(0, 4).join(", ")
         : null;
 
     return {
@@ -251,7 +251,7 @@ const Main = (props: Props) => {
           {!charitiesLoading &&
             !charitiesError &&
             cardDetails.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-12">
               {cardDetails.map((card) => {
                 const CategoryIcon = categoryIcons[card.category || 'Community'] || Heart;
                 return (

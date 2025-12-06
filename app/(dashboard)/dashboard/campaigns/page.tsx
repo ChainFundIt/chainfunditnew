@@ -36,7 +36,7 @@ export default function CampaignsPage() {
         // Chains tab handles its own data via useChainerDonations hook
         return [];
       case "Favourites":
-        // For now, return empty array - to implement favorites functionality
+        // Favourites component handles its own data fetching
         return [];
       case "Comments":
         // For now, return empty array - comments are handled separately
@@ -183,7 +183,7 @@ export default function CampaignsPage() {
             )}
             {activeTab === "Chains" && <Chains />}
             {activeTab === "Favourites" && (
-              <Favourites campaigns={filteredCampaigns} />
+              <Favourites />
             )}
             {activeTab === "Comments" && <Comments campaigns={userCampaigns} />}
           </div>
