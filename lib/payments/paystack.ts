@@ -9,6 +9,17 @@ if (!PAYSTACK_SECRET_KEY) {
   console.warn('PAYSTACK_SECRET_KEY is not set in environment variables');
 }
 
+function validatePaystackKey(): void {
+  if (!PAYSTACK_SECRET_KEY) {
+    throw new Error('PAYSTACK_SECRET_KEY is not set in environment variables. Please configure your Paystack secret key.');
+  }
+  
+  // Validate key format (Paystack keys start with sk_test_ or sk_live_)
+  if (!PAYSTACK_SECRET_KEY.startsWith('sk_test_') && !PAYSTACK_SECRET_KEY.startsWith('sk_live_')) {
+    throw new Error('PAYSTACK_SECRET_KEY has an invalid format. Paystack secret keys should start with "sk_test_" or "sk_live_".');
+  }
+}
+
 export interface PaystackInitializeResponse {
   status: boolean;
   message: string;
@@ -46,6 +57,9 @@ export async function initializePaystackPayment(
   metadata?: Record<string, any>,
   callbackUrl?: string
 ): Promise<PaystackInitializeResponse> {
+  // Validate Paystack configuration before making API call
+  validatePaystackKey();
+  
   try {
     const response = await axios.post(
       `${PAYSTACK_BASE_URL}/transaction/initialize`,
@@ -66,7 +80,22 @@ export async function initializePaystackPayment(
 
     return response.data;
   } catch (error: any) {
-    console.error('Error initializing Paystack payment:', error.response?.data || error.message);
+    const errorData = error.response?.data || {};
+    const errorMessage = errorData.message || error.message || 'Unknown error';
+    
+    console.error('Error initializing Paystack payment:', {
+      status: errorData.status,
+      message: errorMessage,
+      type: errorData.type,
+      code: errorData.code,
+      meta: errorData.meta,
+    });
+    
+    // Provide more helpful error messages
+    if (error.response?.status === 401) {
+      throw new Error(`Paystack authentication failed: ${errorMessage}. Please check that your PAYSTACK_SECRET_KEY is correct and valid.`);
+    }
+    
     throw error;
   }
 }
@@ -77,6 +106,8 @@ export async function initializePaystackPayment(
 export async function verifyPaystackPayment(
   reference: string
 ): Promise<PaystackVerifyResponse> {
+  validatePaystackKey();
+  
   try {
     const response = await axios.get(
       `${PAYSTACK_BASE_URL}/transaction/verify/${reference}`,
@@ -98,8 +129,13 @@ export async function verifyPaystackPayment(
  * Verify Paystack webhook signature
  */
 export function verifyPaystackWebhook(payload: string, signature: string): boolean {
+  if (!PAYSTACK_SECRET_KEY) {
+    console.error('Cannot verify Paystack webhook: PAYSTACK_SECRET_KEY is not set');
+    return false;
+  }
+  
   const hash = crypto
-    .createHmac('sha512', PAYSTACK_SECRET_KEY || '')
+    .createHmac('sha512', PAYSTACK_SECRET_KEY)
     .update(payload)
     .digest('hex');
   

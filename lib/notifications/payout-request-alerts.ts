@@ -116,6 +116,7 @@ async function sendPayoutRequestEmailToAdmin(
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
             .header { background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+            .logo-img { max-width: 150px; height: auto; margin-bottom: 15px; }
             .content { background: white; padding: 30px; border: 1px solid #e5e7eb; border-top: none; }
             .details { background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; }
             .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e5e7eb; }
@@ -130,6 +131,10 @@ async function sendPayoutRequestEmailToAdmin(
         <body>
           <div class="container">
             <div class="header">
+              ${(() => {
+                const logoUrl = `/images/logo.svg`;
+                return `<img src="${logoUrl}" alt="ChainFundit Logo" class="logo-img" />`;
+              })()}
               <h1>💰 Payout Request</h1>
               <div class="alert-badge">⚠️ Requires Admin Review</div>
             </div>

@@ -1,8 +1,19 @@
 #!/usr/bin/env tsx
 
-import { db } from '@/lib/db';
-import { charities } from '@/lib/schema/charities';
-import { sql, isNull, or, eq } from 'drizzle-orm';
+// Load environment variables FIRST before any other imports
+import * as dotenv from 'dotenv';
+import { resolve } from 'path';
+
+// Try to load .env.local first, then .env
+dotenv.config({ path: resolve(process.cwd(), '.env.local') });
+dotenv.config({ path: resolve(process.cwd(), '.env') });
+
+// Verify DATABASE_URL is set before proceeding
+if (!process.env.DATABASE_URL) {
+  console.error('❌ Error: DATABASE_URL environment variable is not set');
+  console.error('   Please ensure .env.local or .env file contains DATABASE_URL');
+  process.exit(1);
+}
 
 /**
  * Script to add categories to charities that don't have one
@@ -147,6 +158,11 @@ function detectCategory(charity: any): string | null {
 
 async function addCharityCategories() {
   try {
+    // Dynamically import database modules after env vars are loaded
+    const { db } = await import('@/lib/db');
+    const { charities } = await import('@/lib/schema/charities');
+    const { sql, isNull, or, eq } = await import('drizzle-orm');
+
     console.log('🔍 Fetching charities without categories...');
 
     // Fetch charities that don't have a category or have null category

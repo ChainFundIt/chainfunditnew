@@ -18,4 +18,5 @@
 # - /api/cron/send-daily-summaries (schedule: 0 9 * * *)
 # - /api/cron/send-weekly-summaries (schedule: 0 9 * * 1)
 # - /api/cron/payouts (schedule: 0 * * * *)
+# - /api/cron/verify-pending-paystack (schedule: */15 * * * * - every 15 minutes)
 

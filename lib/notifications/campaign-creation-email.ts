@@ -73,6 +73,11 @@ export async function sendCampaignCreationEmail(data: CampaignCreationEmailData)
             color: #104901;
             margin-bottom: 10px;
           }
+          .logo-img {
+            max-width: 150px;
+            height: auto;
+            margin-bottom: 15px;
+          }
           .success-icon {
             width: 60px;
             height: 60px;
@@ -222,6 +227,10 @@ export async function sendCampaignCreationEmail(data: CampaignCreationEmailData)
         <div class="container">
           <div class="header">
             <div class="success-icon"></div>
+            ${(() => {
+              const logoUrl = `/images/logo.svg`;
+              return `<img src="${logoUrl}" alt="ChainFundit Logo" class="logo-img" />`;
+            })()}
             <div class="logo">ChainFundIt</div>
             <div class="title">Campaign Created Successfully!</div>
             <div class="subtitle">Your fundraising campaign is now live</div>

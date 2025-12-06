@@ -17,9 +17,37 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const logoUrl = `/images/logo.svg`;
+
 export const metadata: Metadata = {
   title: "Chainfundit",
   description: "Raise funds - support dreams",
+  openGraph: {
+    title: "Chainfundit",
+    description: "Raise funds - support dreams",
+    url: process.env.NEXT_PUBLIC_APP_URL || 'https://chainfundit.com',
+    siteName: "Chainfundit",
+    images: [
+      {
+        url: logoUrl,
+        width: 512,
+        height: 512,
+        alt: "Chainfundit Logo",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Chainfundit",
+    description: "Raise funds - support dreams",
+    images: [logoUrl],
+  },
+  icons: {
+    icon: "/images/logo.svg",
+    apple: "/images/logo.svg",
+  },
 };
 
 export default function RootLayout({

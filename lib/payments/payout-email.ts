@@ -72,6 +72,11 @@ export async function sendPayoutApprovalEmail(data: PayoutEmailData) {
             color: #104901;
             margin-bottom: 10px;
           }
+          .logo-img {
+            max-width: 150px;
+            height: auto;
+            margin-bottom: 15px;
+          }
           .success-icon {
             width: 60px;
             height: 60px;
@@ -207,6 +212,10 @@ export async function sendPayoutApprovalEmail(data: PayoutEmailData) {
       <body>
         <div class="container">
           <div class="header">
+            ${(() => {
+              const logoUrl = `/images/logo.svg`;
+              return `<img src="${logoUrl}" alt="ChainFundit Logo" class="logo-img" />`;
+            })()}
             <div class="success-icon">
               <CheckCircle className="h-10 w-10 text-white" />
             </div>
@@ -403,6 +412,11 @@ export async function sendPayoutConfirmationEmail(data: PayoutEmailData) {
             color: #104901;
             margin-bottom: 10px;
           }
+          .logo-img {
+            max-width: 150px;
+            height: auto;
+            margin-bottom: 15px;
+          }
           .success-icon {
             width: 60px;
             height: 60px;
@@ -550,6 +564,10 @@ export async function sendPayoutConfirmationEmail(data: PayoutEmailData) {
       <body>
         <div class="container">
           <div class="header">
+            ${(() => {
+              const logoUrl = `/images/logo.svg`;
+              return `<img src="${logoUrl}" alt="ChainFundit Logo" class="logo-img" />`;
+            })()}
             <div class="success-icon">
               <CheckCircle className="h-10 w-10 text-white" />
             </div>
@@ -739,6 +757,11 @@ export async function sendPayoutCompletionEmail(
             color: #104901;
             margin-bottom: 10px;
           }
+          .logo-img {
+            max-width: 150px;
+            height: auto;
+            margin-bottom: 15px;
+          }
           .success-icon {
             width: 60px;
             height: 60px;
@@ -847,6 +870,10 @@ export async function sendPayoutCompletionEmail(
       <body>
         <div class="container">
           <div class="header">
+            ${(() => {
+              const logoUrl = `/images/logo.svg`;
+              return `<img src="${logoUrl}" alt="ChainFundit Logo" class="logo-img" />`;
+            })()}
             <div class="success-icon">
               <CheckCircle className="h-10 w-10 text-white" />
             </div>
@@ -989,6 +1016,11 @@ export async function sendPayoutFailureEmail(data: PayoutFailureEmailData) {
             color: #104901;
             margin-bottom: 10px;
           }
+          .logo-img {
+            max-width: 150px;
+            height: auto;
+            margin-bottom: 15px;
+          }
           .error-icon {
             width: 60px;
             height: 60px;
@@ -1087,6 +1119,10 @@ export async function sendPayoutFailureEmail(data: PayoutFailureEmailData) {
       <body>
         <div class="container">
           <div class="header">
+            ${(() => {
+              const logoUrl = `/images/logo.svg`;
+              return `<img src="${logoUrl}" alt="ChainFundit Logo" class="logo-img" />`;
+            })()}
             <div class="error-icon"></div>
             <div class="logo">ChainFundIt</div>
             <div class="title">Payout Failed</div>

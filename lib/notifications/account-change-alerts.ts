@@ -92,6 +92,10 @@ export async function sendAccountChangeConfirmationToUser(requestData: AccountCh
         <body>
           <div class="container">
             <div class="header">
+              ${(() => {
+                const logoUrl = `/images/logo.svg`;
+                return `<img src="${logoUrl}" alt="ChainFundit Logo" class="logo-img" />`;
+              })()}
               <h1>✅ Request Received</h1>
             </div>
             
@@ -160,6 +164,7 @@ async function sendAccountChangeRequestEmailToAdmin(
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
             .header { background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+            .logo-img { max-width: 150px; height: auto; margin-bottom: 15px; }
             .content { background: white; padding: 30px; border: 1px solid #e5e7eb; border-top: none; }
             .details { background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; }
             .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e5e7eb; }
@@ -174,6 +179,10 @@ async function sendAccountChangeRequestEmailToAdmin(
         <body>
           <div class="container">
             <div class="header">
+              ${(() => {
+                const logoUrl = `/images/logo.svg`;
+                return `<img src="${logoUrl}" alt="ChainFundit Logo" class="logo-img" />`;
+              })()}
               <h1>🔐 Account Change Request</h1>
               <div class="alert-badge">⚠️ Requires Admin Review</div>
             </div>
@@ -344,6 +353,7 @@ export async function sendAccountChangeApprovalEmail(data: AccountChangeApproval
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
             .header { background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+            .logo-img { max-width: 150px; height: auto; margin-bottom: 15px; }
             .content { background: white; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }
             .success-box { background: #f0fdf4; border-left: 4px solid #16a34a; padding: 15px; margin: 20px 0; }
             .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
@@ -353,6 +363,10 @@ export async function sendAccountChangeApprovalEmail(data: AccountChangeApproval
         <body>
           <div class="container">
             <div class="header">
+              ${(() => {
+                const logoUrl = `/images/logo.svg`;
+                return `<img src="${logoUrl}" alt="ChainFundit Logo" class="logo-img" />`;
+              })()}
               <h1>✅ Account Change Request Approved</h1>
             </div>
             
@@ -431,6 +445,7 @@ export async function sendAccountChangeRejectionEmail(data: AccountChangeRejecti
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
             .header { background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+            .logo-img { max-width: 150px; height: auto; margin-bottom: 15px; }
             .content { background: white; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }
             .info-box { background: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; margin: 20px 0; }
             .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
@@ -440,6 +455,10 @@ export async function sendAccountChangeRejectionEmail(data: AccountChangeRejecti
         <body>
           <div class="container">
             <div class="header">
+              ${(() => {
+                const logoUrl = `/images/logo.svg`;
+                return `<img src="${logoUrl}" alt="ChainFundit Logo" class="logo-img" />`;
+              })()}
               <h1>❌ Account Change Request Not Approved</h1>
             </div>
             

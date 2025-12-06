@@ -572,6 +572,7 @@ async function sendUserSummaryEmail(recipientEmail: string, data: UserSummaryDat
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
             .header { background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+            .logo-img { max-width: 150px; height: auto; margin-bottom: 15px; }
             .content { background: white; padding: 30px; border: 1px solid #e5e7eb; border-top: none; }
             .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0; }
             .stat-card { background: #f9fafb; padding: 20px; border-radius: 8px; text-align: center; }
@@ -586,6 +587,10 @@ async function sendUserSummaryEmail(recipientEmail: string, data: UserSummaryDat
         <body>
           <div class="container">
             <div class="header">
+              ${(() => {
+                const logoUrl = `/images/logo.svg`;
+                return `<img src="${logoUrl}" alt="ChainFundit Logo" class="logo-img" />`;
+              })()}
               <h1>📊 ${periodLabel} Campaign Summary</h1>
               <p style="margin: 10px 0 0 0; opacity: 0.9;">${dateRange}</p>
             </div>
@@ -699,6 +704,7 @@ async function sendAdminSummaryEmail(recipientEmail: string, data: AdminSummaryD
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
             .header { background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+            .logo-img { max-width: 150px; height: auto; margin-bottom: 15px; }
             .content { background: white; padding: 30px; border: 1px solid #e5e7eb; border-top: none; }
             .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0; }
             .stat-card { background: #f9fafb; padding: 20px; border-radius: 8px; text-align: center; }
@@ -711,6 +717,10 @@ async function sendAdminSummaryEmail(recipientEmail: string, data: AdminSummaryD
         <body>
           <div class="container">
             <div class="header">
+              ${(() => {
+                const logoUrl = `/images/logo.svg`;
+                return `<img src="${logoUrl}" alt="ChainFundit Logo" class="logo-img" />`;
+              })()}
               <h1>📊 ${periodLabel} Platform Summary</h1>
               <p style="margin: 10px 0 0 0; opacity: 0.9;">${dateRange}</p>
             </div>

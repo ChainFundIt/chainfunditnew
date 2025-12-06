@@ -31,7 +31,7 @@ import { useGeolocation, useCampaignFiltering } from "@/hooks/use-geolocation";
 import Footer from "@/components/layout/Footer";
 import { getRelatedCategories } from "@/lib/utils/category-mapping";
 
-// Combined categories for campaigns and charities
+// Campaign categories only
 const allCategories = [
   "Emergency",
   "Business",
@@ -45,28 +45,18 @@ const allCategories = [
   "Charity",
   "Community",
   "Creative",
-  "Health", // Charity category
-  "Children", // Charity category
-  "Children & Youth", // Charity category
-  "Housing", // Charity category
-  "Housing & Shelter", // Charity category
-  "Environment", // Charity category
-  "Arts", // Charity category
-  "Disaster Relief", // Charity category
-  "Employment & Training", // Charity category
-  "Global", // Charity category
   "Uncategorized",
 ];
 
 const campaignStatuses = ["active", "closed", "trending"];
-const itemTypes = ["all", "campaign", "charity"];
+const itemTypes = ["campaign"];
 
 export default function AllCampaignsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
-  const [selectedType, setSelectedType] = useState<"all" | "campaign" | "charity">("all");
+  const [selectedType, setSelectedType] = useState<"all" | "campaign" | "charity">("campaign");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState<
     "newest" | "oldest" | "amount" | "popular"
@@ -109,10 +99,8 @@ export default function AllCampaignsPage() {
     try {
       let filtered = [...items];
 
-      // Filter by type
-      if (selectedType !== "all") {
-        filtered = filtered.filter(item => item.type === selectedType);
-      }
+      // Filter by type - only show campaigns
+      filtered = filtered.filter(item => item.type === "campaign");
 
       // Filter by geolocation (only for campaigns with currency)
       if (geolocation && !locationLoading) {
@@ -120,8 +108,7 @@ export default function AllCampaignsPage() {
           if (item.type === 'campaign' && item.currency) {
             return shouldShowCampaign(item.currency);
           }
-          // Charities are shown regardless of geolocation
-          return item.type === 'charity';
+          return true;
         });
       }
 
@@ -209,7 +196,6 @@ export default function AllCampaignsPage() {
     debouncedSearchQuery,
     selectedCategory,
     selectedStatus,
-    selectedType,
     sortBy,
     geolocation,
     shouldShowCampaign,
@@ -232,7 +218,7 @@ export default function AllCampaignsPage() {
       setDebouncedSearchQuery("");
       setSelectedCategory("");
       setSelectedStatus("");
-      setSelectedType("all");
+      setSelectedType("campaign");
       setSortBy("newest");
     } catch (error) {
       console.error('Error clearing filters:', error);
@@ -244,9 +230,9 @@ export default function AllCampaignsPage() {
       status: selectedStatus && selectedStatus.trim() ? selectedStatus : undefined, 
       reason: selectedCategory && selectedCategory.trim() ? selectedCategory : undefined,
       category: selectedCategory && selectedCategory.trim() ? selectedCategory : undefined,
-      type: selectedType,
+      type: "campaign",
     });
-  }, [selectedStatus, selectedCategory, selectedType, updateFilters]);
+  }, [selectedStatus, selectedCategory, updateFilters]);
 
 
   return (
@@ -256,7 +242,7 @@ export default function AllCampaignsPage() {
       <div className="mt-20 relative bg-gradient-to-r from-brand-green-light to-brand-green-dark text-white py-16">
         <div className="relative container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-4">
-            Discover Campaigns & Charities
+            Discover Campaigns
           </h1>
           <p className="text-xl md:text-2xl text-white max-w-3xl mx-auto">
             Support causes you care about and make a difference in people&apos;s
@@ -288,7 +274,7 @@ export default function AllCampaignsPage() {
                 htmlFor="search"
                 className="text-sm font-medium text-gray-700 mb-2 block"
               >
-                Search Campaigns & Charities
+                Search Campaigns
               </Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -329,32 +315,6 @@ export default function AllCampaignsPage() {
               </Select>
             </div>
 
-            {/* Type Filter */}
-            <div className="lg:w-48">
-              <Label
-                htmlFor="type"
-                className="text-sm font-medium text-gray-700 mb-2 block"
-              >
-                Type
-              </Label>
-              <Select
-                value={selectedType}
-                onValueChange={(value) => setSelectedType(value as "all" | "campaign" | "charity")}
-              >
-                <SelectTrigger className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-green-dark">
-                  <SelectValue placeholder="All Types" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {itemTypes.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
 
             {/* Status Filter */}
             <div className="lg:w-48">
@@ -411,7 +371,7 @@ export default function AllCampaignsPage() {
           </div>
 
           {/* Clear Filters */}
-          {(searchQuery || selectedCategory || selectedStatus || selectedType !== "all") && (
+          {(searchQuery || selectedCategory || selectedStatus) && (
             <div className="mt-4 flex justify-center">
               <Button
                 variant="outline"
@@ -484,7 +444,7 @@ export default function AllCampaignsPage() {
             ) : (
               <>
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5F8555] mb-4"></div>
-                <p className="text-gray-600">Loading campaigns & charities...</p>
+                <p className="text-gray-600">Loading campaigns...</p>
               </>
             )}
           </div>

@@ -38,6 +38,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const campaignData = campaign[0];
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://chainfundit.com';
+  const logoUrl = `/images/logo.svg`;
   
   // Get the campaign URL
   const campaignUrl = `${baseUrl}/campaign/${slug}`;
@@ -50,6 +51,25 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       ? `${baseUrl}${coverImageUrl}`
       : `${baseUrl}/${coverImageUrl}`;
   }
+
+  // Prepare images array - use cover image if available, otherwise fallback to logo
+  const images = coverImageUrl 
+    ? [
+        {
+          url: coverImageUrl,
+          width: 1200,
+          height: 630,
+          alt: campaignData.title,
+        }
+      ]
+    : [
+        {
+          url: logoUrl,
+          width: 512,
+          height: 512,
+          alt: 'Chainfundit Logo',
+        }
+      ];
 
   // Prepare description - use subtitle or truncate description
   const description = campaignData.subtitle || 
@@ -71,22 +91,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       description: description,
       url: campaignUrl,
       siteName: 'Chainfundit',
-      images: coverImageUrl ? [
-        {
-          url: coverImageUrl,
-          width: 1200,
-          height: 630,
-          alt: campaignData.title,
-        }
-      ] : [],
+      images: images,
       locale: 'en_US',
       type: 'website',
     },
     twitter: {
-      card: 'summary_large_image',
+      card: coverImageUrl ? 'summary_large_image' : 'summary',
       title: campaignData.title,
       description: description,
-      images: coverImageUrl ? [coverImageUrl] : [],
+      images: coverImageUrl ? [coverImageUrl] : [logoUrl],
     },
     alternates: {
       canonical: campaignUrl,

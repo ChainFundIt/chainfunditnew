@@ -164,6 +164,20 @@ async function createSuccessfulDonationNotification(donationId: string, campaign
 
     console.log(`✅ Donation notification created for user ${campaign[0].creatorId}${notificationCheck.isLargeDonation ? ' (Large Donation)' : ''}`);
 
+    // Send email to campaign creator
+    const { sendCampaignDonationEmailById } = await import('@/lib/notifications/campaign-donation-email');
+    const emailResult = await sendCampaignDonationEmailById(
+      donationId,
+      campaign[0].creatorId,
+      notificationCheck.isLargeDonation
+    );
+
+    if (emailResult.sent) {
+      console.log(`✅ Campaign donation email sent to creator`);
+    } else {
+      console.warn(`⚠️ Failed to send campaign donation email: ${emailResult.reason}`);
+    }
+
   } catch (error) {
     console.error('Error creating successful donation notification:', error);
   }

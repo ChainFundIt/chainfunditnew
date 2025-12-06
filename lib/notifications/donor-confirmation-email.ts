@@ -25,6 +25,17 @@ interface DonorConfirmationData {
  */
 export async function sendDonorConfirmationEmail(data: DonorConfirmationData) {
   try {
+    // Check if Resend is configured
+    if (!process.env.RESEND_API_KEY) {
+      console.error('RESEND_API_KEY is not configured');
+      return { sent: false, reason: 'RESEND_API_KEY not configured' };
+    }
+
+    if (!process.env.RESEND_FROM_EMAIL) {
+      console.error('RESEND_FROM_EMAIL is not configured');
+      return { sent: false, reason: 'RESEND_FROM_EMAIL not configured' };
+    }
+
     if (!data.donorEmail || data.donorEmail.includes('guest_')) {
       // Skip email for guest/anonymous users without real emails
       console.log(`Skipping donor email for ${data.donorEmail}`);
@@ -51,6 +62,9 @@ export async function sendDonorConfirmationEmail(data: DonorConfirmationData) {
       ? `${process.env.NEXT_PUBLIC_APP_URL}campaign/${data.campaignSlug}`
       : `${process.env.NEXT_PUBLIC_APP_URL}campaign/${data.campaignId}`;
 
+    // Get logo URL
+    const logoUrl = `/images/logo.svg`;
+
     const html = `
       <!DOCTYPE html>
       <html>
@@ -59,6 +73,7 @@ export async function sendDonorConfirmationEmail(data: DonorConfirmationData) {
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
             .header { background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+            .logo-img { max-width: 150px; height: auto; margin-bottom: 15px; }
             .content { background: white; padding: 30px; border: 1px solid #e5e7eb; border-top: none; }
             .amount { font-size: 36px; font-weight: bold; color: #16a34a; margin: 20px 0; text-align: center; }
             .details { background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; }
@@ -75,6 +90,7 @@ export async function sendDonorConfirmationEmail(data: DonorConfirmationData) {
         <body>
           <div class="container">
             <div class="header">
+              <img src="${logoUrl}" alt="ChainFundit Logo" class="logo-img" />
               <h1>🎉 Thank You for Your Donation!</h1>
             </div>
             
