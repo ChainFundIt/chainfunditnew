@@ -2,6 +2,11 @@
   command = "npm run build"
   publish = ".next"
 
+[build.environment]
+  # Exclude NEXT_PUBLIC_ variables from secrets scanning
+  # These are intentionally public and safe to expose in client-side code
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY"
+
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
