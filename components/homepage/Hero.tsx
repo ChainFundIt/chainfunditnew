@@ -111,17 +111,17 @@ const Hero = () => {
                   <b>Urgent Cause</b>
                 </p>
                 <span className="text-xs font-semibold text-[#F97316] bg-[#F97316]/10 px-2 py-1 rounded-full whitespace-nowrap">
-                  85% Funded
+                  0% Funded
                 </span>
               </div>
               <h4 className=" font-bold text-base md:text-lg text-black">
-                Hearing aids for Bolu
+                A Christmas Miracle for 100 Orphanage Kids
               </h4>
               {/* Progress bar */}
               <div className="w-full h-2 bg-[#E5E5E5] rounded-full overflow-hidden mt-2">
                 <div
                   className="h-full bg-[#13C870] rounded-full"
-                  style={{ width: "85%" }}
+                  style={{ width: "0%" }}
                 ></div>
               </div>
             </div>
