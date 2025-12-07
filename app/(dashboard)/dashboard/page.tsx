@@ -74,6 +74,104 @@ interface Campaign {
   reason?: string; // Campaign category for emoji fallback
 }
 
+export const CampaignInfo = ({
+  imageUrl,
+  title,
+  currentAmount,
+  goalAmount,
+  currency,
+  progressDivision,
+  id,
+  reason,
+  fundRaisingFor,
+  description,
+  status,
+}: {
+  imageUrl: string;
+  title: string;
+  currentAmount: number;
+  goalAmount: number;
+  currency: string;
+  progressDivision: number;
+  id: string;
+  reason: string;
+  fundRaisingFor: string;
+  description: string;
+  status: string;
+}) => {
+  const router = useRouter();
+  const imageExist = !needsEmojiFallback(imageUrl);
+  return (
+    <div className="w-[360px] h-[400px] border border-[#F3F4F6] bg-white rounded-[14px] flex flex-col overflow-hidden">
+      <div className="relative">
+        {imageExist ? (
+          <R2Image src={imageUrl} alt={title} width={357} height={168} />
+        ) : (
+          <EmojiFallbackImage width={357} height={168} category={reason} />
+        )}
+
+        <div className="flex items-center justify-center w-[90px] h-[21px] bg-white rounded-full font-bold text-[10px] leading-[14px] text-[#104109] absolute top-[10px] left-[10px]">
+          {fundRaisingFor}
+        </div>
+
+        <div className="flex gap-1 w-fit h-[21px] px-2 bg-[#00000099] rounded-full items-center justify-center absolute right-[10px] top-[10px]">
+          <ClockIcon />
+          <div className="text-[11px] font-bold leading-[14px] text-white">
+            {capitalizeFirstLetter(status)}
+          </div>
+        </div>
+      </div>
+
+      <div className="p-[18px] flex flex-col justify-between h-full">
+        <div className="flex flex-col gap-2">
+          <div className="font-bold text-[16px] leading-[22px] text-[#111827] truncate">
+            {title}
+          </div>
+          <div className="text-[#6B7280] text-[12px] font-normal leading-[18px] line-clamp-3 text-ellipsis">
+            {description}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1">
+            <div className="flex justify-between">
+              <div className="text-[#104109] font-bold text-[12px] leading-[18px]">
+                {formatCurrency(currentAmount, currency)}
+                <span className="text-[#6b7280] font-normal text-[12px] leading-[18px]">
+                  {" "}
+                  raised
+                </span>
+              </div>
+              <div className="text-[#6b7280] font-medium text-[12px] leading-[18px]">
+                of {formatCurrency(goalAmount, currency)}
+              </div>
+            </div>
+
+            <div className="h-[8px] w-full bg-[#f3f4f6] rounded-full relative">
+              <div
+                className="h-[8px] bg-[#104109] rounded-full absolute"
+                style={{ width: `${progressDivision}%` }}
+              ></div>
+            </div>
+          </div>
+
+          <Button className="border border-[#104109] rounded-[11px] bg-white flex items-center justify-center gap-2">
+            <div
+              className="font-semibold leading-[18px] text-[12px] text-[#104109]"
+              onClick={() => {
+                router.push(`/campaign/${id}`);
+              }}
+            >
+              View Details
+            </div>
+            <TrendingUp className="text-[#104109]" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function DashboardPage() {
   const [showWelcome, setShowWelcome] = useState(false);
   const [showCompleteProfile, setShowCompleteProfile] = useState(false);
@@ -81,12 +179,13 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+
   const formRef = useRef<HTMLFormElement>(
     null
   ) as React.RefObject<HTMLFormElement>;
 
   const isMobile = useIsMobile();
+  const router = useRouter();
 
   useEffect(() => {
     async function checkProfile() {
@@ -238,103 +337,6 @@ export default function DashboardPage() {
     );
   };
 
-  const CampaignInfo = ({
-    imageUrl,
-    title,
-    currentAmount,
-    goalAmount,
-    currency,
-    progressDivision,
-    id,
-    reason,
-    fundRaisingFor,
-    description,
-    status,
-  }: {
-    imageUrl: string;
-    title: string;
-    currentAmount: number;
-    goalAmount: number;
-    currency: string;
-    progressDivision: number;
-    id: string;
-    reason: string;
-    fundRaisingFor: string;
-    description: string;
-    status: string;
-  }) => {
-    const imageExist = !needsEmojiFallback(imageUrl);
-    return (
-      <div className="w-[360px] h-[400px] border border-[#F3F4F6] bg-white rounded-[14px] flex flex-col overflow-hidden">
-        <div className="relative">
-          {imageExist ? (
-            <R2Image src={imageUrl} alt={title} width={357} height={168} />
-          ) : (
-            <EmojiFallbackImage width={357} height={168} category={reason} />
-          )}
-
-          <div className="flex items-center justify-center w-[90px] h-[21px] bg-white rounded-full font-bold text-[10px] leading-[14px] text-[#104109] absolute top-[10px] left-[10px]">
-            {fundRaisingFor}
-          </div>
-
-          <div className="flex gap-1 w-[93px] h-[21px] bg-[#00000099] rounded-full items-center justify-center absolute right-[10px] top-[10px]">
-            <ClockIcon />
-            <div className="text-[11px] font-bold leading-[14px] text-white">
-              {capitalizeFirstLetter(status)}
-            </div>
-          </div>
-        </div>
-
-        <div className="p-[18px] flex flex-col justify-between h-full">
-          <div className="flex flex-col gap-2">
-            <div className="font-bold text-[16px] leading-[22px] text-[#111827] truncate">
-              {title}
-            </div>
-            <div className="text-[#6B7280] text-[12px] font-normal leading-[18px]">
-              {description}
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-col gap-1">
-              <div className="flex justify-between">
-                <div className="text-[#104109] font-bold text-[12px] leading-[18px]">
-                  {formatCurrency(currentAmount, currency)}
-                  <span className="text-[#6b7280] font-normal text-[12px] leading-[18px]">
-                    {" "}
-                    raised
-                  </span>
-                </div>
-                <div className="text-[#6b7280] font-medium text-[12px] leading-[18px]">
-                  of {formatCurrency(goalAmount, currency)}
-                </div>
-              </div>
-
-              <div className="h-[8px] w-full bg-[#f3f4f6] rounded-full relative">
-                <div
-                  className="h-[8px] bg-[#104109] rounded-full absolute"
-                  style={{ width: `${progressDivision}%` }}
-                ></div>
-              </div>
-            </div>
-
-            <Button className="border border-[#104109] rounded-[11px] bg-white flex items-center justify-center gap-2">
-              <div
-                className="font-semibold leading-[18px] text-[12px] text-[#104109]"
-                onClick={() => {
-                  router.push(`/campaign/${id}`);
-                }}
-              >
-                View Details
-              </div>
-              <TrendingUp className="text-[#104109]" />
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <>
       {/* Welcome Modal */}
@@ -407,7 +409,7 @@ export default function DashboardPage() {
       <div className="bg-[#F0F7Ef] p-6 font-jakarta md:min-h-[calc(100vh-122px)] ">
         <div className="flex flex-col gap-7">
           {/* Dashboard Heading */}
-          <div className="flex md:flex-row flex-col md:justify-between items-center gap-5">
+          <div className="flex md:flex-row flex-col md:justify-between md:items-center gap-5">
             <div className="flex flex-col">
               <div className="text-[var(--color-darkGreen)] text-[26px] font-extrabold leading-[31.5px]">
                 Dashboard
@@ -435,21 +437,21 @@ export default function DashboardPage() {
               <div className="flex gap-5 md:flex-row flex-col">
                 <Card
                   containerStyle={isMobile ? { width: "100%" } : {}}
-                  bgColor="var(--color-darkGreen)"
+                  bgColor="#104109"
                   value={stats?.totalCampaigns || 0}
                   text="TOTAL CAMPAIGNS"
                   Icon={CreditCardIcon}
                 />
                 <Card
                   containerStyle={isMobile ? { width: "100%" } : {}}
-                  bgColor="#1A1A1A"
+                  bgColor="var(--color-lightGreen)"
                   value={stats?.activeCampaigns || 0}
                   text="ACTIVE CAMPAIGNS"
                   Icon={HeartBeat}
                 />
                 <Card
                   containerStyle={isMobile ? { width: "100%" } : {}}
-                  bgColor="#fdc500"
+                  bgColor="#104109"
                   value={stats?.totalDonors || 0}
                   text="TOTAL DONORS"
                   Icon={PeopleIcon}

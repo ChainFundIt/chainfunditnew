@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
     }
 
     const userId = user[0].id;
+    console.log(userId)
 
     // Get user's campaigns with donation stats
     const userCampaigns = await db

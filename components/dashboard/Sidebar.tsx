@@ -19,33 +19,12 @@ import { emitter } from "@/hooks/eventBus";
 
 type Props = {};
 
-const links = [
-  {
-    href: "/dashboard/campaigns",
-    icon: <PackageOpen size={40} />,
-    label: "Campaigns",
-  },
-  {
-    href: "/donations",
-    icon: <BiDonateHeart size={40} />,
-    label: "Donations",
-  },
-  {
-    href: "/payouts",
-    icon: <Share size={40} />,
-    label: "Payouts",
-  },
-  {
-    href: "/settings",
-    icon: <LifeBuoy size={40} />,
-    label: "Settings",
-  },
-];
 const sideBarButtons = [
   {
     icon: DashboardIcon,
     label: "Dashboard",
     url: "/dashboard",
+    exact: true,
   },
   { icon: CampaignsIcon, label: "Campaigns", url: "/dashboard/campaigns" },
   { icon: DonationsIcon, label: "Donations", url: "/donations" },
@@ -116,7 +95,9 @@ const Sidebar = (props: Props) => {
         {/* SideBarButtons */}
         <div className="flex flex-col gap-4 w-full pt-8 ">
           {sideBarButtons.map((data, index) => {
-            const isSelected = pathname.startsWith(data.url);
+            const isSelected = data.exact
+              ? pathname === data.url
+              : pathname.startsWith(data.url);
             return (
               <div
                 key={index}

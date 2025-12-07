@@ -8,44 +8,57 @@ import {
   TrendingUp,
   Gift,
   Calendar,
+  PlusIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { useChainerDonations } from "@/hooks/use-chainer-donations";
 import { formatCurrency } from "@/lib/utils/currency";
+import EmptyCampaign from "./emptyCampaign";
+import { useRouter } from "next/navigation";
+
+import { useIsMobile } from "@/hooks/useIsMobile";
+import Card from "../_components/Card/page";
+
+const GiftIcon = () => {
+  return <Gift style={{ color: "white" }} />;
+};
+const DollarIcon = () => {
+  return <DollarSign style={{ color: "white" }} />;
+};
+const UsersIcon = () => {
+  return <Users style={{ color: "white" }} />;
+};
+
+const trendIcon = () => {
+  return <TrendingUp style={{ color: "white" }} />;
+};
 
 const Chains = () => {
   const { data: chainerData, loading, error, refetch } = useChainerDonations();
 
-  const isEmpty = !loading && (!chainerData || chainerData.donations.length === 0);
+  const isEmpty =
+    !loading && (!chainerData || chainerData.donations.length === 0);
+  const router = useRouter();
+  const isMobile = useIsMobile();
 
   if (isEmpty) {
     return (
-      <div className="flex flex-col items-center justify-center py-16">
-        <div className="relative inline-block mb-8">
-          <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-[#104901] rounded-full blur opacity-20"></div>
-          <div className="relative bg-white/80 backdrop-blur-sm p-8 rounded-full">
-            <Image src="/images/frame.png" alt="" width={200} height={180} />
-            <div className="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-r from-green-600 to-[#104901] flex items-center justify-center font-bold text-4xl text-white rounded-2xl shadow-lg">
-              0
-            </div>
-          </div>
-        </div>
+      <EmptyCampaign
+        title="No Ambassador Donations Yet"
+        subtitle="No donations have been raised through ambassadors for your campaigns yet. Encourage people to chain your campaigns to help spread the word"
+      >
+        <Button
+          onClick={() => {
+            router.push("/campaigns");
+          }}
+          className="bg-[var(--color-darkGreen)] text-[14px] leading-[21px] font-bold rounded-[10.5px] flex
+                            items-center justify-center py-3 h-auto md:w-fit w-full"
+        >
+          <div> Browse Campaigns</div>
 
-        <div className="text-center mb-8">
-          <h3 className="font-bold text-3xl text-[#104901] mb-3">
-            No Ambassador Donations Yet
-          </h3>
-          <p className="font-normal text-xl text-[#104901] opacity-80">
-            No donations have been raised through ambassadors for your campaigns yet. Encourage people to chain your campaigns to help spread the word!
-          </p>
-        </div>
-
-        <Link href="/campaigns">
-          <Button className="bg-gradient-to-r from-green-600 to-[#104901] text-white hover:from-green-600 hover:to-[#104901] hover:text-white rounded-xl px-8 py-4 hover:shadow-lg transition-all duration-300 flex items-center gap-3 font-semibold text-xl">
-            Browse Campaigns <Plus size={24} />
-          </Button>
-        </Link>
-      </div>
+          <PlusIcon height={18} width={18} />
+        </Button>
+      </EmptyCampaign>
     );
   }
 
@@ -68,7 +81,7 @@ const Chains = () => {
           <p className="font-normal text-xl text-red-600 opacity-80 mb-4">
             {error}
           </p>
-          <Button 
+          <Button
             onClick={refetch}
             className="bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-600 hover:to-red-700 hover:text-white rounded-xl px-8 py-4 hover:shadow-lg transition-all duration-300 flex items-center gap-3 font-semibold text-xl"
           >
@@ -80,53 +93,50 @@ const Chains = () => {
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8 font-jakarta">
       {/* Stats Overview */}
       {chainerData && chainerData.stats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-gradient-to-r from-green-600 to-[#104901] text-white p-4 rounded-2xl">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-green-100 text-sm font-medium">Total Ambassador Donations</p>
-                <p className="text-3xl font-bold">{chainerData.stats.totalChainedDonations}</p>
-              </div>
-              <Gift className="h-8 w-8 text-green-100" />
-            </div>
-          </div>
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-2xl">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-blue-100 text-sm font-medium">Amount Raised by ambassadors</p>
-                <p className="text-3xl font-bold">{formatCurrency(chainerData.stats.totalChainedAmount, 'NGN')}</p>
-              </div>
-              <DollarSign className="h-8 w-8 text-blue-100" />
-            </div>
-          </div>
-          <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-4 rounded-2xl">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-purple-100 text-sm font-medium">Total ambassadors</p>
-                <p className="text-3xl font-bold">{chainerData.stats.totalChainers}</p>
-              </div>
-              <Users className="h-8 w-8 text-purple-100" />
-            </div>
-          </div>
-          <div className="bg-gradient-to-r from-orange-600 to-orange-700 text-white p-4 rounded-2xl">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-orange-100 text-sm font-medium">Commissions Paid</p>
-                <p className="text-3xl font-bold">{formatCurrency(chainerData.stats.totalCommissionsPaid, 'NGN')}</p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-orange-100" />
-            </div>
-          </div>
+        <div className="flex gap-5 md:flex-row flex-col">
+          <Card
+            containerStyle={isMobile ? { width: "100%" } : {}}
+            bgColor="#104109"
+            value={chainerData.stats.totalChainedDonations}
+            text="Total Ambassador Donations"
+            Icon={GiftIcon}
+          />
+          <Card
+            containerStyle={isMobile ? { width: "100%" } : {}}
+            bgColor="var(--color-lightGreen)"
+            value={formatCurrency(chainerData.stats.totalChainedAmount, "NGN")}
+            text="Amount Raised by Ambassadors"
+            Icon={DollarIcon}
+          />
+          <Card
+            containerStyle={isMobile ? { width: "100%" } : {}}
+            bgColor="#104109"
+            value={chainerData.stats.totalChainers}
+            text="Total ambassadors"
+            Icon={UsersIcon}
+          />
+          <Card
+            containerStyle={isMobile ? { width: "100%" } : {}}
+            bgColor="var(--color-lightGreen)"
+            value={formatCurrency(
+              chainerData.stats.totalCommissionsPaid,
+              "NGN"
+            )}
+            text="Commissions Paid"
+            Icon={trendIcon}
+          />
         </div>
       )}
 
       {/* Campaign Stats */}
       {chainerData && chainerData.campaigns.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-[#104901] mb-6">Campaign Performance</h2>
+        <div>
+          <h2 className="text-2xl font-bold text-[#104901] mb-6">
+            Campaign Performance
+          </h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {chainerData.campaigns.map((campaign) => (
               <div
@@ -136,7 +146,10 @@ const Chains = () => {
                 <div className="flex items-start gap-4 mb-4">
                   <div className="relative w-16 h-16 rounded-xl overflow-hidden">
                     <Image
-                      src={campaign.campaignCoverImage || '/images/default-campaign.jpg'}
+                      src={
+                        campaign.campaignCoverImage ||
+                        "/images/default-campaign.jpg"
+                      }
                       alt={campaign.campaignTitle}
                       fill
                       className="object-cover"
@@ -158,18 +171,24 @@ const Chains = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Raised by ambassadors</span>
                     <span className="font-semibold text-green-600">
-                      {formatCurrency(campaign.chainedAmount, campaign.campaignCurrency)}
+                      {formatCurrency(
+                        campaign.chainedAmount,
+                        campaign.campaignCurrency
+                      )}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Commissions Paid</span>
                     <span className="font-semibold text-blue-600">
-                      {formatCurrency(campaign.totalCommissionsPaid, campaign.campaignCurrency)}
+                      {formatCurrency(
+                        campaign.totalCommissionsPaid,
+                        campaign.campaignCurrency
+                      )}
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
@@ -180,7 +199,17 @@ const Chains = () => {
                   </div>
                   <div className="flex justify-between text-xs text-gray-500">
                     <span>{campaign.progressPercentage}% of goal reached</span>
-                    <span>{formatCurrency(campaign.campaignCurrent, campaign.campaignCurrency)} / {formatCurrency(campaign.campaignGoal, campaign.campaignCurrency)}</span>
+                    <span>
+                      {formatCurrency(
+                        campaign.campaignCurrent,
+                        campaign.campaignCurrency
+                      )}{" "}
+                      /{" "}
+                      {formatCurrency(
+                        campaign.campaignGoal,
+                        campaign.campaignCurrency
+                      )}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -192,7 +221,9 @@ const Chains = () => {
       {/* Recent Chainer Donations */}
       {chainerData && chainerData.donations.length > 0 && (
         <div>
-          <h2 className="text-2xl font-bold text-[#104901] mb-6">Recent Chain Ambassador Donations</h2>
+          <h2 className="text-2xl font-bold text-[#104901] mb-6">
+            Recent Chain Ambassador Donations
+          </h2>
           <div className="space-y-4">
             {chainerData.donations.slice(0, 10).map((donation) => (
               <div
@@ -203,7 +234,10 @@ const Chains = () => {
                   <div className="flex items-center gap-4">
                     <div className="relative w-12 h-12 rounded-xl overflow-hidden">
                       <Image
-                        src={donation.campaignCoverImage || '/images/default-campaign.jpg'}
+                        src={
+                          donation.campaignCoverImage ||
+                          "/images/default-campaign.jpg"
+                        }
                         alt={donation.campaignTitle}
                         fill
                         className="object-cover"
@@ -214,7 +248,10 @@ const Chains = () => {
                         {donation.campaignTitle}
                       </h3>
                       <p className="text-gray-600 text-sm">
-                        Donated by <span className="font-medium">{donation.donorName}</span>
+                        Donated by{" "}
+                        <span className="font-medium">
+                          {donation.donorName}
+                        </span>
                       </p>
                       <p className="text-gray-500 text-xs flex items-center gap-1">
                         <Calendar size={12} />
@@ -222,25 +259,32 @@ const Chains = () => {
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="text-right">
                     <div className="text-2xl font-bold text-green-600">
                       {formatCurrency(donation.amount, donation.currency)}
                     </div>
                     <div className="text-sm text-gray-600">
-                      Via referral: <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
+                      Via referral:{" "}
+                      <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
                         {donation.chainerReferralCode}
                       </span>
                     </div>
                     <div className="text-xs text-blue-600">
-                      Commission: {formatCurrency(donation.chainerCommissionEarned, donation.currency)}
+                      Commission:{" "}
+                      {formatCurrency(
+                        donation.chainerCommissionEarned,
+                        donation.currency
+                      )}
                     </div>
                   </div>
                 </div>
-                
+
                 {donation.message && (
                   <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                    <p className="text-gray-700 text-sm italic">{donation.message}</p>
+                    <p className="text-gray-700 text-sm italic">
+                      {donation.message}
+                    </p>
                   </div>
                 )}
               </div>
@@ -250,11 +294,17 @@ const Chains = () => {
       )}
 
       <div className="flex justify-center mt-8">
-        <Link href="/campaigns">
-          <Button className="bg-gradient-to-r from-green-600 to-[#104901] hover:from-green-600 hover:to-[#104901] hover:text-white rounded-xl px-8 py-4 hover:shadow-lg transition-all duration-300 flex items-center gap-3 font-semibold text-xl">
-            View All Campaigns <Plus size={24} />
-          </Button>
-        </Link>
+        <Button
+          onClick={() => {
+            router.push("/campaigns");
+          }}
+          className="bg-[var(--color-darkGreen)] text-[14px] leading-[21px] font-bold rounded-[10.5px] flex
+                                 items-center justify-center py-3 h-auto md:w-fit w-full"
+        >
+          <div> View All Campaign</div>
+
+          <Plus height={18} width={18} />
+        </Button>
       </div>
     </div>
   );
