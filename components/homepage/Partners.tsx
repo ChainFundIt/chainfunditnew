@@ -2,9 +2,7 @@
 
 import React from "react";
 
-type Props = {};
-
-const Partners = (props: Props) => {
+const Partners = () => {
   const metrics = [
     {
       number: "5k+",
@@ -37,42 +35,44 @@ const Partners = (props: Props) => {
   ];
 
   return (
-    <div className="w-full px-4 md:px-12 py-12 md:py-20 bg-white flex flex-col gap-12">
-      {/* Header */}
-      <div className="flex flex-col items-center gap-4 text-center max-w-2xl mx-auto">
-        <div className="inline-block bg-[#E8F5F0] rounded-full px-4 py-2">
-          <span className="font-jakarta font-bold text-xs md:text-sm text-[#104901] uppercase tracking-wider">
-            Impact Metrics
-          </span>
-        </div>
-        <h2 className="font-jakarta font-bold text-3xl md:text-5xl text-black leading-tight">
-          Programs that change lives
-        </h2>
-        <p className="font-jakarta font-regular text-base md:text-lg text-[#666666] leading-relaxed">
-          Together, we make real impact in communities around the world. Help us bring hope and support.
-        </p>
-      </div>
-
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {metrics.map((metric, index) => (
-          <div
-            key={index}
-            className={`${metric.bgColor} ${metric.textColor} rounded-2xl p-6 md:p-8 flex flex-col gap-4 transition-all duration-300 hover:shadow-lg hover:scale-105`}
-          >
-            <div>
-              <p className={`font-jakarta font-bold text-4xl md:text-5xl ${metric.textColor} mb-2`}>
-                {metric.number}
-              </p>
-              <p className={`font-jakarta font-bold text-lg md:text-xl ${metric.textColor}`}>
-                {metric.label}
-              </p>
+    <div className="font-jakarta flex items-center justify-center bg-white py-20 px-4">
+      <div className="flex flex-col gap-16 md:max-w-[80rem] w-full">
+        {/* Section Header */}
+        <div className="flex flex-col items-center gap-4 text-center">
+          {/* Badge */}
+          <div className="px-3 py-1 bg-[#ECFDF5] rounded-full">
+            <div className="font-bold text-xs leading-4 uppercase text-[#059669]">
+              IMPACT METRICS
             </div>
-            <p className={`font-jakarta font-regular text-sm md:text-base ${metric.textColor} opacity-80`}>
-              {metric.description}
-            </p>
           </div>
-        ))}
+          {/* Title */}
+          <div className="font-bold text-4xl leading-10 text-[#1C1917]">
+            Programs that change lives
+          </div>
+          {/* Description */}
+          <div className="font-normal text-base leading-6 text-[#78716C]">
+            Together, we make real impact in communities around the world. Help
+            us bring hope and support.
+          </div>
+        </div>
+
+        {/* Metrics Grid */}
+        <div className="flex flex-col md:flex-row gap-6 w-full justify-center items-stretch">
+          {metrics.map((metric, index) => (
+            <div
+              key={index}
+              className={`${metric.bgColor} ${metric.textColor} rounded-3xl p-8 gap-2 flex flex-col md:w-[18rem] w-full`}
+            >
+              <div className="font-extrabold text-5xl leading-[48px]">
+                {metric.number}
+              </div>
+              <div className="font-bold text-lg leading-7">{metric.label}</div>
+              <div className="font-medium text-sm leading-5 bg-white/20 p-4 rounded-xl">
+                {metric.description}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
