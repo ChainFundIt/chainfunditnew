@@ -1,9 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Shield,
   Lock,
@@ -12,18 +11,39 @@ import {
   Users,
   Globe,
   CookieIcon,
+  Check,
+  ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
 
+// Table of Contents Items
+const tableOfContents = [
+  { id: "introduction", label: "Introduction" },
+  { id: "who-we-are", label: "Who We Are" },
+  { id: "information-we-collect", label: "Information We Collect" },
+  { id: "how-we-use-data", label: "How We Use Your Data" },
+  { id: "legal-bases", label: "Legal Bases for Processing" },
+  { id: "sharing-data", label: "Who We Share Your Data With" },
+  { id: "international-transfers", label: "International Transfers" },
+  { id: "data-retention", label: "Data Retention" },
+  { id: "your-data-rights", label: "Your Data Rights" },
+  { id: "security-measures", label: "Security Measures" },
+  { id: "children-privacy", label: "Children's Privacy" },
+  { id: "cookies", label: "Cookies" },
+  { id: "policy-update", label: "Policy Update" },
+  { id: "contact-us", label: "Contact Us" },
+];
+
 const sections = [
   {
+    id: "information-we-collect",
     title: "Information We Collect",
     icon: FileText,
     content: [
       {
         subtitle: "a. Account & Identity Data",
         text: (
-          <ul className="list-disc list-inside">
+          <ul className="list-disc list-inside space-y-2">
             <li>Full Name</li>
             <li>Email address</li>
             <li>Phone number</li>
@@ -38,7 +58,7 @@ const sections = [
       {
         subtitle: "b. Campaign Data",
         text: (
-          <ul className="list-disc list-inside">
+          <ul className="list-disc list-inside space-y-2">
             <li>Campaign name, description, and category</li>
             <li>Uploaded media (images, videos, documents)</li>
             <li>Bank account details (used for verifying payout recipients)</li>
@@ -49,7 +69,7 @@ const sections = [
       {
         subtitle: "c. Donation Data",
         text: (
-          <ul className="list-disc list-inside">
+          <ul className="list-disc list-inside space-y-2">
             <li>Donation amount and currency</li>
             <li>Donor name (unless anonymous)</li>
             <li>Optional donor message</li>
@@ -61,7 +81,7 @@ const sections = [
       {
         subtitle: "d. Technical Data",
         text: (
-          <ul className="list-disc list-inside">
+          <ul className="list-disc list-inside space-y-2">
             <li>IP address</li>
             <li>Browser and device information</li>
             <li>Time zone and geolocation (approximate)</li>
@@ -72,31 +92,53 @@ const sections = [
     ],
   },
   {
-    title: "How We Use Your Information",
+    id: "how-we-use-data",
+    title: "How We Use Your Data",
     icon: Eye,
     content: [
       {
         subtitle: "We use your information to:",
         text: (
-          <ul className="list-disc list-inside">
-            <li>Register and manage your account</li>
-            <li>
-              Verify your identity and compliance (e.g. KYC, fraud screening)
+          <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <li className="flex items-start gap-3">
+              <Check className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <span>Register and manage your account</span>
             </li>
-            <li>Process donations through licensed payment partners</li>
-            <li>Disburse funds to verified payout accounts</li>
-            <li>
-              Facilitate chain ambassador referrals and commission payouts
+            <li className="flex items-start gap-3">
+              <Check className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <span>Verify your identity and compliance (e.g. KYC, fraud screening)</span>
             </li>
-            <li>Respond to support requests and user inquiries</li>
-            <li>Improve user experience and site functionality</li>
-            <li>Meet legal, financial, and regulatory obligations</li>
+            <li className="flex items-start gap-3">
+              <Check className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <span>Process donations through licensed payment partners</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <Check className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <span>Disburse funds to verified payout accounts</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <Check className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <span>Facilitate chain ambassador referrals and commission payouts</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <Check className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <span>Respond to support requests and user inquiries</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <Check className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <span>Improve user experience and site functionality</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <Check className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <span>Meet legal, financial, and regulatory obligations</span>
+            </li>
           </ul>
         ),
       },
     ],
   },
   {
+    id: "legal-bases",
     title: "Legal Bases for Processing",
     icon: FileText,
     content: [
@@ -104,15 +146,15 @@ const sections = [
         subtitle:
           "Under data protection laws (such as GDPR and NDPR), we process your data on the following legal grounds:",
         text: (
-          <ul className="list-disc list-inside">
+          <ul className="list-disc list-inside space-y-2">
             <li>Consent - where you have opted in (e.g., email updates)</li>
             <li>
-              Contract -to provide services like campaign hosting, payouts, or
+              Contract - to provide services like campaign hosting, payouts, or
               donation processing
             </li>
             <li>
               Legal Obligation - for identity verification, record keeping,
-              fraud prevention{" "}
+              fraud prevention
             </li>
             <li>
               Legitimate Interest - for platform security, analytics, and
@@ -124,13 +166,14 @@ const sections = [
     ],
   },
   {
+    id: "sharing-data",
     title: "Who We Share Your Data With",
     icon: Users,
     content: [
       {
         subtitle: "Your personal data may be shared with:",
         text: (
-          <ul className="list-disc list-inside">
+          <ul className="list-disc list-inside space-y-2">
             <li>Payment processors (e.g. Stripe, Paystack)</li>
             <li>Identity verification services</li>
             <li>Hosting services and media storage</li>
@@ -148,6 +191,7 @@ const sections = [
     ],
   },
   {
+    id: "international-transfers",
     title: "International Transfers",
     icon: Globe,
     content: [
@@ -159,6 +203,7 @@ const sections = [
     ],
   },
   {
+    id: "data-retention",
     title: "Data Retention",
     icon: Lock,
     content: [
@@ -218,6 +263,7 @@ const sections = [
     ],
   },
   {
+    id: "your-data-rights",
     title: "Your Data Rights",
     icon: Shield,
     content: [
@@ -225,7 +271,7 @@ const sections = [
         subtitle: "Depending on your jurisdiction, you have the right to:",
         text: (
           <>
-            <ul className="list-disc list-inside">
+            <ul className="list-disc list-inside space-y-2 mb-4">
               <li>Access your personal data</li>
               <li>Correct inaccurate or outdated information</li>
               <li>
@@ -239,7 +285,7 @@ const sections = [
               To exercise these rights, email{" "}
               <Link
                 href="mailto:mngt@chainfundit.com"
-                className="text-[#104901] hover:underline font-semibold"
+                className="text-green-600 hover:underline font-semibold"
               >
                 mngt@chainfundit.com
               </Link>
@@ -251,23 +297,24 @@ const sections = [
     ],
   },
   {
+    id: "security-measures",
     title: "Security Measures",
-    icon: Shield,
+    icon: Lock,
     content: [
       {
         subtitle:
           "We implement industry-standard safeguards to protect your data:",
         text: (
           <>
-            <ul className="list-disc list-inside">
+            <ul className="list-disc list-inside space-y-2 mb-4">
               <li>Encrypted transmission and payment processing</li>
               <li>Two-factor authentication for critical actions</li>
               <li>Role-based access controls</li>
               <li>Fraud and abuse monitoring</li>
               <li>KYC verification for campaign recipients</li>
             </ul>
-            <p className="text-gray-700 leading-relaxed mt-4">
-              Despite these measures, no online system is completely secure. We
+            <p className="text-gray-700 leading-relaxed text-sm bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <strong>Note:</strong> Despite these measures, no online system is completely secure. We
               recommend that you use strong passwords and do not share your
               login credentials with anyone.
             </p>
@@ -277,6 +324,7 @@ const sections = [
     ],
   },
   {
+    id: "children-privacy",
     title: "Children's Privacy",
     icon: Users,
     content: [
@@ -288,6 +336,7 @@ const sections = [
     ],
   },
   {
+    id: "cookies",
     title: "Cookies",
     icon: CookieIcon,
     content: [
@@ -300,7 +349,7 @@ const sections = [
               Our website:{" "}
               <Link
                 href="https://www.chainfundit.com"
-                className="text-[#104901] hover:underline font-semibold"
+                className="text-green-600 hover:underline font-semibold"
               >
                 www.chainfundit.com
               </Link>
@@ -486,6 +535,7 @@ const sections = [
     ],
   },
   {
+    id: "policy-update",
     title: "Policy Update",
     icon: FileText,
     content: [
@@ -498,175 +548,237 @@ const sections = [
   },
 ];
 
+const getIconComponent = (icon: React.ComponentType<any>) => {
+  return icon;
+};
+
 export default function PrivacyPolicyPage() {
+  const [activeSection, setActiveSection] = useState("introduction");
+
+  const scrollToSection = (sectionId: string) => {
+    setActiveSection(sectionId);
+    const element = document.getElementById(sectionId);
+    if (element) {
+      setTimeout(() => {
+        element.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
+    <div className="min-h-screen bg-[#FCFAF5]">
       <Navbar />
 
-      <div className="relative bg-gradient-to-r from-green-600 to-[#104901] mt-16 text-white py-20">
+      {/* Hero Section */}
+      <div className="relative bg-gray-50 mt-16 py-16">
         <div className="container mx-auto px-4 text-center">
-          <Shield className="h-16 w-16 mx-auto mb-6" />
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+          <div className="p-3 bg-green-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+            <Shield className="h-10 w-10 text-green-600" />
+          </div>
+          <h1 className="text-5xl font-bold mb-4 text-gray-900">
             Privacy Policy
           </h1>
-          <p className="text-xl md:text-2xl text-white/90 max-w-4xl mx-auto">
-            Your privacy is important to us. This policy explains how we
-            collect, use, and protect your personal information.
+          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+            Your trust is our top priority. Here's how we protect your data.
           </p>
-          <p className="text-sm text-white/80 mt-4">
+          <p className="text-sm text-green-600 font-semibold mt-6 bg-green-100 rounded-lg px-3 py-1 inline-block">
             Last updated: 19 November 2025
-            <br />
-            Effective date: 19 November 2025
           </p>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-16 max-w-4xl">
-        <div className="mb-8">
-          <Card>
-            <CardContent className="p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Introduction
-              </h2>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                ChainFundIt is committed to protecting your privacy and personal
-                data. This Privacy Policy explains what information we collect,
-                how we use it, who we share it with, and your rights under
-                applicable data protection laws, including the UK General Data
-                Protection Regulation (UK GDPR), the Nigeria Data Protection
-                Regulation (NDPR), and other relevant laws.
-              </p>
-              <p className="text-gray-700 leading-relaxed">
-                By using{" "}
-                <Link
-                  href="https://www.chainfundit.com"
-                  className="text-[#104901] hover:underline font-semibold"
-                >
-                  <strong>www.chainfundit.com</strong>
-                </Link>
-                , you agree to this Privacy Policy, our{" "}
-                <Link
-                  href="/terms-and-conditions"
-                  className="text-[#104901] hover:underline font-semibold"
-                >
-                  <strong>Terms and Conditions</strong>
-                </Link>
-                , and our{" "}
-                <Link
-                  href="/privacy-policy#cookies"
-                  className="text-[#104901] hover:underline font-semibold"
-                >
-                  <strong>Cookie Policy</strong>
-                </Link>
-                .
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="mb-8">
-          <Card>
-            <CardContent className="p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Who We Are
-              </h2>
-              <p>
-                ChainFundIt Limited <br /> Company No. 13253451 <br />{" "}
-                Registered in England & Wales <br /> 71–75 Shelton Street,
-                Covent Garden, London, WC2H 9JQ <br /> General Support Email:{" "}
-                <Link
-                  href="mailto:campaigns@chainfundit.com"
-                  className="text-[#104901] hover:underline font-semibold"
-                >
-                  campaigns@chainfundit.com
-                </Link>{" "}
-                <br /> Privacy Matters Contact:{" "}
-                <Link
-                  href="mailto:mngt@chainfundit.com"
-                  className="text-[#104901] hover:underline font-semibold"
-                >
-                  mngt@chainfundit.com
-                </Link>{" "}
-                <br /> <br /> We are the <strong>data controller</strong> for
-                personal data collected through our platform.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {sections.map((section, index) => {
-          const Icon = section.icon;
-          const sectionId = section.title.toLowerCase().replace(/\s+/g, "-");
-          return (
-            <div key={index} id={sectionId === "cookies" ? "cookies" : undefined} className="mb-8 scroll-mt-20">
-              <Card>
-                <CardContent className="p-8">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-3 bg-green-100 rounded-full">
-                      <Icon className="h-6 w-6 text-green-600" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-gray-900">
-                      {section.title}
-                    </h2>
-                  </div>
-                  <div className="space-y-6">
-                    {section.content.map((item, idx) => (
-                      <div key={idx}>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                          {item.subtitle}
-                        </h3>
-                        <div className="text-gray-700 leading-relaxed">
-                          {item.text}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+      <div className="container mx-auto px-4 py-16 max-w-7xl">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Sidebar - Table of Contents */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-24 bg-gray-50 rounded-lg p-6 border border-gray-200 max-h-[calc(100vh-120px)] overflow-y-auto">
+              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">
+                TABLE OF CONTENTS
+              </h3>
+              <nav className="space-y-1">
+                {tableOfContents.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => scrollToSection(item.id)}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                      activeSection === item.id
+                        ? "bg-green-100 text-green-700 font-semibold"
+                        : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </nav>
             </div>
-          );
-        })}
+          </div>
 
-        <div className="mb-8">
-          <Card>
-            <CardContent className="p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Contact Us
-              </h2>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                For general inquiries:
-              </p>
-              <div className="space-y-2 text-gray-700">
-                <p>
-                  <strong>Email:</strong>{" "}
-                  <Link
-                    href="mailto:campaigns@chainfundit.com"
-                    className="text-[#104901] font-semibold"
-                  >
-                    campaigns@chainfundit.com
-                  </Link>
+          {/* Main Content */}
+          <div className="lg:col-span-3 space-y-8">
+            {/* Introduction Section */}
+            <div
+              id="introduction"
+              className="scroll-mt-20"
+              onMouseEnter={() => setActiveSection("introduction")}
+            >
+              <div className="bg-white rounded-2xl p-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                  1. Introduction
+                </h2>
+                <p className="text-gray-700 leading-relaxed mb-4">
+                  ChainFundIt ("we", "our", or "us") is committed to protecting
+                  your privacy and personal data. This Privacy Policy explains
+                  what information we collect, how we use it, who we share it
+                  with, and your rights under applicable data protection laws,
+                  including the UK General Data Protection Regulation (UK GDPR)
+                  and the Nigeria Data Protection Regulation (NDPR).
                 </p>
-                <p>
-                  <strong>For data privacy matters or rights requests:</strong>{" "}
-                  <Link
-                    href="mailto:mngt@chainfundit.com"
-                    className="text-[#104901] font-semibold"
-                  >
-                    mngt@chainfundit.com
-                  </Link>
-                </p>
-                <p>
-                  <strong>Website:</strong>{" "}
+                <p className="text-gray-700 leading-relaxed">
+                  By using{" "}
                   <Link
                     href="https://www.chainfundit.com"
-                    className="text-[#104901] font-semibold"
+                    className="text-green-600 hover:underline font-semibold"
                   >
                     www.chainfundit.com
                   </Link>
+                  , you agree to this Privacy Policy, our Terms and Conditions,
+                  and our Cookie Policy.
                 </p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+
+            {/* Who We Are Section */}
+            <div
+              id="who-we-are"
+              className="scroll-mt-20"
+              onMouseEnter={() => setActiveSection("who-we-are")}
+            >
+              <div className="bg-white rounded-2xl p-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                  2. Who We Are
+                </h2>
+                <p className="text-gray-700 leading-relaxed">
+                  <strong>ChainFundIt Limited</strong>
+                  <br />
+                  Company No. 13253451
+                  <br />
+                  Registered in England & Wales
+                  <br />
+                  71–75 Shelton Street, Covent Garden, London, WC2H 9JQ
+                  <br />
+                  <br />
+                  <strong>General Support Email:</strong>{" "}
+                  <Link
+                    href="mailto:campaigns@chainfundit.com"
+                    className="text-green-600 hover:underline font-semibold"
+                  >
+                    campaigns@chainfundit.com
+                  </Link>
+                  <br />
+                  <strong>Privacy Matters Contact:</strong>{" "}
+                  <Link
+                    href="mailto:mngt@chainfundit.com"
+                    className="text-green-600 hover:underline font-semibold"
+                  >
+                    mngt@chainfundit.com
+                  </Link>
+                  <br />
+                  <br />
+                  We are the <strong>data controller</strong> for personal data
+                  collected through our platform.
+                </p>
+              </div>
+            </div>
+
+            {/* Dynamic Sections */}
+            {sections.map((section, idx) => {
+              const sectionNumber = idx + 3;
+              const greenBgSections = [9, 11, 13];
+              const isGreenBg = greenBgSections.includes(sectionNumber);
+              const IconComponent = section.icon;
+
+              return (
+                <div
+                  key={section.id}
+                  id={section.id}
+                  className="scroll-mt-20"
+                  onMouseEnter={() => setActiveSection(section.id)}
+                >
+                  <div
+                    className={`rounded-2xl p-8 ${
+                      isGreenBg ? "bg-[#104901]" : "bg-white"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 mb-6">
+                      <IconComponent
+                        className={`h-5 w-5 ${
+                          isGreenBg ? "text-white" : "text-green-600"
+                        }`}
+                      />
+                      <h2
+                        className={`text-2xl font-bold ${
+                          isGreenBg ? "text-white" : "text-gray-900"
+                        }`}
+                      >
+                        {sectionNumber}. {section.title}
+                      </h2>
+                    </div>
+
+                    <div className="space-y-6">
+                      {section.content.map((item, contentIdx) => (
+                        <div key={contentIdx}>
+                          {item.subtitle && (
+                            <h3
+                              className={`text-base font-semibold mb-3 ${
+                                isGreenBg ? "text-white" : "text-gray-900"
+                              }`}
+                            >
+                              {item.subtitle}
+                            </h3>
+                          )}
+                          {item.text && (
+                            <div
+                              className={`leading-relaxed text-sm ${
+                                isGreenBg ? "text-white" : "text-gray-700"
+                              }`}
+                            >
+                              {item.text}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Contact Us Section */}
+            <div
+              id="contact-us"
+              className="scroll-mt-20"
+              onMouseEnter={() => setActiveSection("contact-us")}
+            >
+              <div className="bg-white rounded-2xl p-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                  {sections.length + 3}. Contact Us
+                </h2>
+                <p className="text-gray-700 leading-relaxed mb-6">
+                  If you have any questions about this Privacy Policy, please
+                  contact our Data Protection Officer:
+                </p>
+                <div className="flex items-center gap-2">
+                  <Link
+                    href="mailto:privacy@chainfundit.com"
+                    className="text-green-600 hover:underline font-semibold text-base flex items-center gap-2"
+                  >
+                    privacy@chainfundit.com
+                    <ChevronRight className="h-5 w-5" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

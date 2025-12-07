@@ -424,7 +424,7 @@ export default function AllCampaignsPage() {
                 <div className="text-orange-500 mb-4">
                   <Search className="h-16 w-16 mx-auto" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">
+                <h3 className="text-xl font-plusjakarta text-gray-600 mb-2">
                   Loading is taking longer than expected
                 </h3>
                 <p className="text-gray-500 mb-4">
@@ -453,7 +453,7 @@ export default function AllCampaignsPage() {
             <div className="text-gray-400 mb-4">
               <Search className="h-16 w-16 mx-auto" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">
+            <h3 className="text-xl font-plusjakarta text-gray-600 mb-2">
               No items found
             </h3>
             <p className="text-gray-500 mb-2">
