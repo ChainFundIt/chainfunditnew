@@ -13,7 +13,7 @@ const Footer = (props: Props) => {
   const router = useRouter();
   return (
     <div className="rounded-t-[48px] bg-[#104109] md:px-20 pt-20 pb-10 flex items-center justify-center">
-      <div className="md:max-w-[1280px] w-390px md:px-8 px:4 flex flex-col gap-16">
+      <div className="md:max-w-[80rem] w-390px md:px-8 px:4 flex flex-col gap-16">
         <div className="flex gap-12 md:flex-row flex-col">
           <div className="flex flex-col gap-6 md:w-[268px] w-[358px]">
             <div className="flex gap-2 items-center">
