@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import PerformanceMonitor from "@/components/performance/PerformanceMonitor";
 import ClientToaster from "@/components/ui/client-toaster";
@@ -18,6 +18,11 @@ const geistMono = Geist_Mono({
 });
 
 const logoUrl = `/images/logo.svg`;
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-plus-jakarta",
+});
 
 export const metadata: Metadata = {
   title: "Chainfundit",
@@ -25,7 +30,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Chainfundit",
     description: "Raise funds - support dreams",
-    url: process.env.NEXT_PUBLIC_APP_URL || 'https://chainfundit.com',
+    url: process.env.NEXT_PUBLIC_APP_URL || "https://chainfundit.com",
     siteName: "Chainfundit",
     images: [
       {
@@ -96,7 +101,9 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} ${jakarta.variable}`}
+      >
         <div className="app-root">
           {children}
           <GoogleAnalytics />

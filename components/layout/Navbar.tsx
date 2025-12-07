@@ -6,6 +6,8 @@ import Link from "next/link";
 import React, { useState } from "react";
 import SessionStatusIndicator from "@/components/dashboard/SessionStatusIndicator";
 import { useAuth } from "@/hooks/use-auth";
+import DashboardIcon from "@/public/icons/DashboardIcon";
+import { HamburgerIcon, Menu } from "lucide-react";
 
 type Props = {};
 
@@ -18,81 +20,94 @@ const Navbar = (props: Props) => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 z-50 w-full bg-white shadow font-source px-4 py-4 md:px-12 md:py-5">
-      <div className="flex justify-between items-center">
-        <Link href="/" className="flex gap-1 items-center">
+    <nav className="sticky top-0 md:px-20 py-3 border-b border-[#E7E5E4]  bg-[white] z-10">
+      <div className="px-8 flex justify-between">
+        <Link href="/" className="flex gap-2 items-center">
           <Image
             src="/images/logo.svg"
             alt="Chainfundit Logo"
-            width={30}
-            height={30}
+            width={36}
+            height={36}
           />
-          <p className="font-semibold text-xl text-brand-green-dark">Chainfundit</p>
+          <div className="font-bold text-[20px] leading-[28px] text-[#064e3b] font-jakarta">
+            ChainFundit
+          </div>
         </Link>
         {/* Hamburger for mobile */}
         <button
-          className="md:hidden flex flex-col gap-1 focus:outline-none"
+          className="md:hidden flex p-1 items-center "
           onClick={() => setMenuOpen((v) => !v)}
           aria-label="Toggle menu"
         >
-          <span className="block w-6 h-0.5 bg-black"></span>
-          <span className="block w-6 h-0.5 bg-black"></span>
-          <span className="block w-6 h-0.5 bg-black"></span>
+          <Menu />
         </button>
         {/* Desktop nav */}
-        <ul className="hidden md:flex justify-between gap-6 font-semibold text-base text-black">
-          <li>
-            <Link href="/dashboard">My Dashboard</Link>
-          </li>
-          <li>
+        <ul className="gap-8 items-center justify-center md:flex hidden">
+          <li className="font-jakarta font-medium text-[14px]  leading-[20px] text-[#57534E] hover:text-[#065f46]">
             <Link href="/campaigns">Campaigns</Link>
           </li>
-          <li>
+          <li className="font-jakarta font-medium text-[14px] leading-[20px] text-[#57534E] hover:text-[#065f46]">
             <Link href="/virtual-giving-mall">Virtual Giving Mall</Link>
           </li>
-          <li>
-            <Link href="/about">About</Link>
+          <li className="font-jakarta font-medium text-[14px] leading-[20px] text-[#57534E] hover:text-[#065f46]">
+            <Link href="/about">About Us</Link>
           </li>
-          <li>
+          <li className="font-jakarta font-medium text-[14px] leading-[20px] text-[#57534E] hover:text-[#065f46]">
             <Link href="/faq" className="">
               FAQs
             </Link>
           </li>
         </ul>
-        <section className="hidden md:flex items-center gap-3">
+
+        <section className="md:flex hidden gap-4 items-center">
           <SessionStatusIndicator />
           {!user && !loading && (
-            <Link href="/signin" className="font-medium text-base text-black">
+            <Link
+              href="/signin"
+              className="flex gap-2 px-4 py-2 font-jakarta font-medium items-center  text-[14px] leading-[20px] justify-center rounded-full text-[#57534E] hover:bg-gray-100 "
+            >
               Sign in
             </Link>
           )}
+
+          {user && !loading && (
+            <Link
+              href="/dashboard"
+              className="flex gap-2 px-4 py-2 font-jakarta font-medium items-center text-[14px] leading-[20px] justify-center rounded-full text-[#57534E] hover:bg-gray-100 "
+            >
+              <DashboardIcon color="#57534E" width="16" height="16" />
+              Dashboard
+            </Link>
+          )}
+
           <Button
-            className="px-4 py-3 border-2 border-white text-base font-semibold rounded-none"
+            className="bg-[#064E3B] py-[10px] px-[24px] rounded-full font-jakarta font-bold text-[14px] leading-[20px] hover:bg-gray-100"
             onClick={handleCreateCampaign}
           >
-            Create Campaign
+            Start a Campaign
           </Button>
         </section>
       </div>
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="md:hidden mt-4 flex flex-col gap-4 animate-fade-in">
-          <ul className="flex flex-col gap-2 font-semibold text-base text-black">
-            <li>
-              <Link href="/dashboard" onClick={() => setMenuOpen(false)}>
-                My Dashboard
-              </Link>
-            </li>
+        <div
+          className="md:hidden p-5 flex flex-col gap-3 
+               animate-fadeIn ease-in-out duration-300 
+               font-jakarta text-center"
+        >
+          <ul className="flex flex-col gap-3 font-semibold text-base text-black ">
             <li>
               <Link href="/campaigns" onClick={() => setMenuOpen(false)}>
                 Campaigns
               </Link>
             </li>
+
             <li>
               <Link href="/about" onClick={() => setMenuOpen(false)}>
-                About
+                About Us
               </Link>
             </li>
+
             <li>
               <Link
                 href="/virtual-giving-mall"
@@ -101,25 +116,38 @@ const Navbar = (props: Props) => {
                 Virtual Giving Mall
               </Link>
             </li>
+
             <li>
               <Link href="/faq" onClick={() => setMenuOpen(false)}>
                 FAQs
               </Link>
             </li>
           </ul>
+
           <div className="flex flex-col gap-2">
             <SessionStatusIndicator />
+
             {!user && !loading && (
               <Link href="/signin" className="font-medium text-base text-black">
                 Sign In
               </Link>
             )}
-            <div className="flex items-center justify-center gap-3"></div>
+
+            {user && !loading && (
+              <Link
+                href="/dashboard"
+                className="font-medium text-base text-black flex gap-2 items-center justify-center"
+              >
+                <DashboardIcon color="#57534E" width="16" height="16" />
+                Dashboard
+              </Link>
+            )}
+
             <Button
-              className="w-full px-4 py-3 border-2 border-white text-base font-semibold rounded-none"
+              className="bg-[#064E3B] py-[10px] px-[24px] rounded-full font-jakarta font-bold text-[14px] leading-[20px] hover:bg-gray-100"
               onClick={handleCreateCampaign}
             >
-              Create Campaign
+              Start a Campaign
             </Button>
           </div>
         </div>
