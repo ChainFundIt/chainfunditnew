@@ -97,7 +97,7 @@ const Hero = () => {
           <div className="relative rounded-3xl overflow-hidden">
             {/* Main Image */}
             <Image
-              src="/images/happyChildren.png"
+              src="/images/story-2.png"
               alt="Featured Campaign"
               width={500}
               height={400}

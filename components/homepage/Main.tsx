@@ -40,7 +40,7 @@ const Main = () => {
     const category = charity.category?.toLowerCase() ?? "";
     const charityName = charity.name?.toLowerCase() ?? "";
     const matchesSearch = charityName.includes(searchQuery.toLowerCase());
-    
+
     if (!matchesSearch) return false;
     if (selectedFilter === "all") return true;
 
@@ -383,10 +383,10 @@ const Main = () => {
               Donate Now
             </Button>
             <Button
-              onClick={() => router.push("/volunteer")}
+              onClick={() => router.push("/signup")}
               className="bg-white px-8 py-4 rounded-full h-auto font-bold text-lg leading-7 text-[#104109] w-full md:w-fit"
             >
-              Become a Volunteer
+              Become a Chain Ambassador
             </Button>
           </motion.div>
 
