@@ -24,6 +24,7 @@ import BenefitsCarousel from "./BenefitsCarousel";
 const Main = () => {
   const router = useRouter();
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   const {
     charities,
@@ -37,6 +38,10 @@ const Main = () => {
 
   const filteredCharities = charities.filter((charity) => {
     const category = charity.category?.toLowerCase() ?? "";
+    const charityName = charity.name?.toLowerCase() ?? "";
+    const matchesSearch = charityName.includes(searchQuery.toLowerCase());
+    
+    if (!matchesSearch) return false;
     if (selectedFilter === "all") return true;
 
     switch (selectedFilter) {
@@ -124,7 +129,7 @@ const Main = () => {
         <div className="flex flex-col gap-12 w-[80rem]">
           {/* Header */}
           <motion.div
-            className="flex flex-col md:flex-row justify-between items-end"
+            className="flex flex-col md:flex-row md:justify-between gap-6 items-end"
             variants={fadeUp}
             initial="hidden"
             animate="visible"
@@ -141,7 +146,7 @@ const Main = () => {
             </div>
 
             {/* Search Input */}
-            <div className="relative w-64 rounded-xl bg-white border-2 border-transparent focus-within:border-[#104109] transition-colors">
+            <div className="relative md:w-64 w-full rounded-xl bg-white border-2 border-transparent focus-within:border-[#104109] transition-colors">
               <Search
                 color="#A8A29E"
                 size={18}
@@ -150,6 +155,8 @@ const Main = () => {
               <input
                 type="text"
                 placeholder="Search charities..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="h-12 pl-10 w-full rounded-xl focus:outline-none text-[#A8A29E] bg-transparent"
               />
             </div>
@@ -221,6 +228,7 @@ const Main = () => {
           {/* Campaign Cards */}
           {!charitiesLoading && !charitiesError && cardDetails.length > 0 && (
             <motion.div
+              key={`${selectedFilter}-${searchQuery}`}
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
               variants={staggerParent}
               initial="hidden"
