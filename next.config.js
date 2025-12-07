@@ -124,17 +124,17 @@ const nextConfig = {
     return config;
   },
 
+  // Turbopack configuration (required for Next.js 16+)
+  turbopack: {
+    // Empty config to silence the error - webpack config will be used when --webpack flag is set
+  },
+
   // Trailing slash
   trailingSlash: false,
 
   // TypeScript
   typescript: {
     ignoreBuildErrors: false,
-  },
-
-  // ESLint
-  eslint: {
-    ignoreDuringBuilds: false,
   },
 };
 

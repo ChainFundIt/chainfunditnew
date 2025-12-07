@@ -3,7 +3,7 @@ import { verifyUserJWT } from "@/lib/auth-middleware";
 import { refreshAccessToken } from "@/lib/auth";
 import { serialize } from "cookie";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
   // Skip token refresh endpoint to avoid infinite loops
@@ -71,7 +71,7 @@ export async function middleware(request: NextRequest) {
             return response;
           }
         } catch (error) {
-          console.error('Token refresh failed in middleware:', error);
+          console.error('Token refresh failed in proxy:', error);
         }
       }
       
@@ -124,7 +124,7 @@ export async function middleware(request: NextRequest) {
             return response;
           }
         } catch (error) {
-          console.error('Token refresh failed in middleware:', error);
+          console.error('Token refresh failed in proxy:', error);
         }
       }
       
