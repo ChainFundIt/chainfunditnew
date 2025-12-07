@@ -9,6 +9,7 @@ import {
   BookOpen,
   Briefcase,
   Cat,
+  Camera,
   Check,
   ChevronsLeft,
   ChevronsRight,
@@ -42,7 +43,8 @@ import {
   Linkedin,
   ExternalLink,
   HelpCircle,
-  MessageCircle,
+  Upload as UploadIcon,
+  Image as ImageIcon,
 } from "lucide-react";
 import {
   Select,
@@ -61,7 +63,6 @@ import { toast } from "sonner";
 import { Upload } from "@/components/ui/upload";
 import ClientToaster from "@/components/ui/client-toaster";
 import { Switch } from "@/components/ui/switch";
-import { trackCampaign, track } from "@/lib/analytics";
 
 const reasons = [
   { text: "Business", icon: <Briefcase /> },
@@ -119,8 +120,13 @@ type CampaignFormData = {
   chainerCommissionRate: number;
 };
 
-// S = Small, M = Medium, L = Large content length options
 const tabs = ["S", "M", "L"];
+const steps = [
+  { number: 1, title: "Details", label: "Details" },
+  { number: 2, title: "Goal", label: "Goal" },
+  { number: 3, title: "Media", label: "Media" },
+  { number: 4, title: "Review", label: "Review" },
+];
 
 export default function CreateCampaignPage() {
   const [aiInstruction, setAiInstruction] = useState("");
@@ -136,14 +142,6 @@ export default function CreateCampaignPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
-  // Currency options with ISO codes
-  const currencies = [
-    { code: "GBP", text: "British Pound", icon: <PoundSterling /> },
-    { code: "USD", text: "US Dollar", icon: <DollarSign /> },
-    { code: "NGN", text: "Nigerian Naira", icon: "₦" },
-    { code: "EUR", text: "Euro", icon: <Euro /> },
-    { code: "CAD", text: "Canadian Dollar", icon: "C$" },
-  ];
 
   const [formData, setFormData] = useState<CampaignFormData>({
     title: "",
@@ -160,7 +158,6 @@ export default function CreateCampaignPage() {
     chainerCommissionRate: 0,
   });
 
-  // Add upload URLs state
   const [uploadedFiles, setUploadedFiles] = useState({
     coverImageUrl: "",
     imageUrls: [] as string[],
@@ -168,10 +165,10 @@ export default function CreateCampaignPage() {
   });
 
   const handleCoverImageUpload = (url: string) => {
-    setUploadedFiles((prev) => {
-      const newState = { ...prev, coverImageUrl: url };
-      return newState;
-    });
+    setUploadedFiles((prev) => ({
+      ...prev,
+      coverImageUrl: url,
+    }));
   };
 
   const handleImageFileSelect = async (files: FileList | null) => {
@@ -266,7 +263,6 @@ export default function CreateCampaignPage() {
     try {
       const payload = new FormData();
 
-      // Map form fields to API expected field names
       payload.append("title", formData.title);
       payload.append("subtitle", formData.subtitle || "");
       payload.append("description", formData.story);
@@ -284,15 +280,12 @@ export default function CreateCampaignPage() {
       payload.append("isChained", formData.isChained.toString());
       payload.append("visibility", formData.visibility);
 
-      // Add cover image URL with fallback to first gallery image
       if (uploadedFiles.coverImageUrl) {
         payload.append("coverImageUrl", uploadedFiles.coverImageUrl);
       } else if (uploadedFiles.imageUrls.length > 0) {
-        // Use first gallery image as cover image fallback
         payload.append("coverImageUrl", uploadedFiles.imageUrls[0]);
       }
 
-      // Convert image URLs to JSON string for galleryImages
       if (uploadedFiles.imageUrls.length > 0) {
         payload.append(
           "galleryImages",
@@ -300,7 +293,6 @@ export default function CreateCampaignPage() {
         );
       }
 
-      // Convert document URLs to JSON string for documents
       if (uploadedFiles.documentUrls.length > 0) {
         payload.append("documents", JSON.stringify(uploadedFiles.documentUrls));
       }
@@ -326,15 +318,6 @@ export default function CreateCampaignPage() {
         ...data.data,
         shortUrl: shortUrl || campaignUrl,
       });
-
-      trackCampaign("campaign_created", {
-        campaign_id: data.data.id,
-        campaign_title: formData.title,
-        campaign_slug: data.data.slug,
-        campaign_goal: formData.goal,
-        campaign_currency: formData.currency,
-      });
-
       setShowSuccessModal(true);
     } catch (err) {
       alert("Failed to create campaign. Please try again.");
@@ -368,14 +351,6 @@ export default function CreateCampaignPage() {
       createdCampaign?.shortUrl || `chainfund.it/${createdCampaign?.slug}`;
     const shareText = `Check out my campaign: ${formData.title}`;
 
-    track("campaign_shared", {
-      campaign_id: createdCampaign?.id,
-      campaign_title: formData.title,
-      campaign_slug: createdCampaign?.slug,
-      category: "social_share",
-      label: platform,
-    });
-
     let shareUrl = "";
     switch (platform) {
       case "facebook":
@@ -393,13 +368,8 @@ export default function CreateCampaignPage() {
           campaignUrl
         )}`;
         break;
-      case "whatsapp":
-        shareUrl = `https://wa.me/?text=${encodeURIComponent(shareText)} ${encodeURIComponent(campaignUrl)}`;
-        break;
       case "instagram":
-        shareUrl = `https://www.instagram.com/sharer/sharer.php?u=${encodeURIComponent(campaignUrl)}`;
-        break;
-      default:
+        navigator.clipboard.writeText(`${shareText} ${campaignUrl}`);
         return;
     }
 
@@ -409,724 +379,924 @@ export default function CreateCampaignPage() {
   };
 
   return (
-    <div className="w-full h-full font-source">
-      <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
-        {/* Step 1 */}
-        {step === 1 && (
-          <div className="w-full flex md:flex-row flex-col gap-5 md:gap-10">
-            {/* Left Side: Image Upload */}
-            <div className="w-full md:w-2/5 flex flex-col gap-4">
-              <Upload
-                type="imageUpload"
-                onUpload={handleCoverImageUpload}
-                accept="image/*"
-                previewUrl={uploadedFiles.coverImageUrl}
-              />
+    <div className="w-full min-h-screen bg-gradient-to-br from-[#F5F5F5] to-[#E5ECDE] font-jakarta p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-[#104901] mb-2">
+            Create Campaign
+          </h1>
+          <p className="text-[#5F8555]">
+            Launch a new fundraising initiative in 4 simple steps.
+          </p>
+        </div>
 
-              <p className="font-medium text-sm md:text-xl text-[#104901]">
-                Upload your main campaign image
-              </p>
-            </div>
-
-            <div className="md:w-3/5 w-full flex flex-col gap-3">
-              {/* Campaign Title */}
-              <p className="font-semibold text-3xl text-[#104901]">
-                Campaign details
-              </p>
-              <section className="flex flex-col gap-1">
-                <input
-                  type="text"
-                  placeholder="Campaign title"
-                  value={formData.title}
-                  onChange={(e) => handleFieldChange("title", e.target.value)}
-                  className="w-full bg-transparent outline-none text-base md:text-[56px] placeholder:font-semibold placeholder:text-lg md:placeholder:text-[56px] placeholder:text-[#B3B3B3]"
-                />
-                <span className="font-normal text-base text-[#ADADAD]">
-                  What is the title of your fundraising campaign?
-                </span>
-              </section>
-
-              {/* Add Subtitle */}
-              <div className="bg-[#E5ECDE] flex gap-2 w-full py-3 px-4 rounded-xl">
-                <Droplet color="#5F8555" size={32} />
-                <section>
-                  <input
-                    type="text"
-                    id="subtitle"
-                    name="subtitle"
-                    value={formData.subtitle}
-                    onChange={(e) =>
-                      handleFieldChange("subtitle", e.target.value)
-                    }
-                    placeholder="Add subtitle (optional)"
-                    className="w-full bg-transparent font-medium text-lg md:text-3xl text-[#5F8555] placeholder:text-[#5F8555] outline-none"
-                  />
-                  <p className="font-normal text-xs md:text-base text-[#5F8555]">
-                    A catchy, emotional hook to attract donors to your campaign
-                    (150 characters max)
-                  </p>
-                </section>
-              </div>
-
-              {/* Visibility */}
-              <div className="flex gap-5">
-                <label className="block font-medium text-3xl text-[#104901]">
-                  Visibility
-                </label>
-                <Select
-                  value={formData.visibility}
-                  onValueChange={(value) =>
-                    handleFieldChange(
-                      "visibility",
-                      value as "public" | "private"
-                    )
-                  }
-                >
-                  <SelectTrigger className="w-[150px] bg-[#E5ECDE] border-0 shadow-none text-[#5F8555]">
-                    <SelectValue placeholder="Public" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#E7EDE6]">
-                    <SelectGroup>
-                      <SelectItem
-                        value="public"
-                        className="flex items-center font-normal text-2xl text-[#5F8555]"
-                      >
-                        <section className="flex items-center gap-2">
-                          <Globe />
-                          Public
-                        </section>
-                      </SelectItem>
-                      <SelectItem
-                        value="private"
-                        className="flex gap-2 items-center font-normal text-2xl text-[#5F8555]"
-                      >
-                        <section className="flex items-center gap-2">
-                          <Lock />
-                          Private
-                        </section>
-                      </SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Reason for Fundraising */}
-              <div>
-                <label className="block font-medium text-[28px] text-[#104901] mb-2">
-                  Reason for fundraising
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {reasons.map((reason) => (
-                    <button
-                      key={reason.text}
-                      type="button"
-                      onClick={() => handleFieldChange("reason", reason.text)}
-                      className={`px-4 py-3 flex gap-2 items-center rounded-xl text-2xl text-[#5F8555] cursor-pointer ${
-                        formData.reason === reason.text
-                          ? "ring-2 ring-[#5F8555] bg-[#104901] text-white"
-                          : "bg-[#E5ECDE]"
-                      }`}
-                    >
-                      {reason.icon}
-                      {reason.text}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Fundraising For */}
-              <div>
-                <label className="block font-medium text-[28px] text-[#104901] mb-1">
-                  Who are you fundraising for?
-                  <span className="text-[#FF0404]">*</span>
-                </label>
-                <div className="flex gap-4 md:flex-row flex-col">
-                  {persons.map((person) => (
-                    <button
-                      key={person.text}
-                      type="button"
-                      onClick={() =>
-                        handleFieldChange("fundraisingFor", person.text)
-                      }
-                      className={`px-4 py-3 flex gap-2 items-center rounded-xl text-2xl text-[#5F8555] cursor-pointer ${
-                        formData.fundraisingFor === person.text
-                          ? "ring-2 ring-[#5F8555] bg-[#104901] text-white"
-                          : "bg-[#E5ECDE]"
-                      }`}
-                    >
-                      {person.icon}
-                      {person.text}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 2 */}
-        {step === 2 && (
-          <div className="space-y-6">
-            <p className="mb-4 font-semibold text-3xl text-[#104901]">
-              Fundraising
-            </p>
-
-            <section>
-              <p className="mb-4 flex gap-3 items-end font-semibold text-[28px] text-[#104901]">
-                Currency
-                <span className="font-normal text-base text-[#5F8555]">
-                  Please select your campaign currency
-                </span>
-              </p>
-              <div className="flex gap-4 md:flex-row flex-col">
-                {currencies.map((currency) => (
-                  <button
-                    key={currency.code}
-                    type="button"
-                    onClick={() => handleFieldChange("currency", currency.code)}
-                    className={`px-4 py-3 flex gap-2 items-center rounded-xl text-2xl text-[#5F8555] cursor-pointer ${
-                      formData.currency === currency.code
-                        ? "ring-2 ring-[#5F8555] bg-[#104901] text-white"
-                        : "bg-[#E5ECDE]"
+        <div className="flex gap-8">
+          {/* Sidebar - Steps */}
+          <div className="w-48 flex-shrink-0">
+            <div className="space-y-4">
+              {steps.map((s) => (
+                <div key={s.number} className="flex items-center gap-3">
+                  <div
+                    className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg transition-all ${
+                      step >= s.number
+                        ? "bg-[#104901] text-white"
+                        : "bg-[#E5ECDE] text-[#5F8555]"
                     }`}
                   >
-                    {currency.icon} {currency.text}
-                  </button>
-                ))}
-              </div>
-            </section>
-
-            <div className="bg-[#E5ECDE] flex gap-2 w-full py-3 px-4 rounded-xl">
-              <Target color="#5F8555" size={32} />
-              {formData.currency && (
-                <span className="font-medium text-lg md:text-3xl text-[#5F8555]">
-                  {{
-                    GBP: "£",
-                    USD: "$",
-                    NGN: "₦",
-                    EUR: "€",
-                    CAD: "C$",
-                  }[formData.currency] || ""}
-                </span>
-              )}
-              <section>
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  id="goal"
-                  name="goal"
-                  placeholder="Your goal"
-                  value={formData.goal === 0 ? "" : formData.goal}
-                  onChange={(e) =>
-                    handleFieldChange(
-                      "goal",
-                      e.target.value === "" ? 0 : +e.target.value
-                    )
-                  }
-                  className="w-full bg-transparent font-medium text-lg md:text-3xl text-[#5F8555] placeholder:text-[#5F8555] outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                />
-                <p className="font-normal text-xs md:text-base text-[#5F8555]">
-                  Please enter target amount
-                </p>
-              </section>
-            </div>
-            <section>
-              <p className="mb-4 font-semibold text-[28px] text-[#104901]">
-                Campaign duration
-              </p>
-              <div className="flex gap-4 md:flex-row flex-col">
-                {duration.map((time) => (
-                  <button
-                    key={time.text}
-                    type="button"
-                    onClick={() => handleFieldChange("duration", time.text)}
-                    className={`px-4 py-3 flex gap-2 items-center rounded-xl text-2xl text-[#5F8555] cursor-pointer ${
-                      formData.duration === time.text
-                        ? "ring-2 ring-[#5F8555] bg-[#104901] text-white"
-                        : "bg-[#E5ECDE]"
-                    }`}
-                  >
-                    {time.icon} {time.text}
-                  </button>
-                ))}
-              </div>
-            </section>
-            <section className="space-y-2">
-              <div className="flex items-center gap-2">
-                <p className="font-semibold text-[28px] text-[#104901]">
-                  Do you want your campaign to be chained?
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setShowChainInfoModal(true)}
-                  className="w-6 h-6 rounded-full text-[#5F8555] flex items-center justify-center transition-colors"
-                  aria-label="Learn more about chained campaigns"
-                >
-                  <HelpCircle size={16} />
-                </button>
-              </div>
-              <section className="flex gap-2 items-center">
-                <Switch
-                  checked={formData.isChained}
-                  onCheckedChange={() =>
-                    handleFieldChange("isChained", !formData.isChained)
-                  }
-                />
-                <p className="font-normal text-base text-[#5F8555]">
-                  Yes, I want my campaign to be chained
-                </p>
-              </section>
-              <section className="flex gap-2 items-center">
-                <Switch
-                  checked={!formData.isChained}
-                  onCheckedChange={() =>
-                    handleFieldChange("isChained", !formData.isChained)
-                  }
-                />
-                <p className="font-normal text-base text-[#5F8555]">
-                  No, I don&apos;t want my campaign to be chained
-                </p>
-              </section>
-            </section>
-
-            {formData.isChained && (
-              <section className=" space-y-2">
-                <p className="font-semibold text-[28px] text-[#104901]">
-                  What percentage of the proceeds will ambassadors get?
-                </p>
-                <input
-                  type="number"
-                  max={10}
-                  min={0}
-                  value={formData.chainerCommissionRate || ""}
-                  onChange={(e) =>
-                    handleFieldChange(
-                      "chainerCommissionRate",
-                      +e.target.value || 0
-                    )
-                  }
-                  className="w-[300px] p-3 rounded-xl bg-[#E5ECDE] font-medium text-lg md:text-3xl text-[#5F8555] placeholder:text-[#5F8555] outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  placeholder="Enter percentage"
-                />
-              </section>
-            )}
-          </div>
-        )}
-
-        {/* Step 3 */}
-        {step === 3 && (
-          <div className="space-y-6">
-            <p className="mb-4 font-semibold text-[28px] text-[#104901]">
-              Media
-            </p>
-            <div className="bg-[#E5ECDE] flex gap-2 w-full py-3 px-4 rounded-xl">
-              <Youtube color="#5F8555" size={32} />
-              <section>
-                <input
-                  type="text"
-                  id="video"
-                  name="video"
-                  value={formData.video}
-                  onChange={(e) => handleFieldChange("video", e.target.value)}
-                  placeholder="Cover video"
-                  className="w-full bg-transparent font-medium text-lg md:text-3xl text-[#5F8555] placeholder:text-[#5F8555] outline-none"
-                />
-                <p className="font-normal text-xs md:text-base text-[#5F8555]">
-                  Copy video link from YouTube or any other valid source and
-                  paste here
-                </p>
-              </section>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <p className="font-medium text-2xl text-[#104901] flex gap-2 items-end">
-                More photos
-                <span className="font-normal text-base text-[#5F8555]">
-                  Add additional images to your campaign gallery
-                </span>
-              </p>
-              <p className="font-normal text-lg text-[#5F8555]">
-                Up to 5 images, PNG, JPG or WEBP, max 1MB each
-              </p>
-
-              <div className="grid md:grid-cols-3 grid-cols-1 gap-4 my-2">
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  id="campaign-images"
-                  onChange={(e) => handleImageFileSelect(e.target.files)}
-                />
-
-                <label
-                  htmlFor="campaign-images"
-                  className="bg-[#E5ECDE] flex gap-3 items-center px-8 py-4 rounded-2xl text-xl text-[#5F8555] cursor-pointer col-span-1"
-                >
-                  <LuImage size={32} />
-                  Choose image
-                </label>
-
-                {/* Preview selected images */}
-                {uploadedFiles.imageUrls.length > 0 ? (
-                  uploadedFiles.imageUrls.map((url, index) => (
-                    <div
-                      key={index}
-                      className="relative bg-[#E5ECDE] rounded-2xl overflow-hidden flex items-center justify-center"
-                    >
-                      <Image
-                        src={url}
-                        alt={`preview-${index}`}
-                        width={200}
-                        height={120}
-                        className="object-cover w-full h-[120px]"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveImage(index)}
-                        className="absolute top-2 right-2 bg-red-600 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))
-                ) : (
-                  <>
-                    {[...Array(5)].map((_, index) => (
-                      <section
-                        key={index}
-                        className="bg-[#E5ECDE] flex gap-3 items-center px-8 py-4 rounded-2xl text-xl text-[#5F8555]"
-                      >
-                        <LuImage size={32} />
-                        Choose image
-                      </section>
-                    ))}
-                  </>
-                )}
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <p className="font-medium text-2xl text-[#104901] flex gap-2 items-end">
-                Documents
-                <span className="font-normal text-base text-[#5F8555]">
-                  Add supporting documents
-                </span>
-              </p>
-              <p className="font-normal text-lg text-[#5F8555]">
-                PDF, DOC, or DOCX, max 10MB total
-              </p>
-
-              <div className="grid md:grid-cols-3 grid-cols-1 gap-4 my-2">
-                <input
-                  type="file"
-                  accept=".pdf,.doc,.docx"
-                  multiple
-                  className="hidden"
-                  id="supporting-documents"
-                  onChange={(e) => handleDocumentFileSelect(e.target.files)}
-                />
-
-                <label
-                  htmlFor="supporting-documents"
-                  className="bg-[#E5ECDE] flex gap-3 items-center px-8 py-4 rounded-2xl text-xl text-[#5F8555] cursor-pointer col-span-1"
-                >
-                  <Paperclip size={32} />
-                  Choose file
-                </label>
-
-                {/* Preview selected documents */}
-                {uploadedFiles.documentUrls.length > 0 ? (
-                  uploadedFiles.documentUrls.map((url, index) => {
-                    // Extract filename from URL
-                    const filename =
-                      url.split("/").pop() || `document-${index}`;
-                    return (
-                      <div
-                        key={index}
-                        className="relative bg-[#E5ECDE] px-4 py-3 rounded-2xl flex items-center gap-2 text-[#5F8555] text-sm"
-                      >
-                        <Paperclip size={20} />
-                        {filename.length > 30
-                          ? filename.slice(0, 30) + "..."
-                          : filename}
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveDocument(index)}
-                          className="absolute top-2 right-2 bg-red-600 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <>
-                    {[...Array(2)].map((_, index) => (
-                      <section
-                        key={index}
-                        className="bg-[#E5ECDE] flex gap-3 items-center px-8 py-4 rounded-2xl text-xl text-[#5F8555]"
-                      >
-                        <Paperclip size={32} />
-                        Choose file
-                      </section>
-                    ))}
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 4 */}
-        {step === 4 && (
-          <div className="space-y-6">
-            <p className="mb-4 font-semibold text-[28px] text-[#104901]">
-              Campaign story
-            </p>
-            <div className="bg-[#E5ECDE] w-full h-[300px] rounded-xl pt-3 relative">
-              <div className="flex gap-3 px-4">
-                <PenTool size={32} color="#5F8555" className="rotate-180" />
-                <section className="flex flex-col gap-2">
-                  <textarea
-                    placeholder="Add description"
-                    value={formData.story}
-                    onChange={(e) => handleFieldChange("story", e.target.value)}
-                    className="bg-transparent md:w-[1000px] w-full h-[200px] font-medium text-[28xl] text-[#5F8555] placeholder:font-medium placeholder:text-[28xl] placeholder:text-[#5F8555] outline-none"
-                  ></textarea>
-                </section>
-              </div>
-              <section className="absolute bottom-0 w-full space-y-2">
-                <section className="px-4">
-                  <span className="font-normal md:text-base text-sm text-center md:text-left text-[#5F8555]">
-                    Tell the world what your campaign is about and why you think
-                    they should support you
-                  </span>
-                </section>
-                <button
-                  type="button"
-                  onClick={() => setShowAiModal(true)}
-                  className="w-full bg-[#5F8555] py-3 px-4 flex gap-2 items-center font-normal text-xl text-[#D9D9D9] rounded-b-xl"
-                >
-                  <Airplay />
-                  <p>Suggest with AI</p>
-                </button>
-              </section>
-            </div>
-            {/* Modal for AI suggestion */}
-            {showAiModal && (
-              <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-                <div className="bg-[#E5ECDE] rounded-xl p-6 w-[600px] max-w-full shadow-lg space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div className="flex gap-2 items-start">
-                      <Loader size={32} color="#5F8555" />
-                      <section>
-                        <h2 className="text-[#5F8555] text-3xl font-medium">
-                          Suggest description
-                        </h2>
-                        <p className="text-[#5F8555] text-base">
-                          Generate a description for your fundraiser with AI
-                        </p>
-                      </section>
-                    </div>
-                    <button
-                      className="text-[#5F8555] text-xl"
-                      onClick={() => setShowAiModal(false)}
-                    >
-                      <XCircle />
-                    </button>
+                    {step > s.number ? <Check size={20} /> : s.number}
                   </div>
-                  <div className="space-y-3">
-                    <label className="text-[#5F8555] text-xl font-medium">
-                      Length
+                  <div>
+                    <p className="text-sm font-medium text-[#999]">
+                      Step {s.number}
+                    </p>
+                    <p
+                      className={`font-semibold ${
+                        step === s.number ? "text-[#104901]" : "text-[#ADADAD]"
+                      }`}
+                    >
+                      {s.label}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="flex-1">
+            <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
+              {/* Step 1: Details */}
+              {step === 1 && (
+                <div className="bg-white rounded-2xl p-8 shadow-sm space-y-8">
+                  <h2 className="text-3xl font-bold text-[#104901]">
+                    Campaign Details
+                  </h2>
+
+                  {/* Campaign Title */}
+                  <div>
+                    <label className="text-lg font-semibold text-[#104901] mb-3 block">
+                      Campaign Title
                     </label>
-                    <div className="bg-[#D9D9D9] w-fit flex gap-2 p-1 rounded-xl my-2">
-                      {tabs.map((tab) => (
-                        <Button
-                          key={tab}
-                          className={`bg-transparent font-medium text-2xl text-[#5F8555] border-none ${
-                            activeTab === tab
-                              ? "text-[#5F8555] bg-white rounded-md"
-                              : ""
+                    <input
+                      type="text"
+                      placeholder="e.g. Clean Water for Village"
+                      value={formData.title}
+                      onChange={(e) =>
+                        handleFieldChange("title", e.target.value)
+                      }
+                      className="w-full px-4 py-3 bg-[#F5F5F5] border border-[#E5ECDE] rounded-lg text-[#104901] placeholder:text-[#B3B3B3] focus:outline-none focus:ring-2 focus:ring-[#104901]"
+                    />
+                  </div>
+
+                  {/* Subtitle */}
+                  <div className="bg-[#E5ECDE] p-4 rounded-xl">
+                    <label className="text-lg font-semibold text-[#5F8555] mb-2 block">
+                      Subtitle (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Add a catchy, emotional hook"
+                      value={formData.subtitle}
+                      onChange={(e) =>
+                        handleFieldChange("subtitle", e.target.value)
+                      }
+                      className="w-full px-4 py-2 bg-transparent text-[#5F8555] placeholder:text-[#5F8555] focus:outline-none"
+                    />
+                    <p className="text-sm text-[#5F8555] mt-2">
+                      A catchy hook to attract donors (150 characters max)
+                    </p>
+                  </div>
+
+                  {/* Visibility */}
+                  <div>
+                    <label className="text-lg font-semibold text-[#104901] mb-3 block">
+                      Visibility
+                    </label>
+                    <Select
+                      value={formData.visibility}
+                      onValueChange={(value) =>
+                        handleFieldChange(
+                          "visibility",
+                          value as "public" | "private"
+                        )
+                      }
+                    >
+                      <SelectTrigger className="w-full bg-[#E5ECDE] border-0 text-[#5F8555] h-12">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#E7EDE6]">
+                        <SelectGroup>
+                          <SelectItem value="public">
+                            <div className="flex items-center gap-2">
+                              <Globe size={18} />
+                              Public
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="private">
+                            <div className="flex items-center gap-2">
+                              <Lock size={18} />
+                              Private
+                            </div>
+                          </SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Category */}
+                  <div>
+                    <label className="text-lg font-semibold text-[#104901] mb-3 block">
+                      Category
+                    </label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {reasons.map((reason) => (
+                        <button
+                          key={reason.text}
+                          type="button"
+                          onClick={() =>
+                            handleFieldChange("reason", reason.text)
+                          }
+                          className={`px-4 py-3 flex gap-2 items-center rounded-lg transition-all ${
+                            formData.reason === reason.text
+                              ? "ring-2 ring-[#5F8555] bg-[#104901] text-white"
+                              : "bg-[#E5ECDE] text-[#5F8555] hover:bg-[#D9D9D9]"
                           }`}
-                          variant={activeTab === tab ? "default" : "ghost"}
-                          onClick={() => setActiveTab(tab)}
                         >
-                          {tab}
-                        </Button>
+                          {reason.icon}
+                          <span className="text-sm">{reason.text}</span>
+                        </button>
                       ))}
                     </div>
-                    <label className="text-[#5F8555] text-xl font-medium">
-                      Additional instructions
+                  </div>
+
+                  {/* Fundraising For */}
+                  <div>
+                    <label className="text-lg font-semibold text-[#104901] mb-3 block">
+                      Who are you fundraising for?{" "}
+                      <span className="text-red-600">*</span>
                     </label>
-                    <textarea
-                      className="w-full bg-whitesmoke rounded border-[#C0BFC4] p-5 text-[#5F8555] placeholder:text-[#B3B3B3] outline-none h-28"
-                      rows={3}
-                      value={aiInstruction}
-                      onChange={(e) => setAiInstruction(e.target.value)}
-                      placeholder="For example, you can tell Chain AI your name, what cause you support, who will benefit from your fundraiser, or even how the funds will be used, etc."
-                    ></textarea>
-                    <div className="flex justify-between">
-                      <Button
-                        className="w-fit h-14 bg-[#104901] text-white text-2xl font-semibold py-2"
-                        onClick={generateAiSuggestion}
-                        disabled={isLoading}
-                      >
-                        {isLoading ? "Generating..." : "Generate"}
-                        {!isLoading && <ChevronsRight className="ml-2" />}
-                      </Button>
-                      {aiInstruction && (
-                        <Button
-                          onClick={handleAiDone}
-                          className="w-fit h-14 bg-[#104901] text-white text-2xl font-semibold py-2"
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {persons.map((person) => (
+                        <button
+                          key={person.text}
+                          type="button"
+                          onClick={() =>
+                            handleFieldChange("fundraisingFor", person.text)
+                          }
+                          className={`px-4 py-3 flex gap-2 items-center rounded-lg transition-all ${
+                            formData.fundraisingFor === person.text
+                              ? "ring-2 ring-[#5F8555] bg-[#104901] text-white"
+                              : "bg-[#E5ECDE] text-[#5F8555] hover:bg-[#D9D9D9]"
+                          }`}
                         >
-                          Done <Check />
-                        </Button>
-                      )}
+                          {person.icon}
+                          <span className="text-sm">{person.text}</span>
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
+              )}
 
-        {/* Chain Info Modal */}
-        {showChainInfoModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-            <div className="bg-[#E5ECDE] rounded-xl p-6 w-[600px] max-w-full shadow-lg space-y-4">
-              <div className="flex justify-between items-start">
-                <div className="flex gap-2 items-start">
-                  <HelpCircle size={32} color="#5F8555" />
-                  <section>
-                    <h2 className="text-[#5F8555] text-3xl font-medium">
-                      About Chained Campaigns
-                    </h2>
-                  </section>
+              {/* Step 2: Goal */}
+              {step === 2 && (
+                <div className="bg-white rounded-2xl p-8 shadow-sm space-y-8">
+                  <h2 className="text-3xl font-bold text-[#104901]">
+                    Set Your Goal
+                  </h2>
+
+                  {/* Currency & Goal Amount */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-lg font-semibold text-[#104901] mb-3 block">
+                        Currency
+                      </label>
+                      <Select
+                        value={formData.currency}
+                        onValueChange={(value) =>
+                          handleFieldChange("currency", value)
+                        }
+                      >
+                        <SelectTrigger className="w-full bg-[#E5ECDE] border-0 text-[#5F8555] h-12">
+                          <SelectValue placeholder="Select currency" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#E7EDE6]">
+                          <SelectGroup>
+                            {currencies.map((currency) => (
+                              <SelectItem
+                                key={currency.code}
+                                value={currency.code}
+                              >
+                                <div className="flex items-center gap-2">
+                                  {typeof currency.icon === "string"
+                                    ? currency.icon
+                                    : currency.icon}{" "}
+                                  {currency.text}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <label className="text-lg font-semibold text-[#104901] mb-3 block">
+                        Goal Amount
+                      </label>
+                      <div className="flex items-center gap-2 bg-[#E5ECDE] rounded-lg px-4 py-3">
+                        <span className="text-[#5F8555] font-semibold text-lg">
+                          {
+                            {
+                              GBP: "£",
+                              USD: "$",
+                              NGN: "₦",
+                              EUR: "€",
+                              CAD: "C$",
+                            }[formData.currency]
+                          }
+                        </span>
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          placeholder="10000"
+                          value={formData.goal === 0 ? "" : formData.goal}
+                          onChange={(e) =>
+                            handleFieldChange(
+                              "goal",
+                              e.target.value === "" ? 0 : +e.target.value
+                            )
+                          }
+                          className="w-full bg-transparent font-medium text-lg text-[#5F8555] placeholder:text-[#5F8555] focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Platform Fee Notice */}
+                  <div className="bg-[#E5ECDE] border-l-4 border-[#5F8555] p-4 rounded">
+                    <div className="flex gap-3">
+                      <Target
+                        size={24}
+                        className="text-[#5F8555] flex-shrink-0"
+                      />
+                      <div>
+                        <p className="font-semibold text-[#5F8555] mb-1">
+                          Platform Fee
+                        </p>
+                        <p className="text-sm text-[#5F8555]">
+                          Chainfund charges a small 2% platform fee on all
+                          successful donations to keep this lights on.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Duration */}
+                  <div>
+                    <label className="text-lg font-semibold text-[#104901] mb-3 block">
+                      Campaign Duration
+                    </label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {duration.map((time) => (
+                        <button
+                          key={time.text}
+                          type="button"
+                          onClick={() =>
+                            handleFieldChange("duration", time.text)
+                          }
+                          className={`px-3 py-3 flex gap-2 items-center justify-center rounded-lg transition-all text-sm ${
+                            formData.duration === time.text
+                              ? "ring-2 ring-[#5F8555] bg-[#104901] text-white"
+                              : "bg-[#E5ECDE] text-[#5F8555] hover:bg-[#D9D9D9]"
+                          }`}
+                        >
+                          {time.icon}
+                          <span>{time.text}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Chained Campaign */}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <label className="text-lg font-semibold text-[#104901]">
+                        Do you want your campaign to be chained?
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowChainInfoModal(true)}
+                        className="text-[#5F8555] hover:text-[#104901] transition-colors"
+                        aria-label="Learn more about chained campaigns"
+                      >
+                        <HelpCircle size={20} />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <Switch
+                        checked={formData.isChained}
+                        onCheckedChange={() =>
+                          handleFieldChange("isChained", !formData.isChained)
+                        }
+                      />
+                      <span className="text-[#5F8555]">
+                        Yes, I want my campaign to be chained
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Commission Rate */}
+                  {formData.isChained && (
+                    <div>
+                      <label className="text-lg font-semibold text-[#104901] mb-3 block">
+                        Ambassador Commission Rate (%)
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={10}
+                        value={formData.chainerCommissionRate}
+                        onChange={(e) =>
+                          handleFieldChange(
+                            "chainerCommissionRate",
+                            +e.target.value
+                          )
+                        }
+                        className="w-full md:w-64 px-4 py-3 rounded-lg bg-[#E5ECDE] font-medium text-lg text-[#5F8555] placeholder:text-[#5F8555] focus:outline-none focus:ring-2 focus:ring-[#5F8555]"
+                      />
+                      <p className="text-sm text-[#5F8555] mt-2">
+                        0% - 10% of proceeds
+                      </p>
+                    </div>
+                  )}
                 </div>
-                <button
-                  className="text-[#5F8555] text-xl"
-                  onClick={() => setShowChainInfoModal(false)}
+              )}
+
+              {/* Step 3: Media */}
+              {step === 3 && (
+                <div className="bg-white rounded-2xl p-8 shadow-sm space-y-8">
+                  <h2 className="text-3xl font-bold text-[#104901]">
+                    Campaign Media
+                  </h2>
+
+                  {/* Cover Image */}
+                  <div>
+                    <label className="text-lg font-semibold text-[#104901] mb-3 block">
+                      Cover Image
+                    </label>
+                    <div className="space-y-6">
+                      {/* Upload Area */}
+                      <div className="bg-[#F5F5F5] rounded-2xl p-12 border-2 border-dashed border-[#E5ECDE] flex flex-col items-center justify-center gap-4 cursor-pointer hover:bg-[#E5ECDE] transition-colors">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            if (e.target.files?.[0]) {
+                              uploadFile(e.target.files[0], "imageUpload").then(
+                                (result) => {
+                                  if (result?.url) {
+                                    handleCoverImageUpload(result.url);
+                                  }
+                                }
+                              );
+                            }
+                          }}
+                          className="hidden"
+                          id="cover-image-input"
+                        />
+                        <label
+                          htmlFor="cover-image-input"
+                          className="flex flex-col items-center gap-4 cursor-pointer"
+                        >
+                          <div className="bg-[#E5ECDE] p-4 rounded-full">
+                            <UploadIcon
+                              size={32}
+                              className="text-[#5F8555] font-bold stroke-[3]"
+                            />
+                          </div>
+                          <div className="text-center">
+                            <p className="text-lg font-semibold text-[#104901]">
+                              Upload Cover Image
+                            </p>
+                            <p className="text-sm text-[#999]">
+                              Drag and drop your image here, or click to browse
+                            </p>
+                            <p className="text-xs text-[#B3B3B3] mt-1">
+                              Recommended size: 1200x400px
+                            </p>
+                          </div>
+                        </label>
+                      </div>
+
+                      {/* Preview Boxes */}
+                      <div className="flex gap-4">
+                        {/* Box 1 */}
+                        {uploadedFiles.coverImageUrl ? (
+                          <div className="relative bg-[#F5F5F5] rounded-2xl overflow-hidden flex-1 h-40">
+                            <Image
+                              src={uploadedFiles.coverImageUrl}
+                              alt="Cover preview"
+                              fill
+                              className="object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleCoverImageUpload("")}
+                              className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full transition-colors"
+                            >
+                              <XCircle size={20} />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="bg-[#F5F5F5] rounded-2xl flex-1 h-40 flex items-center justify-center border-2 border-dashed border-[#E5ECDE]">
+                            <Camera size={40} className="text-[#D9D9D9]" />
+                          </div>
+                        )}
+
+                        {/* Box 2 */}
+                        <div className="bg-[#F5F5F5] rounded-2xl flex-1 h-40 flex items-center justify-center border-2 border-dashed border-[#E5ECDE]">
+                          <Camera size={40} className="text-[#D9D9D9]" />
+                        </div>
+
+                        {/* Box 3 */}
+                        <div className="bg-[#F5F5F5] rounded-2xl flex-1 h-40 flex items-center justify-center border-2 border-dashed border-[#E5ECDE]">
+                          <Camera size={40} className="text-[#D9D9D9]" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Video */}
+                  <div>
+                    <label className="text-lg font-semibold text-[#104901] mb-3 block">
+                      Cover Video (Optional)
+                    </label>
+                    <div className="bg-[#E5ECDE] p-4 rounded-lg">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Youtube color="#5F8555" size={24} />
+                        <span className="font-semibold text-[#5F8555]">
+                          YouTube or Video Link
+                        </span>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Paste video link from YouTube or other sources"
+                        value={formData.video}
+                        onChange={(e) =>
+                          handleFieldChange("video", e.target.value)
+                        }
+                        className="w-full px-4 py-3 bg-transparent text-[#5F8555] placeholder:text-[#5F8555] focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Gallery Images */}
+                  <div>
+                    <label className="text-lg font-semibold text-[#104901] mb-1 block">
+                      Gallery Images
+                    </label>
+                    <p className="text-sm text-[#5F8555] mb-4">
+                      Add up to 5 images (PNG, JPG, WEBP - max 1MB each)
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        id="campaign-images"
+                        onChange={(e) => handleImageFileSelect(e.target.files)}
+                      />
+
+                      <label
+                        htmlFor="campaign-images"
+                        className="bg-[#E5ECDE] flex flex-col gap-3 items-center justify-center px-8 py-12 rounded-xl text-[#5F8555] cursor-pointer hover:bg-[#D9D9D9] transition-colors border-2 border-dashed border-[#5F8555]"
+                      >
+                        <ImageIcon size={40} />
+                        <span className="text-center font-medium">
+                          Click to upload images
+                        </span>
+                      </label>
+
+                      {uploadedFiles.imageUrls.map((url, index) => (
+                        <div
+                          key={index}
+                          className="relative bg-[#E5ECDE] rounded-xl overflow-hidden flex items-center justify-center group"
+                        >
+                          <Image
+                            src={url}
+                            alt={`preview-${index}`}
+                            width={200}
+                            height={150}
+                            className="object-cover w-full h-40"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImage(index)}
+                            className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 flex items-center justify-center transition-all"
+                          >
+                            <XCircle
+                              size={32}
+                              className="text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                            />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Documents */}
+                  <div>
+                    <label className="text-lg font-semibold text-[#104901] mb-1 block">
+                      Supporting Documents
+                    </label>
+                    <p className="text-sm text-[#5F8555] mb-4">
+                      Add supporting documents (PDF, DOC, DOCX - max 10MB total)
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        multiple
+                        className="hidden"
+                        id="supporting-documents"
+                        onChange={(e) =>
+                          handleDocumentFileSelect(e.target.files)
+                        }
+                      />
+
+                      <label
+                        htmlFor="supporting-documents"
+                        className="bg-[#E5ECDE] flex flex-col gap-3 items-center justify-center px-8 py-12 rounded-xl text-[#5F8555] cursor-pointer hover:bg-[#D9D9D9] transition-colors border-2 border-dashed border-[#5F8555]"
+                      >
+                        <Paperclip size={40} />
+                        <span className="text-center font-medium">
+                          Click to upload documents
+                        </span>
+                      </label>
+
+                      {uploadedFiles.documentUrls.map((url, index) => {
+                        const filename =
+                          url.split("/").pop() || `document-${index}`;
+                        return (
+                          <div
+                            key={index}
+                            className="relative bg-[#E5ECDE] px-4 py-4 rounded-xl flex items-center gap-3 text-[#5F8555] group hover:bg-[#D9D9D9] transition-colors"
+                          >
+                            <Paperclip size={20} className="flex-shrink-0" />
+                            <span className="text-sm truncate flex-1">
+                              {filename.length > 25
+                                ? filename.slice(0, 25) + "..."
+                                : filename}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveDocument(index)}
+                              className="text-red-600 hover:text-red-700 flex-shrink-0"
+                            >
+                              <XCircle size={20} />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 4: Review & Launch */}
+              {step === 4 && (
+                <div className="bg-white rounded-2xl p-8 shadow-sm space-y-8">
+                  <h2 className="text-3xl font-bold text-[#104901]">
+                    Review & Launch
+                  </h2>
+
+                  {/* Campaign Preview */}
+                  <div className="bg-[#F5F5F5] rounded-xl overflow-hidden">
+                    {uploadedFiles.coverImageUrl && (
+                      <div className="relative w-full h-64 mb-4">
+                        <Image
+                          src={uploadedFiles.coverImageUrl}
+                          alt="Campaign cover"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
+                    <div className="p-6">
+                      <h3 className="text-2xl font-bold text-[#104901] mb-2">
+                        {formData.title || "Untitled Campaign"}
+                      </h3>
+                      <p className="text-sm text-[#5F8555] mb-4 uppercase tracking-wide">
+                        {formData.reason || "UNCATEGORIZED"}
+                      </p>
+                      <p className="text-[#5F8555]">
+                        {formData.story || "No description provided."}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Story Section */}
+                  <div>
+                    <label className="text-lg font-semibold text-[#104901] mb-3 block">
+                      Campaign Story
+                    </label>
+                    <div className="bg-[#E5ECDE] rounded-xl overflow-hidden">
+                      <div className="p-4 space-y-3">
+                        <div className="flex items-start gap-3">
+                          <PenTool
+                            size={24}
+                            className="text-[#5F8555] rotate-180 flex-shrink-0 mt-1"
+                          />
+                          <textarea
+                            placeholder="Tell the world what your campaign is about..."
+                            value={formData.story}
+                            onChange={(e) =>
+                              handleFieldChange("story", e.target.value)
+                            }
+                            className="w-full bg-transparent text-[#5F8555] placeholder:text-[#5F8555] focus:outline-none resize-none min-h-40"
+                          />
+                        </div>
+                        <div className="text-sm text-[#5F8555] px-4">
+                          Tell the world what your campaign is about and why
+                          they should support you.
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowAiModal(true)}
+                        className="w-full bg-[#5F8555] py-3 px-4 flex gap-2 items-center justify-center font-semibold text-white hover:bg-[#3f5f3d] transition-colors"
+                      >
+                        <Airplay size={20} />
+                        Suggest with AI
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Campaign Stats */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-[#E5ECDE] rounded-xl p-6">
+                    <div>
+                      <p className="text-sm text-[#5F8555]">Currency</p>
+                      <p className="text-xl font-bold text-[#104901]">
+                        {formData.currency || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-[#5F8555]">Goal</p>
+                      <p className="text-xl font-bold text-[#104901]">
+                        {formData.goal || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-[#5F8555]">Duration</p>
+                      <p className="text-xl font-bold text-[#104901]">
+                        {formData.duration || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-[#5F8555]">Visibility</p>
+                      <p className="text-xl font-bold text-[#104901] capitalize">
+                        {formData.visibility}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* AI Modal */}
+                  {showAiModal && (
+                    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+                      <div className="bg-white rounded-xl p-6 w-full max-w-2xl shadow-lg space-y-4 max-h-96 overflow-y-auto">
+                        <div className="flex justify-between items-start">
+                          <div className="flex gap-2 items-start">
+                            <Loader size={32} color="#5F8555" />
+                            <div>
+                              <h2 className="text-2xl font-semibold text-[#104901]">
+                                Suggest Description
+                              </h2>
+                              <p className="text-[#5F8555]">
+                                Generate a description for your campaign with AI
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            className="text-[#5F8555] hover:text-[#104901]"
+                            onClick={() => setShowAiModal(false)}
+                          >
+                            <XCircle size={24} />
+                          </button>
+                        </div>
+
+                        <div className="space-y-3">
+                          <label className="text-[#104901] font-semibold">
+                            Length
+                          </label>
+                          <div className="flex gap-2 bg-[#E5ECDE] w-fit p-1 rounded-lg">
+                            {tabs.map((tab) => (
+                              <button
+                                key={tab}
+                                type="button"
+                                onClick={() => setActiveTab(tab)}
+                                className={`px-6 py-2 rounded-md font-semibold transition-colors ${
+                                  activeTab === tab
+                                    ? "bg-[#104901] text-white"
+                                    : "bg-transparent text-[#5F8555] hover:bg-[#D9D9D9]"
+                                }`}
+                              >
+                                {tab}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-[#104901] font-semibold block">
+                            Additional Instructions
+                          </label>
+                          <textarea
+                            className="w-full bg-[#F5F5F5] rounded-lg border border-[#E5ECDE] p-4 text-[#5F8555] placeholder:text-[#B3B3B3] focus:outline-none focus:ring-2 focus:ring-[#5F8555]"
+                            rows={4}
+                            value={aiInstruction}
+                            onChange={(e) => setAiInstruction(e.target.value)}
+                            placeholder="Share your story, goals, and what makes your campaign unique..."
+                          />
+                        </div>
+
+                        <div className="flex justify-between gap-3">
+                          <Button
+                            className="flex-1 bg-[#104901] hover:bg-[#0a3a01] text-white font-semibold py-2 h-12 text-lg"
+                            onClick={generateAiSuggestion}
+                            disabled={isLoading}
+                          >
+                            {isLoading ? "Generating..." : "Generate"}
+                            {!isLoading && (
+                              <ChevronsRight className="ml-2" size={20} />
+                            )}
+                          </Button>
+                          {aiInstruction && (
+                            <Button
+                              onClick={handleAiDone}
+                              className="flex-1 bg-[#5F8555] hover:bg-[#3f5f3d] text-white font-semibold py-2 h-12 text-lg"
+                            >
+                              Done <Check className="ml-2" size={20} />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Chain Info Modal */}
+                  {showChainInfoModal && (
+                    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+                      <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg space-y-4">
+                        <div className="flex justify-between items-start">
+                          <div className="flex gap-3 items-start">
+                            <HelpCircle
+                              size={28}
+                              className="text-[#5F8555] flex-shrink-0"
+                            />
+                            <h2 className="text-2xl font-semibold text-[#104901]">
+                              About Chained Campaigns
+                            </h2>
+                          </div>
+                          <button
+                            className="text-[#5F8555] hover:text-[#104901]"
+                            onClick={() => setShowChainInfoModal(false)}
+                          >
+                            <XCircle size={24} />
+                          </button>
+                        </div>
+                        <p className="text-[#5F8555] leading-relaxed">
+                          Having your campaign chained means you can allow
+                          others, who may be interested in earning a commission
+                          to help promote your campaign, potentially increasing
+                          donations. The ambassador commission rate must be a
+                          valid percentage between 0% and 10% of campaign
+                          proceeds.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Navigation */}
+              <div className="flex justify-between items-center gap-4">
+                {step > 1 ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setStep((prev) => prev - 1)}
+                    className="h-10 px-4 text-base font-semibold text-[#5F8555] hover:text-[#104901] hover:bg-transparent"
+                  >
+                    Back
+                  </Button>
+                ) : (
+                  <div />
+                )}
+
+                <Button
+                  type="button"
+                  onClick={nextStep}
+                  disabled={isLoading}
+                  className="h-10 px-6 text-base font-semibold bg-[#104901] hover:bg-[#0a3a01] text-white rounded-md flex items-center gap-2"
                 >
-                  <XCircle />
-                </button>
+                  {isFinalStep ? "Launch Campaign" : "Next Step"}
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </Button>
               </div>
-              <div className="space-y-3">
-                <p className="text-[#5F8555] text-base leading-relaxed">
-                  Having your campaign chained means you can allow others, who
-                  may be interested in earning a commission to help promote your
-                  campaign, potentially increasing donations. The ambassador
-                  commission rate must be a valid percentage between 0% and 10%
-                  of campaign proceeds.
-                </p>
-              </div>
-            </div>
+            </form>
           </div>
-        )}
-
-        {/* Navigation Buttons */}
-        <div className="flex justify-between items-center">
-          {step > 1 ? (
-            <Button
-              type="button"
-              className="bg-[#104901] flex justify-between items-center font-semibold text-2xl px-6 py-3 h-14 hover:bg-transparent"
-              onClick={() => setStep((prev) => prev - 1)}
-            >
-              <ChevronsLeft />
-              Previous
-            </Button>
-          ) : (
-            <div />
-          )}
-
-          <Button
-            type="button"
-            onClick={nextStep}
-            className="bg-[#104901] flex justify-between items-center font-semibold text-2xl px-6 py-3 h-14 hover:bg-transparent"
-          >
-            {isFinalStep ? "Submit" : "Next"} <ChevronsRight />
-          </Button>
         </div>
-      </form>
+      </div>
 
       {/* Success Modal */}
       {showSuccessModal && createdCampaign && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 font-manrope">
-          <div
-            className="bg-[#F5F5F5] p-8 w-[600px] max-w-full shadow-lg space-y-6"
-            style={{ boxShadow: "0px 0px 70px 0px #00000033" }}
-          >
-            <div className="flex justify-end">
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-xl shadow-2xl space-y-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <h2 className="text-3xl font-bold text-[#104901] mb-2">
+                  Campaign Created Successfully! 🎉
+                </h2>
+                <p className="text-[#5F8555]">
+                  Your fundraising campaign is live. Share it to start receiving
+                  donations.
+                </p>
+              </div>
               <button onClick={() => setShowSuccessModal(false)}>
-                <XCircle />
+                <XCircle className="text-[#5F8555]" size={24} />
               </button>
             </div>
-            <div className="text-left">
-              <h2 className="text-[#104901] text-3xl font-semibold mb-4">
-                Campaign created successfully
-              </h2>
-              <p className="text-[#104901] text-xl mb-6">
-                Share your campaign online and on social media to gain traction
-                and drive you towards your goal.
-              </p>
-            </div>
 
-            {/* Campaign Link Button */}
+            {/* Campaign Link */}
             <div
-              className="bg-[#104901] p-4 flex items-center justify-between text-white cursor-pointer hover:bg-[#0a3a01] transition-colors"
+              className="bg-[#104901] p-4 flex items-center justify-between text-white rounded-lg cursor-pointer hover:bg-[#0a3a01] transition-colors"
               onClick={handleViewCampaign}
             >
-              <span className="font-medium">
+              <span className="font-medium truncate">
                 {createdCampaign.shortUrl ||
-                  `chainfund.it/${createdCampaign.id || "l0rea12"}`}
+                  `chainfund.it/${createdCampaign.slug}`}
               </span>
-              <div className="flex items-center gap-2">
-                <span className="font-medium">VIEW</span>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <span className="font-semibold">VIEW</span>
                 <ExternalLink size={20} />
               </div>
             </div>
 
             {/* Share Section */}
-            <div className="flex items-center justify-between">
-              <span className="text-[#104901] text-2xl font-medium">
-                Share campaign
-              </span>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => handleShareCampaign("whatsapp")}
-                  className="w-12 h-12 rounded-full flex items-center justify-center text-[#104901] hover:bg-[#104901] hover:text-white transition-colors"
-                >
-                  <MessageCircle size={32} />
-                </button>
+            <div className="space-y-3">
+              <p className="text-lg font-semibold text-[#104901]">
+                Share Your Campaign
+              </p>
+              <div className="flex gap-3 justify-center">
                 <button
                   onClick={() => handleShareCampaign("facebook")}
-                  className="w-12 h-12 rounded-full flex items-center justify-center text-[#104901] hover:bg-[#104901] hover:text-white transition-colors"
+                  className="w-14 h-14 rounded-full flex items-center justify-center bg-[#E5ECDE] text-[#104901] hover:bg-[#104901] hover:text-white transition-colors"
+                  title="Share on Facebook"
                 >
-                  <Facebook size={32} strokeWidth={1.5} />
+                  <Facebook size={28} />
                 </button>
                 <button
                   onClick={() => handleShareCampaign("instagram")}
-                  className="w-12 h-12 rounded-full flex items-center justify-center text-[#104901] hover:bg-[#104901] hover:text-white transition-colors"
+                  className="w-14 h-14 rounded-full flex items-center justify-center bg-[#E5ECDE] text-[#104901] hover:bg-[#104901] hover:text-white transition-colors"
+                  title="Share on Instagram"
                 >
-                  <Instagram size={32} strokeWidth={1.5} />
+                  <Instagram size={28} />
                 </button>
                 <button
                   onClick={() => handleShareCampaign("twitter")}
-                  className="w-12 h-12 rounded-full flex items-center justify-center text-[#104901] hover:bg-[#104901] hover:text-white transition-colors"
+                  className="w-14 h-14 rounded-full flex items-center justify-center bg-[#E5ECDE] text-[#104901] hover:bg-[#104901] hover:text-white transition-colors"
+                  title="Share on Twitter"
                 >
-                  <Twitter size={32} strokeWidth={1.5} />
+                  <Twitter size={28} />
                 </button>
                 <button
                   onClick={() => handleShareCampaign("linkedin")}
-                  className="w-12 h-12 rounded-full flex items-center justify-center text-[#104901] hover:bg-[#104901] hover:text-white transition-colors"
+                  className="w-14 h-14 rounded-full flex items-center justify-center bg-[#E5ECDE] text-[#104901] hover:bg-[#104901] hover:text-white transition-colors"
+                  title="Share on LinkedIn"
                 >
-                  <Linkedin size={32} strokeWidth={1.5} />
+                  <Linkedin size={28} />
                 </button>
               </div>
             </div>
           </div>
         </div>
       )}
+
       <ClientToaster />
     </div>
   );
