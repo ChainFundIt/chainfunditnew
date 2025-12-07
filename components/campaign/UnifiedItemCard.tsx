@@ -162,85 +162,87 @@ export function UnifiedItemCard({ item, viewMode, geolocation }: UnifiedItemCard
   const CategoryIcon = categoryIcons[item.category || 'Uncategorized'] || Heart;
   const imageUrl = item.coverImage || item.image || '';
   
-  // Campaign cards - old design with description and raised amount
+  // Campaign cards - updated design matching homepage
   if (isCampaign) {
     return (
-      <div className="group relative overflow-hidden rounded-2xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-white">
-        {/* Image */}
-        <div className="relative">
+      <div className="group rounded-2xl overflow-hidden bg-white border border-[#E8E8E8] hover:border-[#104901] hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col">
+        {/* IMAGE SECTION */}
+        <div className="relative w-full h-[200px] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
           {needsFallback ? (
             <EmojiFallbackImage
               category={item.category}
               title={item.title}
-              className="w-full h-48 group-hover:scale-105 transition-transform duration-300"
+              className="w-full h-full object-contain bg-white group-hover:scale-105 transition-transform duration-500"
               width={400}
-              height={192}
+              height={200}
             />
           ) : (
             <R2Image
               src={imageUrl}
               alt={item.title}
               width={400}
-              height={300}
-              className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+              height={200}
+              className="w-full h-full object-cover bg-white group-hover:scale-105 transition-transform duration-500"
             />
           )}
-          <div className="absolute top-3 left-3 flex gap-2">
-            <Badge className="bg-[#104901] text-white">Campaign</Badge>
+          <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full">
+            <span className="font-jakarta font-bold text-xs text-[#104901] uppercase tracking-wider">
+              {item.category || 'Campaign'}
+            </span>
+          </div>
+          <div className="absolute top-4 right-4 bg-[#333333] text-white px-3 py-1.5 rounded-full">
+            <span className="font-jakarta font-bold text-xs">
+              12 days left
+            </span>
           </div>
         </div>
-
-        {/* Content */}
-        <div className="p-4">
-          <Link href={getItemUrl()}>
-            <h3 className="font-semibold text-lg text-black mb-2 line-clamp-2 group-hover:text-[#104901] transition-colors">
-              {item.title}
-            </h3>
-          </Link>
-          <p className="text-sm text-[#757575] mb-3 line-clamp-2">
-            {item.description}
-          </p>
-
-          {item.creatorName && (
-            <div className="flex items-center gap-2 mb-3">
-              <User className="h-4 w-4 text-gray-400" />
-              <span className="text-sm text-[#757575]">by {item.creatorName}</span>
-            </div>
-          )}
-
-          <div className="mb-3">
-            <div className="flex justify-between items-center mb-1">
-              <span className="font-semibold text-lg text-black">
-                {formatCurrency(item.currentAmount || 0, item.currency || 'USD')} raised
-              </span>
-              <span className="text-sm text-[#757575]">
-                {item.stats?.uniqueDonors || 0} donors
-              </span>
-            </div>
-            {item.goalAmount && (
-              <>
-                <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
-                  <div
-                    className="bg-[#104901] h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${progressPercentage}%` }}
-                  />
-                </div>
-                <div className="text-xs text-[#757575]">
-                  {progressPercentage}% of {formatCurrency(item.goalAmount, item.currency || 'USD')}
-                </div>
-              </>
-            )}
-          </div>
-
-          <div className="flex items-center justify-between pt-3 border-t">
-            <div className="flex items-center gap-1 text-xs text-[#757575]">
-              <Calendar className="h-3 w-3" />
-              <span>{formatDate(item.createdAt)}</span>
+        
+        {/* CONTENT SECTION */}
+        <div className="p-5 md:p-6 flex flex-col gap-4 flex-grow">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <p className="font-jakarta font-regular text-xs text-[#999999] uppercase tracking-wider">
+                Organized by <b className="text-black">{item.category || 'Campaign'}</b>
+              </p>
+              {item.isVerified && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-[#104901] border border-[#104901]/20">
+                  <Shield className="h-3 w-3" />
+                </span>
+              )}
             </div>
             <Link href={getItemUrl()}>
-              <Button size="sm" className="bg-[#104901] hover:bg-[#0d3a01] text-white text-xs">
-                View
-              </Button>
+              <h3 className="font-jakarta font-bold text-lg text-black mb-2 hover:text-[#104901] transition-colors">
+                {item.title.length > 50
+                  ? `${item.title.slice(0, 50)}...`
+                  : item.title}
+              </h3>
+            </Link>
+            <p className="font-jakarta font-regular text-sm text-[#666666] line-clamp-2">
+              {item.description}
+            </p>
+          </div>
+          <div className="flex-grow" />
+          <div className="border-t border-[#E8E8E8] pt-4">
+            <div className="flex justify-between items-center mb-3">
+              <span className="font-jakarta font-bold text-[#1ABD73]">
+                {formatCurrency(item.currentAmount || 0, item.currency || 'USD')} raised
+              </span>
+              <span className="font-jakarta font-regular text-[#999999] text-sm">
+                {formatCurrency(item.goalAmount || 0, item.currency || 'USD')} goal
+              </span>
+            </div>
+            <div className="w-full bg-[#E8E8E8] h-2 rounded-full overflow-hidden mb-4">
+              <div
+                className="bg-[#1ABD73] h-full rounded-full transition-all duration-300"
+                style={{ width: `${progressPercentage}%` }}
+              ></div>
+            </div>
+            <Link href={getItemUrl()}>
+              <button
+                className="w-full py-2.5 px-4 bg-[#F5F5F4] text-black font-jakarta font-semibold text-sm rounded-lg hover:bg-[#59AD4A] hover:text-white transition-colors duration-300"
+              >
+                View Campaign
+              </button>
             </Link>
           </div>
         </div>
@@ -248,102 +250,80 @@ export function UnifiedItemCard({ item, viewMode, geolocation }: UnifiedItemCard
     );
   }
   
-  // Charity cards - new virtual giving mall design
+  // Charity cards - updated design matching campaign cards
   return (
-    <Card className="group overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-white rounded-2xl">
-      <CardContent className="p-0">
-        {/* Logo Section with Gradient Overlay */}
-        <div
-          className="relative h-48 flex items-center justify-center overflow-hidden bg-gradient-to-br from-green-50 via-blue-50 to-purple-50"
-          style={{
-            backgroundImage: imageUrl && !needsFallback
-              ? `linear-gradient(135deg, rgba(16, 73, 1, 0.05) 0%, rgba(34, 197, 94, 0.05) 100%), url(${imageUrl})` 
-              : 'linear-gradient(135deg, rgba(16, 73, 1, 0.1) 0%, rgba(34, 197, 94, 0.1) 100%)',
-            backgroundSize: imageUrl && !needsFallback ? 'cover' : 'auto',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-          }}
-        >
-          {/* Animated gradient overlay on hover */}
-          <div className="absolute inset-0 bg-gradient-to-br from-green-600/0 via-green-500/0 to-blue-500/0 group-hover:from-green-600/10 group-hover:via-green-500/10 group-hover:to-blue-500/10 transition-all duration-500"></div>
-          
-          {/* Image or Fallback */}
-          {needsFallback ? (
-            <div className="text-center p-4 relative z-10">
-              <div className="relative inline-block">
-                <div className="absolute inset-0 bg-gradient-to-br from-green-400 to-blue-500 rounded-full blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
-                <div className="relative bg-gradient-to-br from-green-500 to-blue-600 p-4 rounded-full">
-                  <CategoryIcon className="h-12 w-12 text-white" />
-                </div>
+    <div className="group rounded-2xl overflow-hidden bg-white border border-[#E8E8E8] hover:border-[#104901] hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col">
+      {/* IMAGE SECTION */}
+      <div className="relative w-full h-[200px] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden flex items-center justify-center">
+        {needsFallback ? (
+          <div className="text-center">
+            <div className="relative inline-block">
+              <div className="absolute inset-0 bg-gradient-to-br from-green-400 to-blue-500 rounded-full blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
+              <div className="relative bg-gradient-to-br from-green-500 to-blue-600 p-3 rounded-full">
+                <CategoryIcon className="h-8 w-8 text-white" />
               </div>
-              <p className="text-xs font-semibold text-gray-600 mt-3 max-w-[120px] mx-auto line-clamp-2">
-                {item.title}
-              </p>
-            </div>
-          ) : imageUrl ? (
-            <R2Image
-              src={imageUrl}
-              alt={item.title}
-              width={400}
-              height={192}
-              className="w-full h-full object-cover"
-            />
-          ) : null}
-          
-          {/* Verified Badge */}
-          {item.isVerified && (
-            <div className="absolute top-3 right-3 z-20">
-              <Badge className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg backdrop-blur-sm px-2.5 py-1 flex items-center gap-1.5">
-                <Shield className="h-3.5 w-3.5" />
-                <span className="text-xs font-semibold">Verified</span>
-              </Badge>
-            </div>
-          )}
-
-          {/* Category Badge */}
-          <div className="absolute bottom-3 left-3 z-20">
-            <Badge className="bg-white/95 backdrop-blur-md text-gray-700 border border-gray-200 shadow-md px-3 py-1.5 flex items-center gap-1.5 hover:bg-white transition-colors">
-              <CategoryIcon className="h-3.5 w-3.5 text-green-600" />
-              <span className="text-xs font-medium">
-                {item.category || 'Uncategorized'}
-              </span>
-            </Badge>
-          </div>
-        </div>
-
-        {/* Content Section */}
-        <div className="p-6 bg-white">
-          <div className="mb-5">
-            <Link href={getItemUrl()}>
-              <h3 className="font-bold text-xl text-gray-900 mb-3 group-hover:text-green-600 transition-colors duration-300 line-clamp-2 min-h-[3rem]">
-                {item.title}
-              </h3>
-            </Link>
-            
-            {/* Decorative divider */}
-            <div className="flex items-center gap-2 mb-4">
-              <div className="h-0.5 bg-gradient-to-r from-green-500 to-transparent flex-1"></div>
-              <Heart className="h-4 w-4 text-red-400 fill-red-400" />
-              <div className="h-0.5 bg-gradient-to-l from-green-500 to-transparent flex-1"></div>
             </div>
           </div>
-
-          {/* Donate Button with enhanced design */}
-          <Button
-            asChild
-            className="w-full bg-gradient-to-r from-green-600 to-[#104901] hover:text-white text-white font-bold py-3.5 rounded-xl transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] shadow-md group/button"
-          >
-            <Link href={getItemUrl()} className="flex items-center justify-center gap-2">
-              <span>Donate Now</span>
-              <Heart className="h-4 w-4 group-hover/button:scale-110 transition-transform duration-300" />
-            </Link>
-          </Button>
+        ) : (
+          <R2Image
+            src={imageUrl}
+            alt={item.title}
+            width={400}
+            height={200}
+            className="w-full h-full object-contain bg-white group-hover:scale-105 transition-transform duration-500"
+          />
+        )}
+        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full">
+          <span className="font-jakarta font-bold text-xs text-[#104901] uppercase tracking-wider">
+            {item.category || 'Charity'}
+          </span>
         </div>
+        {item.isVerified && (
+          <div className="absolute top-4 right-4 bg-[#59AD4A] text-white px-3 py-1.5 rounded-full flex items-center gap-1.5">
+            <Shield className="h-3 w-3" />
+            <span className="font-jakarta font-bold text-xs">Verified</span>
+          </div>
+        )}
+      </div>
 
-        {/* Bottom accent border */}
-        <div className="h-1 bg-gradient-to-r from-green-500 via-green-400 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-      </CardContent>
-    </Card>
+      {/* CONTENT SECTION */}
+      <div className="p-5 md:p-6 flex flex-col gap-4 flex-grow">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <p className="font-jakarta font-regular text-xs text-[#999999] uppercase tracking-wider">
+              Charity <b className="text-black">{item.category || 'Organization'}</b>
+            </p>
+          </div>
+          <Link href={getItemUrl()}>
+            <h3 className="font-jakarta font-bold text-lg text-black mb-2 hover:text-[#104901] transition-colors">
+              {item.title.length > 50
+                ? `${item.title.slice(0, 50)}...`
+                : item.title}
+            </h3>
+          </Link>
+          <p className="font-jakarta font-regular text-sm text-[#666666] line-clamp-2">
+            {item.description}
+          </p>
+        </div>
+        <div className="flex-grow" />
+        <div className="border-t border-[#E8E8E8] pt-4">
+          <div className="flex items-center justify-center mb-4">
+            <div className="flex items-center gap-2">
+              {/* <div className="h-0.5 bg-gradient-to-r from-[#59AD4A] to-transparent flex-1 w-8"></div> */}
+              <Heart className="h-0 w-0 text-red-400 fill-red-400" />
+              {/* <div className="h-0.5 bg-gradient-to-l from-[#59AD4A] to-transparent flex-1 w-8"></div> */}
+            </div>
+          </div>
+          <Link href={getItemUrl()}>
+            <button
+              className="w-full py-2.5 px-4 bg-white text-black font-jakarta font-semibold text-sm rounded-lg hover:bg-[#59AD4A] hover:text-white transition-colors duration-300 flex items-center justify-center gap-2 border border-gray-200"
+            >
+              <Heart className="h-0 w-0" />
+              Donate Now
+            </button>
+          </Link>
+        </div>
+      </div>
+    </div>
   );
 }
-
