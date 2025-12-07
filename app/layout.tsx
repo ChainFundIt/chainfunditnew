@@ -26,10 +26,10 @@ const jakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: "Chainfundit",
-  description: "Raise funds - support dreams",
+  description: "Raise funds, support dreams",
   openGraph: {
     title: "Chainfundit",
-    description: "Raise funds - support dreams",
+    description: "Raise funds, support dreams",
     url: process.env.NEXT_PUBLIC_APP_URL || "https://chainfundit.com",
     siteName: "Chainfundit",
     images: [
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary",
     title: "Chainfundit",
-    description: "Raise funds - support dreams",
+    description: "Raise funds, support dreams",
     images: [logoUrl],
   },
   icons: {

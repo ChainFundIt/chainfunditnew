@@ -53,7 +53,7 @@ export const themes: Record<string, ThemeConfig> = {
     ],
     features: [
       {
-        title: "Raise Funds | Support Dreams this Season.",
+        title: "Raise Funds, Support Dreams this Season.",
         desc: "Share the spirit of Christmas by supporting causes that matter. Every donation brings joy and hope to those in need during this festive season",
         bgClass: "bg-brand-green-dark",
         textColor: "text-white",
