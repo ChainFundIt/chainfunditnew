@@ -30,7 +30,7 @@ const sideBarButtons = [
   { icon: CampaignsIcon, label: "Campaigns", url: "/dashboard/campaigns" },
   { icon: DonationsIcon, label: "Donations", url: "/dashboard/donations" },
   { icon: PayoutsIcon, label: "Payouts", url: "/dashboard/payouts" },
-  { icon: SettingsIcon, label: "Settings", url: "/settings" },
+  { icon: SettingsIcon, label: "Settings", url: "/dashboard/settings" },
 ];
 
 const Sidebar = (props: Props) => {

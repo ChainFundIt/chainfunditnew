@@ -487,7 +487,7 @@ export function PayoutDetailsModal({
                         size="sm"
                         onClick={() => {
                           onClose();
-                          router.push("/settings");
+                          router.push("/dashboard/settings");
                         }}
                         className="rounded-xl p-4 text-sm"
                       >
@@ -605,7 +605,7 @@ export function PayoutDetailsModal({
                   <Button
                     onClick={() => {
                       onClose();
-                      router.push("/settings");
+                      router.push("/dashboard/settings");
                     }}
                     size="sm"
                     className="bg-amber-600 hover:bg-amber-700"

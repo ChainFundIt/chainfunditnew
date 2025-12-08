@@ -27,7 +27,7 @@ const links = [
     label: "Payouts",
   },
   {
-    href: "/settings",
+    href: "/dashboard/settings",
     icon: <LifeBuoy size={24} />,
     label: "Settings",
   },
