@@ -22,7 +22,7 @@ const links = [
     label: "Donations",
   },
   {
-    href: "/payouts",
+    href: "/dashboard/payouts",
     icon: <Share size={24} />,
     label: "Payouts",
   },
