@@ -293,7 +293,6 @@ export default function DashboardPage() {
               width={35}
               height={35}
               className="rounded-full"
-              // className="w-full h-full object-cover"
             />
           ) : (
             <div className="w-[35px] h-[35px] flex items-center justify-center rounded-full border border-[var(--color-darkGreen)">
@@ -389,8 +388,8 @@ export default function DashboardPage() {
             </p>
           </DialogHeader>
           <div className="py-4 md:py-5">
-            <CompleteProfile 
-              formRef={formRef} 
+            <CompleteProfile
+              formRef={formRef}
               onSuccess={() => setShowCompleteProfile(false)}
             />
           </div>
@@ -588,7 +587,7 @@ export default function DashboardPage() {
                 <Button
                   className="bg-white border border-[#E5E7EB] rounded-[10.5px] font-bold text-[12px] leading-[18px] text-[#4b5563] mt-auto "
                   onClick={() => {
-                    router.push("/donations");
+                    router.push("/dashboard/donations");
                   }}
                 >
                   View All Transactions

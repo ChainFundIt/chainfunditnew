@@ -10,7 +10,8 @@ type Props = {};
 
 const ReceivedDonations = (props: Props) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const { donations, loading, error, pagination, refreshDonations } = useDonations('completed', currentPage);
+  const { donations, loading, error, pagination, refreshDonations } =
+    useDonations("completed", currentPage);
   const { stats } = useDashboard();
 
   if (loading) {
@@ -73,17 +74,24 @@ const ReceivedDonations = (props: Props) => {
               Donations Summary
             </h2>
             <p className="text-lg text-[#104901] opacity-80">
-              {stats?.totalDonors || 0} donor{(stats?.totalDonors || 0) !== 1 ? 's' : ''} • {donations.length} donation{donations.length !== 1 ? 's' : ''} received
+              {stats?.totalDonors || 0} donor
+              {(stats?.totalDonors || 0) !== 1 ? "s" : ""} • {donations.length}{" "}
+              donation{donations.length !== 1 ? "s" : ""} received
             </p>
             {Object.keys(currencyBreakdown).length > 1 && (
               <div className="mt-2 text-sm text-[#104901] opacity-70">
                 <p className="font-medium">Currency Breakdown:</p>
                 <div className="flex flex-wrap gap-2 mt-1">
-                  {Object.entries(currencyBreakdown).map(([currency, amount]) => (
-                    <span key={currency} className="bg-white bg-opacity-50 px-2 py-1 rounded text-xs">
-                      {currency}: {formatCurrency(amount, currency)}
-                    </span>
-                  ))}
+                  {Object.entries(currencyBreakdown).map(
+                    ([currency, amount]) => (
+                      <span
+                        key={currency}
+                        className="bg-white bg-opacity-50 px-2 py-1 rounded text-xs"
+                      >
+                        {currency}: {formatCurrency(amount, currency)}
+                      </span>
+                    )
+                  )}
                 </div>
               </div>
             )}
@@ -102,66 +110,101 @@ const ReceivedDonations = (props: Props) => {
       {/* Donations List */}
       <div className="mt-6 space-y-4">
         {donations.map((donation) => (
-          <div key={donation.id} className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+          <div
+            key={donation.id}
+            className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+          >
             <div className="flex justify-between items-start">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-3">
                   {donation.donorAvatar ? (
                     <Image
                       src={donation.donorAvatar}
-                      alt={donation.isAnonymous ? 'Anonymous' : donation.donorName || 'Donor'}
+                      alt={
+                        donation.isAnonymous
+                          ? "Anonymous"
+                          : donation.donorName || "Donor"
+                      }
                       width={40}
                       height={40}
                       className="rounded-full"
                     />
                   ) : (
                     <div className="w-10 h-10 bg-gradient-to-br from-[#104901] to-green-600 rounded-full flex items-center justify-center text-white font-semibold">
-                      {donation.isAnonymous ? 'A' : (donation.donorName?.[0] || 'D').toUpperCase()}
+                      {donation.isAnonymous
+                        ? "A"
+                        : (donation.donorName?.[0] || "D").toUpperCase()}
                     </div>
                   )}
                   <div>
                     <h4 className="font-semibold text-[#104901]">
-                      {donation.isAnonymous ? 'Anonymous Donation' : (donation.donorName || 'Donor')}
+                      {donation.isAnonymous
+                        ? "Anonymous Donation"
+                        : donation.donorName || "Donor"}
                     </h4>
-                    <p className="text-sm text-gray-600">{donation.campaignTitle}</p>
+                    <p className="text-sm text-gray-600">
+                      {donation.campaignTitle}
+                    </p>
                   </div>
                 </div>
-                
+
                 {donation.message && (
-                  <p className="text-gray-700 text-sm mb-3 italic">&ldquo;{donation.message}&rdquo;</p>
+                  <p className="text-gray-700 text-sm mb-3 italic">
+                    &ldquo;{donation.message}&rdquo;
+                  </p>
                 )}
-                
+
                 <div className="flex items-center gap-4 text-xs text-gray-500">
-                  <span>{new Date(donation.createdAt).toLocaleDateString()}</span>
+                  <span>
+                    {new Date(donation.createdAt).toLocaleDateString()}
+                  </span>
                   <span>•</span>
                   <div className="flex items-center gap-1">
-                      {donation.paymentProvider === 'stripe' ? (
-                        <Image src='/icons/stripe.png' alt='Stripe' width={16} height={16}/>
+                    {donation.paymentProvider === "stripe" ? (
+                      <Image
+                        src="/icons/stripe.png"
+                        alt="Stripe"
+                        width={16}
+                        height={16}
+                      />
                     ) : (
-                      <Image src='/icons/paystack.png' alt='Paystack' width={16} height={16}/>
+                      <Image
+                        src="/icons/paystack.png"
+                        alt="Paystack"
+                        width={16}
+                        height={16}
+                      />
                     )}
-                    <span className="capitalize">{donation.paymentProvider}</span>
+                    <span className="capitalize">
+                      {donation.paymentProvider}
+                    </span>
                   </div>
                   {donation.transactionId && (
                     <>
                       <span>•</span>
-                      <span className="font-mono text-xs">#{donation.transactionId.slice(-8)}</span>
+                      <span className="font-mono text-xs">
+                        #{donation.transactionId.slice(-8)}
+                      </span>
                     </>
                   )}
                 </div>
               </div>
-              
+
               <div className="text-right">
                 <p className="font-bold text-lg text-[#104901]">
                   {formatCurrency(donation.amount, donation.currency)}
                 </p>
-                <Badge variant="default" className="bg-green-100 text-green-800 mt-1">
+                <Badge
+                  variant="default"
+                  className="bg-green-100 text-green-800 mt-1"
+                >
                   <CheckCircle className="h-3 w-3 mr-1" />
                   Completed
                 </Badge>
                 {donation.processedAt && (
                   <p className="text-xs text-gray-500 mt-1">
-                    Processed: {new Date(donation.processedAt).toLocaleDateString()}
+                    Processed:{" "}
+                    {new Date(donation.processedAt).toLocaleDateString()}
                   </p>
                 )}
               </div>
@@ -174,11 +217,12 @@ const ReceivedDonations = (props: Props) => {
       {pagination && pagination.totalPages > pagination.page && (
         <div className="flex justify-center mt-6">
           <Button
-            onClick={() => setCurrentPage(prev => prev + 1)}
+            onClick={() => setCurrentPage((prev) => prev + 1)}
             variant="outline"
             className="text-[#104901] border-[#104901] hover:bg-[#104901] hover:text-white"
           >
-            Load More ({pagination.total - (pagination.page * pagination.limit)} remaining)
+            Load More ({pagination.total - pagination.page * pagination.limit}{" "}
+            remaining)
             <ChevronDown className="h-4 w-4 ml-2" />
           </Button>
         </div>
