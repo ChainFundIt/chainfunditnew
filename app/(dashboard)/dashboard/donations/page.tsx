@@ -1,34 +1,34 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ReceivedDonations from "./received";
 import PendingDonations from "./pending";
 import FailedDonations from "./failed";
 import { fa } from "zod/v4/locales";
 import { useDonations } from "@/hooks/use-dashboard";
 import Image from "next/image";
-import { CircleCheckBig } from "lucide-react";
+import { ChevronDown, CircleCheckBig, Clock, XCircle } from "lucide-react";
+import { formatCurrency } from "@/lib/utils/currency";
+import { Button } from "@/components/ui/button";
 
 const tabs = ["Received", "Pending", "Failed"];
 
 const DonationsPage = () => {
   const [activeTab, setActiveTab] = React.useState<string>(tabs[0]);
   const [currentPage, setCurrentPage] = useState(1);
-  const { donations, loading, error, pagination, refreshDonations } =
-    useDonations("completed", currentPage);
 
-  const renderActiveTab = () => {
-    switch (activeTab) {
-      case "Received":
-        return <ReceivedDonations key="received" />;
-      case "Pending":
-        return <PendingDonations key="pending" />;
-      case "Failed":
-        return <FailedDonations key="failed" />;
-      default:
-        return <ReceivedDonations key="received" />;
-    }
+  const statusMap: any = {
+    Received: "completed",
+    Pending: "pending",
+    Failed: "failed",
   };
+
+  const { donations, loading, error, pagination, refreshDonations } =
+    useDonations(statusMap[activeTab], currentPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab]);
 
   return (
     <div className="bg-[#F0F7Ef] p-6 font-jakarta md:min-h-[calc(100vh-122px)] ">
@@ -78,6 +78,7 @@ const DonationsPage = () => {
             </div>
             {/* Table Data */}
             {donations.map((data, index) => {
+              console.log(data);
               return (
                 <div
                   className="flex py-3 px-5 bg-white items-center justify-between border-t"
@@ -85,57 +86,108 @@ const DonationsPage = () => {
                 >
                   {/* Donor */}
                   <div className="flex gap-4 items-center w-[19rem]">
-                    <Image
-                      src={"/images/avatar-2.png"}
-                      alt={"user pic"}
-                      width={35}
-                      height={35}
-                      style={{
-                        border: "1px solid #f3f4f6",
-                        borderRadius: "999px",
-                      }}
-                    />
+                    {data.donorAvatar ? (
+                      <Image
+                        src={data.donorAvatar}
+                        alt={
+                          data.isAnonymous
+                            ? "Anonymous"
+                            : data.donorName || "Donor"
+                        }
+                        width={35}
+                        height={35}
+                        style={{
+                          border: "1px solid #f3f4f6",
+                          borderRadius: "999px",
+                        }}
+                      />
+                    ) : (
+                      <div className="w-10 h-10 bg-gradient-to-br from-[#104109] to-[#59ad4a] rounded-full flex items-center justify-center text-white font-semibold">
+                        {data.isAnonymous
+                          ? "A"
+                          : (data.donorName?.[0] || "D").toUpperCase()}
+                      </div>
+                    )}
                     <div className="flex flex-col">
                       <div className="text-[16px] font-bold leading-[30px] text-[#111827]">
-                        Sarah Jenkins
+                        {data.isAnonymous
+                          ? "Anonymous Donation"
+                          : data.donorName || "Donor"}
                       </div>
-                      <div className="text-[11px] leading-[14px] text-[#6b7280]">
-                        Via Credit Card
+                      <div className="text-[11px] leading-[14px] text-[#6b7280] ">
+                        Via{" "}
+                        <span className="capitalize">
+                          {data.paymentProvider}
+                        </span>
                       </div>
                     </div>
                   </div>
                   {/* Amount */}
                   <div className="font-bold text-[#104109] text-[16px] leading-[25px] w-[19rem]  ">
-                    $150
+                    {formatCurrency(data.amount, data.currency)}
                   </div>
                   {/* Campaign */}
                   <div className="font-medium text-[12px] leading-[18px] text-[#4b5563] w-[19rem]">
-                    Clean Water
+                    {data.campaignTitle}
                   </div>
                   {/* Date */}
                   <div className="text-[12px] leading-[18px] text-[#6b7280] w-[19rem]">
-                    Oct 24, 2024
+                    {new Date(data.createdAt).toLocaleDateString()}
                   </div>
                   {/* Status */}
                   <div className=" w-[19rem]">
-                    <div className="bg-[#f0fdf4] border border-[#DCFCE7]  flex gap-2 items-center rounded-full px-5  py-1 w-fit ">
-                      <CircleCheckBig
-                        style={{
-                          color: "#15803d",
-                          width: "12px",
-                          height: "12px",
-                        }}
-                      />
-                      <div className="font-bold text-[11px] leading-[14px] text-[#15803d]">
-                        Received
+                    {activeTab == "Received" && (
+                      <div className="bg-[#f0fdf4] border border-[#DCFCE7]  flex gap-2 items-center rounded-full px-5  py-1 w-fit ">
+                        <CircleCheckBig color="#15803d" size={12} />
+                        <div className="font-bold text-[11px] leading-[14px] text-[#15803d] capitalize">
+                          {data.paymentStatus}
+                        </div>
                       </div>
-                    </div>
+                    )}
+                    {activeTab == "Pending" && (
+                      <div className="bg-yellow-100 border border-yellow-800  flex gap-2 items-center rounded-full px-5  py-1 w-fit ">
+                        <Clock color="#854d0e" size={12} />
+                        <div className="font-bold text-[11px] leading-[14px] text-yellow-800 capitalize">
+                          {data.paymentStatus}
+                        </div>
+                      </div>
+                    )}
+                    {activeTab == "Failed" && (
+                      <div className="bg-destructive border border-transparent  flex gap-2 items-center rounded-full px-5  py-1 w-fit ">
+                        <XCircle color="white" size={12} />
+                        <div className="font-bold text-[11px] leading-[14px] text-destructive-foreground capitalize">
+                          {data.paymentStatus}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
             })}
           </div>
         </div>
+
+        {/* Load More Button */}
+        {pagination && pagination.totalPages > pagination.page && (
+          <div className="flex justify-center">
+            <Button
+              onClick={() => setCurrentPage((prev) => prev + 1)}
+              className="bg-[var(--color-darkGreen)] text-[14px] leading-[21px] font-bold rounded-[10.5px] flex
+                       items-center justify-center py-3 h-auto md:w-fit w-full"
+            >
+              Load More ({pagination.total - pagination.page * pagination.limit}{" "}
+              remaining)
+              <ChevronDown className="h-4 w-4 " />
+            </Button>
+          </div>
+        )}
+
+        {/* Pagination Info */}
+        {pagination && (
+          <div className="text-center text-sm text-gray-500 ">
+            Showing {donations.length} of {pagination.total} donations
+          </div>
+        )}
       </div>
     </div>
   );
