@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useDashboard, useDonations } from "@/hooks/use-dashboard";
 import Image from "next/image";
 import {
   ChevronDown,
@@ -10,9 +9,11 @@ import {
   RefreshCw,
   XCircle,
 } from "lucide-react";
+
 import { formatCurrency } from "@/lib/utils/currency";
 import { Button } from "@/components/ui/button";
 import { Loader } from "@/components/ui/Loader";
+import { useDashboard, useDonations } from "@/hooks/use-dashboard";
 
 const tabs = ["Received", "Pending", "Failed"];
 
@@ -21,6 +22,10 @@ const DonationsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
   const { stats } = useDashboard();
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab]);
 
   const statusMap: any = {
     Received: "completed",
@@ -40,10 +45,6 @@ const DonationsPage = () => {
     }
   };
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [activeTab]);
-
   const ActionButton = () => {
     if (activeTab == "Received") {
       const totalAmount = stats?.totalDonations || 0;
@@ -53,28 +54,12 @@ const DonationsPage = () => {
         </div>
       );
     }
-    if (activeTab == "Pending") {
+    if (activeTab == "Pending" || activeTab == "Failed") {
       return (
         <Button
           onClick={handleRefresh}
           disabled={refreshing}
-          className="flex items-center gap-2 bg-[var(--color-darkGreen)] rounded-[10.5px] 
-                  justify-center py-3 h-auto md:w-fit w-full "
-        >
-          <RefreshCw
-            className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
-          />
-          {refreshing ? "Refreshing..." : "Refresh"}
-        </Button>
-      );
-    }
-    if (activeTab == "Failed") {
-      return (
-        <Button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="flex items-center gap-2 bg-[var(--color-darkGreen)] rounded-[10.5px] 
-                  justify-center py-3 h-auto md:w-fit w-full "
+          className="flex items-center gap-2 bg-[var(--color-darkGreen)] rounded-[10.5px] justify-center py-3 h-auto md:w-fit w-full "
         >
           <RefreshCw
             className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
@@ -88,7 +73,7 @@ const DonationsPage = () => {
   const EmptyDonations = () => {
     if (activeTab === "Received") {
       return (
-        <div className="flex flex-col pt-8 justify-center items-center gap-2">
+        <div className="flex flex-col pt-8 justify-center items-center gap-2 overflow-hidden">
           <h3 className="font-semibold text-3xl text-[#104901]">
             No donations received
           </h3>
@@ -126,7 +111,7 @@ const DonationsPage = () => {
   };
 
   return (
-    <div className="bg-[#F0F7Ef] p-6 font-jakarta md:min-h-[calc(100vh-122px)] ">
+    <div className="bg-[#F0F7Ef] p-6 font-jakarta min-h-[calc(100vh-122px)] ">
       <div className="flex flex-col gap-7">
         {/* Dashboard Heading */}
         <div className="flex md:flex-row flex-col md:justify-between md:items-center gap-5">
@@ -140,10 +125,9 @@ const DonationsPage = () => {
           </div>
         </div>
 
-        {/* Table */}
-        <div className=" border border-[#f3f4f6] rounded-[21px]  flex flex-col">
+        <div>
           {/* Buttons */}
-          <div className="bg-white p-5 flex md:flex-row flex-col md:justify-between gap-2 items-center">
+          <div className="flex md:flex-row flex-col bg-white p-5 md:justify-between gap-2 items-center rounded-tl-[21px] rounded-tr-[21px]">
             <div className="flex p-1  bg-[#f3f4f6] w-fit border rounded-[11px]">
               {tabs.map((data, index) => {
                 const isSelected = activeTab == data;
@@ -162,140 +146,146 @@ const DonationsPage = () => {
             </div>
             <ActionButton />
           </div>
-          {/* Table Content */}
-          <div className="flex flex-col overflow-x-auto">
-            {/* Table Header */}
-            <div className="bg-[#Fcfdfd] flex  py-3 px-5 text-[#6b7280] text-[11px] leading-[14px] font-bold justify-between border-t ">
-              <div className=" w-[19rem]">DONOR</div>
-              <div className=" w-[19rem] ">AMOUNT</div>
-              <div className=" w-[19rem]">CAMPAIGN</div>
-              <div className="w-[19rem]">DATE</div>
-              <div className="w-[19rem]">STATUS</div>
-            </div>
-            {/* Table Data */}
-
-            {!loading &&
-              !error &&
-              donations.length > 0 &&
-              donations.map((data, index) => {
-                return (
+          {/* Table */}
+          <div className="overflow-x-auto overflow-y-hidden w-full">
+            <div className="flex flex-col border border-[#f3f4f6] rounded-bl-[21px] rounded-br-[21px] md:w-full min-w-max">
+              {loading && !error && (
+                <div className="flex pt-8 justify-center items-center gap-4 overflow-hidden">
+                  <Loader color="#104109" />
                   <div
-                    className="flex py-3 px-5 bg-white items-center justify-between border-t"
-                    key={index}
+                    style={{
+                      fontSize: "28px",
+                      lineHeight: "20px",
+                      fontWeight: "700",
+                      color: "#104109",
+                    }}
                   >
-                    {/* Donor */}
-                    <div className="flex gap-4 items-center w-[19rem]">
-                      {data.donorAvatar ? (
-                        <Image
-                          src={data.donorAvatar}
-                          alt={
-                            data.isAnonymous
-                              ? "Anonymous"
-                              : data.donorName || "Donor"
-                          }
-                          width={35}
-                          height={35}
-                          style={{
-                            border: "1px solid #f3f4f6",
-                            borderRadius: "999px",
-                          }}
-                        />
-                      ) : (
-                        <div className="w-10 h-10 bg-gradient-to-br from-[#104109] to-[#59ad4a] rounded-full flex items-center justify-center text-white font-semibold">
-                          {data.isAnonymous
-                            ? "A"
-                            : (data.donorName?.[0] || "D").toUpperCase()}
+                    Loading Donations ...
+                  </div>
+                </div>
+              )}
+
+              {error && (
+                <div className="flex pt-8 justify-center items-center gap-4 overflow-hidden">
+                  <div
+                    className="text-red-700"
+                    style={{
+                      fontSize: "28px",
+                      lineHeight: "20px",
+                      fontWeight: "700",
+                    }}
+                  >
+                    Error Loading Donations: {error}
+                  </div>
+                </div>
+              )}
+
+              {!loading && !error && donations.length == 0 && (
+                <div className="overflow-hidden flex-wrap md:w-full w-screen text-center px-8">
+                  <EmptyDonations />
+                </div>
+              )}
+
+              {!loading && !error && donations.length > 0 && (
+                <>
+                  {/* Table Header */}
+                  <div className="bg-[#Fcfdfd] flex  py-3 px-5 text-[#6b7280] text-[11px] leading-[14px] font-bold md:justify-between gap-5 border-t">
+                    <div className="w-[15rem]">DONOR</div>
+                    <div className="w-[15rem]">AMOUNT</div>
+                    <div className="w-[15rem]">CAMPAIGN</div>
+                    <div className="w-[15rem]">DATE</div>
+                    <div className="w-[10rem]">STATUS</div>
+                  </div>
+                  {/* Table Data */}
+                  {donations.map((data, index) => {
+                    return (
+                      <div
+                        className="flex py-3 px-5 bg-white items-center md:justify-between gap-5 border-t"
+                        key={index}
+                      >
+                        {/* Donor */}
+                        <div className="flex gap-4 items-center w-[15rem] truncate">
+                          {data.donorAvatar ? (
+                            <Image
+                              src={data.donorAvatar}
+                              alt={
+                                data.isAnonymous
+                                  ? "Anonymous"
+                                  : data.donorName || "Donor"
+                              }
+                              width={35}
+                              height={35}
+                              style={{
+                                border: "1px solid #f3f4f6",
+                                borderRadius: "999px",
+                              }}
+                            />
+                          ) : (
+                            <div className="w-10 h-10 bg-gradient-to-br from-[#104109] to-[#59ad4a] rounded-full flex items-center justify-center text-white font-semibold">
+                              {data.isAnonymous
+                                ? "A"
+                                : (data.donorName?.[0] || "D").toUpperCase()}
+                            </div>
+                          )}
+                          <div className="flex flex-col">
+                            <div className="text-[16px] font-bold leading-[30px] text-[#111827]">
+                              {data.isAnonymous
+                                ? "Anonymous Donation"
+                                : data.donorName || "Donor"}
+                            </div>
+                            <div className="text-[11px] leading-[14px] text-[#6b7280] ">
+                              Via{" "}
+                              <span className="capitalize">
+                                {data.paymentProvider}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                      )}
-                      <div className="flex flex-col">
-                        <div className="text-[16px] font-bold leading-[30px] text-[#111827]">
-                          {data.isAnonymous
-                            ? "Anonymous Donation"
-                            : data.donorName || "Donor"}
+                        {/* Amount */}
+                        <div className="font-bold text-[#104109] text-[16px] leading-[25px] w-[15rem] truncate">
+                          {formatCurrency(data.amount, data.currency)}
                         </div>
-                        <div className="text-[11px] leading-[14px] text-[#6b7280] ">
-                          Via{" "}
-                          <span className="capitalize">
-                            {data.paymentProvider}
-                          </span>
+                        {/* Campaign */}
+                        <div className="font-medium text-[12px] leading-[18px] text-[#4b5563] w-[15rem] truncate">
+                          {data.campaignTitle}
+                        </div>
+                        {/* Date */}
+                        <div className="text-[12px] leading-[18px] text-[#6b7280] w-[15rem] truncate">
+                          {new Date(data.createdAt).toLocaleDateString()}
+                        </div>
+                        {/* Status */}
+                        <div className=" w-[10rem]">
+                          {activeTab == "Received" && (
+                            <div className="bg-[#f0fdf4] border border-[#DCFCE7]  flex gap-2 items-center rounded-full px-5  py-1 w-fit ">
+                              <CircleCheckBig color="#15803d" size={12} />
+                              <div className="font-bold text-[11px] leading-[14px] text-[#15803d] capitalize">
+                                {data.paymentStatus}
+                              </div>
+                            </div>
+                          )}
+                          {activeTab == "Pending" && (
+                            <div className="bg-yellow-100 border border-yellow-800  flex gap-2 items-center rounded-full px-5  py-1 w-fit ">
+                              <Clock color="#854d0e" size={12} />
+                              <div className="font-bold text-[11px] leading-[14px] text-yellow-800 capitalize">
+                                {data.paymentStatus}
+                              </div>
+                            </div>
+                          )}
+                          {activeTab == "Failed" && (
+                            <div className="bg-destructive border border-transparent  flex gap-2 items-center rounded-full px-5  py-1 w-fit ">
+                              <XCircle color="white" size={12} />
+                              <div className="font-bold text-[11px] leading-[14px] text-destructive-foreground capitalize">
+                                {data.paymentStatus}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
-                    </div>
-                    {/* Amount */}
-                    <div className="font-bold text-[#104109] text-[16px] leading-[25px] w-[19rem]  ">
-                      {formatCurrency(data.amount, data.currency)}
-                    </div>
-                    {/* Campaign */}
-                    <div className="font-medium text-[12px] leading-[18px] text-[#4b5563] w-[19rem]">
-                      {data.campaignTitle}
-                    </div>
-                    {/* Date */}
-                    <div className="text-[12px] leading-[18px] text-[#6b7280] w-[19rem]">
-                      {new Date(data.createdAt).toLocaleDateString()}
-                    </div>
-                    {/* Status */}
-                    <div className=" w-[19rem]">
-                      {activeTab == "Received" && (
-                        <div className="bg-[#f0fdf4] border border-[#DCFCE7]  flex gap-2 items-center rounded-full px-5  py-1 w-fit ">
-                          <CircleCheckBig color="#15803d" size={12} />
-                          <div className="font-bold text-[11px] leading-[14px] text-[#15803d] capitalize">
-                            {data.paymentStatus}
-                          </div>
-                        </div>
-                      )}
-                      {activeTab == "Pending" && (
-                        <div className="bg-yellow-100 border border-yellow-800  flex gap-2 items-center rounded-full px-5  py-1 w-fit ">
-                          <Clock color="#854d0e" size={12} />
-                          <div className="font-bold text-[11px] leading-[14px] text-yellow-800 capitalize">
-                            {data.paymentStatus}
-                          </div>
-                        </div>
-                      )}
-                      {activeTab == "Failed" && (
-                        <div className="bg-destructive border border-transparent  flex gap-2 items-center rounded-full px-5  py-1 w-fit ">
-                          <XCircle color="white" size={12} />
-                          <div className="font-bold text-[11px] leading-[14px] text-destructive-foreground capitalize">
-                            {data.paymentStatus}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-
-            {loading && !error && (
-              <div className="flex pt-8 justify-center items-center gap-4">
-                <Loader color="#104109" />
-                <div
-                  style={{
-                    fontSize: "28px",
-                    lineHeight: "20px",
-                    fontWeight: "700",
-                    color: "#104109",
-                  }}
-                >
-                  Loading Donations ...
-                </div>
-              </div>
-            )}
-
-            {error && (
-              <div className="flex pt-8 justify-center items-center gap-4">
-                <div
-                  className="text-red-700"
-                  style={{
-                    fontSize: "28px",
-                    lineHeight: "20px",
-                    fontWeight: "700",
-                  }}
-                >
-                  Error Loading Donations: {error}
-                </div>
-              </div>
-            )}
-
-            {!loading && !error && donations.length == 0 && <EmptyDonations />}
+                    );
+                  })}
+                </>
+              )}
+            </div>
           </div>
         </div>
 
@@ -309,7 +299,7 @@ const DonationsPage = () => {
             >
               Load More ({pagination.total - pagination.page * pagination.limit}{" "}
               remaining)
-              <ChevronDown className="h-4 w-4 " />
+              <ChevronDown className="h-4 w-4" />
             </Button>
           </div>
         )}
