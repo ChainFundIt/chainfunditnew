@@ -1,8 +1,16 @@
 import React, { useRef, useState, useEffect } from "react";
 import { ArrowUp, UserCheck } from "lucide-react";
-import { FaFacebook, FaInstagram, FaLinkedinIn, FaTiktok, FaTwitter, FaYoutube } from "react-icons/fa";
+import {
+  FaFacebook,
+  FaInstagram,
+  FaLinkedinIn,
+  FaTiktok,
+  FaTwitter,
+  FaYoutube,
+} from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import Image from "next/image";
 
 type Props = {};
 
@@ -35,8 +43,9 @@ const Account = (props: Props) => {
         }
         return JSON.parse(text);
       })
-      .then(data => {
+      .then((data) => {
         if (data.success && data.user) {
+          console.log(data.user);
           setForm({
             fullName: data.user.fullName || "",
             bio: data.user.bio || "",
@@ -63,14 +72,16 @@ const Account = (props: Props) => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreview(reader.result as string);
-        setForm(f => ({ ...f, avatar: reader.result as string }));
+        setForm((f) => ({ ...f, avatar: reader.result as string }));
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -93,7 +104,74 @@ const Account = (props: Props) => {
   };
 
   return (
-    <div className=" 2xl:container 2xl:mx-auto">
+    <div className="bg-white flex flex-col p-7 gap-7 font-jakarta">
+      {/* User Picture */}
+      <div className="flex gap-4 pb-8 border-b border-b-[#f3f4f6]">
+        {preview ? (
+          <Image
+            src={preview}
+            alt={"User Picture"}
+            width={84}
+            height={84}
+            className="border-4 rounded-full "
+          />
+        ) : (
+          <div className="w-[84px] h-[84px] bg-gradient-to-br from-[#104109] to-[#59ad4a] border-4 rounded-full flex items-center justify-center text-white text-2xl font-semibold">
+            {(form.fullName?.[0] || "U").toUpperCase()}
+          </div>
+        )}
+        <div className="flex flex-col ">
+          <div className="font-bold text-base text-[#111827]">
+            Profile Picture
+          </div>
+          <div className="text-xs text-[#6b7280]">PNG, JPG upto 5MB</div>
+          <div className="flex gap-4 mt-2">
+            <Button className="bg-white border border-[#e5e7eb] rounded-lg text-[#374151] font-semibold text-xs">
+              Upload New
+            </Button>
+            <Button className="border-none rounded-lg text-[#ef4444] font-semibold text-xs bg-white hover:text-[#ef4444]">
+              Delete
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* User Info */}
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
+          <div className="font-bold text-base text-[#374159]">Name</div>
+          <input
+            type="text"
+            name="fullName"
+            value={form.fullName}
+            onChange={handleChange}
+            placeholder="Enter your name"
+            className=" w-[20rem] rounded-lg outline-none border border-[#e5e7eb] p-2 text-sm text-[#6b7280] placeholder:text-sm placeholder:text-[#6b7280]"
+          />
+        </div>
+        <div className="flex flex-col gap-2 w-[40rem]">
+          <div className="font-bold text-base text-[#374159]">Bio</div>
+          <textarea
+            maxLength={250}
+            name="bio"
+            value={form.bio}
+            onChange={handleChange}
+            placeholder="Share a little about your background and interests."
+            className=" w-[40rem] h-[10rem] rounded-lg outline-none border border-[#e5e7eb] p-2 text-sm text-[#6b7280] placeholder:text-sm placeholder:text-[#6b7280]"
+          />
+          <div className=" text-xs text-[#9ca3af] ml-auto">
+            {250 - form.bio.length} Characters Left
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Account;
+
+{
+  /* <div className=" 2xl:container 2xl:mx-auto">
       <h4 className="font-semibold text-2xl md:text-3xl text-[#104901]">Your profile</h4>
       <p className="font-normal text-base md:text-xl text-[#104901]">
         Choose how you are displayed on the website.
@@ -252,8 +330,5 @@ const Account = (props: Props) => {
           {isLoading ? "Saving..." : "Save changes"} <UserCheck />
         </Button>
       </form>
-    </div>
-  );
-};
-
-export default Account;
+    </div> */
+}
