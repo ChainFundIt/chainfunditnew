@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import { ArrowUp, UserCheck } from "lucide-react";
+import { ArrowUp, Save, UserCheck } from "lucide-react";
 import {
   FaFacebook,
   FaInstagram,
@@ -146,7 +146,7 @@ const Account = (props: Props) => {
             value={form.fullName}
             onChange={handleChange}
             placeholder="Enter your name"
-            className=" w-[20rem] rounded-lg outline-none border border-[#e5e7eb] p-2 text-sm text-[#6b7280] placeholder:text-sm placeholder:text-[#6b7280]"
+            className=" w-[20rem] rounded-lg outline-none border border-[#e5e7eb] p-3 text-sm text-[#6b7280] bg-[#f9fafb] placeholder:text-sm placeholder:text-[#6b7280]"
           />
         </div>
         <div className="flex flex-col gap-2 w-[40rem]">
@@ -157,12 +157,134 @@ const Account = (props: Props) => {
             value={form.bio}
             onChange={handleChange}
             placeholder="Share a little about your background and interests."
-            className=" w-[40rem] h-[10rem] rounded-lg outline-none border border-[#e5e7eb] p-2 text-sm text-[#6b7280] placeholder:text-sm placeholder:text-[#6b7280]"
+            className="bg-[#f9fafb] w-[40rem] h-[10rem] rounded-lg outline-none border border-[#e5e7eb] p-2 text-sm text-[#6b7280] placeholder:text-sm placeholder:text-[#6b7280]"
           />
           <div className=" text-xs text-[#9ca3af] ml-auto">
             {250 - form.bio.length} Characters Left
           </div>
         </div>
+      </div>
+
+      {/* Socials */}
+      <div>
+        <div className="flex flex-col gap-2">
+          <div className="font-bold text-base text-[#374159]">Social Links</div>
+          <div className="flex gap-4 flex-col">
+            {/* First Social Row */}
+            <div className="flex w-[60rem] md:justify-between md:flex-row flex-col gap-4">
+              {/* Twitter */}
+              <div className="flex">
+                <input
+                  type="text"
+                  value={"twitter.com/"}
+                  disabled={true}
+                  className="bg-[#f3f4f6] w-[9rem] rounded-tl-lg rounded-bl-lg outline-none border border-[#e5e7eb] p-3 text-sm text-[#6b7280] "
+                />
+                <input
+                  type="text"
+                  name="twitter"
+                  value={form.twitter}
+                  onChange={handleChange}
+                  className=" w-[20rem] rounded-tr-lg rounded-br-lg outline-none border border-[#e5e7eb] p-3 text-sm text-[#6b7280] bg-[#f9fafb]"
+                />
+              </div>
+              {/* Instagram */}
+              <div className="flex">
+                <input
+                  type="text"
+                  value={"instagram.com/"}
+                  disabled={true}
+                  className="bg-[#f3f4f6] w-[9rem] rounded-tl-lg rounded-bl-lg outline-none border border-[#e5e7eb] p-3 text-sm text-[#6b7280] "
+                />
+                <input
+                  type="text"
+                  name="instagram"
+                  value={form.instagram}
+                  onChange={handleChange}
+                  className=" w-[20rem] rounded-tr-lg rounded-br-lg outline-none border border-[#e5e7eb] p-3 text-sm text-[#6b7280] bg-[#f9fafb]"
+                />
+              </div>
+            </div>
+            {/* Second Social Row */}
+            <div className="flex w-[60rem] md:justify-between md:flex-row flex-col gap-4">
+              {/* Facebook */}
+              <div className="flex">
+                <input
+                  type="text"
+                  value={"facebook.com/"}
+                  disabled={true}
+                  className="bg-[#f3f4f6] w-[9rem] rounded-tl-lg rounded-bl-lg outline-none border border-[#e5e7eb] p-3 text-sm text-[#6b7280] "
+                />
+                <input
+                  type="text"
+                  name="facebook"
+                  value={form.facebook}
+                  onChange={handleChange}
+                  className=" w-[20rem] rounded-tr-lg rounded-br-lg outline-none border border-[#e5e7eb] p-3 text-sm text-[#6b7280] bg-[#f9fafb]"
+                />
+              </div>
+              {/* Tiktok */}
+              <div className="flex">
+                <input
+                  type="text"
+                  value={"tiktok.com/@"}
+                  disabled={true}
+                  className="bg-[#f3f4f6] w-[9rem] rounded-tl-lg rounded-bl-lg outline-none border border-[#e5e7eb] p-3 text-sm text-[#6b7280] "
+                />
+                <input
+                  type="text"
+                  name="tiktok"
+                  value={form.tiktok}
+                  onChange={handleChange}
+                  className=" w-[20rem] rounded-tr-lg rounded-br-lg outline-none border border-[#e5e7eb] p-3 text-sm text-[#6b7280] bg-[#f9fafb]"
+                />
+              </div>
+            </div>
+            {/* Third Social Row */}
+            <div className="flex w-[60rem] md:justify-between md:flex-row flex-col gap-4">
+              {/* LinkedIn */}
+              <div className="flex">
+                <input
+                  type="text"
+                  value={"linkedin.com/"}
+                  disabled={true}
+                  className="bg-[#f3f4f6] w-[9rem] rounded-tl-lg rounded-bl-lg outline-none border border-[#e5e7eb] p-3 text-sm text-[#6b7280] "
+                />
+                <input
+                  type="text"
+                  name="linkedin"
+                  value={form.linkedin}
+                  onChange={handleChange}
+                  className=" w-[20rem] rounded-tr-lg rounded-br-lg outline-none border border-[#e5e7eb] p-3 text-sm text-[#6b7280] bg-[#f9fafb]"
+                />
+              </div>
+              {/* Youtube */}
+              <div className="flex">
+                <input
+                  type="text"
+                  value={"youtube.com/@"}
+                  disabled={true}
+                  className="bg-[#f3f4f6] w-[9rem] rounded-tl-lg rounded-bl-lg outline-none border border-[#e5e7eb] p-3 text-sm text-[#6b7280] "
+                />
+                <input
+                  type="text"
+                  name="youtube"
+                  value={form.youtube}
+                  onChange={handleChange}
+                  className=" w-[20rem] rounded-tr-lg rounded-br-lg outline-none border border-[#e5e7eb] p-3 text-sm text-[#6b7280] bg-[#f9fafb]"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Button */}
+      <div className="flex pt-5 border-t border-t-[#f3f4f6] justify-center">
+        <Button className=" rounded-xl font-semibold text-sm p-3 flex h-auto">
+          <Save size={18} />
+          Save Changes
+        </Button>
       </div>
     </div>
   );
