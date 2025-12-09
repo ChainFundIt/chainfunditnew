@@ -33,7 +33,7 @@ const SettingsPage = () => {
         </div>
         <div>
           {/* Settings Header */}
-          <div className="flex border border-b-[f3f4f6] bg-white p-2 gap-2 rounded-tl-3xl rounded-tr-3xl">
+          <div className="flex border border-b-[f3f4f6] bg-white p-2 gap-2 rounded-tl-3xl rounded-tr-3xl overflow-x-auto scrollbar-hide">
             {tabs.map((data, index) => {
               const isSelected = activeTab == data.label;
               return (

@@ -71,7 +71,6 @@ const Account = (props: Props) => {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreview(reader.result as string);
         setForm((f) => ({ ...f, avatar: reader.result as string }));
       };
       reader.readAsDataURL(file);
@@ -82,6 +81,10 @@ const Account = (props: Props) => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+  };
+
+  const deleteImage = () => {
+    setForm((f) => ({ ...f, avatar: "" }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -107,9 +110,9 @@ const Account = (props: Props) => {
     <div className="bg-white flex flex-col p-7 gap-7 font-jakarta">
       {/* User Picture */}
       <div className="flex gap-4 pb-8 border-b border-b-[#f3f4f6]">
-        {preview ? (
+        {form.avatar ? (
           <Image
-            src={preview}
+            src={form.avatar}
             alt={"User Picture"}
             width={84}
             height={84}
@@ -126,10 +129,27 @@ const Account = (props: Props) => {
           </div>
           <div className="text-xs text-[#6b7280]">PNG, JPG upto 5MB</div>
           <div className="flex gap-4 mt-2">
-            <Button className="bg-white border border-[#e5e7eb] rounded-lg text-[#374151] font-semibold text-xs">
+            <input
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              ref={inputRef}
+              onChange={(e) => {
+                handleFileChange(e);
+              }}
+            />
+            <Button
+              className="bg-white border border-[#e5e7eb] rounded-lg text-[#374151] font-semibold text-xs"
+              onClick={() => {
+                inputRef.current?.click();
+              }}
+            >
               Upload New
             </Button>
-            <Button className="border-none rounded-lg text-[#ef4444] font-semibold text-xs bg-white hover:text-[#ef4444]">
+            <Button
+              className="border-none rounded-lg text-[#ef4444] font-semibold text-xs bg-white hover:text-[#ef4444]"
+              onClick={deleteImage}
+            >
               Delete
             </Button>
           </div>
@@ -146,10 +166,10 @@ const Account = (props: Props) => {
             value={form.fullName}
             onChange={handleChange}
             placeholder="Enter your name"
-            className=" w-[20rem] rounded-lg outline-none border border-[#e5e7eb] p-3 text-sm text-[#6b7280] bg-[#f9fafb] placeholder:text-sm placeholder:text-[#6b7280]"
+            className=" md:w-[20rem] w-full rounded-lg outline-none border border-[#e5e7eb] p-3 text-sm text-[#6b7280] bg-[#f9fafb] placeholder:text-sm placeholder:text-[#6b7280]"
           />
         </div>
-        <div className="flex flex-col gap-2 w-[40rem]">
+        <div className="flex flex-col gap-2 md:w-[40rem] w-full">
           <div className="font-bold text-base text-[#374159]">Bio</div>
           <textarea
             maxLength={250}
@@ -157,7 +177,7 @@ const Account = (props: Props) => {
             value={form.bio}
             onChange={handleChange}
             placeholder="Share a little about your background and interests."
-            className="bg-[#f9fafb] w-[40rem] h-[10rem] rounded-lg outline-none border border-[#e5e7eb] p-2 text-sm text-[#6b7280] placeholder:text-sm placeholder:text-[#6b7280]"
+            className="bg-[#f9fafb] w-full md:w-[40rem] md:h-[10rem] h-[15rem] rounded-lg outline-none border border-[#e5e7eb] p-2 text-sm text-[#6b7280] placeholder:text-sm placeholder:text-[#6b7280]"
           />
           <div className=" text-xs text-[#9ca3af] ml-auto">
             {250 - form.bio.length} Characters Left
@@ -171,7 +191,7 @@ const Account = (props: Props) => {
           <div className="font-bold text-base text-[#374159]">Social Links</div>
           <div className="flex gap-4 flex-col">
             {/* First Social Row */}
-            <div className="flex w-[60rem] md:justify-between md:flex-row flex-col gap-4">
+            <div className="flex md:w-[60rem] w-full md:justify-between md:flex-row flex-col gap-4">
               {/* Twitter */}
               <div className="flex">
                 <input
@@ -206,7 +226,7 @@ const Account = (props: Props) => {
               </div>
             </div>
             {/* Second Social Row */}
-            <div className="flex w-[60rem] md:justify-between md:flex-row flex-col gap-4">
+            <div className="flex md:w-[60rem] w-full  md:justify-between md:flex-row flex-col gap-4">
               {/* Facebook */}
               <div className="flex">
                 <input
@@ -241,7 +261,7 @@ const Account = (props: Props) => {
               </div>
             </div>
             {/* Third Social Row */}
-            <div className="flex w-[60rem] md:justify-between md:flex-row flex-col gap-4">
+            <div className="flex md:w-[60rem] w-full  md:justify-between md:flex-row flex-col gap-4">
               {/* LinkedIn */}
               <div className="flex">
                 <input
@@ -281,7 +301,10 @@ const Account = (props: Props) => {
 
       {/* Button */}
       <div className="flex pt-5 border-t border-t-[#f3f4f6] justify-center">
-        <Button className=" rounded-xl font-semibold text-sm p-3 flex h-auto">
+        <Button
+          className=" rounded-xl font-semibold text-sm p-3 flex h-auto"
+          onClick={handleSubmit}
+        >
           <Save size={18} />
           Save Changes
         </Button>
