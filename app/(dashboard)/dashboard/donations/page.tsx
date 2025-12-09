@@ -7,6 +7,7 @@ import {
   CircleCheckBig,
   Clock,
   RefreshCw,
+  RotateCcw,
   XCircle,
 } from "lucide-react";
 
@@ -14,6 +15,11 @@ import { formatCurrency } from "@/lib/utils/currency";
 import { Button } from "@/components/ui/button";
 import { Loader } from "@/components/ui/Loader";
 import { useDashboard, useDonations } from "@/hooks/use-dashboard";
+import {
+  getNextRetryTime,
+  getStatusMessage,
+  isRetryable,
+} from "@/lib/utils/donation-status";
 
 const tabs = ["Received", "Pending", "Failed"];
 
@@ -21,6 +27,7 @@ const DonationsPage = () => {
   const [activeTab, setActiveTab] = React.useState<string>(tabs[0]);
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
+  const [retryingDonation, setRetryingDonation] = useState<string | null>(null);
   const { stats } = useDashboard();
 
   useEffect(() => {
@@ -42,6 +49,34 @@ const DonationsPage = () => {
       await refreshDonations();
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  const handleRetryPayment = async (donationId: string) => {
+    setRetryingDonation(donationId);
+    try {
+      const response = await fetch("/api/payments/retry", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ donationId }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Refresh donations to show updated status
+        await refreshDonations();
+      } else {
+        console.error("Retry failed:", result.error);
+        // TODO: Show error toast
+      }
+    } catch (error) {
+      console.error("Retry error:", error);
+      // TODO: Show error toast
+    } finally {
+      setRetryingDonation(null);
     }
   };
 
@@ -195,9 +230,14 @@ const DonationsPage = () => {
                     <div className="w-[15rem]">CAMPAIGN</div>
                     <div className="w-[15rem]">DATE</div>
                     <div className="w-[10rem]">STATUS</div>
+                    {(activeTab == "Failed" || activeTab == "Pending") && (
+                      <div className="w-[10rem]">ACTIONS</div>
+                    )}
                   </div>
                   {/* Table Data */}
                   {donations.map((data, index) => {
+                    const canRetry = isRetryable(data as any);
+                    const nextRetryTime = getNextRetryTime(data as any);
                     return (
                       <div
                         className="flex py-3 px-5 bg-white items-center md:justify-between gap-5 border-t"
@@ -264,10 +304,15 @@ const DonationsPage = () => {
                             </div>
                           )}
                           {activeTab == "Pending" && (
-                            <div className="bg-yellow-100 border border-yellow-800  flex gap-2 items-center rounded-full px-5  py-1 w-fit ">
-                              <Clock color="#854d0e" size={12} />
-                              <div className="font-bold text-[11px] leading-[14px] text-yellow-800 capitalize">
-                                {data.paymentStatus}
+                            <div className="flex flex-col gap-1">
+                              <div className="bg-yellow-100 border border-yellow-800  flex gap-2 items-center rounded-full px-5  py-1 w-fit ">
+                                <Clock color="#854d0e" size={12} />
+                                <div className="font-bold text-[11px] leading-[14px] text-yellow-800 capitalize">
+                                  {data.paymentStatus}
+                                </div>
+                              </div>
+                              <div className="text-[10px] leading-[14px] text-[#6b7280] ">
+                                {getStatusMessage(data as any)}
                               </div>
                             </div>
                           )}
@@ -280,6 +325,39 @@ const DonationsPage = () => {
                             </div>
                           )}
                         </div>
+                        {/* ACTIONS IN FAILED */}
+                        {activeTab == "Failed" && (
+                          <div className="text-[12px] leading-[18px] text-[#6b7280] w-[10rem] ">
+                            {canRetry ? (
+                              <Button
+                                onClick={() => handleRetryPayment(data.id)}
+                                disabled={retryingDonation === data.id}
+                                className="flex items-center gap-2 rounded-[10.5px] justify-center py-3  md:w-fit w-full text-[#104109] bg-white border-[#104109] "
+                              >
+                                <RotateCcw className="h-3 w-3 mr-1" />
+                                {retryingDonation === data.id
+                                  ? "Retrying..."
+                                  : "Retry Payment"}
+                              </Button>
+                            ) : nextRetryTime ? (
+                              <p className="text-xs text-orange-600 mt-2">
+                                Can retry after{" "}
+                                {nextRetryTime.toLocaleDateString()}
+                              </p>
+                            ) : (
+                              <p className="text-xs text-gray-500 mt-2">
+                                Cannot retry
+                              </p>
+                            )}
+                          </div>
+                        )}
+                        {activeTab === "Pending" && (
+                          <p className="text-xs text-orange-600 mt-1 w-[10rem]">
+                            {data.retryAttempts && data.retryAttempts > 0
+                              ? `Retry attempt ${data.retryAttempts} of 3`
+                              : "No Actions Yet"}
+                          </p>
+                        )}
                       </div>
                     );
                   })}
