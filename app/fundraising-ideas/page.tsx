@@ -6,16 +6,9 @@ import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import {
   Lightbulb,
-  Heart,
   Users,
   Music,
-  Gamepad2,
   Camera,
-  Utensils,
-  Gift,
-  Trophy,
-  BookOpen,
-  ArrowRight,
   Sparkles,
   Footprints,
   GiftIcon,
@@ -30,126 +23,7 @@ import {
   PencilRuler,
   HeartIcon,
 } from "lucide-react";
-import Link from "next/link";
-import BulbIcon from "@/public/icons/BulbIcon";
 import { useRouter } from "next/navigation";
-
-const fundraisingIdeas = [
-  {
-    category: "Events & Activities",
-    categoryLabel: "Get Moving Together",
-    icon: Sparkles,
-    description:
-      "Physical events are a great way to build community spirit while raising funds for your cause.",
-  },
-  {
-    category: "Creative Campaigns",
-    categoryLabel: "Think Outside the Box",
-    icon: Camera,
-    description:
-      "Use the power of social media and creativity to spread your message further. Virtual campaigns have 3x more reach on average.",
-    ideas: [
-      {
-        icon: "📸",
-        title: "Photo Challenge",
-        description:
-          "Create a social media challenge where participants share photos and donate.",
-        tips: "Use a unique hashtag and encourage viral sharing.",
-      },
-      {
-        icon: "🎨",
-        title: "Art Exhibition",
-        description:
-          "Showcase local artwork and sell pieces with proceeds going to your cause.",
-        tips: "Partner with local artists and galleries for support.",
-      },
-      {
-        icon: "🎬",
-        title: "Video Series",
-        description:
-          "Create engaging video content that tells your story over multiple episodes.",
-        tips: "Release episodes weekly to maintain engagement and momentum.",
-      },
-      {
-        icon: "💻",
-        title: "Virtual Workshop",
-        description:
-          "Teach a skill online in exchange for donations to your campaign.",
-        tips: "Charge admission or accept donations during the event.",
-      },
-    ],
-  },
-  {
-    category: "Community Engagement",
-    categoryLabel: "Build Connections",
-    icon: Users,
-    ideas: [
-      {
-        icon: "🌱",
-        title: "Community Cleanup",
-        description:
-          "Organize a neighborhood cleanup and collect donations from participants.",
-        tips: "Partner with local organizations and promote environmental impact.",
-      },
-      {
-        icon: "📚",
-        title: "Skill-Sharing",
-        description:
-          "Offer workshops where people can learn new skills for a donation.",
-        tips: "Tap into your network for volunteer instructors.",
-      },
-      {
-        icon: "🤝",
-        title: "Matching Gifts",
-        description:
-          "Find a sponsor who will match donations up to a certain amount.",
-        tips: "Create urgency by setting a deadline for matching funds.",
-      },
-      {
-        icon: "🎂",
-        title: "Birthday Fundraiser",
-        description:
-          "Ask friends and family to donate to your cause instead of giving gifts.",
-        tips: "Create a dedicated campaign page and share on social media.",
-      },
-    ],
-  },
-  {
-    category: "Product-Based",
-    categoryLabel: "Create & Sell",
-    icon: Gift,
-    ideas: [
-      {
-        icon: "👕",
-        title: "Merchandise Sales",
-        description:
-          "Create and sell branded merchandise like t-shirts, mugs, or stickers.",
-        tips: "Use print-on-demand services to minimize upfront costs.",
-      },
-      {
-        icon: "📖",
-        title: "Cookbook",
-        description:
-          "Compile recipes from community members and sell the cookbook.",
-        tips: "Include personal stories with each recipe for added value.",
-      },
-      {
-        icon: "📅",
-        title: "Calendar",
-        description:
-          "Create a themed calendar with photos or artwork and sell it.",
-        tips: "Start early to have it ready before the new year.",
-      },
-      {
-        icon: "🛍️",
-        title: "Craft Fair",
-        description:
-          "Organize a market where local artisans sell their work with a portion going to your cause.",
-        tips: "Charge vendor fees and a percentage of sales.",
-      },
-    ],
-  },
-];
 
 const eventIdeas = [
   {
