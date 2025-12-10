@@ -10,17 +10,17 @@ const carouselData = [
   {
     image: "/images/signin-1.jpg",
     buttonText: "Create campaigns",
-    text: "Start raising funds for causes you love on the Chainfundit platform, using modern tools for fundraising  like Stripe, PayPal, Paystack and more to get your funds quickly.",
+    text: "Start raising funds for causes you love on the Chainfundit platform, using modern tools for fundraising like Stripe, PayPal, Paystack and more to get your funds quickly.",
   },
   {
     image: "/images/signin-2.jpg",
     buttonText: "Chain campaigns",
-    text: "Start raising funds for causes you love on the Chainfundit platform, using modern tools for fundraising  like Stripe, PayPal, Paystack and more to get your funds quickly.",
+    text: "Start raising funds for causes you love on the Chainfundit platform, using modern tools for fundraising like Stripe, PayPal, Paystack and more to get your funds quickly.",
   },
   {
     image: "/images/signin-3.jpg",
-    buttonText: "Solve life issues",
-    text: "Start raising funds for causes you love on the Chainfundit platform, using modern tools for fundraising  like Stripe, PayPal, Paystack and more to get your funds quickly.",
+    buttonText: "Activate tax incentives",
+    text: "Start raising funds for causes you love on the Chainfundit platform, using modern tools for fundraising like Stripe, PayPal, Paystack and more to get your funds quickly.",
   },
 ];
 
@@ -30,18 +30,19 @@ const CarouselSlide = React.memo(({ item, index, isActive }: {
   index: number; 
   isActive: boolean; 
 }) => (
-  <div className="embla__slide flex-[0_0_100%] relative h-screen overflow-hidden">
+  <div className="embla__slide flex-[0_0_100%] relative min-w-0 w-full h-full overflow-hidden bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700">
     <Image
       src={item.image}
       alt={`Carousel slide ${index + 1}`}
       fill
-      className="object-cover object-center"
+      sizes="50vw"
+      className="object-cover object-center opacity-80"
       priority={index === 0} 
+      quality={75}
       loading={index === 0 ? "eager" : "lazy"}
-      placeholder="blur"
-      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
-      sizes="100vw"
     />
+    {/* Gradient overlay */}
+    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-5" />
   </div>
 ));
 
@@ -75,15 +76,15 @@ function Carousel() {
 
   return (
     <div
-      className="w-full h-screen overflow-hidden"
+      className="w-full h-full overflow-hidden relative"
       onMouseEnter={() => setIsPlaying(false)}
       onMouseLeave={() => setIsPlaying(true)}
     >
-      <div className="embla" ref={emblaRef}>
-        <div className="embla__container flex">
+      <div className="embla w-full h-full" ref={emblaRef}>
+        <div className="embla__container flex w-full h-full">
           {carouselData.map((item, index) => (
             <CarouselSlide
-              key={item.image} // Use image path as key for better React performance
+              key={item.image}
               item={item}
               index={index}
               isActive={selectedIndex === index}
@@ -92,16 +93,17 @@ function Carousel() {
         </div>
       </div>
       
-      {/* Progress indicators and content */}
-      <div className="absolute bottom-8 left-8 right-8 bg-[#56864D] text-white rounded-xl p-6 flex flex-col gap-4 z-10">
-        <div className="flex gap-2">
+      {/* Bottom content overlay */}
+      <div className="absolute bottom-0 left-0 right-0 text-white z-20 p-8">
+        {/* Progress bars */}
+        <div className="flex gap-2 mb-6">
           {[0, 1, 2].map((barIdx) => (
             <div
               key={barIdx}
               ref={(el) => {
                 progressRefs.current[barIdx] = el;
               }}
-              className={`h-1 bg-white/70 rounded w-full overflow-hidden`}
+              className="h-1 bg-white/40 rounded-full flex-1 overflow-hidden"
             >
               <div
                 className={`h-full bg-white transition-all duration-500 ease-out ${
@@ -112,25 +114,14 @@ function Carousel() {
           ))}
         </div>
         
-        <div className="flex items-center">
-          <div className="flex -space-x-3">
-            {[...Array(selectedIndex + 1)].map((_, i) => (
-              <span
-                key={i}
-                className="w-[36px] h-[36px] border-[3px] border-white rounded-full bg-transparent"
-              />
-            ))}
-          </div>
-          <Button
-            className="rounded-[30px] -ml-3 border-[3px] border-white hover:text-white hover:bg-transparent px-10 py-3 bg-transparent transition-all duration-300"
-            variant="outline"
-          >
+        {/* Title and description */}
+        <div className="flex flex-col gap-3">
+          <h3 className="text-xl font-bold leading-tight">
             {carouselData[selectedIndex].buttonText}
-          </Button>
-        </div>
-        
-        <div className="text-sm leading-relaxed">
-          {carouselData[selectedIndex].text}
+          </h3>
+          <p className="text-sm text-white/90 leading-relaxed">
+            {carouselData[selectedIndex].text}
+          </p>
         </div>
       </div>
     </div>
@@ -139,66 +130,22 @@ function Carousel() {
 
 const layout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="w-full flex gap-5 md:p-5 p-2 font-source h-screen overflow-y-auto overflow-x-hidden max-w-[1440px] mx-auto">
-      <div
-        className="w-full md:w-2/5 flex flex-col justify-between items-center"
-        style={{
-          background:
-            "linear-gradient(180deg, whitesmoke 80%, #FFF 85%, whitesmoke 100%)",
-        }}
-      >
-        <div className="w-full flex flex-col gap-3 py-3">{children}</div>
-        <ClientToaster />
-
-        {/* lower section */}
-        <div className="flex flex-col md:flex-row gap-2 md:gap-4 items-center px-2 w-full">
-          <ul className="flex items-center mb-2 md:mb-0">
-            <li className="w-10 h-10 rounded-full border-2 border-[#104901]">
-              <Image
-                src="/images/avatar-3.png"
-                alt="avatar"
-                width={40}
-                height={40}
-              />
-            </li>
-            <li className="w-10 h-10 rounded-full border-2 border-[#104901] -ml-3">
-              <Image
-                src="/images/avatar-4.png"
-                alt="avatar"
-                width={40}
-                height={40}
-              />
-            </li>
-            <li className="w-10 h-10 rounded-full border-2 border-[#104901] -ml-3">
-              <Image
-                src="/images/avatar-5.png"
-                alt="avatar"
-                width={40}
-                height={40}
-              />
-            </li>
-            <li className="w-10 h-10 rounded-full border-2 border-[#104901] -ml-3">
-              <Image
-                src="/images/avatar-6.png"
-                alt="avatar"
-                width={40}
-                height={40}
-              />
-            </li>
-          </ul>
-          <div className="text-center md:text-left">
-            <p className="font-source font-semibold text-xs md:text-sm text-black">
-              Over 100 Chainfunders can&apos;t be wrong
-            </p>
-            <span className="font-light text-xs md:text-sm text-black">
-              Start fundraising today!
-            </span>
+    <div className="w-screen h-screen overflow-hidden bg-gray-100 flex items-center justify-center p-6">
+      <div className="flex w-full max-w-5xl h-[600px] rounded-3xl overflow-hidden shadow-2xl">
+        {/* Left side - Form */}
+        <div className="w-full md:w-1/2 flex flex-col justify-center bg-white px-10">
+          <div className="w-full h-fit">
+            <div className="w-full flex flex-col gap-5">
+              {children}
+            </div>
+            <ClientToaster />
           </div>
         </div>
-      </div>
-{/* right */}
-      <div className="md:w-3/5 relative hidden lg:block h-screen">
-        <Carousel />
+
+        {/* Right side - Carousel */}
+        <div className="hidden md:flex md:w-1/2 h-full">
+          <Carousel />
+        </div>
       </div>
     </div>
   );

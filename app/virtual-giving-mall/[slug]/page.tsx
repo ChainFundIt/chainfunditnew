@@ -26,7 +26,6 @@ import { useGeolocationCurrency } from '@/hooks/use-geolocation-currency';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import Image from 'next/image';
-import { track } from '@/lib/analytics';
 
 interface Charity {
   id: string;
@@ -96,15 +95,6 @@ export default function CharityDetailPage() {
       const data = await response.json();
       setCharity(data.charity);
       setStats(data.stats);
-      
-      // Track charity view
-      if (data.charity) {
-        track("charity_viewed", {
-          charity_id: data.charity.id,
-          charity_name: data.charity.name,
-          charity_slug: data.charity.slug,
-        });
-      }
     } catch (error) {
       console.error('Error fetching charity:', error);
       toast.error('Failed to load charity information');
@@ -132,16 +122,6 @@ export default function CharityDetailPage() {
 
     try {
       const currency = locationInfo?.currency.code || 'USD';
-      
-      // Track charity donation started
-      track("charity_donation_started", {
-        charity_id: charity?.id?.toString(),
-        charity_name: charity?.name,
-        charity_slug: charity?.slug,
-        donation_amount: parseFloat(donationAmount),
-        donation_currency: currency,
-        is_anonymous: isAnonymous,
-      });
       
       // Create payment intent
       const response = await fetch(`/api/charities/${charity?.id}/payment-intent`, {
@@ -189,7 +169,7 @@ export default function CharityDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="animate-pulse">
             <div className="h-64 bg-gray-200 rounded-lg mb-6"></div>
@@ -203,7 +183,7 @@ export default function CharityDetailPage() {
 
   if (!charity) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Charity Not Found</h1>
           <Button asChild>
@@ -218,9 +198,23 @@ export default function CharityDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <Navbar />
-      <div className="max-w-6xl mx-auto mt-20 md:px-10 px-4">
+      
+      {/* Cover Image */}
+      {charity.coverImage && (
+        <div className="h-80 bg-gray-200 overflow-hidden mt-16">
+          <Image 
+            src={charity.coverImage} 
+            alt={charity.name} 
+            className="w-full h-full object-cover"
+            width={1200}
+            height={320}
+          />
+        </div>
+      )}
+
+      <div className="container mx-auto px-4 py-12 max-w-6xl">
         {/* Back Button */}
         <Button asChild variant="ghost" className="mb-6">
           <Link href="/virtual-giving-mall">
@@ -229,44 +223,33 @@ export default function CharityDetailPage() {
           </Link>
         </Button>
 
-        {/* Cover Image */}
-        {charity.coverImage && (
-          <div className="h-64 bg-gray-200 rounded-lg mb-6 overflow-hidden">
-            <Image 
-              src={charity.coverImage} 
-              alt={charity.name} 
-              className="w-full h-full object-cover"
-              width={1000}
-              height={1000}
-            />
-          </div>
-        )}
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Header */}
-            <div>
-              <div className="flex items-start gap-4 mb-4">
+            <div className="bg-white rounded-2xl p-8 border border-gray-200">
+              <div className="flex items-start gap-4 mb-6">
                 {charity.logo && (
                   <Image 
                     src={charity.logo} 
                     alt={charity.name} 
-                    className="h-20 w-20 rounded-lg object-cover"
-                    width={1000}
-                    height={1000}
+                    className="h-20 w-20 rounded-lg object-cover flex-shrink-0"
+                    width={80}
+                    height={80}
                   />
                 )}
                 <div className="flex-1">
-                  <h1 className="text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-                    {charity.name}
+                  <div className="flex items-center gap-3 mb-2">
+                    <h1 className="text-4xl font-bold text-gray-900">
+                      {charity.name}
+                    </h1>
                     {charity.isVerified && (
-                      <Badge className="bg-blue-500">
-                        <CheckCircle className="h-3 w-3 mr-1" />
+                      <Badge className="bg-[#59AD4A] flex items-center gap-1">
+                        <CheckCircle className="h-3 w-3" />
                         Verified
                       </Badge>
                     )}
-                  </h1>
+                  </div>
                   {charity.category && (
                     <Badge variant="outline" className="text-sm">
                       {charity.category}
@@ -277,96 +260,88 @@ export default function CharityDetailPage() {
 
               {/* Stats */}
               {stats && (
-                <div className="grid grid-cols-3 gap-4 p-4 bg-white rounded-lg border">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-green-600">
+                <div className="grid grid-cols-3 gap-4 pt-6 border-t border-gray-200">
+                  <div className="text-center py-4">
+                    <p className="text-2xl font-bold text-[#59AD4A]">
                       {formatAmount(stats.totalAmount.toString(), locationInfo?.currency.code || 'USD')}
                     </p>
-                    <p className="text-sm text-gray-500">Total Raised</p>
+                    <p className="text-sm text-gray-500 mt-1">Total Raised</p>
                   </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-blue-600">{stats.totalDonations}</p>
-                    <p className="text-sm text-gray-500">Donations</p>
+                  <div className="text-center py-4">
+                    <p className="text-2xl font-bold text-[#FFCF55]">{stats.totalDonations}</p>
+                    <p className="text-sm text-gray-500 mt-1">Donations</p>
                   </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-purple-600">{stats.successfulDonations}</p>
-                    <p className="text-sm text-gray-500">Completed</p>
+                  <div className="text-center py-4">
+                    <p className="text-2xl font-bold text-[#FFCF55]">{stats.successfulDonations}</p>
+                    <p className="text-sm text-gray-500 mt-1">Completed</p>
                   </div>
                 </div>
               )}
             </div>
 
             {/* Mission & Description */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Our Mission</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <div className="bg-white rounded-2xl p-8 border border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Our Mission</h2>
+              <div className="space-y-4">
                 {charity.mission && (
-                  <p className="text-lg text-gray-700">{charity.mission}</p>
+                  <p className="text-lg text-gray-700 leading-relaxed">{charity.mission}</p>
                 )}
                 {charity.description && (
-                  <p className="text-gray-600">{charity.description}</p>
+                  <p className="text-gray-600 leading-relaxed">{charity.description}</p>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Focus Areas */}
             {charity.focusAreas && charity.focusAreas.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Focus Areas</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {charity.focusAreas.map((area, index) => (
-                      <Badge key={index} variant="secondary">
-                        {area}
-                      </Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="bg-white rounded-2xl p-8 border border-gray-200">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">Focus Areas</h2>
+                <div className="flex flex-wrap gap-2">
+                  {charity.focusAreas.map((area, index) => (
+                    <Badge key={index} variant="secondary" className="bg-gray-100 text-gray-700 text-lg">
+                      {area}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
             )}
 
             {/* Contact Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Contact Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
+            <div className="bg-white rounded-2xl p-8 border border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Contact Information</h2>
+              <div className="space-y-4">
                 {charity.email && (
-                  <div className="flex items-center gap-3 text-gray-600">
-                    <Mail className="h-5 w-5" />
-                    <a href={`mailto:${charity.email}`} className="hover:text-blue-600">
+                  <div className="flex items-center gap-3 text-gray-700">
+                    <Mail className="h-5 w-5 text-green-600 flex-shrink-0" />
+                    <a href={`mailto:${charity.email}`} className="hover:text-blue-600 transition">
                       {charity.email}
                     </a>
                   </div>
                 )}
                 {charity.phone && (
-                  <div className="flex items-center gap-3 text-gray-600">
-                    <Phone className="h-5 w-5" />
-                    <a href={`tel:${charity.phone}`} className="hover:text-blue-600">
+                  <div className="flex items-center gap-3 text-gray-700">
+                    <Phone className="h-5 w-5 text-green-600 flex-shrink-0" />
+                    <a href={`tel:${charity.phone}`} className="hover:text-blue-600 transition">
                       {charity.phone}
                     </a>
                   </div>
                 )}
                 {charity.website && (
-                  <div className="flex items-center gap-3 text-gray-600">
-                    <Globe className="h-5 w-5" />
+                  <div className="flex items-center gap-3 text-gray-700">
+                    <Globe className="h-5 w-5 text-green-600 flex-shrink-0" />
                     <a 
                       href={charity.website} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="hover:text-blue-600"
+                      className="hover:text-blue-600 transition"
                     >
                       Visit Website
                     </a>
                   </div>
                 )}
                 {(charity.address || charity.city || charity.country) && (
-                  <div className="flex items-start gap-3 text-gray-600">
-                    <MapPin className="h-5 w-5 mt-0.5" />
+                  <div className="flex items-start gap-3 text-gray-700">
+                    <MapPin className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                     <div>
                       {charity.address && <p>{charity.address}</p>}
                       <p>
@@ -377,81 +352,87 @@ export default function CharityDetailPage() {
                     </div>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
 
           {/* Donation Form */}
           <div className="lg:col-span-1">
-            <Card className="sticky top-8">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Heart className="h-5 w-5 text-red-500" />
-                  Make a Donation
-                </CardTitle>
-                <CardDescription>
-                  Your support helps {charity.name} continue their important work
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleDonate} className="space-y-4">
-                  {/* Amount Selection */}
-                  <div className="space-y-2">
-                    <Label>
-                      Select Amount ({locationInfo?.currency.code || 'USD'})
-                      {/* {locationInfo && (
-                        <span className="text-sm text-gray-500 ml-2">
-                          ({locationInfo.country})
-                        </span>
-                      )} */}
-                    </Label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {presetAmounts.map((preset) => (
-                        <Button
-                          key={preset}
-                          type="button"
-                          variant={amount === preset ? 'default' : 'outline'}
-                          onClick={() => setAmount(preset)}
-                          className="w-full"
-                        >
-                          {formatAmount(preset, locationInfo?.currency.code || 'USD')}
-                        </Button>
-                      ))}
-                    </div>
-                    <Button
-                      type="button"
-                      variant={amount === 'custom' ? 'default' : 'outline'}
-                      onClick={() => setAmount('custom')}
-                      className="w-full"
-                    >
-                      Custom Amount
-                    </Button>
-                    {amount === 'custom' && (
-                      <Input
-                        type="number"
-                        placeholder={`Enter amount in ${locationInfo?.currency.code || 'USD'}`}
-                        value={customAmount}
-                        onChange={(e) => setCustomAmount(e.target.value)}
-                        min="1"
-                        step={locationInfo?.currency.code === 'NGN' ? '1' : '0.01'}
-                      />
-                    )}
-                  </div>
+            <div className="bg-white rounded-2xl p-8 border border-gray-200 sticky top-24 shadow-sm">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <Heart className="h-6 w-6 text-red-500" />
+                Make a Donation
+              </h2>
+              <p className="text-gray-600 text-sm mb-6">
+                Your support helps {charity.name} continue their important work
+              </p>
 
-                  {/* Donor Information */}
-                  <div className="space-y-2">
-                    <Label htmlFor="donorName">Your Name (Optional)</Label>
+              <form onSubmit={handleDonate} className="space-y-6">
+                {/* Amount Selection */}
+                <div className="space-y-3">
+                  <Label className="text-gray-900">
+                    Select Amount ({locationInfo?.currency.code || 'USD'})
+                  </Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {presetAmounts.map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => setAmount(preset)}
+                        className={`py-3 px-2 rounded-lg text-sm transition-all border-2 ${
+                          amount === preset
+                            ? 'border-[#59AD4A] bg-[#59AD4A] text-white font-semibold'
+                            : 'border-gray-300 bg-white text-gray-900 hover:border-[#59AD4A]'
+                        }`}
+                      >
+                        {formatAmount(preset, locationInfo?.currency.code || 'USD')}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setAmount('custom')}
+                    className={`w-full py-3 px-4 rounded-lg text-sm transition-all border-2 ${
+                      amount === 'custom'
+                        ? 'border-[#59AD4A] bg-[#59AD4A] text-white font-semibold'
+                        : 'border-gray-300 bg-white text-gray-900 hover:border-[#59AD4A]'
+                    }`}
+                  >
+                    Custom Amount
+                  </button>
+                  {amount === 'custom' && (
+                    <Input
+                      type="number"
+                      placeholder={`Enter amount in ${locationInfo?.currency.code || 'USD'}`}
+                      value={customAmount}
+                      onChange={(e) => setCustomAmount(e.target.value)}
+                      min="1"
+                      step={locationInfo?.currency.code === 'NGN' ? '1' : '0.01'}
+                      className="mt-3"
+                    />
+                  )}
+                </div>
+
+                {/* Donor Information */}
+                <div className="space-y-3">
+                  <div>
+                    <Label htmlFor="donorName" className="text-sm font-medium text-gray-900 mb-2 block">
+                      Your Name (Optional)
+                    </Label>
                     <Input
                       id="donorName"
                       value={donorName}
                       onChange={(e) => setDonorName(e.target.value)}
                       placeholder="John Doe"
                       disabled={isAnonymous}
+                      className="bg-gray-50 border-gray-300"
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="donorEmail">Email Address *</Label>
+                  <div>
+                    <Label htmlFor="donorEmail" className="text-sm font-medium text-gray-900 mb-2 block">
+                      Email Address <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       id="donorEmail"
                       type="email"
@@ -459,75 +440,78 @@ export default function CharityDetailPage() {
                       onChange={(e) => setDonorEmail(e.target.value)}
                       placeholder="john@example.com"
                       required
+                      className="bg-gray-50 border-gray-300"
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="message">Message (Optional)</Label>
+                  <div>
+                    <Label htmlFor="message" className="text-sm font-medium text-gray-900 mb-2 block">
+                      Message (Optional)
+                    </Label>
                     <Textarea
                       id="message"
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
                       placeholder="Leave a message of support..."
                       rows={3}
+                      className="bg-gray-50 border-gray-300 resize-none"
                     />
                   </div>
+                </div>
 
-                  {/* Anonymous Donation */}
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="anonymous"
-                      checked={isAnonymous}
-                      onChange={(e) => setIsAnonymous(e.target.checked)}
-                      className="rounded"
-                    />
-                    <Label htmlFor="anonymous" className="cursor-pointer">
-                      Donate anonymously
-                    </Label>
-                  </div>
+                {/* Anonymous Donation */}
+                <div className="flex items-center space-x-3 py-3 border-y border-gray-200">
+                  <input
+                    type="checkbox"
+                    id="anonymous"
+                    checked={isAnonymous}
+                    onChange={(e) => setIsAnonymous(e.target.checked)}
+                    className="rounded w-4 h-4 border-gray-300 text-[#59AD4A]"
+                  />
+                  <Label htmlFor="anonymous" className="cursor-pointer text-sm text-gray-700">
+                    Donate anonymously
+                  </Label>
+                </div>
 
-                  {/* Payment Method */}
-                  <div className="space-y-2">
-                    <Label>Payment Method</Label>
-                    <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="stripe" id="stripe" />
-                        <Label htmlFor="stripe" className="cursor-pointer">
-                          Credit/Debit Card (Stripe)
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="paystack" id="paystack" />
-                        <Label htmlFor="paystack" className="cursor-pointer">
-                          Paystack
-                        </Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
+                {/* Payment Method */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium text-gray-900">Payment Method</Label>
+                  <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
+                    <div className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:border-[#59AD4A] transition cursor-pointer">
+                      <RadioGroupItem value="stripe" id="stripe" />
+                      <Label htmlFor="stripe" className="cursor-pointer text-sm text-gray-700 flex-1 m-0">
+                        Credit/Debit Card (Stripe)
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:border-[#59AD4A] transition cursor-pointer">
+                      <RadioGroupItem value="paystack" id="paystack" />
+                      <Label htmlFor="paystack" className="cursor-pointer text-sm text-gray-700 flex-1 m-0">
+                        Paystack
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
 
-                  {/* Security Badge */}
-                  <div className="flex items-center gap-2 text-sm text-gray-500 p-3 bg-gray-50 rounded-lg">
-                    <Shield className="h-4 w-4" />
-                    <span>Secure and encrypted payment</span>
-                  </div>
+                {/* Security Badge */}
+                <div className="flex items-center gap-2 text-xs text-white p-3 bg-[#59AD4A] rounded-lg">
+                  <Shield className="h-4 w-4 flex-shrink-0" />
+                  <span>Secure and encrypted payment</span>
+                </div>
 
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    size="lg"
-                    disabled={donating || !amount}
-                  >
-                    {donating ? 'Processing...' : `Donate ${amount && amount !== 'custom' ? formatAmount(amount, locationInfo?.currency.code || 'USD') : customAmount ? formatAmount(customAmount, locationInfo?.currency.code || 'USD') : ''}`}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+                <Button 
+                  type="submit" 
+                  className="w-full bg-[#59AD4A] hover:bg-[#4a9a3e] text-white font-semibold py-3 transition"
+                  disabled={donating || !amount}
+                >
+                  {donating ? 'Processing...' : `Donate ${amount && amount !== 'custom' ? formatAmount(amount, locationInfo?.currency.code || 'USD') : customAmount ? formatAmount(customAmount, locationInfo?.currency.code || 'USD') : ''}`}
+                </Button>
+              </form>
+            </div>
           </div>
         </div>
       </div>
+
       <Footer />
     </div>
   );
 }
-
