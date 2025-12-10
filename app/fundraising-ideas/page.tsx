@@ -28,9 +28,11 @@ import {
   BookCheck,
   Calendar,
   PencilRuler,
+  HeartIcon,
 } from "lucide-react";
 import Link from "next/link";
 import BulbIcon from "@/public/icons/BulbIcon";
+import { useRouter } from "next/navigation";
 
 const fundraisingIdeas = [
   {
@@ -305,6 +307,7 @@ const quickIdeas = [
 ];
 
 export default function FundraisingIdeasPage() {
+  const router = useRouter();
   return (
     <div>
       <Navbar />
@@ -315,41 +318,42 @@ export default function FundraisingIdeasPage() {
             <Lightbulb color="#6ee7b7" size={14} />
             <div className="text-[#6ee7b7] font-bold text-xs ">INSPIRATION</div>
           </div>
-          <div className="font-extrabold text-white text-[4rem] leading-[4rem]">
+          <div className="font-extrabold text-white text-[4rem] leading-[4rem] text-center">
             Fundraising Ideas
           </div>
           <div className="text-xl text-[#d1fae5] text-center">
             Discover creative and effective ways to engage your community and
             reach your fundraising goals faster.
           </div>
-          <div className="absolute left-1/2 rounded-full h-[24rem] w-[24rem] bg-[#FACC151A] blur-[100px]"></div>
-          <div className="absolute right-1/3 -top-[50px] rounded-full h-[24rem] w-[24rem] bg-[#10B98133] blur-[100px]"></div>
+          <div className="md:flex hidden absolute left-1/2 rounded-full h-[24rem] w-[24rem] bg-[#FACC151A] blur-[100px]"></div>
+          <div className="md:flex hidden  absolute right-1/3 -top-[50px] rounded-full h-[24rem] w-[24rem] bg-[#10B98133] blur-[100px]"></div>
         </div>
       </div>
 
       <div className="bg-[#104109]">
         <div className="bg-[#fcfaf5] rounded-tr-[48px] rounded-tl-[48px] pt-16 pb-[96px] md:px-0 px-4 flex flex-col items-center justify-center gap-[96px]">
+          {/* Events & activities */}
           <div className="flex flex-col gap-12 md:max-w-[80rem] w-full">
-            <div className="flex justify-between items-end">
+            <div className="flex md:flex-row flex-col md:justify-between md:text-left text-center md:items-end gap-2">
               <div className="flex flex-col gap-2">
                 <div className="font-bold text-sm text-[#059669]">
                   EVENTS & ACTIVITIES
                 </div>
-                <div className="font-bold text-[36px] leading-[40px] text-[#022c22]">
+                <div className="font-bold text-[36px] leading-[40px] text-[#022c22] ">
                   Get Moving Together
                 </div>
               </div>
-              <div className="text-[#6b7280] text-base md:max-w-[28rem] w-full">
+              <div className="text-[#6b7280] text-base md:max-w-[28rem] w-full md:text-right text-center">
                 Physical events are a great way to build community spirit while
                 raising funds for your cause.
               </div>
             </div>
 
-            <div className="flex gap-6">
+            <div className="flex md:flex-row flex-col gap-6">
               {eventIdeas.map((data, index) => {
                 return (
                   <div
-                    className="bg-white border border-[#f3f4f6] rounded-3xl p-8 gap-4 flex flex-col md:w-[20rem] "
+                    className="bg-white border border-[#f3f4f6] rounded-3xl p-8 gap-4 flex flex-col md:w-[20rem]  md:items-start items-center md:text-left text-center "
                     key={index}
                   >
                     {data.Icon}
@@ -364,9 +368,9 @@ export default function FundraisingIdeasPage() {
               })}
             </div>
           </div>
-
+          {/* Community engagement */}
           <div className="flex flex-col gap-12 md:max-w-[80rem] w-full">
-            <div className="flex justify-between items-end">
+            <div className="flex md:flex-row flex-col md:justify-between text-center md:text-left md:items-end gap-2">
               <div className="flex flex-col gap-2">
                 <div className="font-bold text-sm text-[#059669]">
                   Community Engagement
@@ -375,17 +379,17 @@ export default function FundraisingIdeasPage() {
                   Build Connections
                 </div>
               </div>
-              <div className="text-[#6b7280] text-base md:max-w-[28rem] w-full">
+              <div className="text-[#6b7280] text-base md:max-w-[28rem] w-full md:text-right">
                 Bring people together through meaningful activities while
                 inspiring donations for your cause.
               </div>
             </div>
 
-            <div className="flex gap-6">
+            <div className="flex md:flex-row flex-col gap-6">
               {communityEngagement.map((data, index) => {
                 return (
                   <div
-                    className="bg-white border border-[#f3f4f6] rounded-3xl p-8 gap-4 flex flex-col md:w-[20rem] "
+                    className="bg-white border border-[#f3f4f6] rounded-3xl p-8 gap-4 flex flex-col md:w-[20rem]  md:items-start items-center md:text-left text-center "
                     key={index}
                   >
                     {data.Icon}
@@ -400,9 +404,9 @@ export default function FundraisingIdeasPage() {
               })}
             </div>
           </div>
-
+          {/* Product Based */}
           <div className="flex flex-col gap-12 md:max-w-[80rem] w-full">
-            <div className="flex justify-between items-end">
+            <div className="flex md:flex-row flex-col md:justify-between text-center md:text-left md:items-end gap-2">
               <div className="flex flex-col gap-2">
                 <div className="font-bold text-sm text-[#059669]">
                   Product Based
@@ -411,17 +415,17 @@ export default function FundraisingIdeasPage() {
                   Create & Sell
                 </div>
               </div>
-              <div className="text-[#6b7280] text-base md:max-w-[28rem] w-full">
+              <div className="text-[#6b7280] text-base md:max-w-[28rem] w-full md:text-right">
                 Turn creative products into powerful fundraising tools by
                 selling items that support your cause and spread your message.
               </div>
             </div>
 
-            <div className="flex gap-6">
+            <div className="flex md:flex-row flex-col gap-6">
               {productBased.map((data, index) => {
                 return (
                   <div
-                    className="bg-white border border-[#f3f4f6] rounded-3xl p-8 gap-4 flex flex-col md:w-[20rem] "
+                    className="bg-white border border-[#f3f4f6] rounded-3xl p-8 gap-4 flex flex-col md:w-[20rem] md:items-start items-center md:text-left text-center "
                     key={index}
                   >
                     {data.Icon}
@@ -436,8 +440,186 @@ export default function FundraisingIdeasPage() {
               })}
             </div>
           </div>
+
+          {/* Creative Campaigns */}
+          <div className="bg-[#104109] p-16 rounded-[48px] md:max-w-[80rem] w-full flex items-center justify-center relative">
+            <div className="flex md:flex-row flex-col gap-16">
+              {/* Left Box */}
+              <div className="flex flex-col gap-6 md:text-left text-center md:items-start items-center">
+                <div className="bg-[#065f46] flex gap-2 px-4 py-[6px] border border-[#047857] rounded-full w-fit text-[#6ee7b7] font-bold text-xs">
+                  CREATIVE CAMPAIGNS
+                </div>
+                <div className="font-bold text-[36px] leading-[40px] text-white ">
+                  Think Outside the Box
+                </div>
+                <div className="text-base text-[#d1fae5cc]">
+                  Use the power of social media and creativity to spread your
+                  message further. Virtual campaigns have 3x more reach on
+                  average
+                </div>
+                <Button
+                  onClick={() => router.push("/create-campaign")}
+                  className="bg-white px-8 py-3 rounded-full h-auto font-bold text-lg leading-7 text-[#104109] w-fit"
+                >
+                  Start a Campaign
+                </Button>
+              </div>
+              {/* Right  Box */}
+              <div className="flex flex-col gap-6">
+                <div className="flex md:flex-row flex-col gap-6">
+                  <div className="md:py-0 py-6 bg-[#ffffff1a] flex items-center justify-center md:h-[9rem] md:w-[22rem] px-6 rounded-2xl border border-[#ffffff1a]">
+                    <div className="flex gap-4 ">
+                      <div className="p-2 rounded-lg bg-[#10b98133] w-fit h-fit">
+                        <Sparkles color="#6ee7b7" size={20} />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <div className="font-bold text-lg text-white">
+                          Photo Challenge
+                        </div>
+                        <div className="text-sm text-[#d1fae5b2]">
+                          Create a viral hashtag and challenge friends to post
+                          photos and donate
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="md:py-0 py-6 bg-[#ffffff1a] flex items-center justify-center md:h-[9rem] md:w-[22rem] px-6 rounded-2xl border border-[#ffffff1a]">
+                    <div className="flex gap-4 ">
+                      <div className="p-2 rounded-lg bg-[#10b98133] w-fit h-fit">
+                        <Sparkles color="#6ee7b7" size={20} />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <div className="font-bold text-lg text-white">
+                          Art Exhibition
+                        </div>
+                        <div className="text-sm text-[#d1fae5b2]">
+                          Showcase local artwork and sell pieces with proceeds
+                          going to your cause.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex md:flex-row flex-col gap-6">
+                  <div className="md:py-0 py-6 bg-[#ffffff1a] flex items-center justify-center md:h-[9rem] md:w-[22rem] px-6 rounded-2xl border border-[#ffffff1a]">
+                    <div className="flex gap-4 ">
+                      <div className="p-2 rounded-lg bg-[#10b98133] w-fit h-fit">
+                        <Sparkles color="#6ee7b7" size={20} />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <div className="font-bold text-lg text-white">
+                          Video Series
+                        </div>
+                        <div className="text-sm text-[#d1fae5b2]">
+                          Tell your story over multiple episodes to keep donors
+                          engaged and coming back.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="md:py-0 py-6 bg-[#ffffff1a] flex items-center justify-center md:h-[9rem] md:w-[22rem] px-6 rounded-2xl border border-[#ffffff1a]">
+                    <div className="flex gap-4 ">
+                      <div className="p-2 rounded-lg bg-[#10b98133] w-fit h-fit">
+                        <Sparkles color="#6ee7b7" size={20} />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <div className="font-bold text-lg text-white">
+                          Virtual Workshop
+                        </div>
+                        <div className="text-sm text-[#d1fae5b2]">
+                          Teach a skill online in exchange for donations to your
+                          campaign.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="absolute h-64 w-64 rounded-full bg-[#10b98133] top-0 right-0 blur-[64px]"></div>
+          </div>
+
+          {/* Quick-Fire Ideas */}
+          <div className="md:max-w-[80rem] bg-white border border-[#f3f4f6]  p-12 rounded-[48px] items-center justify-center shadow-md">
+            <div className="flex flex-col gap-12">
+              <div className="flex flex-col gap-2 items-center justify-center">
+                <div className="font-bold text-[30px] leading-[36px] text-[#111827]">
+                  Quick-Fire Ideas
+                </div>
+                <div className="text-[#6b7280] text-base">
+                  Organize these fun activities for your campaigns
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2 md:w-[74rem] justify-center">
+                {quickIdeas.map((data, index) => {
+                  return (
+                    <div
+                      className="rounded-full py-3 px-6 bg-[#f9fafb] border border-[#00000000] font-medium text-base text-[#374151]"
+                      key={index}
+                    >
+                      {data}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Making ur ideas successful */}
+          <div className=" flex items-center justify-center md:max-w-[80rem] flex-col gap-8">
+            {/* Header */}
+
+            <div className=" font-bold md:text-[36px] text-[30px] md:leading-10 leading-[36px] text-[#1C1917] text-center">
+              Making Your Ideas Successful
+            </div>
+
+            <div className="flex gap-8 flex-wrap justify-center flex-col md:flex-row">
+              {/* Card 1 */}
+              <div className="md:w-[24rem] h-[20rem] w-full rounded-[40px]  flex flex-col items-center justify-center gap-5">
+                <div className="w-[80px] h-[80px] rounded-[24px] bg-[#DCFCE7] flex items-center justify-center">
+                  <Users size={36} color="#16a34a" />
+                </div>
+                <div className=" font-bold text-[24px] leading-8 text-[#1C1917]">
+                  Build a Team
+                </div>
+                <div className=" font-normal text-[16px] leading-[26px] text-center text-[#78716C] w-[280px]">
+                  Recruit volunteers to help plan, promote, and execute your
+                  fundraising idea.
+                </div>
+              </div>
+
+              {/* Card 2 */}
+              <div className="md:w-[24rem] h-[20rem] w-full rounded-[40px]  flex flex-col items-center justify-center gap-5">
+                <div className="w-[80px] h-[80px] rounded-[24px] bg-[#FEF9C3] flex items-center justify-center">
+                  <Camera size={36} color="#ca8a04" />
+                </div>
+                <div className="font-bold text-[24px] leading-8 text-[#1C1917]">
+                  Document Everything
+                </div>
+                <div className=" font-normal text-[16px] leading-[26px] text-center text-[#78716C] w-[280px]">
+                  Take photos and videos to share on social media and your
+                  campaign page.
+                </div>
+              </div>
+
+              {/* Card 3 */}
+              <div className="md:w-[24rem] h-[20rem] w-full rounded-[40px] flex flex-col items-center justify-center gap-5">
+                <div className="w-[80px] h-[80px] rounded-[24px] bg-[#FFEDD5] flex items-center justify-center">
+                  <HeartIcon size={36} color="#EA580C" />
+                </div>
+                <div className=" font-bold text-[24px] leading-8 text-[#1C1917]">
+                  Show Impact
+                </div>
+                <div className="font-normal text-[16px] leading-[26px] text-center text-[#78716C] w-[280px]">
+                  Clearly communicate how funds will be used and the difference
+                  they'll make.
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
