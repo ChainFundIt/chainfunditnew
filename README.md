@@ -202,29 +202,29 @@ If you're migrating from the old structure:
 
 Alongside existing payment and auth secrets, the compliance and payout workflow now expects:
 
-- `PERSONA_API_KEY` – Persona API token for payout-time KYC
-- `PERSONA_ENVIRONMENT_ID` – Persona environment identifier
-- `PERSONA_TEMPLATE_ID` – Persona inquiry template id
-- `PERSONA_WEBHOOK_SECRET` – Shared secret used to validate incoming Persona webhooks
+- `DIDIT_API_KEY` – Didit API token for payout-time KYC
+- `DIDIT_APP_ID` – Didit environment identifier
+- `DIDIT_APP_NAME` – Didit inquiry app name
+- `DIDIT_WEBHOOK_SECRET` – Shared secret used to validate incoming Persona webhooks
 - `CRON_SECRET` – Shared bearer token protecting compliance worker routes
 - `OPENAI_API_KEY` – Enables automated moderation during campaign screening
 
 Set these in `.env.local` before running migrations.
-### Phase 2: Campaign Management (Planned)
-- Campaign creation and management
-- Campaign listing and search
-- Campaign detail pages
-- Media upload and management
+### Phase 2: Campaign Management
+- ✅ Campaign creation and management
+- ✅ Campaign listing and search
+- ✅ Campaign detail pages
+- ✅ Media upload and management
 
-### Phase 3: Chainer System (Planned)
-- Referral link generation
-- Commission tracking
-- Leaderboards
-- Analytics dashboard
+### Phase 3: Chainer System
+- ✅ Referral link generation
+- ✅ Commission tracking
+- ✅ Leaderboards
+- ✅ Analytics dashboard
 
-### Phase 4: Advanced Features (Planned)
-- Payment integration (Stripe, Paystack)
-- Multi-currency support
+### Phase 4: Advanced Features (Ongoing)
+- ✅ Payment integration (Stripe, Paystack)
+- ✅ Multi-currency support
 - AI writing assistance
 - Advanced analytics
 
