@@ -5,6 +5,7 @@ export interface CampaignDonation {
   amount: string;
   currency: string;
   paymentStatus: string;
+  paymentMethod?: string;
   message?: string;
   isAnonymous: boolean;
   createdAt: string;
@@ -13,7 +14,10 @@ export interface CampaignDonation {
   donorAvatar?: string;
 }
 
-export function useCampaignDonations(campaignId: string | undefined) {
+export function useCampaignDonations(
+  campaignId: string | undefined,
+  options?: { paymentMethod?: 'stripe' | 'paystack' }
+) {
   const [donations, setDonations] = useState<CampaignDonation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +32,14 @@ export function useCampaignDonations(campaignId: string | undefined) {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/campaigns/${campaignId}/donations`);
+      // Build query params
+      const params = new URLSearchParams();
+      if (options?.paymentMethod) {
+        params.append('paymentMethod', options.paymentMethod);
+      }
+
+      const url = `/api/campaigns/${campaignId}/donations${params.toString() ? `?${params.toString()}` : ''}`;
+      const response = await fetch(url);
       const data = await response.json();
 
       if (data.success) {
@@ -42,7 +53,7 @@ export function useCampaignDonations(campaignId: string | undefined) {
     } finally {
       setLoading(false);
     }
-  }, [campaignId]);
+  }, [campaignId, options?.paymentMethod]);
 
   useEffect(() => {
     fetchDonations();

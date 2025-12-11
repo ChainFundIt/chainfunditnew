@@ -2,38 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { donations } from '@/lib/schema/donations';
-import { campaigns } from '@/lib/schema/campaigns';
-import { eq, sum, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { verifyPaystackPayment } from '@/lib/payments/paystack';
 import { getStripePaymentIntent } from '@/lib/payments/stripe';
-
-// Helper function to update campaign currentAmount based on completed donations
-async function updateCampaignAmount(campaignId: string) {
-  try {
-    const donationStats = await db
-      .select({
-        totalAmount: sum(donations.amount),
-      })
-      .from(donations)
-      .where(and(
-        eq(donations.campaignId, campaignId),
-        eq(donations.paymentStatus, 'completed')
-      ));
-
-    const totalAmount = Number(donationStats[0]?.totalAmount || 0);
-
-    await db
-      .update(campaigns)
-      .set({
-        currentAmount: totalAmount.toString(),
-        updatedAt: new Date(),
-      })
-      .where(eq(campaigns.id, campaignId));
-
-  } catch (error) {
-    console.error('Error updating campaign amount:', error);
-  }
-}
+import { updateCampaignAmount } from '@/lib/utils/campaign-amount';
 
 // User-friendly donation status check
 export async function GET(request: NextRequest) {

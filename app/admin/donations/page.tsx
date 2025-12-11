@@ -39,6 +39,9 @@ interface Donation {
   donorEmail: string;
   amount: number;
   currency: string;
+  convertedAmount?: number | null;
+  convertedCurrency?: string | null;
+  exchangeRate?: number | null;
   paymentStatus: 'pending' | 'completed' | 'failed';
   paymentMethod: string;
   chainerId?: string;
@@ -307,6 +310,22 @@ export default function DonationsPage() {
     });
   };
 
+  const formatRelativeTime = (date: string) => {
+    const diff = Date.now() - new Date(date).getTime();
+    const minutes = Math.max(0, Math.floor(diff / (1000 * 60)));
+    if (minutes < 60) {
+      return `${minutes}m ago`;
+    }
+
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) {
+      return `${hours}h ago`;
+    }
+
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  };
+
   // Filter charity donations
   const filteredCharityDonations = charityDonations.filter(d => {
     if (selectedCharity !== 'all' && d.charityId !== selectedCharity) return false;
@@ -516,6 +535,14 @@ export default function DonationsPage() {
                         <TableCell>
                           <div className="font-medium">
                             {formatCurrency(donation.amount, donation.currency)}
+                            {donation.convertedAmount && donation.convertedCurrency && (
+                              <div className="text-xs text-gray-500 mt-1">
+                                ≈ {formatCurrency(donation.convertedAmount, donation.convertedCurrency)}
+                                {donation.exchangeRate && (
+                                  <span className="ml-1">(Rate: {Number(donation.exchangeRate).toFixed(2)})</span>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>

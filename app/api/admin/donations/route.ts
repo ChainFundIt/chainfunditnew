@@ -14,6 +14,33 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = (page - 1) * limit;
+    const search = searchParams.get('search') || '';
+    const status = searchParams.get('status') || 'all';
+    const currency = searchParams.get('currency') || 'all';
+
+    // Build where conditions
+    const whereConditions = [];
+    
+    if (status !== 'all') {
+      whereConditions.push(eq(donations.paymentStatus, status));
+    }
+    
+    if (currency !== 'all') {
+      whereConditions.push(eq(donations.currency, currency));
+    }
+    
+    if (search) {
+      whereConditions.push(
+        sql`(
+          ${users.fullName} ILIKE ${`%${search}%`} OR
+          ${users.email} ILIKE ${`%${search}%`} OR
+          ${campaigns.title} ILIKE ${`%${search}%`} OR
+          ${donations.paymentIntentId} ILIKE ${`%${search}%`}
+        )`
+      );
+    }
+
+    const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined;
 
     const donationsList = await db
       .select({
@@ -22,6 +49,9 @@ export async function GET(request: NextRequest) {
         donorId: donations.donorId,
         amount: donations.amount,
         currency: donations.currency,
+        convertedAmount: donations.convertedAmount,
+        convertedCurrency: donations.convertedCurrency,
+        exchangeRate: donations.exchangeRate,
         paymentStatus: donations.paymentStatus,
         paymentMethod: donations.paymentMethod,
         chainerId: donations.chainerId,
@@ -31,23 +61,34 @@ export async function GET(request: NextRequest) {
         donorName: users.fullName,
         donorEmail: users.email,
         campaignTitle: campaigns.title,
-        chainerName: chainers.userId,
       })
       .from(donations)
       .leftJoin(users, eq(donations.donorId, users.id))
       .leftJoin(campaigns, eq(donations.campaignId, campaigns.id))
-      .leftJoin(chainers, eq(donations.chainerId, chainers.id))
+      .where(whereClause)
       .orderBy(desc(donations.createdAt))
       .limit(limit)
       .offset(offset);
 
-    // Basic count query
+    // Deduplicate by donation ID to prevent duplicates from joins
+    const uniqueDonationsMap = new Map();
+    donationsList.forEach(donation => {
+      if (!uniqueDonationsMap.has(donation.id)) {
+        uniqueDonationsMap.set(donation.id, donation);
+      }
+    });
+    const uniqueDonationsList = Array.from(uniqueDonationsMap.values());
+
+    // Count query with same filters (count distinct donations to avoid duplicates from joins)
     const [totalCount] = await db
-      .select({ count: count() })
-      .from(donations);
+      .select({ count: sql<number>`COUNT(DISTINCT ${donations.id})` })
+      .from(donations)
+      .leftJoin(users, eq(donations.donorId, users.id))
+      .leftJoin(campaigns, eq(donations.campaignId, campaigns.id))
+      .where(whereClause);
 
     const donationsWithChainerNames = await Promise.all(
-      donationsList.map(async (donation) => {
+      uniqueDonationsList.map(async (donation) => {
         let chainerName = null;
         if (donation.chainerId) {
           const [chainerUser] = await db
@@ -62,6 +103,9 @@ export async function GET(request: NextRequest) {
 
         return {
           ...donation,
+          amount: Number(donation.amount) || 0,
+          convertedAmount: donation.convertedAmount ? Number(donation.convertedAmount) : null,
+          exchangeRate: donation.exchangeRate ? Number(donation.exchangeRate) : null,
           chainerName,
         };
       })

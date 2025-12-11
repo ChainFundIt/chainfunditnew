@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { donations } from '@/lib/schema';
 import { eq, inArray } from 'drizzle-orm';
+import { updateCampaignAmount } from '@/lib/utils/campaign-amount';
 
 /**
  * PATCH /api/admin/donations/bulk
@@ -67,9 +68,18 @@ export async function PATCH(request: NextRequest) {
             ...updateData,
             paymentStatus: 'completed',
             processedAt: new Date(),
+            lastStatusUpdate: new Date(),
           })
           .where(inArray(donations.id, donationIds))
           .returning();
+        
+        // Update campaign amounts for all affected campaigns
+        if (updatedDonations.length > 0) {
+          const campaignIds = [...new Set(updatedDonations.map(d => d.campaignId))];
+          for (const campaignId of campaignIds) {
+            await updateCampaignAmount(campaignId);
+          }
+        }
         break;
 
       case 'mark_failed':

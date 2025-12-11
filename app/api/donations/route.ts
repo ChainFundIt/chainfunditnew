@@ -4,6 +4,7 @@ import { donations } from '@/lib/schema/donations';
 import { campaigns } from '@/lib/schema/campaigns';
 import { eq } from 'drizzle-orm';
 import { validateCampaignForDonations, checkAndUpdateGoalReached } from '@/lib/utils/campaign-validation';
+import { convertCurrency } from '@/lib/utils/currency-conversion';
 
 // GET /api/donations - Get donations (with optional filtering)
 export async function GET(request: NextRequest) {
@@ -100,10 +101,39 @@ export async function POST(request: NextRequest) {
     }
 
     const campaign = campaignValidation.campaign;
+    const campaignCurrency = campaign.currency;
 
-    // Check minimum donation amount
+    // Convert currency if needed
+    let convertedAmount: number | undefined;
+    let exchangeRate: number | undefined;
+    let exchangeRateDate: string | undefined;
+
+    if (currency.toUpperCase() !== campaignCurrency.toUpperCase()) {
+      const conversionResult = await convertCurrency(
+        parseFloat(amount.toString()),
+        currency.toUpperCase(),
+        campaignCurrency.toUpperCase()
+      );
+
+      if (conversionResult.success && conversionResult.convertedAmount && conversionResult.rate) {
+        convertedAmount = conversionResult.convertedAmount;
+        exchangeRate = conversionResult.rate;
+        exchangeRateDate = conversionResult.date;
+      } else {
+        console.warn(`Failed to convert currency: ${conversionResult.error}`);
+        // Continue without conversion - we'll store the original amount
+      }
+    } else {
+      // Same currency, no conversion needed
+      convertedAmount = parseFloat(amount.toString());
+      exchangeRate = 1.0;
+      exchangeRateDate = new Date().toISOString();
+    }
+
+    // Check minimum donation amount (use converted amount if available)
+    const amountToCheck = convertedAmount || parseFloat(amount.toString());
     const minDonation = parseFloat(campaign.minimumDonation);
-    if (amount < minDonation) {
+    if (amountToCheck < minDonation) {
       return NextResponse.json(
         { success: false, error: `Minimum donation amount is ${campaign.currency} ${minDonation}` },
         { status: 400 }
@@ -115,7 +145,11 @@ export async function POST(request: NextRequest) {
       donorId,
       chainerId,
       amount: amount.toString(),
-      currency,
+      currency: currency.toUpperCase(),
+      convertedAmount: convertedAmount ? convertedAmount.toString() : null,
+      convertedCurrency: campaignCurrency.toUpperCase(),
+      exchangeRate: exchangeRate ? exchangeRate.toString() : null,
+      exchangeRateDate: exchangeRateDate ? new Date(exchangeRateDate) : null,
       paymentMethod,
       paymentStatus: 'pending',
       message,

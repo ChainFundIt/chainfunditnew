@@ -8,6 +8,11 @@ export const donations = pgTable('donations', {
   chainerId: uuid('chainer_id'), // nullable - only if referred by chainer
   amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
   currency: varchar('currency', { length: 3 }).notNull(), // USD, GBP, NGN
+  // Currency conversion fields
+  convertedAmount: decimal('converted_amount', { precision: 10, scale: 2 }), // Amount in campaign currency
+  convertedCurrency: varchar('converted_currency', { length: 3 }), // Campaign currency
+  exchangeRate: decimal('exchange_rate', { precision: 15, scale: 6 }), // Exchange rate used for conversion
+  exchangeRateDate: timestamp('exchange_rate_date'), // Date when exchange rate was fetched
   paymentStatus: varchar('payment_status', { length: 20 }).default('pending').notNull(), // pending, completed, failed
   paymentMethod: varchar('payment_method', { length: 50 }).notNull(), // stripe, paystack
   paymentIntentId: varchar('payment_intent_id', { length: 255 }),

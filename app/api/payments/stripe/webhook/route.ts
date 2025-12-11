@@ -4,42 +4,13 @@ import { donations } from '@/lib/schema/donations';
 import { recurringDonations, recurringDonationPayments } from '@/lib/schema/recurring-donations';
 import { campaigns } from '@/lib/schema/campaigns';
 import { notifications } from '@/lib/schema/notifications';
-import { eq, sum, and } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { verifyStripeWebhook } from '@/lib/payments/stripe';
 import Stripe from 'stripe';
 import { shouldCloseForGoalReached, closeCampaign } from '@/lib/utils/campaign-closure';
+import { updateCampaignAmount } from '@/lib/utils/campaign-amount';
 import { shouldNotifyUserOfDonation, formatDonationNotificationMessage } from '@/lib/utils/donation-notification-utils';
 import { sendDonorConfirmationEmailById } from '@/lib/notifications/donor-confirmation-email';
-
-// Helper function to update campaign currentAmount based on completed donations
-async function updateCampaignAmount(campaignId: string) {
-  try {
-    // Calculate total amount from completed donations
-    const donationStats = await db
-      .select({
-        totalAmount: sum(donations.amount),
-      })
-      .from(donations)
-      .where(and(
-        eq(donations.campaignId, campaignId),
-        eq(donations.paymentStatus, 'completed')
-      ));
-
-    const totalAmount = Number(donationStats[0]?.totalAmount || 0);
-
-    // Update campaign currentAmount
-    await db
-      .update(campaigns)
-      .set({
-        currentAmount: totalAmount.toString(),
-        updatedAt: new Date(),
-      })
-      .where(eq(campaigns.id, campaignId));
-
-  } catch (error) {
-    console.error('Error updating campaign amount:', error);
-  }
-}
 
 // Helper function to create notification for successful donation
 async function createSuccessfulDonationNotification(donationId: string, campaignId: string) {
@@ -353,12 +324,16 @@ async function handleSubscriptionPaymentFailed(invoice: Stripe.Invoice) {
     if (!recurringDonation) return;
 
     // Find the pending payment for this invoice
-    const payment = await db.query.recurringDonationPayments.findFirst({
-      where: and(
+    const paymentResult = await db
+      .select()
+      .from(recurringDonationPayments)
+      .where(and(
         eq(recurringDonationPayments.recurringDonationId, recurringDonation.id),
         eq(recurringDonationPayments.stripeInvoiceId, invoice.id)
-      ),
-    });
+      ))
+      .limit(1);
+    
+    const payment = paymentResult[0] || null;
 
     if (payment) {
       // Update payment status

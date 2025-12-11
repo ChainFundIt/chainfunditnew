@@ -4,6 +4,7 @@ import { recurringDonations } from '@/lib/schema/recurring-donations';
 import { eq, and } from 'drizzle-orm';
 import { isSubscriptionDueForBilling } from '@/lib/utils/recurring-donations';
 import { processRecurringDonationPayment } from '@/lib/services/subscription-service';
+import { getCronDisabledResponse } from '@/lib/utils/cron-control';
 
 export const runtime = 'nodejs';
 
@@ -18,6 +19,11 @@ export const runtime = 'nodejs';
  * - Schedule: "0 2 * * *" (Every day at 2:00 AM UTC)
  */
 export async function POST(request: NextRequest) {
+  const disabledResponse = getCronDisabledResponse('process-recurring-donations');
+  if (disabledResponse) {
+    return disabledResponse;
+  }
+
   try {
     // Verify this is a legitimate cron request
     const authHeader = request.headers.get('authorization');
@@ -113,6 +119,11 @@ export async function POST(request: NextRequest) {
  * Allow manual triggering for testing (only in development)
  */
 export async function GET(request: NextRequest) {
+  const disabledResponse = getCronDisabledResponse('process-recurring-donations');
+  if (disabledResponse) {
+    return disabledResponse;
+  }
+
   if (process.env.NODE_ENV === 'production') {
     return NextResponse.json({ error: 'Not available in production' }, { status: 403 });
   }

@@ -1,6 +1,7 @@
 import { db } from '@/lib/db';
 import { recurringDonations, recurringDonationPayments } from '@/lib/schema/recurring-donations';
 import { donations } from '@/lib/schema/donations';
+import { campaigns } from '@/lib/schema/campaigns';
 import { eq, and } from 'drizzle-orm';
 import { 
   createOrRetrieveStripeCustomer,
@@ -106,16 +107,28 @@ export async function createRecurringDonationSubscription(data: {
       clientSecret: (stripeSubscription.latest_invoice as any)?.payment_intent?.client_secret,
     };
   } else if (data.paymentMethod === 'paystack') {
+    // Fetch campaign details for metadata
+    const campaign = await db.query.campaigns.findFirst({
+      where: eq(campaigns.id, data.campaignId),
+    });
+
+    // Prepare comprehensive campaign metadata for Paystack receipts
+    const campaignMetadata = {
+      recurringDonationId: subscription.id,
+      campaignId: data.campaignId,
+      ...(campaign && {
+        campaignTitle: campaign.title,
+        campaignSlug: campaign.slug,
+      }),
+    };
+
     // Create or retrieve Paystack customer
     const customer = await createOrRetrievePaystackCustomer(
       data.donorEmail,
       data.donorName?.split(' ')[0],
       data.donorName?.split(' ').slice(1).join(' '),
       undefined,
-      {
-        recurringDonationId: subscription.id,
-        campaignId: data.campaignId,
-      }
+      campaignMetadata
     );
 
     // Create Paystack plan
@@ -124,10 +137,7 @@ export async function createRecurringDonationSubscription(data: {
       data.amount,
       data.currency,
       normalizedPeriod,
-      {
-        recurringDonationId: subscription.id,
-        campaignId: data.campaignId,
-      }
+      campaignMetadata
     );
 
     // Create Paystack subscription (requires authorization code from first payment)
@@ -136,10 +146,7 @@ export async function createRecurringDonationSubscription(data: {
         customer.customer_code,
         plan.plan_code,
         data.authorizationCode,
-        {
-          recurringDonationId: subscription.id,
-          campaignId: data.campaignId,
-        }
+        campaignMetadata
       );
 
       // Update subscription record with Paystack IDs

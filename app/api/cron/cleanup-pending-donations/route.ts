@@ -5,8 +5,14 @@ import { notifications } from '@/lib/schema/notifications';
 import { campaigns } from '@/lib/schema/campaigns';
 import { eq, and, lt } from 'drizzle-orm';
 import { toast } from 'sonner';
+import { getCronDisabledResponse } from '@/lib/utils/cron-control';
 
 export async function GET(request: NextRequest) {
+  const disabledResponse = getCronDisabledResponse('cleanup-pending-donations');
+  if (disabledResponse) {
+    return disabledResponse;
+  }
+
   try {
     // Find pending donations older than 1 hour
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);

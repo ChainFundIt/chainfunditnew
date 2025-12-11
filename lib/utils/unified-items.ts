@@ -49,11 +49,40 @@ export function normalizeCampaign(campaign: any): UnifiedItem {
 }
 
 /**
+ * Get fallback image for charity based on category or use default
+ */
+export function getCharityFallbackImage(category?: string): string {
+  // Map categories to available images in public/images
+  const categoryImageMap: Record<string, string> = {
+    'Health': '/images/blue-cross.jpg',
+    'Education': '/images/happyChildren.png',
+    'Community': '/images/volunteersHelping.png',
+    'Environment': '/images/save-the-planet.jpg',
+    'Children': '/images/happyChildren.png',
+    'Disaster Relief': '/images/volunteersHelping.png',
+  };
+  
+  if (category && categoryImageMap[category]) {
+    return categoryImageMap[category];
+  }
+  
+  // Default fallback
+  return '/images/card-img1.png';
+}
+
+/**
  * Normalize a charity into a unified item
  */
 export function normalizeCharity(charity: any): UnifiedItem {
-  // Get image - prefer cover image, then logo
-  const image = charity.coverImage || charity.logo || null;
+  // Filter out clearbit.com URLs as they often return 403
+  const hasValidCoverImage = charity.coverImage && !charity.coverImage.includes('logo.clearbit.com');
+  const hasValidLogo = charity.logo && !charity.logo.includes('logo.clearbit.com');
+  
+  // Get image - prefer cover image, then logo, then fallback based on category
+  // Skip clearbit URLs as they're unreliable
+  const image = (hasValidCoverImage ? charity.coverImage : null) || 
+                (hasValidLogo ? charity.logo : null) || 
+                getCharityFallbackImage(charity.category);
   const category = charity.category || 'Uncategorized';
 
   return {
