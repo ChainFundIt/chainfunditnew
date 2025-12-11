@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,28 +15,27 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-// ----------------------------
-// CARD BACKGROUND OVERRIDES
-// ----------------------------
-// 2nd, 5th & 7th card (indexes 1, 4, 6) use dark green background #104901
-const cardBgOverride = (index: number) => {
-  return [1, 4, 6].includes(index)
-    ? "bg-[#104901] text-white shadow-xl border-none"
-    : "bg-white shadow-md";
-};
+const tableOfContents = [
+  { id: "section-1", label: "1. Interpretation" },
+  { id: "section-2", label: "2. Commencement and Duration" },
+  { id: "section-3", label: "3. Referrals and Assurance" },
+  { id: "section-4", label: "4. Commission and Payment" },
+  { id: "section-5", label: "5. Data Protection" },
+  { id: "section-6", label: "6. Limitation of Liability" },
+  { id: "section-7", label: "7. Termination" },
+  { id: "section-8", label: "8. General" },
+];
 
-// ----------------------------
-// FULL SECTIONS ARRAY
-// ----------------------------
 const sections = [
   {
+    id: "section-1",
     title: "1. Interpretation",
     icon: FileText,
     content: [
       {
         subtitle: "1.1 Definitions",
         text: (
-          <div className="space-y-3 text-gray-700">
+          <div className="space-y-3">
             <p>
               <strong>"Applicable Commission"</strong> means the applicable
               Commission payable on a Chained Fundraising Campaign.
@@ -94,7 +93,7 @@ const sections = [
               platform.
             </p>
             <p>
-              Words following “including” or similar expressions are
+              Words following "including" or similar expressions are
               illustrative and do not limit preceding terms.
             </p>
             <p>
@@ -114,13 +113,14 @@ const sections = [
     ],
   },
   {
+    id: "section-2",
     title: "2. Commencement and Duration",
     icon: FileText,
     content: [
       {
         subtitle: "",
         text: (
-          <div className="space-y-4 text-White">
+          <div className="space-y-4">
             <p>This Agreement commences upon acceptance.</p>
             <p>
               This Agreement continues until terminated under Clause 7.
@@ -131,13 +131,14 @@ const sections = [
     ],
   },
   {
+    id: "section-3",
     title: "3. Referrals and Assurance",
     icon: Handshake,
     content: [
       {
         subtitle: "",
         text: (
-          <div className="space-y-4 text-gray-700">
+          <div className="space-y-4">
             <p>ChainFundIt appoints the Chain Ambassador to make referrals.</p>
             <p>The Chain Ambassador must:</p>
             <ul className="list-disc list-inside ml-4 space-y-2">
@@ -169,20 +170,21 @@ const sections = [
     ],
   },
   {
+    id: "section-4",
     title: "4. Commission and Payment",
     icon: DollarSign,
     content: [
       {
         subtitle: "",
         text: (
-          <div className="space-y-4 text-gray-700">
+          <div className="space-y-4">
             <p>
               Ambassador is entitled to Applicable Commission for donations made
               on their Chainfund.
             </p>
             <p>
               Commission disputes should be sent to{" "}
-              <Link href="mailto:ambassadors@chainfundit.com" className="text-[#104901] font-semibold">
+              <Link href="mailto:ambassadors@chainfundit.com" className="font-plusjakarta">
                 ambassadors@chainfundit.com
               </Link>
             </p>
@@ -206,19 +208,20 @@ const sections = [
     ],
   },
   {
+    id: "section-5",
     title: "5. Data Protection",
     icon: Shield,
     content: [
       {
         subtitle: "",
         text: (
-          <div className="space-y-4 text-White">
+          <div className="space-y-4">
             <p>
               Both parties must comply with all Data Protection Legislation.
             </p>
             <p>
               Personal data is processed according to ChainFundIt's{" "}
-              <Link href="/privacy-policy" className="text-[#104901] font-semibold">
+              <Link href="/privacy-policy" className="font-plusjakarta">
                 privacy policy
               </Link>
               .
@@ -229,13 +232,14 @@ const sections = [
     ],
   },
   {
+    id: "section-6",
     title: "6. Limitation of Liability",
     icon: AlertTriangle,
     content: [
       {
         subtitle: "",
         text: (
-          <div className="space-y-4 text-gray-700">
+          <div className="space-y-4">
             <p>Nothing limits liability for:</p>
             <ul className="list-disc list-inside ml-4 space-y-2">
               <li>Death or injury from negligence</li>
@@ -250,11 +254,11 @@ const sections = [
               negligence.
             </p>
             <p>
-              ChainFundIt’s maximum liability is limited to 12 months of
+              ChainFundIt's maximum liability is limited to 12 months of
               commission.
             </p>
             <p>
-              Ambassador’s liability is limited to twice the commission paid.
+              Ambassador's liability is limited to twice the commission paid.
             </p>
           </div>
         ),
@@ -262,13 +266,14 @@ const sections = [
     ],
   },
   {
+    id: "section-7",
     title: "7. Termination",
     icon: AlertTriangle,
     content: [
       {
         subtitle: "",
         text: (
-          <div className="space-y-4 text-White">
+          <div className="space-y-4">
             <p>ChainFundIt may terminate immediately if:</p>
             <ul className="list-disc list-inside ml-4 space-y-2">
               <li>Campaign goal reached</li>
@@ -292,13 +297,14 @@ const sections = [
     ],
   },
   {
+    id: "section-8",
     title: "8. General",
     icon: Gavel,
     content: [
       {
         subtitle: "8.1 Entire Agreement",
         text: (
-          <p className="text-gray-700">
+          <p>
             This Agreement is the entire agreement between parties.
           </p>
         ),
@@ -306,123 +312,115 @@ const sections = [
       {
         subtitle: "8.2 Assignment",
         text: (
-          <p className="text-gray-700">
+          <p>
             Ambassador may not assign or transfer rights.
           </p>
         ),
       },
-
-      // (content continues in Part 2)
+      {
+        subtitle: "8.3 No partnership or agency",
+        text: (
+          <p>
+            Nothing creates a partnership, agency, or employment relationship.
+          </p>
+        ),
+      },
+      {
+        subtitle: "8.4 Variation",
+        text: (
+          <div className="space-y-3">
+            <p>ChainFundIt may vary terms without consent when required by:</p>
+            <ul className="list-disc list-inside ml-4 space-y-2">
+              <li>Changes in operations, policies, systems</li>
+              <li>Law, regulation, court decisions</li>
+            </ul>
+            <p>
+              ChainFundIt aims to notify 7 days prior, but may not always be
+              possible.
+            </p>
+          </div>
+        ),
+      },
+      {
+        subtitle: "8.5 No automatic waiver",
+        text: (
+          <p>
+            Delay in enforcing rights does not waive them.
+          </p>
+        ),
+      },
+      {
+        subtitle: "8.6 Severance",
+        text: (
+          <p>
+            Invalid terms are modified minimally or removed; remainder stays valid.
+          </p>
+        ),
+      },
+      {
+        subtitle: "8.7 Notices",
+        text: (
+          <div className="space-y-3">
+            <p>Notices must be sent by email.</p>
+            <p>Email notices are effective immediately or next business hour.</p>
+          </div>
+        ),
+      },
+      {
+        subtitle: "8.8 Counterparty",
+        text: <p>This Agreement may be executed in counterparts.</p>,
+      },
+      {
+        subtitle: "8.9 Third Party Rights",
+        text: (
+          <p>
+            Only ChainFundIt may enforce third-party rights.
+          </p>
+        ),
+      },
+      {
+        subtitle: "8.10 Governing Law",
+        text: (
+          <div className="space-y-3">
+            <p>UK/US campaigns follow laws of England & Wales.</p>
+            <p>Nigeria campaigns follow Nigerian law.</p>
+          </div>
+        ),
+      },
+      {
+        subtitle: "8.11 Jurisdiction",
+        text: (
+          <div className="space-y-3">
+            <p>Arbitration seat is London or Nigeria depending on campaign origin.</p>
+            <p>
+              Courts of England & Wales have non-exclusive jurisdiction.
+            </p>
+          </div>
+        ),
+      },
     ],
   },
 ];
-// (continuing inside section 8 content array…)
-
-sections[7].content.push(
-  {
-    subtitle: "8.3 No partnership or agency",
-    text: (
-      <p className="text-gray-700">
-        Nothing creates a partnership, agency, or employment relationship.
-      </p>
-    ),
-  },
-  {
-    subtitle: "8.4 Variation",
-    text: (
-      <div className="text-gray-700 space-y-3">
-        <p>ChainFundIt may vary terms without consent when required by:</p>
-        <ul className="list-disc list-inside ml-4 space-y-2">
-          <li>Changes in operations, policies, systems</li>
-          <li>Law, regulation, court decisions</li>
-        </ul>
-        <p>
-          ChainFundIt aims to notify 7 days prior, but may not always be
-          possible.
-        </p>
-      </div>
-    ),
-  },
-  {
-    subtitle: "8.5 No automatic waiver",
-    text: (
-      <p className="text-gray-700">
-        Delay in enforcing rights does not waive them.
-      </p>
-    ),
-  },
-  {
-    subtitle: "8.6 Severance",
-    text: (
-      <p className="text-gray-700">
-        Invalid terms are modified minimally or removed; remainder stays valid.
-      </p>
-    ),
-  },
-  {
-    subtitle: "8.7 Notices",
-    text: (
-      <div className="text-gray-700 space-y-3">
-        <p>Notices must be sent by email.</p>
-        <p>Email notices are effective immediately or next business hour.</p>
-      </div>
-    ),
-  },
-  {
-    subtitle: "8.8 Counterparty",
-    text: <p className="text-gray-700">This Agreement may be executed in counterparts.</p>,
-  },
-  {
-    subtitle: "8.9 Third Party Rights",
-    text: (
-      <p className="text-gray-700">
-        Only ChainFundIt may enforce third-party rights.
-      </p>
-    ),
-  },
-  {
-    subtitle: "8.10 Governing Law",
-    text: (
-      <div className="text-gray-700 space-y-3">
-        <p>UK/US campaigns follow laws of England & Wales.</p>
-        <p>Nigeria campaigns follow Nigerian law.</p>
-      </div>
-    ),
-  },
-  {
-    subtitle: "8.11 Jurisdiction",
-    text: (
-      <div className="text-gray-700 space-y-3">
-        <p>Arbitration seat is London or Nigeria depending on campaign origin.</p>
-        <p>
-          Courts of England & Wales have non-exclusive jurisdiction.
-        </p>
-      </div>
-    ),
-  }
-);
-
-// ----------------------------
-// PAGE COMPONENT
-// ----------------------------
 
 export default function AmbassadorAgreementPage() {
+  const [activeSection, setActiveSection] = useState("section-1");
+
+  const scrollToSection = (sectionId: string) => {
+    setActiveSection(sectionId);
+    const element = document.getElementById(sectionId);
+    if (element) {
+      setTimeout(() => {
+        element.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 font-plusjakarta">
+    <div className="min-h-screen via-white to-blue-50 font-plusjakarta w-full">
       <Navbar />
 
-      {/* HERO WITH STRICT SIZING */}
-      <div
-        className="relative bg-gradient-to-r from-green-600 to-[#104901] text-white overflow-hidden rounded-3xl"
-        style={{
-          width: "1280px",
-          height: "350px",
-          marginLeft: "80px",
-          marginRight: "80px",
-          paddingBottom: "96px",
-          boxSizing: "border-box",
-        }}
-      >
+      {/* HERO SECTION */}
+      <div className="relative text-[#000000ff] overflow-hidden rounded-3xl w-full" style={{ boxSizing: "border-box" }}>
         {/* RIGHT BLUR */}
         <div
           className="absolute top-0 right-0 pointer-events-none"
@@ -441,7 +439,7 @@ export default function AmbassadorAgreementPage() {
           style={{
             width: "400px",
             height: "400px",
-            background: "radial-gradient(circle, #104109 0%, transparent 70%)",
+            background: "radial-gradient(circle, #59AD4A 0%, transparent 70%)",
             filter: "blur(64px)",
             opacity: 0.1,
           }}
@@ -449,218 +447,225 @@ export default function AmbassadorAgreementPage() {
 
         {/* CENTER CONTAINER */}
         <div
-          className="relative mx-auto flex flex-col items-center justify-center"
+          className="relative mx-auto flex flex-col items-center justify-center font-plusjakarta"
           style={{
             width: "896px",
-            maxWidth: "896px",
-            height: "240px",
+            maxWidth: "100%",
             paddingLeft: "16px",
             paddingRight: "16px",
-            paddingTop: "70px",
-            gap: "20px",
+            paddingTop: "80.8px",
+            gap: "24px",
           }}
         >
           {/* ICON BADGE */}
           <div
-            className="flex items-center justify-center"
+            className="inline-flex items-center justify-center font-plusjakarta"
             style={{
-              backgroundColor: "#104109",
+              backgroundColor: "#ECFDF5",
               width: "64px",
               height: "64px",
-              borderRadius: "14px",
-              marginTop: "16px",
+              borderRadius: "16px",
+              marginTop: "24px",
             }}
           >
-            <Handshake className="h-14 w-14 text-white" />
+            <Handshake className="h-8 w-8 mx-auto text-[#059669]" />
           </div>
 
           {/* MAIN HEADING */}
-          <h1
-            className="font-plusjakarta text-center"
-            style={{
-              fontWeight: 800,
-              fontSize: "60px",
-              lineHeight: "60px",
-            }}
+          <div
+            className="flex items-center justify-center font-plusjakarta text-center px-4"
+            style={{ width: "100%", maxWidth: "864px" }}
           >
-            Ambassador Agreement
-          </h1>
+            <h1
+              className="font-plusjakarta"
+              style={{
+                fontWeight: 800,
+                fontSize: "48px",
+                lineHeight: "1.2",
+                color: "#000000ff",
+              }}
+            >
+              Ambassador Agreement
+            </h1>
+          </div>
 
           {/* SUBHEADING */}
-          <p
-            className="font-plusjakarta text-center"
-            style={{
-              fontWeight: 400,
-              fontSize: "18px",
-              color: "#D1FAE5CC",
-              maxWidth: "700px",
-              lineHeight: "1.5",
-            }}
+          <div
+            className="flex items-center justify-center font-plusjakarta text-center px-4"
+            style={{ width: "100%", maxWidth: "672px" }}
           >
-            Terms & Conditions for Chain Ambassadors
-          </p>
+            <p
+              className="font-plusjakarta"
+              style={{
+                fontWeight: 400,
+                fontSize: "18px",
+                color: "#4B5563",
+                lineHeight: "1.5",
+              }}
+            >
+              Terms & Conditions for Chain Ambassadors
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* CONTENT WRAPPER */}
-      <div
-        className="font-plusjakarta"
-        style={{
-          width: "1440px",
-          paddingLeft: "80px",
-          paddingRight: "80px",
-          paddingTop: "64px",
-          paddingBottom: "96px",
-        }}
-      >
-        <div style={{ width: "1280px", marginLeft: "auto", marginRight: "auto" }}>
-          {/* CONTRACT DETAILS */}
-          <div className="mb-8 font-plusjakarta">
-            <Card style={{ borderRadius: "16px" }}>
-              <CardContent className="p-8">
-                <h2
-                  className="font-plusjakarta font-bold"
-                  style={{ fontSize: "24px", color: "#1a1a1a" }}
-                >
-                  Contract Details
-                </h2>
-
-                <div
-                  style={{ fontSize: "16px", color: "#4b5563" }}
-                  className="space-y-2 mt-4"
-                >
-                  <p>
-                    <strong>Parties:</strong> ChainFundIt Limited and Chain
-                    Ambassador
-                  </p>
-                  <p>
-                    <strong>Effective Date:</strong> Upon acceptance of this
-                    Agreement
-                  </p>
-                  <p>
-                    <strong>Contact:</strong>{" "}
-                    <Link
-                      href="mailto:ambassadors@chainfundit.com"
-                      style={{ color: "#104901", fontWeight: 600 }}
+      {/* MAIN CONTENT */}
+      <div className="w-full font-plusjakarta px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {/* SIDEBAR - TABLE OF CONTENTS */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-24 bg-gray-50 rounded-lg p-6 border border-gray-200 max-h-[calc(100vh-120px)] overflow-y-auto font-plusjakarta">
+                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4 font-plusjakarta">
+                  TABLE OF CONTENTS
+                </h3>
+                <nav className="space-y-1 font-plusjakarta">
+                  {tableOfContents.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => scrollToSection(item.id)}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors font-plusjakarta ${
+                        activeSection === item.id
+                          ? "bg-green-100 text-green-700 font-plusjakarta"
+                          : "text-gray-700 hover:bg-gray-100"
+                      }`}
                     >
-                      ambassadors@chainfundit.com
-                    </Link>
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                      {item.label}
+                    </button>
+                  ))}
+                </nav>
+              </div>
+            </div>
 
-          {/* TERMS & CONDITIONS CARD */}
-          <div className="mb-8 font-plusjakarta">
-            <Card style={{ borderRadius: "16px" }}>
-              <CardContent className="p-8">
-                <h2
-                  className="font-plusjakarta font-bold mb-4"
-                  style={{ fontSize: "24px", color: "#1a1a1a" }}
-                >
-                  Terms & Conditions
-                </h2>
-
-                <p
-                  style={{ fontSize: "16px", color: "#4b5563", lineHeight: "1.6" }}
-                >
-                  This Agreement sets out the terms and conditions under which
-                  you may participate as a Chain Ambassador.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* DYNAMIC SECTION CARDS */}
-          {sections.map((section, index) => {
-            const Icon = section.icon;
-
-            return (
-              <div key={index} className="mb-8 font-plusjakarta">
-                <Card
-                  className={cardBgOverride(index)}
-                  style={{ borderRadius: "16px", padding: 0 }}
-                >
-                  <CardContent className="p-8">
-                    {/* CARD HEADER */}
-                    <div className="flex items-center gap-3 mb-6">
-                      <div
-                        className="flex items-center justify-center rounded-full"
-                        style={{
-                          backgroundColor:
-                            index === 1 || index === 4 || index === 6
-                              ? "#0e3c01"
-                              : "#f0fdf4",
-                          width: "48px",
-                          height: "48px",
-                        }}
-                      >
-                        <Icon
-                          className="h-6 w-6"
-                          style={{
-                            color:
-                              index === 1 || index === 4 || index === 6
-                                ? "#ffffff"
-                                : "#059669",
-                          }}
-                        />
-                      </div>
-
-                      <h2
-                        className="font-plusjakarta font-bold"
-                        style={{
-                          fontSize: "22px",
-                          color:
-                            index === 1 || index === 4 || index === 6
-                              ? "#ffffff"
-                              : "#1a1a1a",
-                        }}
-                      >
-                        {section.title}
-                      </h2>
-                    </div>
-
-                    {/* SECTION CONTENT */}
-                      <div
-                        className={`space-y-6 ${
-                          [1, 4, 6].includes(index) ? "text-white" : "text-gray-700"
-                        }`}
-                        style={{ fontSize: "16px", lineHeight: "1.65" }}
-                      >
-                      {section.content.map((item, idx) => (
-                        <div key={idx}>
-                          {item.subtitle && (
-                            <h3
-                              className="font-plusjakarta font-semibold mb-2"
-                              style={{
-                                fontSize: "18px",
-                                color:
-                                  index === 1 || index === 4 || index === 6
-                                    ? "#ffffff"
-                                    : "#1a1a1a",
-                              }}
-                            >
-                              {item.subtitle}
-                            </h3>
-                          )}
-
-                          <div>{item.text}</div>
-                        </div>
-                      ))}
+            {/* MAIN CONTENT */}
+            <div className="lg:col-span-3 space-y-8 font-plusjakarta">
+              {/* CONTRACT DETAILS */}
+              <div className="font-plusjakarta">
+                <Card style={{ borderRadius: "16px", padding: "0", backgroundColor: "#FFFFFF !important" }}>
+                  <CardContent className="p-8 font-plusjakarta">
+                    <h2 className="font-plusjakarta font-bold" style={{ fontSize: "24px", color: "#1a1a1a" }}>
+                      Contract Details
+                    </h2>
+                    <div style={{ fontSize: "16px", color: "#4b5563" }} className="space-y-2 mt-4 font-plusjakarta">
+                      <p>
+                        <strong>Parties:</strong> ChainFundIt Limited and Chain Ambassador
+                      </p>
+                      <p>
+                        <strong>Effective Date:</strong> Upon acceptance of this Agreement
+                      </p>
+                      <p>
+                        <strong>Contact:</strong>{" "}
+                        <Link href="mailto:ambassadors@chainfundit.com" style={{ color: "#104901", fontWeight: 600 }}>
+                          ambassadors@chainfundit.com
+                        </Link>
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
               </div>
-            );
-          })}
 
-          {/* REVISION DATE */}
-          <div
-            className="text-center font-plusjakarta"
-            style={{ fontSize: "14px", color: "#666", marginTop: "48px" }}
-          >
-            Date of Last Revision: November 19, 2025
+              {/* TERMS & CONDITIONS INTRO */}
+              <div className="font-plusjakarta">
+                <Card style={{ borderRadius: "16px", padding: "0", backgroundColor: "#FFFFFF !important" }}>
+                  <CardContent className="p-8 font-plusjakarta">
+                    <h2 className="font-plusjakarta font-bold mb-4" style={{ fontSize: "24px", color: "#1a1a1a" }}>
+                      Terms & Conditions
+                    </h2>
+                    <p style={{ fontSize: "16px", color: "#4b5563", lineHeight: "1.6" }} className="font-plusjakarta">
+                      This Agreement sets out the terms and conditions under which you may participate as a Chain Ambassador.
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* DYNAMIC SECTIONS */}
+              {sections.map((section, index) => {
+                const Icon = section.icon;
+                const isGreenCard = [2, 4, 6].includes(index);
+
+                return (
+                  <div
+                    key={section.id}
+                    id={section.id}
+                    className="scroll-mt-20 font-plusjakarta"
+                    onMouseEnter={() => setActiveSection(section.id)}
+                  >
+                    <Card
+                      style={{
+                        backgroundColor: isGreenCard ? "#104901" : "#FFFFFF",
+                        borderRadius: "16px",
+                        padding: "0",
+                        border: "none"
+                      }}
+                      className={isGreenCard ? "!bg-[#104901]" : "!bg-white"}
+                    >
+                      <CardContent className="p-6 font-plusjakarta">
+                        {/* CARD HEADER */}
+                        <div className="flex items-center gap-3 mb-6 font-plusjakarta">
+                          <div
+                            className="flex items-center justify-center rounded-full flex-shrink-0"
+                            style={{
+                              backgroundColor: isGreenCard ? "#1a5a2a" : "#f0fdf4",
+                              width: "48px",
+                              height: "48px",
+                            }}
+                          >
+                            <Icon
+                              className="h-5 w-5"
+                              style={{
+                                color: isGreenCard ? "#FFFFFF" : "#059669",
+                              }}
+                            />
+                          </div>
+
+                          <h2
+                            className="font-bold font-plusjakarta"
+                            style={{
+                              fontSize: "18px",
+                              color: isGreenCard ? "#FFFFFF" : "#1a1a1a",
+                            }}
+                          >
+                            {section.title}
+                          </h2>
+                        </div>
+
+                        {/* SECTION CONTENT */}
+                        <div
+                          className="space-y-6 font-plusjakarta"
+                          style={{
+                            fontSize: "16px",
+                            lineHeight: "1.65",
+                            color: isGreenCard ? "#FFFFFF" : "#4b5563",
+                          }}
+                        >
+                          {section.content.map((item, idx) => (
+                            <div key={idx} className="font-plusjakarta">
+                              {item.subtitle && (
+                                <h3
+                                  className="font-plusjakarta mb-2 font-plusjakarta"
+                                  style={{
+                                    fontSize: "18px",
+                                    color: isGreenCard ? "#FFFFFF" : "#1a1a1a",
+                                  }}
+                                >
+                                  {item.subtitle}
+                                </h3>
+                              )}
+                              <div className="font-plusjakarta">{item.text}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                );
+              })}
+
+              {/* REVISION DATE */}
+              <div className="text-center font-plusjakarta" style={{ fontSize: "14px", color: "#666", marginTop: "48px" }}>
+                Date of Last Revision: November 19, 2025
+              </div>
+            </div>
           </div>
         </div>
       </div>

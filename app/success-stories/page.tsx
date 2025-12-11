@@ -129,12 +129,11 @@ export default function SuccessStoriesPage() {
       <Navbar />
 
       {/* Hero Section */}
-      <div 
-        className="relative bg-gradient-to-r from-green-600 to-[#104901] text-white overflow-hidden"
+      <div
+        className="relative text-white overflow-hidden rounded-3xl w-fulltext-[#000000ff]"
         style={{
-          width: "1440px",
           paddingBottom: "96px",
-          boxSizing: "border-box"
+          boxSizing: "border-box",
         }}
       >
         {/* Right Corner Blur Overlay */}
@@ -143,9 +142,9 @@ export default function SuccessStoriesPage() {
           style={{
             width: "400px",
             height: "400px",
-            background: "radial-gradient(circle, #065F4633 0%, transparent 70%)",
+            background: "radial-gradient(circle, #104109 0%, transparent 70%)",
             filter: "blur(64px)",
-            opacity: 0.2
+            opacity: 0.2,
           }}
         ></div>
 
@@ -155,14 +154,14 @@ export default function SuccessStoriesPage() {
           style={{
             width: "400px",
             height: "400px",
-            background: "radial-gradient(circle, #10B9811A 0%, transparent 70%)",
+            background: "radial-gradient(circle, #59AD4A 0%, transparent 70%)",
             filter: "blur(64px)",
-            opacity: 0.1
+            opacity: 0.1,
           }}
         ></div>
 
         {/* Center Content Container */}
-        <div 
+        <div
           className="relative mx-auto flex flex-col items-center justify-center font-plusjakarta"
           style={{
             width: "896px",
@@ -171,38 +170,38 @@ export default function SuccessStoriesPage() {
             paddingLeft: "16px",
             paddingRight: "16px",
             paddingTop: "80.8px",
-            gap: "24px"
+            gap: "24px",
           }}
         >
           {/* Trophy Icon Badge */}
-          <div 
+          <div
             className="inline-flex items-center justify-center font-plusjakarta"
             style={{
-              backgroundColor: "#104109",
+              backgroundColor: "#ECFDF5",
               width: "64px",
               height: "70px",
               borderRadius: "12px",
-              marginTop: "22px"
+              marginTop: "22px",
             }}
           >
-            <Trophy className="h-16 w-16 mx-auto mb-2 text-white" />
+            <Trophy className="h-8 w-8 mx-auto mb-2 text-[#059669]" />
           </div>
 
           {/* Main Heading */}
-          <div 
-            className="flex items-center justify-center font-plusjakarta"
+          <div
+            className="flex items-center justify-center font-plusjakarta text-center w-full"
             style={{
-              width: "864px",
-              height: "60px"
+              maxWidth: "864px",
+              height: "60px",
             }}
           >
-            <h1 
+            <h1
               className="font-plusjakarta text-center"
               style={{
                 fontWeight: 800,
-                fontSize: "60px",
+                fontSize: "48px",
                 lineHeight: "60px",
-                color: "#FFFFFF"
+                color: "#000000ff",
               }}
             >
               Success Stories
@@ -210,21 +209,20 @@ export default function SuccessStoriesPage() {
           </div>
 
           {/* Subheading */}
-          <div 
-            className="flex items-center justify-center font-plusjakarta"
+          <div
+            className="flex items-center justify-center font-plusjakarta text-center w-full"
             style={{
-              width: "672px",
               maxWidth: "672px",
-              height: "59px"
+              height: "59px",
             }}
           >
-            <p 
+            <p
               className="font-plusjakarta text-center"
               style={{
                 fontWeight: 400,
                 fontSize: "18px",
-                color: "#D1FAE5CC",
-                lineHeight: "1.5"
+                color: "#4B5563",
+                lineHeight: "1.5",
               }}
             >
               Real stories from real people who've achieved their fundraising goals with ChainFundIt.
@@ -234,63 +232,54 @@ export default function SuccessStoriesPage() {
       </div>
 
       {/* Stats Section */}
-      <div 
-        className="font-plusjakarta"
+      <div
+        className="font-plusjakarta w-full px-4 sm:px-6 lg:px-8 py-12 lg:py-16"
         style={{
-          width: "1440px",
-          paddingLeft: "80px",
-          paddingRight: "80px",
-          paddingTop: "64px",
-          paddingBottom: "64px"
+          width: "1280px",
+          marginLeft: "auto",
+          marginRight: "auto",
         }}
       >
-        <div 
-          className="grid grid-cols-2 md:grid-cols-4 gap-6 font-plusjakarta"
-          style={{
-            width: "1280px",
-            marginLeft: "auto",
-            marginRight: "auto"
-          }}
-        >
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 font-plusjakarta">
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <Card 
-                key={index} 
+              <Card
+                key={index}
                 className="text-center font-plusjakarta"
                 style={{
-                  borderRadius: "16px"
+                  borderRadius: "16px",
                 }}
               >
                 <CardContent className="p-6 font-plusjakarta">
-                  <div 
+                  <div
                     className="flex items-center justify-center mb-3 font-plusjakarta"
                     style={{
                       backgroundColor: "#ECFDF5",
                       width: "56px",
                       height: "56px",
                       borderRadius: "12px",
-                      margin: "0 auto"
+                      margin: "0 auto",
                     }}
                   >
                     <Icon className="h-6 w-6 text-green-600" />
                   </div>
-                  <div 
+                  <div
                     className="font-plusjakarta"
                     style={{
                       fontSize: "28px",
                       fontWeight: 700,
                       color: "#1a1a1a",
-                      marginBottom: "4px"
+                      marginBottom: "4px",
                     }}
                   >
                     {stat.value}
                   </div>
-                  <div 
+                  <div
                     className="font-plusjakarta"
                     style={{
                       fontSize: "14px",
-                      color: "#666666"
+                      color: "#666666",
                     }}
                   >
                     {stat.label}
@@ -303,84 +292,67 @@ export default function SuccessStoriesPage() {
       </div>
 
       {/* Category Filter */}
-      <div 
-        className="font-plusjakarta"
+      <div
+        className="font-plusjakarta w-full px-4 sm:px-6 lg:px-8 py-12 lg:py-16"
         style={{
-          width: "1440px",
-          paddingLeft: "80px",
-          paddingRight: "80px",
-          paddingBottom: "64px"
+          width: "1280px",
+          marginLeft: "auto",
+          marginRight: "auto",
         }}
       >
-        <div 
-          style={{
-            width: "1280px",
-            marginLeft: "auto",
-            marginRight: "auto"
-          }}
-        >
-          <div className="flex items-center gap-3 mb-6 font-plusjakarta">
-            <Filter className="h-5 w-5 text-gray-600" />
-            <h2 
-              className="font-plusjakarta"
-              style={{
-                fontSize: "24px",
-                fontWeight: 700,
-                color: "#1a1a1a"
-              }}
+        <div className="flex items-center gap-3 mb-6 font-plusjakarta">
+          <Filter className="h-5 w-5 text-gray-600" />
+          <h2
+            className="font-plusjakarta"
+            style={{
+              fontSize: "24px",
+              fontWeight: 700,
+              color: "#1a1a1a",
+            }}
+          >
+            Filter by Category
+          </h2>
+        </div>
+        <div className="flex flex-wrap gap-3 font-plusjakarta">
+          {categories.map((category) => (
+            <Badge
+              key={category}
+              className={`px-4 py-2 text-sm cursor-pointer transition-colors font-plusjakarta ${
+                selectedCategory === category
+                  ? "bg-[#104109] text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+              onClick={() => setSelectedCategory(category)}
             >
-              Filter by Category
-            </h2>
-          </div>
-          <div className="flex flex-wrap gap-3 font-plusjakarta">
-            {categories.map((category) => (
-              <Badge
-                key={category}
-                className={`px-4 py-2 text-sm cursor-pointer transition-colors font-plusjakarta ${
-                  selectedCategory === category
-                    ? "bg-green-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-                onClick={() => setSelectedCategory(category)}
-              >
-                {category}
-              </Badge>
-            ))}
-          </div>
+              {category}
+            </Badge>
+          ))}
         </div>
       </div>
 
       {/* Success Stories Grid */}
-      <div 
-        className="font-plusjakarta"
+      <div
+        className="font-plusjakarta w-full px-4 sm:px-6 lg:px-8 py-12 lg:py-16"
         style={{
-          width: "1440px",
-          paddingLeft: "80px",
-          paddingRight: "80px",
-          paddingBottom: "96px"
+          width: "1280px",
+          marginLeft: "auto",
+          marginRight: "auto",
         }}
       >
-        <div 
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 font-plusjakarta"
-          style={{
-            width: "1280px",
-            marginLeft: "auto",
-            marginRight: "auto"
-          }}
-        >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 font-plusjakarta">
           {filteredStories.map((story) => (
             <Card
               key={story.id}
               className="hover:shadow-xl transition-all duration-300 hover:-translate-y-2 overflow-hidden font-plusjakarta"
               style={{
-                borderRadius: "24px"
+                borderRadius: "24px",
               }}
             >
               <CardContent className="p-0 font-plusjakarta">
-                <div 
+                <div
                   className="bg-gradient-to-br from-green-100 to-blue-100 flex items-center justify-center font-plusjakarta"
                   style={{
-                    height: "192px"
+                    height: "192px",
                   }}
                 >
                   <div style={{ fontSize: "80px" }}>{story.image}</div>
@@ -392,33 +364,33 @@ export default function SuccessStoriesPage() {
                     </Badge>
                     <div className="flex items-center gap-1 text-green-600 font-plusjakarta">
                       <CheckCircle className="h-4 w-4" />
-                      <span 
+                      <span
                         className="font-plusjakarta"
                         style={{
                           fontSize: "12px",
-                          fontWeight: 600
+                          fontWeight: 600,
                         }}
                       >
                         Success
                       </span>
                     </div>
                   </div>
-                  <h3 
+                  <h3
                     className="font-plusjakarta mb-3 line-clamp-2"
                     style={{
                       fontSize: "18px",
                       fontWeight: 700,
-                      color: "#1a1a1a"
+                      color: "#000000ff",
                     }}
                   >
                     {story.title}
                   </h3>
-                  <p 
+                  <p
                     className="mb-4 line-clamp-3 font-plusjakarta"
                     style={{
                       fontSize: "14px",
-                      color: "#666666",
-                      lineHeight: "1.5"
+                      color: "#000000ff",
+                      lineHeight: "1.5",
                     }}
                   >
                     {story.story}
@@ -426,30 +398,30 @@ export default function SuccessStoriesPage() {
 
                   <div className="border-t pt-4 mb-4 font-plusjakarta">
                     <div className="flex items-center justify-between text-sm mb-2 font-plusjakarta">
-                      <span 
+                      <span
                         className="font-plusjakarta"
                         style={{ color: "#666666" }}
                       >
                         Raised
                       </span>
-                      <span 
+                      <span
                         className="font-plusjakarta"
                         style={{
                           fontWeight: 700,
-                          color: "#059669"
+                          color: "#059669",
                         }}
                       >
                         £{story.raised.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm mb-2 font-plusjakarta">
-                      <span 
+                      <span
                         className="font-plusjakarta"
                         style={{ color: "#666666" }}
                       >
                         Goal
                       </span>
-                      <span 
+                      <span
                         className="font-plusjakarta"
                         style={{ color: "#4b5563" }}
                       >
@@ -457,20 +429,20 @@ export default function SuccessStoriesPage() {
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm font-plusjakarta">
-                      <span 
+                      <span
                         className="font-plusjakarta"
                         style={{ color: "#666666" }}
                       >
                         Donors
                       </span>
-                      <span 
+                      <span
                         className="font-plusjakarta"
                         style={{ color: "#4b5563" }}
                       >
                         {story.donors}
                       </span>
                     </div>
-                    <div 
+                    <div
                       className="w-full bg-gray-200 rounded-full mt-3 font-plusjakarta"
                       style={{ height: "8px" }}
                     >
@@ -484,24 +456,24 @@ export default function SuccessStoriesPage() {
                     </div>
                   </div>
 
-                  <div 
+                  <div
                     className="rounded-lg p-4 border-l-4 border-green-600 font-plusjakarta"
                     style={{ backgroundColor: "#f0fdf4" }}
                   >
-                    <p 
+                    <p
                       className="italic mb-2 font-plusjakarta"
                       style={{
                         fontSize: "14px",
-                        color: "#4b5563"
+                        color: "#4b5563",
                       }}
                     >
                       &quot;{story.quote}&quot;
                     </p>
-                    <p 
+                    <p
                       className="font-plusjakarta font-bold"
                       style={{
                         fontSize: "12px",
-                        color: "#666666"
+                        color: "#666666",
                       }}
                     >
                       – {story.author}
@@ -511,57 +483,6 @@ export default function SuccessStoriesPage() {
               </CardContent>
             </Card>
           ))}
-        </div>
-      </div>
-
-      {/* CTA Section */}
-      <div 
-        className="font-plusjakarta"
-        style={{
-          width: "1440px",
-          paddingLeft: "80px",
-          paddingRight: "80px",
-          paddingBottom: "96px"
-        }}
-      >
-        <div 
-          className="bg-gradient-to-r from-green-600 to-[#104901] text-white rounded-3xl p-12 text-center font-plusjakarta"
-          style={{
-            width: "1280px",
-            marginLeft: "auto",
-            marginRight: "auto"
-          }}
-        >
-          <Heart className="h-16 w-16 mx-auto mb-6" />
-          <h2 
-            className="font-plusjakarta mb-4"
-            style={{
-              fontSize: "36px",
-              fontWeight: 700,
-              color: "#FFFFFF"
-            }}
-          >
-            Ready to Write Your Success Story?
-          </h2>
-          <p 
-            className="font-plusjakarta mb-8 max-w-2xl mx-auto"
-            style={{
-              fontSize: "18px",
-              color: "#D1FAE5CC"
-            }}
-          >
-            Join thousands of successful fundraisers who've achieved their goals
-            with ChainFundIt.
-          </p>
-          <Link href="/create-campaign">
-            <Button
-              size="lg"
-              className="bg-white text-green-600 hover:bg-gray-100 font-plusjakarta font-bold rounded-full"
-            >
-              Start Your Campaign
-              <ArrowRight className="h-5 w-5 ml-2 rounded-full" />
-            </Button>
-          </Link>
         </div>
       </div>
 
