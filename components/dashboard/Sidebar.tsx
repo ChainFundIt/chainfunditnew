@@ -16,6 +16,7 @@ import { BiDonateHeart } from "react-icons/bi";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { emitter } from "@/hooks/eventBus";
+import { fetchPayoutData } from "@/app/utils/api/payouts";
 
 type Props = {};
 
@@ -27,21 +28,51 @@ const sideBarButtons = [
     exact: true,
   },
   { icon: CampaignsIcon, label: "Campaigns", url: "/dashboard/campaigns" },
-  { icon: DonationsIcon, label: "Donations", url: "/donations" },
-  { icon: PayoutsIcon, label: "Payouts", url: "/payouts" },
-  { icon: SettingsIcon, label: "Settings", url: "/settings" },
+  { icon: DonationsIcon, label: "Donations", url: "/dashboard/donations" },
+  { icon: PayoutsIcon, label: "Payouts", url: "/dashboard/payouts" },
+  { icon: SettingsIcon, label: "Settings", url: "/dashboard/settings" },
 ];
 
 const Sidebar = (props: Props) => {
   const pathname = usePathname();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [availableBalance, setAvailableBalance] = useState<number>(0);
+
+  const formatBalance = (amount: number) => {
+    if (amount >= 1_000_000) {
+      const value = amount / 1_000_000;
+      return `${Number.isInteger(value) ? value : value.toFixed(1)}M`;
+    }
+
+    if (amount >= 1_000) {
+      const value = amount / 1_000;
+      return `${Number.isInteger(value) ? value : value.toFixed(1)}K`;
+    }
+
+    return amount.toLocaleString();
+  };
 
   useEffect(() => {
     const handler = () => setIsOpen(true);
     emitter.on("openSideBar", handler);
     return () => emitter.off("openSideBar", handler);
   }, []);
+
+  useEffect(() => {
+    const loadBalance = async () => {
+      const { data } = await fetchPayoutData();
+      if (data) {
+        setAvailableBalance(data.totalAvailableForPayoutInNGN);
+      }
+    };
+    loadBalance();
+  }, []);
+
+  const handleSideBarButtonClick = (url: string) => {
+    router.push(url);
+    setIsOpen(false);
+  }
 
   const handleLogout = async () => {
     try {
@@ -101,7 +132,7 @@ const Sidebar = (props: Props) => {
             return (
               <div
                 key={index}
-                onClick={() => router.push(data.url)}
+                onClick={() => handleSideBarButtonClick(data.url)}
                 className={`
     flex items-center gap-4 cursor-pointer p-4 rounded-[10px]
      ${isSelected ? "bg-[var(--color-darkGreen)]" : "hover:bg-[#f3f4f6]"}
@@ -136,13 +167,13 @@ const Sidebar = (props: Props) => {
               AVAILABLE BALANCE
             </div>
             <div className="font-extrabold text-[21px] leading-[28px] text-[var(--color-darkGreen)]">
-              $12,450.00
+              ₦{formatBalance(availableBalance)}
             </div>
             <Button
               onClick={() => {
-                console.log("clicked");
+                router.push("/dashboard/payouts");
               }}
-              className=" border border-[#1041091A] bg-white text-[var(--color-darkGreen)] rounded-[10px] text-[11px] leading-[14px]"
+              className="border border-transparent bg-white text-[var(--color-darkGreen)] rounded-[10px] text-[11px] leading-[14px] hover:border-[#104109] transition-colors"
             >
               Withdraw Funds
             </Button>
@@ -165,36 +196,3 @@ const Sidebar = (props: Props) => {
 };
 
 export default Sidebar;
-
-//  <div className="w-full font-source font-semibold text-[28px] text-[#8E8C95]">
-//       <div className="flex flex-col gap-2 p-4">
-//         {links.map((link) => (
-//           <Link
-//             key={link.href}
-//             href={link.href}
-//             className={`flex gap-3 items-center p-4 ${
-//               pathname === link.href
-//                 ? "bg-[#FFFEF8] text-[#104901] shadow-sm"
-//                 : ""
-//             }`}
-//           >
-//             <section
-//               className={` ${pathname === link.href ? " text-[#5F8555]" : "text-black"}`}
-//             >
-//               {link.icon}
-//             </section>
-
-//             {link.label}
-//           </Link>
-//         ))}
-
-//         {/* Logout Button */}
-//         {/* <button
-//           onClick={handleLogout}
-//           className="flex gap-3 p-4 text-left text-[#8E8C95] hover:bg-[#FFFEF8] hover:text-[#104901] transition-colors"
-//         >
-//           <LogOut size={40} className="text-black" />
-//           Logout
-//         </button> */}
-//       </div>
-//     </div>

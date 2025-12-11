@@ -8,8 +8,6 @@ import SessionTimeoutProvider from "@/components/providers/SessionTimeoutProvide
 import { TokenRefreshProvider } from "@/hooks/use-token-refresh";
 import SearchBar from "@/components/dashboard/SearchBar";
 
-type Props = {};
-
 const layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <TokenRefreshProvider>
@@ -26,7 +24,6 @@ const layout = ({ children }: { children: React.ReactNode }) => {
             </div>
           </div>
         </div>
-
         <ClientToaster />
       </SessionTimeoutProvider>
     </TokenRefreshProvider>

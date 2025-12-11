@@ -154,7 +154,7 @@ const Navbar = (props: Props) => {
             <DropdownMenuSeparator className="my-2" />
             <DropdownMenuItem asChild>
               <Link
-                href="/settings"
+                href="/dashboard/settings"
                 className="flex items-center gap-2 text-sm text-[#1F2937] cursor-pointer"
               >
                 <Settings className="h-4 w-4 text-[#6B7280]" />
@@ -210,9 +210,6 @@ const Navbar = (props: Props) => {
             <Button className="w-full">Create Campaign</Button>
             <div className="flex gap-3 items-center justify-center">
               <NotificationAlert />
-              {/* <Link href="/settings">
-                <UserAvatar size={32} className="w-8 h-8" />
-              </Link> */}
               <Link href="/logout" onClick={handleLogout}>
                 <LogOut className="h-6 w-6 text-red-600" />
               </Link>

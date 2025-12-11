@@ -40,17 +40,20 @@ export function NotificationAlert({ className }: NotificationAlertProps) {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isOpen]);
 
@@ -106,7 +109,7 @@ export function NotificationAlert({ className }: NotificationAlertProps) {
 
       {/* Notification Dropdown */}
       {isOpen && (
-        <div 
+        <div
           ref={dropdownRef}
           className="absolute right-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-hidden"
         >
@@ -162,14 +165,17 @@ export function NotificationAlert({ className }: NotificationAlertProps) {
                       if (!notification.isRead) {
                         markAsRead([notification.id]);
                       }
-                      
+
                       // Handle navigation based on notification type
-                      if (notification.type === 'donation_failed' || notification.type === 'donation_received') {
+                      if (
+                        notification.type === "donation_failed" ||
+                        notification.type === "donation_received"
+                      ) {
                         // Navigate to donations page
-                        window.location.href = '/donations';
-                      } else if (notification.type === 'campaign_created') {
+                        window.location.href = "/dashboard/donations";
+                      } else if (notification.type === "campaign_created") {
                         // Navigate to campaigns page
-                        window.location.href = '/dashboard/campaigns';
+                        window.location.href = "/dashboard/campaigns";
                       }
                     }}
                   >

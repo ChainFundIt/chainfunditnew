@@ -58,7 +58,7 @@ const Navbar = (props: Props) => {
           <Search color="#757575" size={24} />
           <NotificationAlert />
 
-          <Link href="/settings">
+          <Link href="/dashboard/settings">
             <Image
               src="/images/user.png"
               alt="User"
@@ -106,7 +106,7 @@ const Navbar = (props: Props) => {
               <NotificationAlert />
               <Bell color="#757575" size={24} />
             </div>
-            <Link href="/settings">
+            <Link href="/dashboard/settings">
               <Image
                 src="/images/user.png"
                 alt="User"

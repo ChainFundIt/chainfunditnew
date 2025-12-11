@@ -13,10 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Clock, Link, MessageSquare } from "lucide-react";
 import HeartBeat from "@/public/icons/HeartBeat";
-import ClockIcon from "@/public/icons/ClockIcon";
 import { DonationsIcon } from "@/public/icons/DonationsIcon";
-
-// const tabs = ["Live", "Past", "Chains", "Favourites", "Comments"];
 
 const tabs = [
   { label: "Live", Icon: HeartBeat },
