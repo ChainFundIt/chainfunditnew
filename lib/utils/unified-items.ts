@@ -53,20 +53,89 @@ export function normalizeCampaign(campaign: any): UnifiedItem {
  */
 export function getCharityFallbackImage(category?: string): string {
   // Map categories to available images in public/images
+  // Using appropriate images that match the charity category theme
   const categoryImageMap: Record<string, string> = {
+    // Health & Medical
     'Health': '/images/blue-cross.jpg',
+    'Medical': '/images/blue-cross.jpg',
+    
+    // Education & Children
     'Education': '/images/happyChildren.png',
-    'Community': '/images/volunteersHelping.png',
-    'Environment': '/images/save-the-planet.jpg',
     'Children': '/images/happyChildren.png',
+    'Children & Youth': '/images/happyChildren.png',
+    
+    // Community & Social
+    'Community': '/images/volunteersHelping.png',
+    'Housing': '/images/volunteersHelping.png',
+    'Housing & Shelter': '/images/volunteersHelping.png',
+    
+    // Environment & Nature
+    'Environment': '/images/save-the-planet.jpg',
+    
+    // Disaster & Emergency
     'Disaster Relief': '/images/volunteersHelping.png',
+    'Emergency': '/images/volunteersHelping.png',
+    
+    // Hunger & Poverty
+    'Hunger & Poverty': '/images/help-mariam.jpg',
+    'Poverty': '/images/help-mariam.jpg',
+    
+    // Water & Sanitation
+    'Water & Sanitation': '/images/help-mariam.jpg',
+    'Water': '/images/help-mariam.jpg',
+    
+    // Arts & Creative
+    'Arts': '/images/story-2.png',
+    'Creative': '/images/story-2.png',
+    
+    // Employment & Training
+    'Employment & Training': '/images/volunteersHelping.png',
+    'Employment': '/images/volunteersHelping.png',
+    
+    // Global & International
+    'Global': '/images/volunteersHelping.png',
+    'International': '/images/volunteersHelping.png',
   };
   
+  // Try exact match first
   if (category && categoryImageMap[category]) {
     return categoryImageMap[category];
   }
   
-  // Default fallback
+  // Try case-insensitive match
+  if (category) {
+    const lowerCategory = category.toLowerCase();
+    for (const [key, value] of Object.entries(categoryImageMap)) {
+      if (key.toLowerCase() === lowerCategory) {
+        return value;
+      }
+    }
+    
+    // Try partial match for categories with variations
+    if (lowerCategory.includes('health') || lowerCategory.includes('medical')) {
+      return '/images/blue-cross.jpg';
+    }
+    if (lowerCategory.includes('education') || lowerCategory.includes('children') || lowerCategory.includes('youth')) {
+      return '/images/happyChildren.png';
+    }
+    if (lowerCategory.includes('community') || lowerCategory.includes('housing') || lowerCategory.includes('shelter')) {
+      return '/images/volunteersHelping.png';
+    }
+    if (lowerCategory.includes('environment') || lowerCategory.includes('climate') || lowerCategory.includes('nature')) {
+      return '/images/save-the-planet.jpg';
+    }
+    if (lowerCategory.includes('disaster') || lowerCategory.includes('emergency') || lowerCategory.includes('relief')) {
+      return '/images/volunteersHelping.png';
+    }
+    if (lowerCategory.includes('hunger') || lowerCategory.includes('poverty') || lowerCategory.includes('food')) {
+      return '/images/help-mariam.jpg';
+    }
+    if (lowerCategory.includes('water') || lowerCategory.includes('sanitation')) {
+      return '/images/help-mariam.jpg';
+    }
+  }
+  
+  // Default fallback - use a generic charity image
   return '/images/card-img1.png';
 }
 

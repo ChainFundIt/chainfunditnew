@@ -17,10 +17,67 @@ import {
 } from "lucide-react";
 
 import { useCharities } from "@/hooks/use-charities";
-import { getCharityFallbackImage } from "@/lib/utils/unified-items";
 
 import { Button } from "../ui/button";
 import BenefitsCarousel from "./BenefitsCarousel";
+
+// Component to show image with heart icon fallback on error
+const CharityImageWithFallback = ({ 
+  src, 
+  alt, 
+  title, 
+  height,
+  width,
+  className
+}: { 
+  src: string; 
+  alt: string; 
+  title: string; 
+  height: number; 
+  width: number; 
+  className: string;
+}) => {
+  const [imageError, setImageError] = React.useState(false);
+
+  React.useEffect(() => {
+    setImageError(false);
+  }, [src]);
+
+  const HeartIconPlaceholder = () => (
+    <div className="w-[382px] h-[224px] bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 flex items-center justify-center relative">
+      <div className="text-center p-4 relative z-10">
+        <div className="relative inline-block">
+          <div className="absolute inset-0 bg-gradient-to-br from-green-400 to-blue-500 rounded-full blur-xl opacity-30 transition-opacity duration-500"></div>
+          <div className="relative bg-gradient-to-br from-green-500 to-blue-600 p-4 rounded-full">
+            <Heart className="h-12 w-12 text-white" />
+          </div>
+        </div>
+        <p className="text-xs font-semibold text-gray-600 mt-3 max-w-[120px] mx-auto line-clamp-2">
+          {title}
+        </p>
+      </div>
+    </div>
+  );
+
+  if (!src || imageError) {
+    return <HeartIconPlaceholder />;
+  }
+
+  return (
+    <div className="relative w-[382px] h-[224px]">
+      <img
+        src={src}
+        alt={alt}
+        height={height}
+        width={width}
+        className={className}
+        onError={() => setImageError(true)}
+        onLoad={() => setImageError(false)}
+      />
+      {imageError && <HeartIconPlaceholder />}
+    </div>
+  );
+};
 
 const Main = () => {
   const router = useRouter();
@@ -93,11 +150,7 @@ const Main = () => {
         charity.description ||
         charity.mission ||
         "Learn more about this charity's impact.",
-      image: (charity.coverImage && !charity.coverImage.includes('logo.clearbit.com'))
-        ? charity.coverImage
-        : (charity.logo && !charity.logo.includes('logo.clearbit.com'))
-        ? charity.logo
-        : getCharityFallbackImage(charity.category),
+      image: charity.coverImage || charity.logo || null,
       category: charity.category || "Community",
       country: charity.country || "International",
       focusAreas,
@@ -252,13 +305,31 @@ const Main = () => {
                 >
                   {/* IMAGE SECTION */}
                   <div className="relative overflow-hidden">
-                    <R2Image
-                      src={card.image}
-                      alt={card.title}
-                      height={224}
-                      width={382}
-                      className="w-[382px] h-[224px] object-contain bg-white group-hover:scale-105 transition-transform duration-500"
-                    />
+                    {/* Show placeholder heart icon when no image, otherwise try to show the image (including clearbit URLs) */}
+                    {!card.image ? (
+                      <div className="w-[382px] h-[224px] bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 flex items-center justify-center relative">
+                        <div className="text-center p-4 relative z-10">
+                          <div className="relative inline-block">
+                            <div className="absolute inset-0 bg-gradient-to-br from-green-400 to-blue-500 rounded-full blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
+                            <div className="relative bg-gradient-to-br from-green-500 to-blue-600 p-4 rounded-full">
+                              <Heart className="h-12 w-12 text-white" />
+                            </div>
+                          </div>
+                          <p className="text-xs font-semibold text-gray-600 mt-3 max-w-[120px] mx-auto line-clamp-2">
+                            {card.title}
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <CharityImageWithFallback
+                        src={card.image}
+                        alt={card.title}
+                        title={card.title}
+                        height={224}
+                        width={382}
+                        className="w-[382px] h-[224px] object-contain bg-white group-hover:scale-105 transition-transform duration-500"
+                      />
+                    )}
                     <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 rounded-full">
                       <span className="font-bold text-xs leading-4">
                         {card.category}

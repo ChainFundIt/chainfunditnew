@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -26,8 +26,67 @@ import { useGeolocationCurrency } from '@/hooks/use-geolocation-currency';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { R2Image } from '@/components/ui/r2-image';
-import { getCharityFallbackImage } from '@/lib/utils/unified-items';
 import { track } from '@/lib/analytics';
+
+// Component to show image with heart icon fallback on error
+const CharityImageWithFallback = ({ 
+  src, 
+  alt, 
+  title, 
+  height,
+  width,
+  className,
+  containerClassName
+}: { 
+  src: string | null | undefined; 
+  alt: string; 
+  title: string; 
+  height: number; 
+  width: number; 
+  className: string;
+  containerClassName?: string;
+}) => {
+  const [imageError, setImageError] = React.useState(false);
+
+  React.useEffect(() => {
+    setImageError(false);
+  }, [src]);
+
+  const HeartIconPlaceholder = () => (
+    <div className={`${containerClassName || ''} bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 flex items-center justify-center relative`}>
+      <div className="text-center p-4 relative z-10">
+        <div className="relative inline-block">
+          <div className="absolute inset-0 bg-gradient-to-br from-green-400 to-blue-500 rounded-full blur-xl opacity-30 transition-opacity duration-500"></div>
+          <div className="relative bg-gradient-to-br from-green-500 to-blue-600 p-4 rounded-full">
+            <Heart className="h-12 w-12 text-white" />
+          </div>
+        </div>
+        <p className="text-xs font-semibold text-gray-600 mt-3 max-w-[120px] mx-auto line-clamp-2">
+          {title}
+        </p>
+      </div>
+    </div>
+  );
+
+  if (!src || imageError) {
+    return <HeartIconPlaceholder />;
+  }
+
+  return (
+    <div className={containerClassName || ''}>
+      <img
+        src={src}
+        alt={alt}
+        height={height}
+        width={width}
+        className={className}
+        onError={() => setImageError(true)}
+        onLoad={() => setImageError(false)}
+      />
+      {imageError && <HeartIconPlaceholder />}
+    </div>
+  );
+};
 
 interface Charity {
   id: string;
@@ -231,17 +290,15 @@ export default function CharityDetailPage() {
         </Button>
 
         {/* Cover Image */}
-        <div className="h-64 bg-gray-200 rounded-lg mb-6 overflow-hidden">
-          <R2Image 
-            src={(charity.coverImage && !charity.coverImage.includes('logo.clearbit.com'))
-              ? charity.coverImage
-              : getCharityFallbackImage(charity.category)} 
-            alt={charity.name} 
-            className="w-full h-full object-cover"
-            width={1000}
-            height={1000}
-          />
-        </div>
+        <CharityImageWithFallback
+          src={charity.coverImage}
+          alt={charity.name}
+          title={charity.name}
+          height={256}
+          width={1000}
+          className="w-full h-full object-cover"
+          containerClassName="h-64 bg-gray-200 rounded-lg mb-6 overflow-hidden"
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
@@ -249,14 +306,14 @@ export default function CharityDetailPage() {
             {/* Header */}
             <div>
               <div className="flex items-start gap-4 mb-4">
-                <R2Image 
-                  src={(charity.logo && !charity.logo.includes('logo.clearbit.com'))
-                    ? charity.logo
-                    : getCharityFallbackImage(charity.category)} 
-                  alt={charity.name} 
+                <CharityImageWithFallback
+                  src={charity.logo}
+                  alt={charity.name}
+                  title={charity.name}
+                  height={80}
+                  width={80}
                   className="h-20 w-20 rounded-lg object-cover"
-                  width={1000}
-                  height={1000}
+                  containerClassName="h-20 w-20"
                 />
                 <div className="flex-1">
                   <h1 className="text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3">

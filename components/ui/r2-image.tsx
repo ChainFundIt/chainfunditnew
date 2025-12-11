@@ -52,17 +52,13 @@ export function R2Image({ src, alt, ...props }: R2ImageProps) {
     setHasError(false);
   }, [src]);
 
-  // Validate src - use fallback from public/images if invalid
+  // Validate src - return null if invalid so parent can show custom fallback
   if (!src || typeof src !== 'string' || src.trim() === '') {
-    console.warn(`R2Image: Empty or invalid src for "${alt}", using fallback`);
-    return <ImagePlaceholder alt={alt} {...props} />;
+    return null;
   }
 
-  // Check if this is a clearbit.com URL - these often return 403, so use fallback immediately
-  if (src.includes('logo.clearbit.com')) {
-    console.warn(`R2Image: Clearbit URL detected (often returns 403): ${src}, using fallback`);
-    return <ImagePlaceholder alt={alt} {...props} />;
-  }
+  // Allow clearbit.com URLs to be displayed (they may work in some cases)
+  // The component using R2Image should handle showing placeholder if needed
 
   // Fix "undefined/" prefix in URLs (common issue from broken uploads)
   // This is a client-side workaround - the proper fix should be done server-side via API
@@ -77,23 +73,13 @@ export function R2Image({ src, alt, ...props }: R2ImageProps) {
 
   // Try to validate URL format for non-relative paths
   if (!fixedSrc.startsWith('/') && !fixedSrc.startsWith('http://') && !fixedSrc.startsWith('https://')) {
-    // If it's not a relative path or absolute URL, it's invalid - use fallback
-    console.warn(`R2Image: Invalid URL format: ${src}, using fallback`);
-    return <ImagePlaceholder alt={alt} {...props} />;
+    // If it's not a relative path or absolute URL, it's invalid - return null
+    return null;
   }
 
-  // If there was an error, try fallback image from public/images
+  // If there was an error, return null so parent can show custom fallback
   if (hasError) {
-    // Try to use a fallback image from public/images
-    const fallbackImage = '/images/card-img1.png';
-    return (
-      <Image
-        src={fallbackImage}
-        alt={alt || 'Image'}
-        unoptimized
-        {...props}
-      />
-    );
+    return null;
   }
 
   // Check if the image is from R2 (Cloudflare R2) or local uploads
