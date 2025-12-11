@@ -281,7 +281,7 @@ const sections = [
               <li>Object to or restrict certain types of processing</li>
               <li>Request a copy of your data (data portability)</li>
             </ul>
-            <p className="text-gray-700 leading-relaxed mt-4">
+            <p className="leading-relaxed mt-4">
               To exercise these rights, email{" "}
               <Link
                 href="mailto:mngt@chainfundit.com"
@@ -548,10 +548,6 @@ const sections = [
   },
 ];
 
-const getIconComponent = (icon: React.ComponentType<any>) => {
-  return icon;
-};
-
 export default function PrivacyPolicyPage() {
   const [activeSection, setActiveSection] = useState("introduction");
 
@@ -566,41 +562,155 @@ export default function PrivacyPolicyPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FCFAF5]">
+    <div className="min-h-screen bg-[#FCFAF5] font-plusjakarta">
       <Navbar />
 
       {/* Hero Section */}
-      <div className="relative bg-gray-50 mt-16 py-16">
-        <div className="container mx-auto px-4 text-center">
-          <div className="p-3 bg-green-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
-            <Shield className="h-10 w-10 text-green-600" />
+      <div 
+        className="bg-white font-plusjakarta"
+        style={{ 
+          width: "1440px", 
+          height: "368.8px",
+          
+          paddingRight: "272px",
+          
+          paddingLeft: "272px",
+          borderBottom: "0.8px solid #F3F4F6",
+          
+          boxSizing: "border-box",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
+        }}
+      >
+        <div 
+          className="font-plusjakarta flex flex-col items-center"
+          style={{ 
+            width: "896px", 
+            height: "224px",
+            maxWidth: "896px"
+          }}
+        >
+          {/* Logo */}
+          <div 
+            className="flex items-center justify-center mb-6 font-plusjakarta"
+            style={{ 
+              backgroundColor: "#ECFDF5",
+              width: "64px", 
+              height: "64px",
+              borderRadius: "16px"
+            }}
+          >
+            <Shield className="h-8 w-8 text-green-600" />
           </div>
-          <h1 className="text-5xl font-bold mb-4 text-gray-900">
+
+          {/* Main Heading */}
+          <h1 
+            className="font-plusjakarta text-center"
+            style={{ 
+              width: "864px", 
+              height: "24px",
+              fontWeight: 800,
+              fontSize: "48px",
+              lineHeight: "1",
+              marginBottom: "24px"
+            }}
+          >
             Privacy Policy
           </h1>
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            Your trust is our top priority. Here's how we protect your data.
-          </p>
-          <p className="text-sm text-green-600 font-semibold mt-6 bg-green-100 rounded-lg px-3 py-1 inline-block">
-            Last updated: 19 November 2025
-          </p>
+
+          {/* Subheading Container */}
+          <div 
+            className="flex items-center justify-center font-plusjakarta"
+            style={{ 
+              width: "864px", 
+              height: "28px",
+              marginTop: "16px"
+            }}
+          >
+            <p 
+              className="font-plusjakarta text-center"
+              style={{ 
+                width: "512px", 
+                height: "28px",
+                fontWeight: 400,
+                fontSize: "18px",
+                color: "#4B5563"
+              }}
+            >
+              Your trust is our top priority. Here's how we protect your data.
+            </p>
+          </div>
+
+          {/* Last Updated Badge */}
+          <div 
+            className="flex items-center justify-center font-plusjakarta"
+            style={{ 
+              width: "306px", 
+              height: "28px",
+              marginTop: "16px",
+              
+              
+              paddingTop: "4px",
+              paddingRight: "16px",
+              paddingBottom: "4px",
+              paddingLeft: "16px",
+              borderRadius: "12px",
+              boxSizing: "border-box"
+            }}
+          >
+            <span 
+              className="font-plusjakarta text-center"
+              style={{ 
+                fontWeight: 700,
+                fontSize: "14px",
+                color: "#059669",
+                backgroundColor: "#ECFDF5",
+                padding: "4px 8px",
+                borderRadius: "8px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "20px"
+              }}
+            >
+              Last updated: 19 November 2025
+            </span>
+          </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-16 max-w-7xl">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      {/* Main Content */}
+      <div 
+        className="font-plusjakarta mx-auto"
+        style={{ 
+          width: "1440px", 
+          minHeight: "900px",
+          paddingTop: "64px",
+          paddingLeft: "160px",
+          paddingRight: "160px",
+          boxSizing: "border-box"
+        }}
+      >
+        <div 
+          className="flex font-plusjakarta"
+          style={{ 
+            width: "1120px", 
+            gap: "48px"
+          }}
+        >
           {/* Sidebar - Table of Contents */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-24 bg-gray-50 rounded-lg p-6 border border-gray-200 max-h-[calc(100vh-120px)] overflow-y-auto">
-              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">
+          <div style={{ width: "256px", flexShrink: 0 }}>
+            <div className="sticky top-24 bg-gray-50 rounded-lg p-6 border border-gray-200 max-h-[calc(100vh-120px)] overflow-y-auto font-plusjakarta">
+              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4 font-plusjakarta">
                 TABLE OF CONTENTS
               </h3>
-              <nav className="space-y-1">
+              <nav className="space-y-1 font-plusjakarta">
                 {tableOfContents.map((item) => (
                   <button
                     key={item.id}
                     onClick={() => scrollToSection(item.id)}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors font-plusjakarta ${
                       activeSection === item.id
                         ? "bg-green-100 text-green-700 font-semibold"
                         : "text-gray-700 hover:bg-gray-100"
@@ -614,18 +724,24 @@ export default function PrivacyPolicyPage() {
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-3 space-y-8">
+          <div 
+            className="font-plusjakarta"
+            style={{ 
+              width: "804px",
+              gap: "48px"
+            }}
+          >
             {/* Introduction Section */}
             <div
               id="introduction"
-              className="scroll-mt-20"
+              className="scroll-mt-20 mb-12 font-plusjakarta"
               onMouseEnter={() => setActiveSection("introduction")}
             >
-              <div className="bg-white rounded-2xl p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              <div className="bg-white rounded-2xl p-8 font-plusjakarta">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4 font-plusjakarta">
                   1. Introduction
                 </h2>
-                <p className="text-gray-700 leading-relaxed mb-4">
+                <p className="text-gray-700 leading-relaxed mb-4 font-plusjakarta">
                   ChainFundIt ("we", "our", or "us") is committed to protecting
                   your privacy and personal data. This Privacy Policy explains
                   what information we collect, how we use it, who we share it
@@ -633,7 +749,7 @@ export default function PrivacyPolicyPage() {
                   including the UK General Data Protection Regulation (UK GDPR)
                   and the Nigeria Data Protection Regulation (NDPR).
                 </p>
-                <p className="text-gray-700 leading-relaxed">
+                <p className="text-gray-700 leading-relaxed font-plusjakarta">
                   By using{" "}
                   <Link
                     href="https://www.chainfundit.com"
@@ -650,14 +766,14 @@ export default function PrivacyPolicyPage() {
             {/* Who We Are Section */}
             <div
               id="who-we-are"
-              className="scroll-mt-20"
+              className="scroll-mt-20 mb-12 font-plusjakarta"
               onMouseEnter={() => setActiveSection("who-we-are")}
             >
-              <div className="bg-white rounded-2xl p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              <div className="bg-white rounded-2xl p-8 font-plusjakarta">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4 font-plusjakarta">
                   2. Who We Are
                 </h2>
-                <p className="text-gray-700 leading-relaxed">
+                <p className="text-gray-700 leading-relaxed font-plusjakarta">
                   <strong>ChainFundIt Limited</strong>
                   <br />
                   Company No. 13253451
@@ -701,22 +817,22 @@ export default function PrivacyPolicyPage() {
                 <div
                   key={section.id}
                   id={section.id}
-                  className="scroll-mt-20"
+                  className="scroll-mt-20 mb-12 font-plusjakarta"
                   onMouseEnter={() => setActiveSection(section.id)}
                 >
                   <div
-                    className={`rounded-2xl p-8 ${
+                    className={`rounded-2xl p-8 font-plusjakarta ${
                       isGreenBg ? "bg-[#104901]" : "bg-white"
                     }`}
                   >
-                    <div className="flex items-center gap-3 mb-6">
+                    <div className="flex items-center gap-3 mb-6 font-plusjakarta">
                       <IconComponent
                         className={`h-5 w-5 ${
                           isGreenBg ? "text-white" : "text-green-600"
                         }`}
                       />
                       <h2
-                        className={`text-2xl font-bold ${
+                        className={`text-2xl font-bold font-plusjakarta ${
                           isGreenBg ? "text-white" : "text-gray-900"
                         }`}
                       >
@@ -724,12 +840,12 @@ export default function PrivacyPolicyPage() {
                       </h2>
                     </div>
 
-                    <div className="space-y-6">
+                    <div className="space-y-6 font-plusjakarta">
                       {section.content.map((item, contentIdx) => (
-                        <div key={contentIdx}>
+                        <div key={contentIdx} className="font-plusjakarta">
                           {item.subtitle && (
                             <h3
-                              className={`text-base font-semibold mb-3 ${
+                              className={`text-base font-semibold mb-3 font-plusjakarta ${
                                 isGreenBg ? "text-white" : "text-gray-900"
                               }`}
                             >
@@ -738,7 +854,7 @@ export default function PrivacyPolicyPage() {
                           )}
                           {item.text && (
                             <div
-                              className={`leading-relaxed text-sm ${
+                              className={`leading-relaxed text-sm font-plusjakarta ${
                                 isGreenBg ? "text-white" : "text-gray-700"
                               }`}
                             >
@@ -756,21 +872,21 @@ export default function PrivacyPolicyPage() {
             {/* Contact Us Section */}
             <div
               id="contact-us"
-              className="scroll-mt-20"
+              className="scroll-mt-20 mb-12 font-plusjakarta"
               onMouseEnter={() => setActiveSection("contact-us")}
             >
-              <div className="bg-white rounded-2xl p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              <div className="bg-white rounded-2xl p-8 font-plusjakarta">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6 font-plusjakarta">
                   {sections.length + 3}. Contact Us
                 </h2>
-                <p className="text-gray-700 leading-relaxed mb-6">
+                <p className="text-gray-700 leading-relaxed mb-6 font-plusjakarta">
                   If you have any questions about this Privacy Policy, please
                   contact our Data Protection Officer:
                 </p>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 font-plusjakarta">
                   <Link
                     href="mailto:privacy@chainfundit.com"
-                    className="text-green-600 hover:underline font-semibold text-base flex items-center gap-2"
+                    className="text-green-600 hover:underline font-semibold text-base flex items-center gap-2 font-plusjakarta"
                   >
                     privacy@chainfundit.com
                     <ChevronRight className="h-5 w-5" />

@@ -1,3 +1,8 @@
+// ============================
+// page.tsx (Updated Version)
+// Cards C, E, and G now use bg #104901
+// ============================
+
 "use client";
 
 import React from "react";
@@ -127,17 +132,17 @@ const sections = [
               You agree to only use the platform in accordance with these Terms
               and applicable laws.
             </li>
-              <li>
-                You may not use ChainFundIt to fundraise for or promote any
-                illegal, deceptive, or prohibited activity (see Section F and{" "}
-                <a
-                  href="#f.1.-prohibited-campaigns-policy"
-                  className="text-[#104901] hover:underline font-semibold"
-                >
-                  Prohibited Campaigns Policy
-                </a>
-                ).
-              </li>
+            <li>
+              You may not use ChainFundIt to fundraise for or promote any
+              illegal, deceptive, or prohibited activity (see Section F and{" "}
+              <a
+                href="#f.1.-prohibited-campaigns-policy"
+                className="text-[#104901] hover:underline font-semibold"
+              >
+                Prohibited Campaigns Policy
+              </a>
+              ).
+            </li>
           </ul>
         ),
       },
@@ -264,8 +269,8 @@ const sections = [
           <>
             <ul className="list-disc list-inside space-y-2 mb-4">
               <li>
-                Organisers are responsible for ensuring that all campaign details
-                are <strong>truthful, transparent, and legal</strong>.
+                Organisers are responsible for ensuring that all campaign
+                details are <strong>truthful, transparent, and legal</strong>.
               </li>
               <li>
                 Organisers may not use ChainFundIt for campaigns involving:
@@ -276,8 +281,8 @@ const sections = [
                   <li>Medical misinformation</li>
                   <li>Fraud or impersonation</li>
                 </ul>
-                See our <strong>Prohibited Campaigns Policy</strong> below for full
-                details.
+                See our <strong>Prohibited Campaigns Policy</strong> below for
+                full details.
               </li>
               <li>
                 ChainFundIt reserves the right to{" "}
@@ -291,16 +296,16 @@ const sections = [
                 and reporting rules.
               </li>
               <li>
-                If a donor overpays or donates in error, the Organiser must issue
-                a refund within <strong>2 business days</strong>.
+                If a donor overpays or donates in error, the Organiser must
+                issue a refund within <strong>2 business days</strong>.
               </li>
               <li>
                 Organisers may propose an "Alternative Recipient" to receive
                 campaign funds, but ChainFundIt must approve the change.
               </li>
               <li>
-                Changes to a campaign's payment account must be requested through
-                the dashboard and are subject to admin verification.
+                Changes to a campaign's payment account must be requested
+                through the dashboard and are subject to admin verification.
               </li>
             </ul>
           </>
@@ -325,8 +330,8 @@ const sections = [
                 </h4>
                 <ul className="list-disc list-inside ml-4 space-y-1 text-gray-700">
                   <li>
-                    Funding for terrorism, money laundering, drug trafficking, or
-                    any other criminal enterprise.
+                    Funding for terrorism, money laundering, drug trafficking,
+                    or any other criminal enterprise.
                   </li>
                   <li>
                     Violations of financial regulations or sanctions laws.
@@ -339,9 +344,7 @@ const sections = [
                   2. Harmful or Dangerous Causes
                 </h4>
                 <ul className="list-disc list-inside ml-4 space-y-1 text-gray-700">
-                  <li>
-                    Weapons, explosives, or tools for violence.
-                  </li>
+                  <li>Weapons, explosives, or tools for violence.</li>
                   <li>
                     Promotion of hate speech, racism, xenophobia, or
                     discrimination.
@@ -354,9 +357,7 @@ const sections = [
                   3. Misinformation or Misleading Claims
                 </h4>
                 <ul className="list-disc list-inside ml-4 space-y-1 text-gray-700">
-                  <li>
-                    Unverified or false medical claims (e.g., miracle cures).
-                  </li>
+                  <li>Unverified or false medical claims (e.g., miracle cures).</li>
                   <li>
                     Fake charitable appeals, impersonation of individuals or
                     groups.
@@ -369,9 +370,7 @@ const sections = [
                   4. Adult or Inappropriate Content
                 </h4>
                 <ul className="list-disc list-inside ml-4 space-y-1 text-gray-700">
-                  <li>
-                    Pornography, adult services, or sexually explicit material.
-                  </li>
+                  <li>Pornography, adult services, or sexually explicit material.</li>
                 </ul>
               </div>
 
@@ -380,10 +379,7 @@ const sections = [
                   5. Gambling or Speculative Investments
                 </h4>
                 <ul className="list-disc list-inside ml-4 space-y-1 text-gray-700">
-                  <li>
-                    Lotteries, betting pools, pyramid schemes, or high-risk
-                    financial solicitations.
-                  </li>
+                  <li>Lotteries, betting pools, pyramid schemes, or high-risk financial solicitations.</li>
                 </ul>
               </div>
 
@@ -404,10 +400,7 @@ const sections = [
                   7. Other Prohibited Purposes
                 </h4>
                 <ul className="list-disc list-inside ml-4 space-y-1 text-gray-700">
-                  <li>
-                    Campaigns with no clear use of funds or lack of
-                    transparency.
-                  </li>
+                  <li>Campaigns with no clear use of funds or lack of transparency.</li>
                   <li>
                     Any content that violates our{" "}
                     <Link
@@ -518,15 +511,16 @@ const sections = [
                   <li>Downtime, bugs, or errors</li>
                   <li>Cyberattacks or data breaches</li>
                   <li>Payment processor failures</li>
-                  <li>
-                    Force majeure events (e.g. natural disasters, war)
-                  </li>
+                  <li>Force majeure events (e.g., natural disasters, war)</li>
                 </ul>
               </li>
               <li>
                 Funds may be pooled in a holding account and are{" "}
-                <strong>not insured or protected by the Financial Services
-                Compensation Scheme (FSCS)</strong> or similar schemes.
+                <strong>
+                  not insured or protected by the Financial Services
+                  Compensation Scheme (FSCS)
+                </strong>{" "}
+                or similar schemes.
               </li>
               <li>
                 <strong>No interest will be paid</strong> to users on held
@@ -562,7 +556,8 @@ const sections = [
               notification. Shorter notice may be provided in urgent cases.
             </li>
             <li>
-              Continued use of the platform after changes constitutes acceptance.
+              Continued use of the platform after changes constitutes
+              acceptance.
             </li>
             <li>
               All communications will be delivered via the platform or your
@@ -586,100 +581,277 @@ const sections = [
 
 export default function TermsAndConditionsPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 font-plusjakarta">
       <Navbar />
 
-      <div className="relative bg-gradient-to-r from-green-600 to-[#104901] mt-16 text-white py-20">
-        <div className="container mx-auto px-4 text-center">
-          <FileText className="h-16 w-16 mx-auto mb-6" />
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Terms and Conditions
-          </h1>
-          <p className="text-xl md:text-2xl text-white/90 max-w-4xl mx-auto">
-            Please read these terms carefully before using ChainFundIt. By using
-            our platform, you agree to be bound by these terms.
-          </p>
-          <p className="text-sm text-white/80 mt-4">
-            Effective Date: November 19, 2025
-          </p>
+      {/* Hero Section */}
+      <div
+        className="relative bg-gradient-to-r from-green-600 to-[#104901] text-white overflow-hidden rounded-3xl"
+        style={{
+          width: "1280px",
+          marginTop: "80.8px",
+          marginLeft: "80px",
+          marginRight: "80px",
+          paddingBottom: "96px",
+          boxSizing: "border-box",
+        }}
+      >
+        {/* Right Corner Blur Overlay */}
+        <div
+          className="absolute top-0 right-0 pointer-events-none"
+          style={{
+            width: "400px",
+            height: "400px",
+            background: "radial-gradient(circle, #104109 0%, transparent 70%)",
+            filter: "blur(64px)",
+            opacity: 0.2,
+          }}
+        ></div>
+
+        {/* Left Corner Blur Overlay */}
+        <div
+          className="absolute top-0 left-0 pointer-events-none"
+          style={{
+            width: "400px",
+            height: "400px",
+            background: "radial-gradient(circle, #10B9811A 0%, transparent 70%)",
+            filter: "blur(64px)",
+            opacity: 0.1,
+          }}
+        ></div>
+
+        {/* Center Content Container */}
+        <div
+          className="relative mx-auto flex flex-col items-center justify-center font-plusjakarta"
+          style={{
+            width: "896px",
+            maxWidth: "896px",
+            height: "198.2px",
+            paddingLeft: "16px",
+            paddingRight: "16px",
+            paddingTop: "80.8px",
+            gap: "24px",
+          }}
+        >
+          {/* FileText Icon Badge */}
+          <div
+            className="inline-flex items-center justify-center font-plusjakarta"
+            style={{
+              backgroundColor: "#104109",
+              width: "64px",
+              height: "64px",
+              borderRadius: "16px",
+              marginTop: "24px",
+            }}
+          >
+            <FileText className="h-16 w-16 mx-auto mb-6 text-white" />
+          </div>
+
+          {/* Main Heading */}
+          <div
+            className="flex items-center justify-center font-plusjakarta"
+            style={{
+              width: "864px",
+              height: "60px",
+            }}
+          >
+            <h1
+              className="font-plusjakarta text-center"
+              style={{
+                fontWeight: 800,
+                fontSize: "60px",
+                lineHeight: "60px",
+                color: "#FFFFFF",
+              }}
+            >
+              Terms and Conditions
+            </h1>
+          </div>
+
+          {/* Subheading */}
+          <div
+            className="flex items-center justify-center font-plusjakarta"
+            style={{
+              width: "672px",
+              maxWidth: "672px",
+              height: "59px",
+            }}
+          >
+            <p
+              className="font-plusjakarta text-center"
+              style={{
+                fontWeight: 400,
+                fontSize: "18px",
+                color: "#D1FAE5CC",
+                lineHeight: "1.5",
+              }}
+            >
+              Please read these terms carefully before using ChainFundIt. By
+              using our platform, you agree to be bound by these terms.
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-16 max-w-4xl">
-        {sections.map((section, index) => {
-          const Icon = section.icon;
-          return (
-            <div
-              key={index}
-              id={section.id}
-              className="mb-8 scroll-mt-20"
-            >
-              <Card>
-                <CardContent className="p-8">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-3 bg-green-100 rounded-full">
-                      <Icon className="h-6 w-6 text-green-600" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-gray-900">
-                      {section.title}
-                    </h2>
-                  </div>
-                  <div className="space-y-6">
-                    {section.content.map((item, idx) => (
-                      <div key={idx}>
-                        {item.subtitle && (
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                            {item.subtitle}
-                          </h3>
-                        )}
-                        <div className="text-gray-700 leading-relaxed">
-                          {item.text}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          );
-        })}
+      {/* Content Sections */}
+      <div
+        className="font-plusjakarta"
+        style={{
+          width: "1440px",
+          paddingLeft: "80px",
+          paddingRight: "80px",
+          paddingTop: "64px",
+          paddingBottom: "96px",
+        }}
+      >
+        <div
+          style={{
+            width: "1280px",
+            maxWidth: "1280px",
+            marginLeft: "auto",
+            marginRight: "auto",
+          }}
+        >
+          {sections.map((section, index) => {
+            const Icon = section.icon;
 
-        <div className="mb-8">
-          <Card>
-            <CardContent className="p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-green-100 rounded-full">
-                  <Mail className="h-6 w-6 text-green-600" />
+            // UPDATED LOGIC: Cards C, E, G get bg #104901
+            const isGreenBg =
+              [
+                "C. Fees & Payments",
+                "E. Donors & Donations",
+                "G. Chain Ambassadors",
+              ].includes(section.title);
+
+            return (
+              <div
+                key={index}
+                id={section.id}
+                className="mb-8 scroll-mt-20 font-plusjakarta"
+              >
+                <Card
+                  style={{
+                    backgroundColor: isGreenBg ? "#FFFFFF" : "#FFFFFF",
+                    borderRadius: "16px",
+                    padding: "0",
+                  }}
+                >
+                  <CardContent className="p-6 font-plusjakarta">
+                    <div className="flex items-center gap-3 mb-6 font-plusjakarta">
+                      <div
+                        className="p-3 rounded-full flex items-center justify-center font-plusjakarta"
+                        style={{
+                          backgroundColor: isGreenBg ? "#1a5a2a" : "#f0fdf4",
+                          width: "48px",
+                          height: "48px",
+                        }}
+                      >
+                        <Icon
+                          className="h-5 w-5"
+                          style={{
+                            color: isGreenBg ? "#FFFFFF" : "#059669",
+                          }}
+                        />
+                      </div>
+                      <h2
+                        className="font-bold font-plusjakarta"
+                        style={{
+                          fontSize: "18px",
+                          color: isGreenBg ? "#1a1a1a" : "#1a1a1a",
+                        }}
+                      >
+                        {section.title}
+                      </h2>
+                    </div>
+
+                    <div className="space-y-6 font-plusjakarta">
+                      {section.content.map((item, idx) => (
+                        <div key={idx} className="font-plusjakarta">
+                          {item.subtitle && (
+                            <h3
+                              className="text-lg font-semibold mb-2 font-plusjakarta"
+                              style={{
+                                color: isGreenBg ? "#1a1a1a" : "#1a1a1a",
+                              }}
+                            >
+                              {item.subtitle}
+                            </h3>
+                          )}
+
+                          <div
+                            className="leading-relaxed font-plusjakarta"
+                            style={{
+                              color: isGreenBg ? "#1a1a1a" : "#1a1a1a",
+                            }}
+                          >
+                            {isGreenBg ? (
+                              <div style={{ color: "#1a1a1a" }}>{item.text}</div>
+                            ) : (
+                              item.text
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            );
+          })}
+          {/* Questions or Concerns Section */}
+          <div className="mb-8 scroll-mt-20 font-plusjakarta">
+            <Card style={{ borderRadius: "16px", padding: "0" }}>
+              <CardContent className="p-6 font-plusjakarta">
+                <div className="flex items-center gap-3 mb-6 font-plusjakarta">
+                  <div
+                    className="p-3 rounded-full flex items-center justify-center font-plusjakarta"
+                    style={{ backgroundColor: "#f0fdf4", width: "48px", height: "48px" }}
+                  >
+                    <Mail className="h-5 w-5 text-green-600" />
+                  </div>
+                  <h2
+                    className="font-bold text-gray-900 font-plusjakarta"
+                    style={{ fontSize: "18px" }}
+                  >
+                    Questions or Concerns?
+                  </h2>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Questions or Concerns?
-                </h2>
-              </div>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                Please contact:
-              </p>
-              <div className="space-y-2 text-gray-700">
-                <p>
-                  <strong>Email:</strong>{" "}
-                  <Link
-                    href="mailto:campaigns@chainfundit.com"
-                    className="text-[#104901] hover:underline font-semibold"
-                  >
-                    campaigns@chainfundit.com
-                  </Link>
+
+                <p
+                  className="leading-relaxed mb-4 font-plusjakarta"
+                  style={{ color: "#4b5563" }}
+                >
+                  Please contact:
                 </p>
-                <p>
-                  <strong>Website:</strong>{" "}
-                  <Link
-                    href="https://www.chainfundit.com"
-                    className="text-[#104901] hover:underline font-semibold"
-                  >
-                    www.chainfundit.com
-                  </Link>
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+
+                <div className="space-y-2 font-plusjakarta" style={{ color: "#4b5563" }}>
+                  <p>
+                    <strong>Email:</strong>{" "}
+                    <Link
+                      href="mailto:campaigns@chainfundit.com"
+                      className="text-[#104901] hover:underline font-semibold"
+                    >
+                      campaigns@chainfundit.com
+                    </Link>
+                  </p>
+
+                  <p>
+                    <strong>Website:</strong>{" "}
+                    <Link
+                      href="https://www.chainfundit.com"
+                      className="text-[#104901] hover:underline font-semibold"
+                    >
+                      www.chainfundit.com
+                    </Link>
+                  </p>
+
+                  <p>
+                    <strong>Effective Date:</strong> November 19, 2025
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
 
