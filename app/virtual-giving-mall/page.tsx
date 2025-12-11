@@ -28,8 +28,76 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCharities, useCharityCategories } from "@/hooks/use-charities";
-import { getCharityFallbackImage } from "@/lib/utils/unified-items";
 import Footer from "@/components/layout/Footer";
+
+// Component to show logo with heart icon fallback on error
+const CharityLogoSection = ({ 
+  logo, 
+  charityName,
+  children
+}: { 
+  logo: string | null | undefined; 
+  charityName: string;
+  children?: React.ReactNode;
+}) => {
+  const [imageError, setImageError] = React.useState(false);
+  const [imageLoaded, setImageLoaded] = React.useState(false);
+
+  React.useEffect(() => {
+    setImageError(false);
+    setImageLoaded(false);
+    
+    // Pre-check if image will load
+    if (logo) {
+      const img = new window.Image();
+      img.onload = () => {
+        setImageLoaded(true);
+        setImageError(false);
+      };
+      img.onerror = () => {
+        setImageError(true);
+        setImageLoaded(false);
+      };
+      img.src = logo;
+    }
+  }, [logo]);
+
+  const HeartIconPlaceholder = () => (
+    <div className="text-center p-4 relative z-10">
+      <div className="relative inline-block">
+        <div className="absolute inset-0 bg-gradient-to-br from-green-400 to-blue-500 rounded-full blur-xl opacity-30 transition-opacity duration-500"></div>
+        <div className="relative bg-gradient-to-br from-green-500 to-blue-600 p-4 rounded-full">
+          <Heart className="h-12 w-12 text-white" />
+        </div>
+      </div>
+      <p className="text-xs font-semibold text-gray-600 mt-3 max-w-[120px] mx-auto line-clamp-2">
+        {charityName}
+      </p>
+    </div>
+  );
+
+  return (
+    <div
+      className="relative h-48 flex items-center justify-center overflow-hidden bg-gradient-to-br from-green-50 via-blue-50 to-purple-50"
+      style={{
+        backgroundImage: (logo && imageLoaded && !imageError)
+          ? `linear-gradient(135deg, rgba(16, 73, 1, 0.05) 0%, rgba(34, 197, 94, 0.05) 100%), url(${logo})`
+          : undefined,
+        backgroundSize: logo && imageLoaded && !imageError ? 'contain' : 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
+      {/* Animated gradient overlay on hover */}
+      <div className="absolute inset-0 bg-gradient-to-br from-green-600/0 via-green-500/0 to-blue-500/0 group-hover:from-green-600/10 group-hover:via-green-500/10 group-hover:to-blue-500/10 transition-all duration-500"></div>
+      
+      {(!logo || imageError || (!imageLoaded && logo)) && <HeartIconPlaceholder />}
+      
+      {/* Children (e.g., verified badge) */}
+      {children}
+    </div>
+  );
+};
 
 // Category icon mapping
 const categoryIcons: Record<string, any> = {
@@ -250,34 +318,11 @@ export default function VirtualGivingMallPage() {
                 >
                   <CardContent className="p-0">
                     {/* Logo Section with Gradient Overlay */}
-                    <div
-                      className="relative h-48 flex items-center justify-center overflow-hidden bg-gradient-to-br from-green-50 via-blue-50 to-purple-50"
-                      style={{
-                        backgroundImage: (charity.logo && !charity.logo.includes('logo.clearbit.com'))
-                          ? `linear-gradient(135deg, rgba(16, 73, 1, 0.05) 0%, rgba(34, 197, 94, 0.05) 100%), url(${charity.logo})` 
-                          : `linear-gradient(135deg, rgba(16, 73, 1, 0.1) 0%, rgba(34, 197, 94, 0.1) 100%), url(${getCharityFallbackImage(charity.category)})`,
-                        backgroundSize: (charity.logo && !charity.logo.includes('logo.clearbit.com')) ? 'contain' : 'cover',
-                        backgroundPosition: 'center',
-                        backgroundRepeat: 'no-repeat',
-                      }}
+                    <CharityLogoSection
+                      logo={charity.logo}
+                      charityName={charity.name}
                     >
-                      {/* Animated gradient overlay on hover */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-green-600/0 via-green-500/0 to-blue-500/0 group-hover:from-green-600/10 group-hover:via-green-500/10 group-hover:to-blue-500/10 transition-all duration-500"></div>
-                      
-                      {(!charity.logo || charity.logo.includes('logo.clearbit.com')) && (
-                        <div className="text-center p-4 relative z-10">
-                          <div className="relative inline-block">
-                            <div className="absolute inset-0 bg-gradient-to-br from-green-400 to-blue-500 rounded-full blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
-                            <div className="relative bg-gradient-to-br from-green-500 to-blue-600 p-4 rounded-full">
-                              <Heart className="h-12 w-12 text-white" />
-                            </div>
-                          </div>
-                          <p className="text-xs font-semibold text-gray-600 mt-3 max-w-[120px] mx-auto line-clamp-2">
-                            {charity.name}
-                          </p>
-                        </div>
-                      )}
-                      
+                        
                       {charity.isVerified && (
                         <div className="absolute top-3 right-3 z-20">
                           <Badge className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg backdrop-blur-sm px-2.5 py-1 flex items-center gap-1.5">
@@ -296,7 +341,7 @@ export default function VirtualGivingMallPage() {
                           </span>
                         </Badge>
                       </div>
-                    </div>
+                    </CharityLogoSection>
 
                     {/* Content Section */}
                     <div className="p-6 bg-white">
