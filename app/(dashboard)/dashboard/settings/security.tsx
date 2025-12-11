@@ -15,6 +15,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Copy, Download, Shield, CheckCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
+import { Loader } from "@/components/ui/Loader";
 const fetchWithAuth = (url: string, options: RequestInit = {}) =>
   fetch(url, {
     credentials: "include",
@@ -291,15 +292,18 @@ export default function Security() {
 
   if (isChecking) {
     return (
-      <div className="2xl:container 2xl:mx-auto">
-        <p className="text-[#104901]">Loading security settings...</p>
+      <div className=" flex pt-5 justify-center ">
+        <div className="text-[#104901] font-extrabold text-xl flex items-center gap-2">
+          <Loader size="medium" />
+          Loading security settings...
+        </div>
       </div>
     );
   }
 
   if (step === "setup") {
     return (
-      <div className="2xl:container 2xl:mx-auto">
+      <div className=" font-jakarta bg-white p-7 border border-b-[f3f4f6] border-r-[f3f4f6] border-l-[f3f4f6] rounded-bl-3xl rounded-br-3xl flex flex-col gap-5">
         <Card className="w-full max-w-2xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -323,7 +327,7 @@ export default function Security() {
               <Button
                 onClick={generateSetup}
                 disabled={isLoading}
-                className="w-full"
+                className="w-full rounded-2xl"
               >
                 {isLoading ? "Generating..." : "Start Setup"}
               </Button>
@@ -331,7 +335,7 @@ export default function Security() {
               <Button
                 variant="outline"
                 onClick={() => setStep("view")}
-                className="w-full"
+                className="w-full rounded-2xl hover:bg-white"
               >
                 Cancel
               </Button>
@@ -350,7 +354,7 @@ export default function Security() {
 
   if (step === "verify") {
     return (
-      <div className="2xl:container 2xl:mx-auto">
+      <div className=" font-jakarta bg-white p-7 border border-b-[f3f4f6] border-r-[f3f4f6] border-l-[f3f4f6] rounded-bl-3xl rounded-br-3xl flex flex-col gap-5">
         <Card className="w-full max-w-2xl">
           <CardHeader>
             <CardTitle>Complete 2FA Setup</CardTitle>
@@ -374,7 +378,7 @@ export default function Security() {
 
                 <div className="space-y-2">
                   <Label htmlFor="secret">Manual Entry Key</Label>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 items-center">
                     <Input
                       id="secret"
                       value={setupData.secret}
@@ -385,6 +389,7 @@ export default function Security() {
                       variant="outline"
                       size="sm"
                       onClick={() => copyToClipboard(setupData.secret)}
+                      className="hover:bg-white"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
@@ -433,7 +438,7 @@ export default function Security() {
                 <Button
                   variant="outline"
                   onClick={() => setStep("view")}
-                  className="w-full"
+                  className="w-full rounded-2xl hover:bg-white"
                 >
                   Cancel
                 </Button>
@@ -447,7 +452,7 @@ export default function Security() {
 
   if (step === "complete") {
     return (
-      <div className="2xl:container 2xl:mx-auto">
+      <div className=" font-jakarta bg-white p-7 border border-b-[f3f4f6] border-r-[f3f4f6] border-l-[f3f4f6] rounded-bl-3xl rounded-br-3xl flex flex-col gap-5">
         <Card className="w-full max-w-2xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-green-600">
@@ -471,11 +476,12 @@ export default function Security() {
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label>Backup Codes</Label>
+                    <Label className="font-bold">Backup Codes</Label>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={downloadBackupCodes}
+                      className="rounded-2xl hover:bg-white"
                     >
                       <Download className="h-4 w-4 mr-1" />
                       Download
@@ -495,7 +501,10 @@ export default function Security() {
               </>
             )}
 
-            <Button onClick={() => setStep("view")} className="w-full">
+            <Button
+              onClick={() => setStep("view")}
+              className="w-full rounded-2xl"
+            >
               Done
             </Button>
           </CardContent>
@@ -506,13 +515,15 @@ export default function Security() {
 
   // View mode - show current status
   return (
-    <div className=" font-jakarta bg-white p-7 border border-b-[f3f4f6] border-r-[f3f4f6] border-l-[f3f4f6] rounded-bl-3xl rounded-br-3xl gap-5+">
-      <h4 className="font-semibold text-2xl md:text-3xl text-[#104901]">
-        Security Settings
-      </h4>
-      <p className="font-normal text-base md:text-xl text-[#104901] ">
-        Manage your account security and two-factor authentication settings.
-      </p>
+    <div className=" font-jakarta bg-white p-5 border border-b-[f3f4f6] border-r-[f3f4f6] border-l-[f3f4f6] rounded-bl-3xl rounded-br-3xl flex flex-col gap-5">
+      <div className="flex flex-col gap-1">
+        <h4 className="font-semibold text-2xl md:text-3xl text-[#104901]">
+          Security Settings
+        </h4>
+        <p className="font-normal text-xl text-[#104901] opacity-80">
+          Manage your account security and two-factor authentication settings.
+        </p>
+      </div>
 
       <Card className="w-full max-w-2xl">
         <CardHeader>
@@ -551,6 +562,7 @@ export default function Security() {
                           variant="outline"
                           size="sm"
                           onClick={downloadBackupCodes}
+                          className="rounded-2xl hover:bg-white"
                         >
                           <Download className="h-4 w-4 mr-1" />
                           Download
@@ -558,6 +570,7 @@ export default function Security() {
                         <Button
                           variant="outline"
                           size="sm"
+                          className="rounded-2xl hover:white"
                           onClick={() =>
                             navigator.clipboard
                               .writeText(regeneratedCodes.join("\n"))
@@ -586,7 +599,7 @@ export default function Security() {
                   <Label>Backup Codes</Label>
                   <Button
                     variant="outline"
-                    className="w-full flex items-center justify-center gap-2"
+                    className="w-full flex items-center justify-center gap-2 rounded-2xl hover:bg-white"
                     onClick={regenerateBackupCodes}
                     disabled={isRegenerating}
                   >
@@ -616,7 +629,7 @@ export default function Security() {
                   variant="destructive"
                   onClick={disableTwoFactor}
                   disabled={isLoading || disableCode.length !== 6}
-                  className="w-full"
+                  className="w-full rounded-full "
                 >
                   {isLoading
                     ? "Disabling..."
@@ -639,7 +652,10 @@ export default function Security() {
                 </AlertDescription>
               </Alert>
 
-              <Button onClick={() => setStep("setup")} className="w-full">
+              <Button
+                onClick={() => setStep("setup")}
+                className="w-full rounded-2xl"
+              >
                 Enable Two-Factor Authentication
               </Button>
             </>
