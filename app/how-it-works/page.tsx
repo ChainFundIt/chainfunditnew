@@ -65,8 +65,8 @@ export default function HowItWorksPage() {
       {/* Main Content Body */}
       <div style={{ marginTop: "-250px", paddingTop: "152px" }} className="flex flex-col items-center">
         {/* Steps Section */}
-        <div className="font-jakarta max-w-[80rem]" style={{ paddingLeft: "80px", paddingRight: "80px", position: "relative", zIndex: "10" }}>
-          <div className="h-64 flex gap-6 flex-wrap">
+        <div className="font-jakarta max-w-[80rem] z-10">
+          <div className="h-64 w-full flex gap-6 flex-wrap">
             {steps.map((step, index) => (
               <div
                 key={index}
