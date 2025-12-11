@@ -185,7 +185,7 @@ export default function SuccessStoriesPage() {
               marginTop: "22px"
             }}
           >
-            <Trophy className="h-16 w-16 mx-auto mb-7 text-white" />
+            <Trophy className="h-16 w-16 mx-auto mb-2 text-white" />
           </div>
 
           {/* Main Heading */}
@@ -556,10 +556,10 @@ export default function SuccessStoriesPage() {
           <Link href="/create-campaign">
             <Button
               size="lg"
-              className="bg-white text-green-600 hover:bg-gray-100 font-plusjakarta font-bold"
+              className="bg-white text-green-600 hover:bg-gray-100 font-plusjakarta font-bold rounded-full"
             >
               Start Your Campaign
-              <ArrowRight className="h-5 w-5 ml-2" />
+              <ArrowRight className="h-5 w-5 ml-2 rounded-full" />
             </Button>
           </Link>
         </div>

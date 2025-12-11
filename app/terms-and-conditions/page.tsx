@@ -589,7 +589,6 @@ export default function TermsAndConditionsPage() {
         className="relative bg-gradient-to-r from-green-600 to-[#104901] text-white overflow-hidden rounded-3xl"
         style={{
           width: "1280px",
-          marginTop: "80.8px",
           marginLeft: "80px",
           marginRight: "80px",
           paddingBottom: "96px",
