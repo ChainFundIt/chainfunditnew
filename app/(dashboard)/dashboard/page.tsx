@@ -356,7 +356,7 @@ export default function DashboardPage() {
           </DialogHeader>
           <DialogFooter className="flex items-end">
             <Button
-              className="w-full h-14 md:h-[72px] font-sans font-semibold text-lg md:text-2xl flex justify-center items-center rounded-3xl"
+              className="w-full h-14 md:h-[72px] font-sans font-semibold text-lg md:text-2xl flex justify-between items-center rounded-3xl"
               onClick={handleCloseWelcome}
             >
               Complete your profile
