@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { retryFailedPayouts } from '@/lib/payments/payout-retry';
 import { processAutomatedCharityPayouts } from '@/lib/payments/automated-charity-payouts';
 import { toast } from 'sonner';
+import { getCronDisabledResponse } from '@/lib/utils/cron-control';
 
 export const runtime = 'nodejs';
 
@@ -11,6 +12,11 @@ export const runtime = 'nodejs';
  * Should be called by a cron service (e.g., Vercel Cron, GitHub Actions, etc.)
  */
 export async function POST(request: NextRequest) {
+  const disabledResponse = getCronDisabledResponse('payouts');
+  if (disabledResponse) {
+    return disabledResponse;
+  }
+
   try {
     // Verify cron secret
     // Vercel Cron sends x-vercel-signature header, but we'll use CRON_SECRET for flexibility
@@ -80,6 +86,11 @@ export async function POST(request: NextRequest) {
  * Health check endpoint
  */
 export async function GET(request: NextRequest) {
+  const disabledResponse = getCronDisabledResponse('payouts');
+  if (disabledResponse) {
+    return disabledResponse;
+  }
+
   return NextResponse.json({
     status: 'ok',
     service: 'payout-cron',

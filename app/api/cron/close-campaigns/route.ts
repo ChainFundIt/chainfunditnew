@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { closeEligibleCampaigns, getCampaignClosureStats } from '@/lib/utils/campaign-closure';
 import { toast } from 'sonner';
+import { getCronDisabledResponse } from '@/lib/utils/cron-control';
 
 /**
  * POST /api/cron/close-campaigns - Scheduled job to automatically close campaigns
  * This endpoint should be called by a cron job or scheduler
  */
 export async function POST(request: NextRequest) {
+  const disabledResponse = getCronDisabledResponse('close-campaigns');
+  if (disabledResponse) {
+    return disabledResponse;
+  }
+
   try {
     // Verify this is a legitimate cron request
     const authHeader = request.headers.get('authorization');
@@ -59,6 +65,11 @@ export async function POST(request: NextRequest) {
  * GET /api/cron/close-campaigns - Get information about the campaign closure job
  */
 export async function GET(request: NextRequest) {
+  const disabledResponse = getCronDisabledResponse('close-campaigns');
+  if (disabledResponse) {
+    return disabledResponse;
+  }
+
   try {
     const stats = await getCampaignClosureStats();
     

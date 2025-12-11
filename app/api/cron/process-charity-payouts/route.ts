@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { processBatchPayouts } from '@/lib/payments/charity-payouts';
 import { toast } from 'sonner';
+import { getCronDisabledResponse } from '@/lib/utils/cron-control';
 
 /**
  * GET /api/cron/process-charity-payouts
@@ -14,6 +15,11 @@ import { toast } from 'sonner';
  * 3. URL: /api/cron/process-charity-payouts
  */
 export async function GET(request: NextRequest) {
+  const disabledResponse = getCronDisabledResponse('process-charity-payouts');
+  if (disabledResponse) {
+    return disabledResponse;
+  }
+
   try {
     // Optional: Add authentication/authorization
     const authHeader = request.headers.get('authorization');

@@ -25,7 +25,8 @@ import { toast } from 'sonner';
 import { useGeolocationCurrency } from '@/hooks/use-geolocation-currency';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import Image from 'next/image';
+import { R2Image } from '@/components/ui/r2-image';
+import { getCharityFallbackImage } from '@/lib/utils/unified-items';
 import { track } from '@/lib/analytics';
 
 interface Charity {
@@ -230,17 +231,17 @@ export default function CharityDetailPage() {
         </Button>
 
         {/* Cover Image */}
-        {charity.coverImage && (
-          <div className="h-64 bg-gray-200 rounded-lg mb-6 overflow-hidden">
-            <Image 
-              src={charity.coverImage} 
-              alt={charity.name} 
-              className="w-full h-full object-cover"
-              width={1000}
-              height={1000}
-            />
-          </div>
-        )}
+        <div className="h-64 bg-gray-200 rounded-lg mb-6 overflow-hidden">
+          <R2Image 
+            src={(charity.coverImage && !charity.coverImage.includes('logo.clearbit.com'))
+              ? charity.coverImage
+              : getCharityFallbackImage(charity.category)} 
+            alt={charity.name} 
+            className="w-full h-full object-cover"
+            width={1000}
+            height={1000}
+          />
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
@@ -248,15 +249,15 @@ export default function CharityDetailPage() {
             {/* Header */}
             <div>
               <div className="flex items-start gap-4 mb-4">
-                {charity.logo && (
-                  <Image 
-                    src={charity.logo} 
-                    alt={charity.name} 
-                    className="h-20 w-20 rounded-lg object-cover"
-                    width={1000}
-                    height={1000}
-                  />
-                )}
+                <R2Image 
+                  src={(charity.logo && !charity.logo.includes('logo.clearbit.com'))
+                    ? charity.logo
+                    : getCharityFallbackImage(charity.category)} 
+                  alt={charity.name} 
+                  className="h-20 w-20 rounded-lg object-cover"
+                  width={1000}
+                  height={1000}
+                />
                 <div className="flex-1">
                   <h1 className="text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3">
                     {charity.name}

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { donations } from '@/lib/schema/donations';
 import { users } from '@/lib/schema/users';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 
 export async function GET(
   request: NextRequest,
@@ -11,16 +11,32 @@ export async function GET(
   try {
     const { id: campaignId } = await params;
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const limitParam = searchParams.get('limit');
+    // Default to a high limit (1000) to get all donations, or use specified limit
+    const limit = limitParam ? parseInt(limitParam) : 1000;
     const status = searchParams.get('status') || 'completed';
+    const paymentMethod = searchParams.get('paymentMethod'); // Optional filter: 'stripe' or 'paystack'
 
-    // Get donations for the campaign with donor information
-    const campaignDonations = await db
+    // Build where conditions
+    const whereConditions = [eq(donations.campaignId, campaignId)];
+    
+    // Filter by status in the database query (not after) - this ensures we get all completed donations
+    if (status !== 'all') {
+      whereConditions.push(eq(donations.paymentStatus, status));
+    }
+    
+    if (paymentMethod && (paymentMethod === 'stripe' || paymentMethod === 'paystack')) {
+      whereConditions.push(eq(donations.paymentMethod, paymentMethod));
+    }
+
+    // Build the base query
+    const baseQuery = db
       .select({
         id: donations.id,
         amount: donations.amount,
         currency: donations.currency,
         paymentStatus: donations.paymentStatus,
+        paymentMethod: donations.paymentMethod,
         message: donations.message,
         isAnonymous: donations.isAnonymous,
         createdAt: donations.createdAt,
@@ -30,9 +46,11 @@ export async function GET(
       })
       .from(donations)
       .leftJoin(users, eq(donations.donorId, users.id))
-      .where(eq(donations.campaignId, campaignId))
-      .orderBy(desc(donations.amount))
-      .limit(limit);
+      .where(whereConditions.length > 1 ? and(...whereConditions) : whereConditions[0])
+      .orderBy(desc(donations.createdAt)); // Order by date (newest first)
+    
+    // Apply limit
+    const campaignDonations = await baseQuery.limit(limit);
 
     // Ensure we have valid data
     if (!campaignDonations || !Array.isArray(campaignDonations)) {
@@ -48,10 +66,8 @@ export async function GET(
       });
     }
 
-    // Filter by status if specified with null safety
-    const filteredDonations = status !== 'all' 
-      ? campaignDonations.filter(d => d && d.paymentStatus === status)
-      : campaignDonations;
+    // No need to filter by status again since it's already in the WHERE clause
+    const filteredDonations = campaignDonations;
 
     // Format donations for frontend with null safety
     const formattedDonations = filteredDonations.map(donation => ({
@@ -59,6 +75,7 @@ export async function GET(
       amount: donation.amount || '0',
       currency: donation.currency || 'NGN',
       paymentStatus: donation.paymentStatus || 'pending',
+      paymentMethod: donation.paymentMethod || 'stripe',
       message: donation.message || '',
       isAnonymous: donation.isAnonymous || false,
       createdAt: donation.createdAt || new Date().toISOString(),

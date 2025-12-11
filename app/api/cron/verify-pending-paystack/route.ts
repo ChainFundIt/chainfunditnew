@@ -2,47 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { donations } from '@/lib/schema/donations';
 import { campaigns } from '@/lib/schema/campaigns';
-import { eq, and, sum, lt } from 'drizzle-orm';
+import { eq, and, lt } from 'drizzle-orm';
 import { verifyPaystackPayment } from '@/lib/payments/paystack';
-import { checkAndUpdateGoalReached } from '@/lib/utils/campaign-validation';
+import { updateCampaignAmount } from '@/lib/utils/campaign-amount';
 import { calculateAndDistributeCommissions } from '@/lib/utils/commission-calculation';
 import { sendDonorConfirmationEmailById } from '@/lib/notifications/donor-confirmation-email';
 import { notifications } from '@/lib/schema/notifications';
 import { users } from '@/lib/schema/users';
 import { shouldNotifyUserOfDonation, formatDonationNotificationMessage } from '@/lib/utils/donation-notification-utils';
+import { getCronDisabledResponse } from '@/lib/utils/cron-control';
 
 export const runtime = 'nodejs';
-
-/**
- * Helper function to update campaign currentAmount based on completed donations
- */
-async function updateCampaignAmount(campaignId: string) {
-  try {
-    const donationStats = await db
-      .select({
-        totalAmount: sum(donations.amount),
-      })
-      .from(donations)
-      .where(and(
-        eq(donations.campaignId, campaignId),
-        eq(donations.paymentStatus, 'completed')
-      ));
-
-    const totalAmount = Number(donationStats[0]?.totalAmount || 0);
-
-    await db
-      .update(campaigns)
-      .set({
-        currentAmount: totalAmount.toString(),
-        updatedAt: new Date(),
-      })
-      .where(eq(campaigns.id, campaignId));
-
-    await checkAndUpdateGoalReached(campaignId);
-  } catch (error) {
-    console.error('Error updating campaign amount:', error);
-  }
-}
 
 /**
  * POST /api/cron/verify-pending-paystack
@@ -59,6 +29,11 @@ async function updateCampaignAmount(campaignId: string) {
  * - Schedule: "0 * * * *" (Every hour at minute 0)
   */
 export async function POST(request: NextRequest) {
+  const disabledResponse = getCronDisabledResponse('verify-pending-paystack');
+  if (disabledResponse) {
+    return disabledResponse;
+  }
+
   try {
     // Verify this is a legitimate cron request
     const authHeader = request.headers.get('authorization');
@@ -327,6 +302,11 @@ export async function POST(request: NextRequest) {
  * Get summary of pending Paystack payments (for monitoring)
  */
 export async function GET(request: NextRequest) {
+  const disabledResponse = getCronDisabledResponse('verify-pending-paystack');
+  if (disabledResponse) {
+    return disabledResponse;
+  }
+
   try {
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
     

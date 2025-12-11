@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCharities, useCharityCategories } from "@/hooks/use-charities";
+import { getCharityFallbackImage } from "@/lib/utils/unified-items";
 import Footer from "@/components/layout/Footer";
 
 // Category icon mapping
@@ -252,10 +253,10 @@ export default function VirtualGivingMallPage() {
                     <div
                       className="relative h-48 flex items-center justify-center overflow-hidden bg-gradient-to-br from-green-50 via-blue-50 to-purple-50"
                       style={{
-                        backgroundImage: charity.logo 
+                        backgroundImage: (charity.logo && !charity.logo.includes('logo.clearbit.com'))
                           ? `linear-gradient(135deg, rgba(16, 73, 1, 0.05) 0%, rgba(34, 197, 94, 0.05) 100%), url(${charity.logo})` 
-                          : 'linear-gradient(135deg, rgba(16, 73, 1, 0.1) 0%, rgba(34, 197, 94, 0.1) 100%)',
-                        backgroundSize: charity.logo ? 'contain' : 'auto',
+                          : `linear-gradient(135deg, rgba(16, 73, 1, 0.1) 0%, rgba(34, 197, 94, 0.1) 100%), url(${getCharityFallbackImage(charity.category)})`,
+                        backgroundSize: (charity.logo && !charity.logo.includes('logo.clearbit.com')) ? 'contain' : 'cover',
                         backgroundPosition: 'center',
                         backgroundRepeat: 'no-repeat',
                       }}
@@ -263,7 +264,7 @@ export default function VirtualGivingMallPage() {
                       {/* Animated gradient overlay on hover */}
                       <div className="absolute inset-0 bg-gradient-to-br from-green-600/0 via-green-500/0 to-blue-500/0 group-hover:from-green-600/10 group-hover:via-green-500/10 group-hover:to-blue-500/10 transition-all duration-500"></div>
                       
-                      {!charity.logo && (
+                      {(!charity.logo || charity.logo.includes('logo.clearbit.com')) && (
                         <div className="text-center p-4 relative z-10">
                           <div className="relative inline-block">
                             <div className="absolute inset-0 bg-gradient-to-br from-green-400 to-blue-500 rounded-full blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>

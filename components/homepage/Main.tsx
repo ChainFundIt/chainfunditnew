@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import Image from "next/image";
+import { R2Image } from "@/components/ui/r2-image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { useCharities } from "@/hooks/use-charities";
+import { getCharityFallbackImage } from "@/lib/utils/unified-items";
 
 import { Button } from "../ui/button";
 import BenefitsCarousel from "./BenefitsCarousel";
@@ -92,7 +93,11 @@ const Main = () => {
         charity.description ||
         charity.mission ||
         "Learn more about this charity's impact.",
-      image: charity.coverImage || charity.logo || "/images/card-img1.png",
+      image: (charity.coverImage && !charity.coverImage.includes('logo.clearbit.com'))
+        ? charity.coverImage
+        : (charity.logo && !charity.logo.includes('logo.clearbit.com'))
+        ? charity.logo
+        : getCharityFallbackImage(charity.category),
       category: charity.category || "Community",
       country: charity.country || "International",
       focusAreas,
@@ -247,7 +252,7 @@ const Main = () => {
                 >
                   {/* IMAGE SECTION */}
                   <div className="relative overflow-hidden">
-                    <Image
+                    <R2Image
                       src={card.image}
                       alt={card.title}
                       height={224}
@@ -398,28 +403,28 @@ const Main = () => {
           >
             <div className="flex -space-x-2">
               {/* Circles remain identical */}
-              <Image
+              <R2Image
                 src="/images/peopleInvolved_0.png"
                 alt="People Involved"
                 height={40}
                 width={40}
                 className="w-10 h-10 rounded-full border-2 border-white z-10"
               />
-              <Image
+              <R2Image
                 src="/images/peopleInvolved_1.png"
                 alt="People Involved"
                 height={40}
                 width={40}
                 className="w-10 h-10 rounded-full border-2 border-white z-20"
               />
-              <Image
+              <R2Image
                 src="/images/peopleInvolved_2.png"
                 alt="People Involved"
                 height={40}
                 width={40}
                 className="w-10 h-10 rounded-full border-2 border-white z-30"
               />
-              <Image
+              <R2Image
                 src="/images/peopleInvolved_3.png"
                 alt="People Involved"
                 height={40}

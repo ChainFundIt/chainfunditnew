@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
       paymentProvider,
       message,
       isAnonymous,
+      email,
       simulate = false, // For testing purposes
     } = body;
 
@@ -67,11 +68,12 @@ export async function POST(request: NextRequest) {
       user = userResult[0];
     } else {
       // Create guest user for anonymous donations
-      const guestEmail = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}@chainfundit.com`;
+      // Use the email provided by the donor, or generate a guest email if not provided
+      const donorEmail = email || `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}@chainfundit.com`;
       const guestUser = await db
         .insert(users)
         .values({
-          email: guestEmail,
+          email: donorEmail,
           fullName: "Anonymous Donor",
           isVerified: false,
           hasCompletedProfile: false,
@@ -194,16 +196,20 @@ export async function POST(request: NextRequest) {
       }
     } else if (paymentProvider === "paystack") {
       try {
+        const campaignMetadata = {
+          donationId,
+          campaignId,
+          donorName: user.fullName || "",
+          donorEmail: user.email!,
+          campaignTitle: campaign.title,
+          campaignSlug: campaign.slug,
+        };
+
         const paystackResponse = await initializePaystackPayment(
           user.email!,
           amount,
           currency,
-          {
-            donationId,
-            campaignId,
-            donorName: user.fullName || "",
-            campaignTitle: campaign.title,
-          },
+          campaignMetadata,
           `${process.env.NEXT_PUBLIC_APP_URL}api/payments/paystack/callback`
         );
 

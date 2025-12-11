@@ -58,6 +58,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { CampaignDashboardModal } from "@/components/admin/campaign-dashboard-modal";
 
 interface Campaign {
   id: string;
@@ -105,6 +106,8 @@ export default function AdminCampaignsPage() {
   const [selectedCampaigns, setSelectedCampaigns] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const router = useRouter();
   const { locationInfo } = useGeolocationCurrency();
   const currency = locationInfo?.currency?.code;
@@ -252,6 +255,11 @@ export default function AdminCampaignsPage() {
 
   const handleViewCampaign = (campaign: Campaign) => {
     router.push(`/campaign/${campaign.slug}`);
+  };
+
+  const handleOpenCampaignDashboard = (campaign: Campaign) => {
+    setSelectedCampaignId(campaign.id);
+    setIsModalOpen(true);
   };
 
   const handleBanCampaign = async (campaign: Campaign) => {
@@ -574,13 +582,18 @@ export default function AdminCampaignsPage() {
                   </TableHeader>
                   <TableBody>
                     {campaigns.map((campaign) => (
-                      <TableRow key={campaign.id}>
+                      <TableRow 
+                        key={campaign.id}
+                        className="cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleOpenCampaignDashboard(campaign)}
+                      >
                         <TableCell>
                           <input
                             type="checkbox"
                             className="rounded border-gray-300"
                             checked={selectedCampaigns.includes(campaign.id)}
                             onChange={(e) => {
+                              e.stopPropagation();
                               if (e.target.checked) {
                                 setSelectedCampaigns([
                                   ...selectedCampaigns,
@@ -594,6 +607,7 @@ export default function AdminCampaignsPage() {
                                 );
                               }
                             }}
+                            onClick={(e) => e.stopPropagation()}
                           />
                         </TableCell>
                         <TableCell>
@@ -700,7 +714,7 @@ export default function AdminCampaignsPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex gap-2 items-center space-x-1">
+                          <div className="flex gap-2 items-center space-x-1" onClick={(e) => e.stopPropagation()}>
                             <Button
                               size="sm"
                               variant="ghost"
@@ -758,6 +772,14 @@ export default function AdminCampaignsPage() {
           </Card>
         </div>
       </div>
+
+      {/* Campaign Dashboard Modal */}
+      <CampaignDashboardModal
+        campaignId={selectedCampaignId}
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        currency={currency}
+      />
     </TooltipProvider>
   );
 }

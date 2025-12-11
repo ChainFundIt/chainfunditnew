@@ -8,6 +8,7 @@ export interface DonationData {
   paymentProvider: PaymentProvider;
   message?: string;
   isAnonymous?: boolean;
+  email?: string;
 }
 
 export interface DonationResult {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { processPendingScreenings } from '@/lib/compliance/screening-service';
+import { getCronDisabledResponse } from '@/lib/utils/cron-control';
 
 function isAuthorized(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
@@ -9,6 +10,11 @@ function isAuthorized(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const disabledResponse = getCronDisabledResponse('compliance-screenings');
+  if (disabledResponse) {
+    return disabledResponse;
+  }
+
   if (!isAuthorized(request)) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
@@ -40,6 +46,11 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  const disabledResponse = getCronDisabledResponse('compliance-screenings');
+  if (disabledResponse) {
+    return disabledResponse;
+  }
+
   if (!isAuthorized(request)) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }

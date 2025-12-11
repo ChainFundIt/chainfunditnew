@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Image from "next/image";
+import { R2Image } from "@/components/ui/r2-image";
 import {
   Drawer,
   DrawerContent,
@@ -155,7 +155,7 @@ const CardDetailsDrawer: React.FC<CardDetailsDrawerProps> = ({
         </DrawerHeader>
         {card && (
           <div className="flex flex-col items-center gap-4 mt-4">
-            <Image src={card.image} alt={card.title} width={560} height={300} />
+            <R2Image src={card.image} alt={card.title} width={560} height={300} />
             <div className="bg-[#F5F5F5] w-full p-4">
               <div className="flex justify-between items-center mb-2">
                 <section className="flex gap-3">

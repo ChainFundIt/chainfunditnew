@@ -23,6 +23,7 @@ import DonateModal from "./donate-modal";
 import ShareModal from "./share-modal";
 import UpdateModal from "./update-modal";
 import CommentModal from "./comment-modal";
+import DonorsModal from "./donors-modal";
 import { useCampaignDonations } from "@/hooks/use-campaign-donations";
 import { useTopChainers } from "@/hooks/use-top-chainers";
 import ClientToaster from "@/components/ui/client-toaster";
@@ -122,6 +123,7 @@ const Main = ({ campaignSlug }: MainProps) => {
   const [updates, setUpdates] = useState<CampaignUpdate[]>([]);
   const [loadingUpdates, setLoadingUpdates] = useState(false);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
+  const [donorsModalOpen, setDonorsModalOpen] = useState(false);
   const [comments, setComments] = useState<CampaignComment[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
   const [chainCount, setChainCount] = useState(0);
@@ -1083,9 +1085,14 @@ const Main = ({ campaignSlug }: MainProps) => {
                   </span>
                 </div>
               </div>
-            ) : donations.length > 0 ? (
-              <ul className="my-5 py-3 px-2 bg-white space-y-3 border border-[#C0BFC4] rounded-2xl">
-                {donations.slice(0, 3).map((donation) => {
+            ) : (() => {
+              // Filter to only show successful donations
+              const successfulDonations = donations.filter(
+                (donation) => donation.paymentStatus === "completed"
+              );
+              return successfulDonations.length > 0 ? (
+                <ul className="my-5 py-3 px-2 bg-white space-y-3 border border-[#C0BFC4] rounded-2xl">
+                  {successfulDonations.slice(0, 3).map((donation) => {
                   return (
                     <li key={donation.id} className="flex gap-3 items-center">
                       {donation.donorAvatar && !donation.isAnonymous ? (
@@ -1107,7 +1114,9 @@ const Main = ({ campaignSlug }: MainProps) => {
                       <section className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <p className="font-normal text-xl text-[#5F8555]">
-                            {donation.donorName}
+                            {donation.isAnonymous
+                              ? "Anonymous Donor"
+                              : donation.donorName || "Donor"}
                           </p>
                         </div>
                         <p className="font-medium text-xl text-black">
@@ -1132,25 +1141,36 @@ const Main = ({ campaignSlug }: MainProps) => {
                       </section>
                     </li>
                   );
-                })}
-              </ul>
-            ) : (
-              <div className="my-5 py-8 bg-white border border-[#C0BFC4] rounded-2xl">
-                <div className="text-center">
-                  <p className="text-[#5F8555] text-lg">No donations yet</p>
-                  <p className="text-[#757575] text-sm mt-1">
-                    Be the first to support this campaign!
-                  </p>
+                  })}
+                </ul>
+              ) : (
+                <div className="my-5 py-8 bg-white border border-[#C0BFC4] rounded-2xl">
+                  <div className="text-center">
+                    <p className="text-[#5F8555] text-lg">No successful donations yet</p>
+                    <p className="text-[#757575] text-sm mt-1">
+                      Be the first to support this campaign!
+                    </p>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
             <section className="flex justify-center">
-              <Button
-                className="bg-white h-12 font-semibold text-[#104901] text-lg px-4 py-1.5 border-2 border-[#104901] rounded-none"
-                variant="ghost"
-              >
-                See all donors
-              </Button>
+              {(() => {
+                // Filter to only show successful donations
+                const successfulDonations = donations.filter(
+                  (donation) => donation.paymentStatus === "completed"
+                );
+                return (
+                  <Button
+                    className="bg-white h-12 font-semibold text-[#104901] text-lg px-4 py-1.5 border-2 border-[#104901] rounded-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    variant="ghost"
+                    onClick={() => setDonorsModalOpen(true)}
+                    disabled={successfulDonations.length === 0}
+                  >
+                    See all donors
+                  </Button>
+                );
+              })()}
             </section>
           </div>
 
@@ -1272,6 +1292,12 @@ const Main = ({ campaignSlug }: MainProps) => {
         onClose={() => setCommentModalOpen(false)}
         campaignId={campaignId || campaign?.id || ''}
         onCommentCreated={fetchComments}
+      />
+      <DonorsModal
+        open={donorsModalOpen}
+        onOpenChange={setDonorsModalOpen}
+        donations={donations}
+        loading={loadingDonations}
       />
       <ClientToaster />
     </div>

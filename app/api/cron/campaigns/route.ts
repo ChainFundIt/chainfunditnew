@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { autoCloseExpiredCampaigns, markExpiredCampaigns } from '@/lib/utils/campaign-validation';
+import { getCronDisabledResponse } from '@/lib/utils/cron-control';
 import { toast } from 'sonner';
 
 /**
@@ -9,6 +10,11 @@ import { toast } from 'sonner';
  * 2. Mark campaigns as expired if they passed their expiration date
  */
 export async function POST(request: NextRequest) {
+  const disabledResponse = getCronDisabledResponse('campaigns');
+  if (disabledResponse) {
+    return disabledResponse;
+  }
+
   try {
     // Verify this is a legitimate cron request
     const authHeader = request.headers.get('authorization');
@@ -57,6 +63,11 @@ export async function POST(request: NextRequest) {
 
 // Allow GET requests for manual testing (remove in production)
 export async function GET(request: NextRequest) {
+  const disabledResponse = getCronDisabledResponse('campaigns');
+  if (disabledResponse) {
+    return disabledResponse;
+  }
+
   // Only allow in development
   if (process.env.NODE_ENV === 'production') {
     return NextResponse.json(

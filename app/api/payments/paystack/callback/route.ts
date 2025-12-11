@@ -2,42 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { donations } from '@/lib/schema/donations';
 import { campaigns } from '@/lib/schema/campaigns';
-import { eq, sum, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { verifyPaystackPayment } from '@/lib/payments/paystack';
-import { checkAndUpdateGoalReached } from '@/lib/utils/campaign-validation';
+import { updateCampaignAmount } from '@/lib/utils/campaign-amount';
 import { toast } from 'sonner';
 import { sendDonorConfirmationEmailById } from '@/lib/notifications/donor-confirmation-email';
-
-// Helper function to update campaign currentAmount based on completed donations
-async function updateCampaignAmount(campaignId: string) {
-  try {
-    // Calculate total amount from completed donations
-    const donationStats = await db
-      .select({
-        totalAmount: sum(donations.amount),
-      })
-      .from(donations)
-      .where(and(
-        eq(donations.campaignId, campaignId),
-        eq(donations.paymentStatus, 'completed')
-      ));
-
-    const totalAmount = Number(donationStats[0]?.totalAmount || 0);
-
-    // Update campaign currentAmount
-    await db
-      .update(campaigns)
-      .set({
-        currentAmount: totalAmount.toString(),
-      })
-      .where(eq(campaigns.id, campaignId));
-
-    // Check if campaign reached its goal and update status
-    await checkAndUpdateGoalReached(campaignId);
-  } catch (error) {
-    toast.error('Error updating campaign amount: ' + error);
-  }
-}
 
 export async function GET(request: NextRequest) {
   try {

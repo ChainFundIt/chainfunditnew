@@ -1,39 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { donations } from '@/lib/schema/donations';
-import { campaigns } from '@/lib/schema/campaigns';
-import { eq, sum, and } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { toast } from 'sonner';
-
-// Helper function to update campaign currentAmount based on completed donations
-async function updateCampaignAmount(campaignId: string) {
-  try {
-    // Calculate total amount from completed donations
-    const donationStats = await db
-      .select({
-        totalAmount: sum(donations.amount),
-      })
-      .from(donations)
-      .where(and(
-        eq(donations.campaignId, campaignId),
-        eq(donations.paymentStatus, 'completed')
-      ));
-
-    const totalAmount = Number(donationStats[0]?.totalAmount || 0);
-
-    // Update campaign currentAmount
-    await db
-      .update(campaigns)
-      .set({
-        currentAmount: totalAmount.toString(),
-        updatedAt: new Date(),
-      })
-      .where(eq(campaigns.id, campaignId));
-
-  } catch (error) {
-    toast.error('Error updating campaign amount: ' + error);
-  }
-}
+import { updateCampaignAmount } from '@/lib/utils/campaign-amount';
 
 // GET - List all pending donations
 export async function GET(request: NextRequest) {

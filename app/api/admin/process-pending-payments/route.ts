@@ -1,42 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { donations } from '@/lib/schema/donations';
-import { campaigns } from '@/lib/schema/campaigns';
-import { eq, sum, and, isNull, lt } from 'drizzle-orm';
+import { eq, and, isNull, lt } from 'drizzle-orm';
 import { verifyPaystackPayment } from '@/lib/payments/paystack';
-import { checkAndUpdateGoalReached } from '@/lib/utils/campaign-validation';
-
-// Helper function to update campaign currentAmount based on completed donations
-async function updateCampaignAmount(campaignId: string) {
-  try {
-    // Calculate total amount from completed donations
-    const donationStats = await db
-      .select({
-        totalAmount: sum(donations.amount),
-      })
-      .from(donations)
-      .where(and(
-        eq(donations.campaignId, campaignId),
-        eq(donations.paymentStatus, 'completed')
-      ));
-
-    const totalAmount = Number(donationStats[0]?.totalAmount || 0);
-
-    // Update campaign currentAmount
-    await db
-      .update(campaigns)
-      .set({
-        currentAmount: totalAmount.toString(),
-        updatedAt: new Date(),
-      })
-      .where(eq(campaigns.id, campaignId));
-
-    // Check if campaign reached its goal and update status
-    await checkAndUpdateGoalReached(campaignId);
-  } catch (error) {
-    console.error('Error updating campaign amount:', error);
-  }
-}
+import { updateCampaignAmount } from '@/lib/utils/campaign-amount';
 
 // GET /api/admin/process-pending-payments - Get all pending payments
 export async function GET(request: NextRequest) {
@@ -202,12 +169,58 @@ async function processBulkPendingPayments(paymentMethod: string, action: string)
                 providerError = verification.message || 'Verification failed';
                 results.failed++;
               }
-            } catch (error) {
-              console.error(`Error verifying payment ${donation.id}:`, error);
-              newStatus = 'failed';
-              providerStatus = 'error';
-              providerError = error instanceof Error ? error.message : 'Verification error';
-              results.failed++;
+            } catch (error: any) {
+              // Check if this is an authentication error (401) - don't mark as failed
+              const isAuthError = error?.response?.status === 401 || 
+                                  error?.response?.data?.code === 'invalid_Key' ||
+                                  error?.message?.includes('Invalid key') ||
+                                  error?.message?.includes('authentication failed');
+              
+              if (isAuthError) {
+                // Authentication error - log error but don't change payment status
+                console.error(`Authentication error verifying payment ${donation.id}:`, error?.response?.data || error.message);
+                
+                // Update only the error tracking fields, NOT the payment status
+                await db
+                  .update(donations)
+                  .set({
+                    lastStatusUpdate: new Date(),
+                    providerStatus: 'auth_error',
+                    providerError: 'Paystack API authentication failed - payment status unknown. Please check API key configuration.',
+                  })
+                  .where(eq(donations.id, donation.id));
+                
+                results.errors++;
+                results.details.push({
+                  donationId: donation.id,
+                  status: 'auth_error',
+                  error: 'API authentication failed - payment may be successful but cannot be verified'
+                });
+                // Skip to next donation without changing payment status
+                continue;
+              } else {
+                // Other errors - log but don't change payment status
+                console.error(`Error verifying payment ${donation.id}:`, error);
+                
+                // Update only the error tracking fields, NOT the payment status
+                await db
+                  .update(donations)
+                  .set({
+                    lastStatusUpdate: new Date(),
+                    providerStatus: 'verification_error',
+                    providerError: error instanceof Error ? error.message : 'Verification error',
+                  })
+                  .where(eq(donations.id, donation.id));
+                
+                results.errors++;
+                results.details.push({
+                  donationId: donation.id,
+                  status: 'verification_error',
+                  error: error instanceof Error ? error.message : 'Unknown verification error'
+                });
+                // Skip to next donation without changing payment status
+                continue;
+              }
             }
           }
         } else if (action === 'complete') {
@@ -336,11 +349,32 @@ export async function POST(request: NextRequest) {
           providerStatus = 'failed';
           providerError = verification.message || 'Verification failed';
         }
-      } catch (error) {
-        console.error('Error verifying payment:', error);
-        newStatus = 'failed';
-        providerStatus = 'error';
-        providerError = error instanceof Error ? error.message : 'Verification error';
+      } catch (error: any) {
+        // Check if this is an authentication error (401) - don't mark as failed
+        const isAuthError = error?.response?.status === 401 || 
+                            error?.response?.data?.code === 'invalid_Key' ||
+                            error?.message?.includes('Invalid key') ||
+                            error?.message?.includes('authentication failed');
+        
+        if (isAuthError) {
+          // Authentication error - don't change status
+          console.error('Paystack API authentication error:', error?.response?.data || error.message);
+          return NextResponse.json({
+            success: false,
+            error: 'Paystack API authentication failed. Please check your PAYSTACK_SECRET_KEY configuration. Payment status remains unchanged.',
+            data: donationRecord,
+            authError: true
+          }, { status: 401 });
+        } else {
+          // Other errors - keep as pending, don't mark as failed
+          console.error('Error verifying payment:', error);
+          return NextResponse.json({
+            success: false,
+            error: 'Payment verification failed due to an error. Payment status remains unchanged.',
+            data: donationRecord,
+            errorDetails: error instanceof Error ? error.message : 'Unknown error'
+          }, { status: 500 });
+        }
       }
     } else if (action === 'complete') {
       // Manually mark as completed

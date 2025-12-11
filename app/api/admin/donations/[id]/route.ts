@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { donations, users, campaigns, chainers } from '@/lib/schema';
-import { eq, and, count, sum, desc, sql } from 'drizzle-orm';
+import { eq, and, count, desc, sql } from 'drizzle-orm';
+import { updateCampaignAmount } from '@/lib/utils/campaign-amount';
 
 /**
  * GET /api/admin/donations/[id]
@@ -212,9 +213,15 @@ export async function PATCH(
           .set({ 
             paymentStatus: 'completed',
             processedAt: new Date(),
+            lastStatusUpdate: new Date(),
           })
           .where(eq(donations.id, donationId))
           .returning();
+        
+        // Update campaign amount if donation was marked as completed
+        if (updatedDonation[0]) {
+          await updateCampaignAmount(updatedDonation[0].campaignId);
+        }
         break;
 
       case 'mark_failed':

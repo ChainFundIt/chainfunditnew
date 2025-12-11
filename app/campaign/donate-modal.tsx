@@ -198,6 +198,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
             period: period,
             message: comments,
             isAnonymous: anonymous,
+            email: email || undefined,
             chainerId: referralChainer?.id || null,
           }),
         });
@@ -235,6 +236,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
         paymentProvider,
         message: comments,
         isAnonymous: anonymous,
+        email: email || undefined,
         chainerId: referralChainer?.id || null,
       };
 
