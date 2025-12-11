@@ -13,15 +13,7 @@ import { Button } from "@/components/ui/button";
 import CompleteProfile from "../complete-profile";
 import Image from "next/image";
 import { formatCurrency } from "@/lib/utils/currency";
-import {
-  ArrowRight,
-  TrendingUp,
-  Users,
-  DollarSign,
-  Share2,
-  Calendar,
-  Eye,
-} from "lucide-react";
+import { ArrowRight, TrendingUp } from "lucide-react";
 import { R2Image } from "@/components/ui/r2-image";
 import { Loader } from "@/components/ui/Loader";
 import { EmojiFallbackImage } from "@/components/ui/emoji-fallback-image";
@@ -31,7 +23,6 @@ import CreditCardIcon from "@/public/icons/CreditCardIcon";
 import HeartBeat from "@/public/icons/HeartBeat";
 import GiftIcon from "@/public/icons/GiftIcon";
 import PeopleIcon from "@/public/icons/PeopleIcon";
-import UserAvatar from "@/components/ui/user-avatar";
 import { CampaignsIcon } from "@/public/icons/CampaignsIcon";
 import ClockIcon from "@/public/icons/ClockIcon";
 import { capitalizeFirstLetter } from "@/lib/utils/helperFunction";
@@ -365,11 +356,11 @@ export default function DashboardPage() {
           </DialogHeader>
           <DialogFooter className="flex items-end">
             <Button
-              className="w-full h-14 md:h-[72px] font-sans font-semibold text-lg md:text-2xl flex justify-between items-center"
+              className="w-full h-14 md:h-[72px] font-sans font-semibold text-lg md:text-2xl flex justify-center items-center rounded-3xl"
               onClick={handleCloseWelcome}
             >
               Complete your profile
-              <ArrowRight />
+              <ArrowRight size={20}/>
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -398,7 +389,7 @@ export default function DashboardPage() {
               onClick={() => {
                 formRef.current?.requestSubmit();
               }}
-              className="w-full h-14 md:h-[72px] flex justify-between items-center font-semibold text-lg md:text-2xl"
+              className="w-full h-14 md:h-[72px] flex justify-between items-center font-semibold text-lg md:text-2xl rounded-3xl"
             >
               Here we go! <ArrowRight size={20} className="md:w-6 md:h-6" />
             </Button>

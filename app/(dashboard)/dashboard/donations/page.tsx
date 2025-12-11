@@ -108,7 +108,7 @@ const DonationsPage = () => {
   const EmptyDonations = () => {
     if (activeTab === "Received") {
       return (
-        <div className="flex flex-col pt-8 justify-center items-center gap-2 overflow-hidden">
+        <div className="flex flex-col pt-8 justify-center items-center gap-2 overflow-hidden w-[20rem]">
           <h3 className="font-semibold text-3xl text-[#104901]">
             No donations received
           </h3>
@@ -216,7 +216,7 @@ const DonationsPage = () => {
               )}
 
               {!loading && !error && donations.length == 0 && (
-                <div className="overflow-hidden flex-wrap md:w-full w-screen text-center px-8">
+                <div className="overflow-hidden flex-wrap md:w-full text-center px-8">
                   <EmptyDonations />
                 </div>
               )}

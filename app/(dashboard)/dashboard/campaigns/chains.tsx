@@ -10,7 +10,6 @@ import {
   Calendar,
   PlusIcon,
 } from "lucide-react";
-import Link from "next/link";
 import { useChainerDonations } from "@/hooks/use-chainer-donations";
 import { formatCurrency } from "@/lib/utils/currency";
 import EmptyCampaign from "./emptyCampaign";
@@ -64,9 +63,11 @@ const Chains = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-16">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#104901]"></div>
-        <p className="mt-4 text-[#104901] opacity-80">Loading donations...</p>
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#104901] mb-4"></div>
+        <p className="text-[#104901] text-lg font-medium">
+          Loading ambassador donations...
+        </p>
       </div>
     );
   }

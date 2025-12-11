@@ -1,27 +1,9 @@
 import React from "react";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import {
-  Plus,
-  Eye,
-  Edit,
-  Link as LinkIcon,
-  Users,
-  Clock,
-  Target,
-  XCircle,
-  PlusIcon,
-} from "lucide-react";
+import { Plus, PlusIcon } from "lucide-react";
 import Link from "next/link";
-import { Campaign, transformCampaign } from "./types";
-import {
-  getCampaignStatus,
-  getTimeRemaining,
-} from "@/lib/utils/campaign-status";
-import { formatCurrency } from "@/lib/utils/currency";
-import { R2Image } from "@/components/ui/r2-image";
-import { EmojiFallbackImage } from "@/components/ui/emoji-fallback-image";
-import { needsEmojiFallback } from "@/lib/utils/campaign-emojis";
+import { Campaign } from "./types";
+import { getCampaignStatus } from "@/lib/utils/campaign-status";
 import EmptyCampaign from "./emptyCampaign";
 import { useRouter } from "next/navigation";
 import { CampaignInfo } from "../page";
@@ -32,7 +14,6 @@ type Props = {
 
 const PastCampaigns = ({ campaigns }: Props) => {
   const isEmpty = campaigns.length === 0;
-  const transformedCampaigns = campaigns.map(transformCampaign);
   const router = useRouter();
 
   if (isEmpty) {
@@ -116,128 +97,3 @@ const PastCampaigns = ({ campaigns }: Props) => {
 };
 
 export default PastCampaigns;
-
-//  <div className="flex flex-col gap-6 font-source 2xl:container 2xl:mx-auto">
-//     {transformedCampaigns.map((transformedCampaign, index) => {
-//       const campaign = campaigns[index];
-//       return (
-//         <div
-//           key={transformedCampaign.id}
-//           className="border border-[#D9D9D9] bg-white py-4 pl-4 pr-6 flex flex-col md:flex-row md:gap-20 gap-4 items-start"
-//           style={{ boxShadow: "0px 4px 8px 0px #0000001A" }}
-//         >
-//           {needsEmojiFallback(transformedCampaign.image) ? (
-//             <EmojiFallbackImage
-//               category={campaign.reason || "Uncategorized"}
-//               title={transformedCampaign.title}
-//               className="w-full md:w-[270px] h-[150px] md:h-[190px]"
-//             />
-//           ) : (
-//             <R2Image
-//               src={transformedCampaign.image}
-//               alt={transformedCampaign.title}
-//               width={270}
-//               height={190}
-//               className="w-full md:w-[270px] h-[150px] md:h-[190px] object-cover"
-//             />
-//           )}
-//           <div className="flex flex-col justify-end">
-//             <div className="flex justify-between flex-col md:flex-row md:items-center gap-2 mb-2">
-//               <h3 className="text-lg md:text-2xl font-medium">
-//                 {transformedCampaign.title}
-//               </h3>
-//               {(() => {
-//                 const statusInfo = getCampaignStatus(campaign);
-//                 const timeRemaining = getTimeRemaining(campaign);
-
-//                 if (statusInfo.status === "expired") {
-//                   return (
-//                     <div className="w-fit flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded-full text-sm">
-//                       <Clock size={14} />
-//                       <span>{timeRemaining}</span>
-//                     </div>
-//                   );
-//                 } else if (statusInfo.status === "goal_reached") {
-//                   return (
-//                     <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-sm">
-//                       <Target size={14} />
-//                       <span>Goal Reached</span>
-//                     </div>
-//                   );
-//                 } else if (statusInfo.status === "closed") {
-//                   return (
-//                     <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
-//                       <XCircle size={14} />
-//                       <span>Closed</span>
-//                     </div>
-//                   );
-//                 }
-//                 return null;
-//               })()}
-//             </div>
-//             <span className="font-normal text-sm md:text-base">
-//               {transformedCampaign.description.slice(0, 60)}...
-//             </span>
-//             <section className="flex flex-col md:flex-row md:justify-between gap-1">
-//               <p className="text-base md:text-lg font-medium my-1 text-black">
-//                 {formatCurrency(
-//                   transformedCampaign.amountRaised,
-//                   transformedCampaign.currency
-//                 )}{" "}
-//                 raised
-//               </p>
-//               <p className="font-medium text-base md:text-lg text-[#757575] my-1">
-//                 {formatCurrency(
-//                   transformedCampaign.goal,
-//                   transformedCampaign.currency
-//                 )}{" "}
-//                 total
-//               </p>
-//             </section>
-//             <div className="w-full bg-[#D9D9D9] h-2 my-1">
-//               <div
-//                 className="bg-[#104901] h-full transition-all duration-500"
-//                 style={{
-//                   width: `${Math.min(
-//                     100,
-//                     Math.round(
-//                       (transformedCampaign.amountRaised /
-//                         transformedCampaign.goal) *
-//                         100
-//                     )
-//                   )}%`,
-//                 }}
-//               ></div>
-//             </div>
-//             <section className="flex flex-col md:flex-row md:justify-between gap-2 md:items-center">
-//               <p className="text-sm md:text-lg text-[#868686] flex gap-1 items-center">
-//                 <Users size={16} className="md:w-5 md:h-5" />
-//                 {transformedCampaign.donors} donors
-//               </p>
-//               <p className="text-sm md:text-lg text-[#868686] flex gap-1 items-center">
-//                 <LinkIcon size={16} className="md:w-5 md:h-5" />{" "}
-//                 {transformedCampaign.chains} chains
-//               </p>
-//             </section>
-//             <div className="mt-3 flex gap-2">
-//               <Link href={`/campaign/${transformedCampaign.slug}`}>
-//                 <Button
-//                   className="bg-whitesmoke font-medium text-lg text-[#474553] border-[#474553]"
-//                   variant="outline"
-//                 >
-//                   View
-//                   <Eye />
-//                 </Button>
-//               </Link>
-//             </div>
-//           </div>
-//         </div>
-//       );
-//     })}
-
-//     <Link href="/create-campaign">
-//       <Button className="w-[300px] h-16 flex justify-between font-semibold text-2xl items-center mt-6">
-//         Create a Campaign <Plus size={24} />
-//       </Button>
-//     </Link>
-//   </div>

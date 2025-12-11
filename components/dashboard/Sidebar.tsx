@@ -69,6 +69,11 @@ const Sidebar = (props: Props) => {
     loadBalance();
   }, []);
 
+  const handleSideBarButtonClick = (url: string) => {
+    router.push(url);
+    setIsOpen(false);
+  }
+
   const handleLogout = async () => {
     try {
       const response = await fetch("/api/auth/logout", {
@@ -127,7 +132,7 @@ const Sidebar = (props: Props) => {
             return (
               <div
                 key={index}
-                onClick={() => router.push(data.url)}
+                onClick={() => handleSideBarButtonClick(data.url)}
                 className={`
     flex items-center gap-4 cursor-pointer p-4 rounded-[10px]
      ${isSelected ? "bg-[var(--color-darkGreen)]" : "hover:bg-[#f3f4f6]"}
