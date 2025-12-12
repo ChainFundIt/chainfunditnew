@@ -451,7 +451,7 @@ export default function PricingPage() {
             reach their goals.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/create-campaign">
+            <Link href="/dashboard/campaigns/create-campaign">
               <Button
                 size="lg"
                 className="bg-white text-green-600 hover:bg-gray-100"

@@ -230,7 +230,7 @@ export function PayoutDetailsModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-[#104901]">
+          <DialogTitle className="text-xl font-bold text-[#104109]">
             Request Payout
           </DialogTitle>
           <DialogDescription>
@@ -487,8 +487,9 @@ export function PayoutDetailsModal({
                         size="sm"
                         onClick={() => {
                           onClose();
-                          router.push("/settings");
+                          router.push("/dashboard/settings");
                         }}
+                        className="rounded-xl p-4 text-sm"
                       >
                         <ExternalLink className="h-4 w-4 mr-2" />
                         {isForeignCurrency ? 'Add Bank Account' : 'Complete Profile'}
@@ -527,13 +528,13 @@ export function PayoutDetailsModal({
             <Button
               onClick={onClose}
               variant="outline"
-              className="flex-1"
+              className="flex-1 rounded-xl p-4 text-sm"
             >
               Cancel
             </Button>
             <Button
               onClick={handleConfirmPayout}
-              className="flex-1 bg-[#104901] text-white"
+              className="flex-1 rounded-xl p-4 text-sm bg-[#104109] text-white"
               disabled={
                 isProcessing ||
                 !campaign.payoutProvider ||
@@ -604,7 +605,7 @@ export function PayoutDetailsModal({
                   <Button
                     onClick={() => {
                       onClose();
-                      router.push("/settings");
+                      router.push("/dashboard/settings");
                     }}
                     size="sm"
                     className="bg-amber-600 hover:bg-amber-700"

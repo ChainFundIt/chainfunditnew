@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Copy, Facebook, Instagram, Twitter, Linkedin, XCircle, MessageCircle } from "lucide-react";
+import { X, Copy, Facebook, Instagram, Twitter, Linkedin, XCircle, MessageCircle, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useShortenLink } from "@/hooks/use-shorten-link";
@@ -119,9 +119,9 @@ const ShareModal: React.FC<ShareModalProps> = ({ open, onOpenChange, campaign })
               <Button
                 onClick={handleCopyLink}
                 disabled={!campaignUrl}
-                className="bg-[#104901] text-white"
+                className="bg-[#104901] text-white rounded-full"
               >
-                <Copy size={16} className="mr-1" />
+                {copied ? <Check size={16} className="mr-1" /> : <Copy size={16} className="mr-1" />}
                 {copied ? "Copied!" : "Copy"}
               </Button>
             </div>

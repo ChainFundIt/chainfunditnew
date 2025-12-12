@@ -151,6 +151,28 @@ const Cards = ({
           const transformedItems = relatedItems.map((item: UnifiedItem) => {
             const isCampaign = item.type === 'campaign';
             const isCharity = item.type === 'charity';
+
+            const getValidCharityLogo = (logo?: string | null) => {
+              if (!logo) return null;
+              if (logo === "undefined") return null;
+              if (logo.includes("logo.clearbit.com")) return null;
+              return logo;
+            };
+
+            const safeDomainFromWebsite = (website?: string | null) => {
+              if (!website) return null;
+              try {
+                const u = new URL(website);
+                return u.hostname.replace(/^www\./, '');
+              } catch {
+                return null;
+              }
+            };
+
+            const getFaviconFallbackUrl = (domain: string) => {
+              // Prefer Google favicon service; it’s generally reliable.
+              return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=256`;
+            };
             
             const getCurrencySymbol = (currency: string) => {
               switch (currency?.toUpperCase()) {
@@ -217,6 +239,10 @@ const Cards = ({
               };
             } else {
               // Charity
+              const logo = getValidCharityLogo((item as any).logo);
+              const domain = safeDomainFromWebsite((item as any).website);
+              const favicon = domain ? getFaviconFallbackUrl(domain) : null;
+              const charityCardImage = logo || favicon || getImageUrl();
               return {
                 id: item.id,
                 slug: item.slug,
@@ -224,13 +250,13 @@ const Cards = ({
                 title: item.title,
                 description: item.description,
                 raised: `${currencySymbol}${Number(item.totalReceived || 0).toLocaleString()} raised`,
-                image: getImageUrl(),
-                coverImageUrl: item.coverImage,
+                image: charityCardImage,
+                coverImageUrl: charityCardImage,
                 reason: item.category,
                 extra: item.mission || '',
                 date: new Date(item.createdAt).toLocaleDateString(),
                 timeLeft: 'Ongoing',
-                avatar: item.logo,
+                avatar: logo || (item as any).logo,
                 creator: item.title,
                 createdFor: '',
                 percentage: '100%',
@@ -404,6 +430,12 @@ const Cards = ({
                   width={400}
                   height={192}
                 />
+              ) : card.type === "charity" ? (
+                <img
+                  src={card.image}
+                  alt={card.title}
+                  className="w-full h-48 object-contain bg-white"
+                />
               ) : (
                 // For campaigns, use R2Image
                 <R2Image
@@ -436,11 +468,11 @@ const Cards = ({
                 {card.description}
               </p>
               <div className="flex items-center gap-2 mb-3">
-                <CampaignCreatorAvatar
+                {/* <CampaignCreatorAvatar
                   creatorName={card.creator}
                   creatorAvatar={card.avatar}
                   size={24}
-                />
+                /> */}
                 <span className="text-sm text-[#757575]">
                   by {card.creator}
                 </span>

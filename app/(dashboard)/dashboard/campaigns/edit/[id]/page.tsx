@@ -229,7 +229,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
       <div className="w-full 2xl:container 2xl:mx-auto p-6 bg-gradient-to-br from-green-50 via-white to-green-50 min-h-screen">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <Loader2 className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#104901] mx-auto mb-4" />
+            <Loader2 className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#104109] mx-auto mb-4" />
             <p className="text-lg text-[#757575]">Loading campaign...</p>
           </div>
         </div>
@@ -249,7 +249,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
             </p>
             <Button 
               onClick={() => router.back()} 
-              className="bg-[#104901] text-white px-6 py-3 rounded-lg hover:bg-[#0d3a01] transition-colors"
+              className="bg-[#104109] text-white px-6 py-3 rounded-lg hover:bg-[#0d3a01] transition-colors"
             >
               Go Back
             </Button>
@@ -271,7 +271,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
             </p>
             <Button 
               onClick={() => router.back()} 
-              className="bg-[#104901] text-white px-6 py-3 rounded-lg transition-colors"
+              className="bg-[#104109] text-white px-6 py-3 rounded-lg transition-colors"
             >
               Go Back
             </Button>
@@ -282,21 +282,21 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
   }
 
   return (
-    <div className="w-full 2xl:container 2xl:mx-auto p-6 bg-gradient-to-br from-green-50 via-white to-green-50 min-h-screen">
+    <div className="p-6 bg-[#F0F7Ef] min-h-screen">
       <div className="relative">
-        <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-[#104901] rounded-3xl blur opacity-10"></div>
+        <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-[#104109] rounded-3xl blur opacity-10"></div>
         <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-8">
           {/* Header */}
           <div className="flex items-center gap-4 mb-8">
             <Button
-              variant="outline"
+              variant="ghost"
               onClick={() => router.back()}
-              className="text-[#104901] border-[#104901] hover:bg-[#104901] hover:text-white rounded-xl"
+              className="text-[#104109] border-[#104109] hover:bg-[#104109] hover:text-white rounded-xl"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Button>
-            <h1 className="text-3xl font-bold text-[#104901]">Edit Campaign</h1>
+            <h1 className="text-3xl font-bold text-[#104109]">Edit Campaign</h1>
           </div>
 
           {/* Campaign Preview */}
@@ -312,7 +312,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
                 />
               )}
               <div>
-                <h3 className="font-semibold text-lg text-[#104901]">{campaign.title}</h3>
+                <h3 className="font-semibold text-lg text-[#104109]">{campaign.title}</h3>
                 <p className="text-sm text-gray-600">Current Status: {campaign.status}</p>
               </div>
             </div>
@@ -340,7 +340,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Cover Image Upload */}
             <div className="bg-white p-6 rounded-2xl border border-gray-200">
-              <label className="block text-sm font-medium text-[#104901] mb-4">
+              <label className="block text-sm font-medium text-[#104109] mb-4">
                 Campaign Cover Image
               </label>
               
@@ -380,7 +380,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
                       />
                       <label
                         htmlFor="cover-image-upload"
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-[#104901] text-white rounded-xl cursor-pointer hover:bg-[#0a3d00] transition-colors"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-[#104109] text-white rounded-xl cursor-pointer hover:bg-[#0a3d00] transition-colors"
                       >
                         <Upload className="h-4 w-4" />
                         {isUploadingImage ? "Uploading..." : "Choose New Image"}
@@ -401,74 +401,74 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-[#104901] mb-2">
+                <label className="block text-sm font-medium text-[#104109] mb-2">
                   Campaign Title *
                 </label>
                 <Input
                   value={formData.title}
                   onChange={(e) => handleInputChange("title", e.target.value)}
                   placeholder="Enter campaign title"
-                  className="rounded-xl border-gray-300 focus:border-[#104901] focus:ring-[#104901]"
+                  className="rounded-xl border-gray-300 focus:border-[#104109] focus:ring-[#104109]"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[#104901] mb-2">
+                <label className="block text-sm font-medium text-[#104109] mb-2">
                   Subtitle
                 </label>
                 <Input
                   value={formData.subtitle}
                   onChange={(e) => handleInputChange("subtitle", e.target.value)}
                   placeholder="Enter campaign subtitle"
-                  className="rounded-xl border-gray-300 focus:border-[#104901] focus:ring-[#104901]"
+                  className="rounded-xl border-gray-300 focus:border-[#104109] focus:ring-[#104109]"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[#104901] mb-2">
+                <label className="block text-sm font-medium text-[#104109] mb-2">
                   Category
                 </label>
-                <div className="px-3 py-1 text-[#104901] shadow-sm rounded-xl border border-gray-300 focus:border-[#104901] focus:ring-[#104901]">
+                <div className="px-3 py-1 text-[#104109] shadow-sm rounded-xl border border-gray-300 focus:border-[#104109] focus:ring-[#104109]">
                   {formData.reason || "Not specified"}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[#104901] mb-2">
+                <label className="block text-sm font-medium text-[#104109] mb-2">
                   Fundraising For
                 </label>
-                <div className="px-3 py-1 text-[#104901] shadow-sm rounded-xl border border-gray-300 focus:border-[#104901] focus:ring-[#104901]">
+                <div className="px-3 py-1 text-[#104109] shadow-sm rounded-xl border border-gray-300 focus:border-[#104109] focus:ring-[#104109]">
                   {formData.fundraisingFor || "Not specified"}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[#104901] mb-2">
+                <label className="block text-sm font-medium text-[#104109] mb-2">
                   Duration
                 </label>
                 <Input
                   value={formData.duration}
                   onChange={(e) => handleInputChange("duration", e.target.value)}
                   placeholder="e.g., 30 days, 3 months"
-                  className="rounded-xl border-gray-300 focus:border-[#104901] focus:ring-[#104901]"
+                  className="rounded-xl border-gray-300 focus:border-[#104109] focus:ring-[#104109]"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[#104901] mb-2">
+                <label className="block text-sm font-medium text-[#104109] mb-2">
                   Video URL
                 </label>
                 <Input
                   value={formData.videoUrl}
                   onChange={(e) => handleInputChange("videoUrl", e.target.value)}
                   placeholder="https://youtube.com/..."
-                  className="rounded-xl border-gray-300 focus:border-[#104901] focus:ring-[#104901]"
+                  className="rounded-xl border-gray-300 focus:border-[#104109] focus:ring-[#104109]"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[#104901] mb-2">
+                <label className="block text-sm font-medium text-[#104109] mb-2">
                   Goal Amount *
                 </label>
                 <Input
@@ -476,21 +476,21 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
                   value={formData.goalAmount}
                   onChange={(e) => handleInputChange("goalAmount", parseFloat(e.target.value) || 0)}
                   placeholder="Enter goal amount"
-                  className="rounded-xl border-gray-300 focus:border-[#104901] focus:ring-[#104901]"
+                  className="rounded-xl border-gray-300 focus:border-[#104109] focus:ring-[#104109]"
                   required
                   min="0"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[#104901] mb-2">
+                <label className="block text-sm font-medium text-[#104109] mb-2">
                   Currency *
                 </label>
                 <Select
                   value={formData.currency}
                   onValueChange={(value) => handleInputChange("currency", value)}
                 >
-                  <SelectTrigger className="rounded-xl border-gray-300 focus:border-[#104901] focus:ring-[#104901]">
+                  <SelectTrigger className="rounded-xl border-gray-300 focus:border-[#104109] focus:ring-[#104109]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -504,7 +504,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[#104901] mb-2">
+                <label className="block text-sm font-medium text-[#104109] mb-2">
                   Minimum Donation
                 </label>
                 <Input
@@ -512,13 +512,13 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
                   value={formData.minimumDonation}
                   onChange={(e) => handleInputChange("minimumDonation", parseFloat(e.target.value) || 0)}
                   placeholder="Enter minimum donation"
-                  className="rounded-xl border-gray-300 focus:border-[#104901] focus:ring-[#104901]"
+                  className="rounded-xl border-gray-300 focus:border-[#104109] focus:ring-[#104109]"
                   min="0"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[#104901] mb-2">
+                <label className="block text-sm font-medium text-[#104109] mb-2">
                   Ambassador Commission Rate (%)
                 </label>
                 <Input
@@ -526,7 +526,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
                   value={formData.chainerCommissionRate}
                   onChange={(e) => handleInputChange("chainerCommissionRate", parseFloat(e.target.value) || 0)}
                   placeholder="Enter commission rate"
-                  className="rounded-xl border-gray-300 focus:border-[#104901] focus:ring-[#104901]"
+                  className="rounded-xl border-gray-300 focus:border-[#104109] focus:ring-[#104109]"
                   min="0"
                   max="100"
                   step="0.1"
@@ -535,7 +535,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#104901] mb-2">
+              <label className="block text-sm font-medium text-[#104109] mb-2">
                 Description *
               </label>
               <Textarea
@@ -543,7 +543,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
                 onChange={(e) => handleInputChange("description", e.target.value)}
                 placeholder="Tell your story and why people should support your campaign..."
                 rows={6}
-                className="rounded-xl border-gray-300 focus:border-[#104901] focus:ring-[#104901]"
+                className="rounded-xl border-gray-300 focus:border-[#104109] focus:ring-[#104109]"
                 required
               />
             </div>
@@ -559,14 +559,14 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
                 type="button"
                 variant="outline"
                 onClick={() => router.back()}
-                className="text-[#104901] border-[#104901] hover:bg-[#104901] hover:text-white rounded-xl px-6 py-2"
+                className="text-[#104109] border-[#104109] hover:bg-[#104109] hover:text-white rounded-xl px-6 py-2"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={saving}
-                className="bg-gradient-to-r from-green-600 to-[#104901] text-white hover:text-white rounded-xl px-8 py-2 hover:shadow-lg transition-all duration-300 disabled:opacity-50"
+                className=" text-white hover:text-[#104109] rounded-xl px-8 py-2 hover:shadow-lg transition-all duration-300 disabled:opacity-50"
               >
                 {saving ? (
                   <>

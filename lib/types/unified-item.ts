@@ -36,6 +36,7 @@ export interface UnifiedItem {
   isVerified?: boolean;
   mission?: string;
   logo?: string;
+  website?: string;
 }
 
 export interface CampaignItem {
@@ -68,6 +69,7 @@ export interface CharityItem {
   description: string;
   coverImage?: string | null;
   logo?: string | null;
+  website?: string | null;
   category: string;
   totalReceived: string | number;
   isVerified: boolean;

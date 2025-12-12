@@ -64,7 +64,7 @@ const Navbar = (props: Props) => {
     "U";
 
   return (
-    <nav className="px-2 md:px-10 py-3 md:py-5 flex flex-col md:flex-row justify-between items-center font-source border-b border-[#C0BFC4] w-full">
+    <nav className=" px-2 md:px-10 py-3 md:py-5 flex flex-col md:flex-row justify-between items-center font-source border-b border-[#C0BFC4] w-full ">
       <div className="flex w-full md:w-auto justify-between items-center">
         <Link href="/" className="flex gap-1 items-center">
           <Image
@@ -103,17 +103,17 @@ const Navbar = (props: Props) => {
         <li>
           <Link href="/faq" className="">
             FAQs
-          </Link> 
+          </Link>
         </li>
       </ul>
       <section className="hidden md:flex gap-5 items-center">
         <SessionStatusIndicator />
         <Button className="">
           <Link
-            href="/create-campaign"
+            href="/dashboard/campaigns/create-campaign"
             className="w-full h-full flex items-center justify-center"
           >
-            Create Campaign
+            Start a Campaign
           </Link>
         </Button>
         <NotificationAlert />
@@ -154,7 +154,7 @@ const Navbar = (props: Props) => {
             <DropdownMenuSeparator className="my-2" />
             <DropdownMenuItem asChild>
               <Link
-                href="/settings"
+                href="/dashboard/settings"
                 className="flex items-center gap-2 text-sm text-[#1F2937] cursor-pointer"
               >
                 <Settings className="h-4 w-4 text-[#6B7280]" />
@@ -207,12 +207,9 @@ const Navbar = (props: Props) => {
             </li>
           </ul>
           <div className="flex flex-col gap-2">
-            <Button className="w-full">Create Campaign</Button>
+            <Button className="w-full">Start a Campaign</Button>
             <div className="flex gap-3 items-center justify-center">
               <NotificationAlert />
-              {/* <Link href="/settings">
-                <UserAvatar size={32} className="w-8 h-8" />
-              </Link> */}
               <Link href="/logout" onClick={handleLogout}>
                 <LogOut className="h-6 w-6 text-red-600" />
               </Link>

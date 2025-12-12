@@ -9,8 +9,19 @@ import Comments from "./comments";
 import { useAuth } from "@/hooks/use-auth";
 import { Campaign } from "./types";
 import { isLiveCampaign, isPastCampaign } from "@/lib/utils/campaign-status";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import { ArrowRight, Clock, Link, MessageSquare } from "lucide-react";
+import HeartBeat from "@/public/icons/HeartBeat";
+import { DonationsIcon } from "@/public/icons/DonationsIcon";
 
-const tabs = ["Live", "Past", "Chains", "Favourites", "Comments"];
+const tabs = [
+  { label: "Live", Icon: HeartBeat },
+  { label: "Past", Icon: Clock },
+  { label: "Chains", Icon: Link },
+  { label: "Favourites", Icon: DonationsIcon },
+  { label: "Comments", Icon: MessageSquare },
+];
 
 export default function CampaignsPage() {
   const [activeTab, setActiveTab] = useState("Live");
@@ -18,6 +29,7 @@ export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [campaignsLoading, setCampaignsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   // Filter campaigns to only show those created by the current user
   const userCampaigns = useMemo(() => {
@@ -82,99 +94,66 @@ export default function CampaignsPage() {
   }, [user?.id, authLoading]);
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50">
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Header Section */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-[#104901] mb-2">Campaigns</h1>
-          <p className="text-lg text-gray-600">
-            Manage and track your fundraising campaigns
-          </p>
-        </div>
-
-        {/* Tabs */}
-        <div className="mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-2 inline-flex">
-            {tabs.map((tab) => (
-              <button
-                key={tab}
-                className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
-                  activeTab === tab
-                    ? "bg-[#104901] text-white shadow-md"
-                    : "text-gray-600 hover:text-[#104901] hover:bg-green-50"
-                }`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Loading State */}
-        {!authLoading && campaignsLoading && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12">
-            <div className="flex flex-col items-center justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#104901] mb-4"></div>
-              <p className="text-[#104901] text-lg font-medium">
-                Loading your campaigns...
-              </p>
+    <div className="bg-[#F0F7Ef] p-6 font-jakarta md:min-h-[calc(100vh-122px)] min-h-[calc(100vh-149px)]">
+      <div className="flex flex-col gap-7">
+        {/* Campaign Heading */}
+        <div className="flex md:flex-row flex-col md:justify-between md:items-center gap-5">
+          <div className="flex flex-col">
+            <div className="text-[var(--color-darkGreen)] text-[26px] font-extrabold leading-[31.5px]">
+              Campaigns
+            </div>
+            <div className="text-[#6B7280] text-[14px] font-medium leading-[21px]">
+              Manage and track your fundraising campaigns
             </div>
           </div>
-        )}
 
-        {/* Error State */}
-        {!authLoading && !campaignsLoading && error && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12">
-            <div className="flex flex-col items-center justify-center">
-              <div className="text-red-500 mb-4">
-                <svg
-                  className="w-16 h-16"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
+          <Button
+            onClick={() => {
+              router.push("/dashboard/campaigns/create-campaign");
+            }}
+            className="bg-[var(--color-darkGreen)] text-[14px] leading-[21px] font-bold rounded-[10.5px] flex
+                       items-center justify-center py-3 h-auto md:w-fit w-full"
+          >
+            <div> Start a Campaign</div>
+
+            <ArrowRight height={18} width={18} />
+          </Button>
+        </div>
+        {/* Filters */}
+        <div className="flex bg-white rounded-[14px] p-2 gap-3 overflow-x-auto touch-pan-x scrollbar-hide">
+          {tabs.map((data, index) => {
+            const isSelected = activeTab == data.label;
+            return (
+              <div
+                key={index}
+                onClick={() => setActiveTab(data.label)}
+                className={`flex items-center justify-center gap-2 px-4 py-2 w-22 cursor-pointer rounded-md
+                   ${isSelected ? "bg-[#104109]" : "bg-white"}
+                   ${isSelected ? "" : "hover:bg-[#f3f4f6]"} transition`}
+              >
+                <data.Icon
+                  color={isSelected ? "#ffcf55" : "#6b7280"}
+                  height="16px"
+                  width="16px"
+                />
+
+                <div
+                  className={`
+        text-[12px] font-bold leading-[18px]
+        ${isSelected ? "text-white" : "text-gray-500"}
+        group-hover:text-white
+      `}
                 >
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                  {data.label}
+                </div>
               </div>
-              <h3 className="font-bold text-2xl text-red-600 mb-3">
-                Error Loading Campaigns
-              </h3>
-              <p className="text-red-500 text-center mb-6">{error}</p>
-              <button
-                onClick={fetchCampaigns}
-                className="bg-[#104901] hover:bg-[#0d3d01] text-white px-6 py-3 rounded-lg font-medium transition-colors"
-              >
-                Try Again
-              </button>
-            </div>
-          </div>
-        )}
+            );
+          })}
+        </div>
 
-        {/* Not Authenticated State
-        {!authLoading && !campaignsLoading && !error && !user && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12">
-            <div className="flex flex-col items-center justify-center">
-              <div className="text-[#104901] mb-4">
-                <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <h3 className="font-bold text-2xl text-[#104901] mb-3">Please Sign In</h3>
-              <p className="text-[#104901] text-center mb-6">You need to be signed in to view your campaigns.</p>
-              <a href="/signin" className="bg-[#104901] hover:bg-[#0d3d01] text-white px-6 py-3 rounded-lg font-medium transition-colors">
-                Sign In
-              </a>
-            </div>
-          </div>
-        )} */}
-
-        {/* Campaigns Content */}
+        {/* Campaign Cards */}
         {!authLoading && !campaignsLoading && !error && user && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div>
             {activeTab === "Live" && (
               <LiveCampaigns campaigns={filteredCampaigns} />
             )}
@@ -182,9 +161,7 @@ export default function CampaignsPage() {
               <PastCampaigns campaigns={filteredCampaigns} />
             )}
             {activeTab === "Chains" && <Chains />}
-            {activeTab === "Favourites" && (
-              <Favourites />
-            )}
+            {activeTab === "Favourites" && <Favourites />}
             {activeTab === "Comments" && <Comments campaigns={userCampaigns} />}
           </div>
         )}

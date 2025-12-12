@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { useSessionTimeout } from '@/hooks/use-session-timeout';
-import { useAuth } from '@/hooks/use-auth';
-import SessionWarningModal from '@/components/auth/SessionWarningModal';
-import SessionTimeoutModal from '@/components/auth/SessionTimeoutModal';
+import React, { useState, useEffect } from "react";
+import { useSessionTimeout } from "@/hooks/use-session-timeout";
+import { useAuth } from "@/hooks/use-auth";
+import SessionWarningModal from "@/components/auth/SessionWarningModal";
+import SessionTimeoutModal from "@/components/auth/SessionTimeoutModal";
 
 interface SessionTimeoutProviderProps {
   children: React.ReactNode;
@@ -25,6 +25,7 @@ const SessionTimeoutProvider: React.FC<SessionTimeoutProviderProps> = ({
   // Call the hook before any conditional returns to follow React Hook rules
   const sessionTimeoutData = useSessionTimeout({
     ...config,
+    enabled: process.env.NODE_ENV !== "development",
     user,
     logout,
   });
@@ -49,17 +50,20 @@ const SessionTimeoutProvider: React.FC<SessionTimeoutProviderProps> = ({
   } = sessionTimeoutData || {};
 
   const handleLogin = () => {
-    if (typeof handleSessionExpired === 'function') {
+    if (typeof handleSessionExpired === "function") {
       handleSessionExpired();
     } else {
-      console.warn('SessionTimeoutProvider: handleSessionExpired is not a function:', typeof handleSessionExpired);
+      console.warn(
+        "SessionTimeoutProvider: handleSessionExpired is not a function:",
+        typeof handleSessionExpired
+      );
     }
   };
 
   return (
     <>
       {children}
-      
+
       {/* Session Warning Modal */}
       <SessionWarningModal
         isOpen={showWarningModal}
@@ -67,7 +71,7 @@ const SessionTimeoutProvider: React.FC<SessionTimeoutProviderProps> = ({
         onExtend={extendSession}
         timeRemaining={timeRemaining}
       />
-      
+
       {/* Session Timeout Modal */}
       <SessionTimeoutModal
         isOpen={showTimeoutModal}
@@ -79,4 +83,3 @@ const SessionTimeoutProvider: React.FC<SessionTimeoutProviderProps> = ({
 };
 
 export default SessionTimeoutProvider;
-

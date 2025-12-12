@@ -50,15 +50,15 @@ const Navbar = (props: Props) => {
           </li>
         </ul>
         <section className="hidden md:flex items-center gap-4">
-          <Link href="/create-campaign">
+          <Link href="/dashboard/campaigns/create-campaign">
             <Button className="px-4 py-3 border-2 border-white text-base font-semibold rounded-none">
-              Create Campaign
+              Start a Campaign
             </Button>
           </Link>
           <Search color="#757575" size={24} />
           <NotificationAlert />
 
-          <Link href="/settings">
+          <Link href="/dashboard/settings">
             <Image
               src="/images/user.png"
               alt="User"
@@ -96,9 +96,9 @@ const Navbar = (props: Props) => {
             </li>
           </ul>
           <div className="flex flex-col gap-4">
-            <Link href="/create-campaign">
+            <Link href="/dashboard/campaigns/create-campaign">
               <Button className="w-full px-4 py-3 border-2 border-white text-base font-semibold rounded-none">
-                Create Campaign
+                Start a Campaign
               </Button>
             </Link>
             <div className="flex items-center gap-4">
@@ -106,7 +106,7 @@ const Navbar = (props: Props) => {
               <NotificationAlert />
               <Bell color="#757575" size={24} />
             </div>
-            <Link href="/settings">
+            <Link href="/dashboard/settings">
               <Image
                 src="/images/user.png"
                 alt="User"
