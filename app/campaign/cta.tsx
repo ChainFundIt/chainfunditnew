@@ -79,7 +79,7 @@ const CTA = (props: Props) => {
             {/* Right CTA Button */}
             <div className="w-full lg:w-auto flex-shrink-0">
               <Button 
-                className="w-full lg:w-64 h-16 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white font-semibold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group"
+                className="w-full lg:w-64 h-16 bg-[#104901] hover:from-emerald-700 hover:to-emerald-600 text-white font-semibold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group"
               >
                 Get Started
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />

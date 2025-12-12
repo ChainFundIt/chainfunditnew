@@ -414,7 +414,7 @@ const Main = ({ campaignSlug }: MainProps) => {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderBottomColor: "#104901" }}></div>
             <p className="text-lg text-gray-600">Loading campaign...</p>
           </div>
         </div>
@@ -428,7 +428,7 @@ const Main = ({ campaignSlug }: MainProps) => {
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="text-6xl mb-4">😔</div>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+            <h2 className="text-2xl font-plusjakarta text-gray-900 mb-2">
               {error === "Campaign not found"
                 ? "Campaign Not Found"
                 : "Something went wrong"}
@@ -440,7 +440,8 @@ const Main = ({ campaignSlug }: MainProps) => {
             </p>
             <button
               onClick={() => window.location.reload()}
-              className="bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700 transition-colors"
+              className="text-white px-6 py-3 rounded-lg hover:opacity-90 transition-colors"
+              style={{ backgroundColor: "#104901" }}
             >
               Try Again
             </button>
@@ -486,7 +487,7 @@ const Main = ({ campaignSlug }: MainProps) => {
           <div className="flex items-center gap-2 text-sm">
             <span className="text-gray-500">Campaigns</span>
             <span className="text-gray-400">/</span>
-            <span className="text-emerald-600 font-medium">{campaignData.reason}</span>
+            <span style={{ color: "#104901" }} className="font-medium">{campaignData.reason}</span>
           </div>
         </div>
       </div>
@@ -534,7 +535,9 @@ const Main = ({ campaignSlug }: MainProps) => {
               {/* Verified Badge Overlay */}
               <div className="absolute top-4 left-4">
                 <div className="bg-white/95 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-lg">
-                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                  <svg className="w-4 h-4" style={{ color: "#104901" }} fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 0c6.627 0 12 5.373 12 12s-5.373 12-12 12-12-5.373-12-12 5.373-12 12-12zm-1.959 17l-4.5-4.319 1.339-1.437 3.161 3.026 6.956-7.538 1.529 1.273-8.485 9.695z"/>
+                  </svg>
                   <span className="text-sm font-medium text-gray-900">VERIFIED</span>
                 </div>
               </div>
@@ -549,7 +552,7 @@ const Main = ({ campaignSlug }: MainProps) => {
                     onClick={() => setSelectedImage(idx)}
                     className={`relative flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-all ${
                       selectedImage === idx
-                        ? "border-emerald-600 ring-2 ring-emerald-600 ring-offset-2"
+                        ? "border-[#104901] ring-2 ring-offset-2"
                         : "border-gray-200 hover:border-gray-300"
                     }`}
                   >
@@ -580,7 +583,7 @@ const Main = ({ campaignSlug }: MainProps) => {
                         window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
                       }
                     }}
-                    className="relative flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-emerald-600 transition-all group"
+                    className="relative flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-[#104901] transition-all group"
                   >
                     <Image
                       src={getYouTubeThumbnail(campaignData.videoUrl)!}
@@ -589,7 +592,7 @@ const Main = ({ campaignSlug }: MainProps) => {
                       className="object-cover"
                     />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-all">
-                      <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: "#104901" }}>
                         <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M8 5v14l11-7z"/>
                         </svg>
@@ -606,9 +609,10 @@ const Main = ({ campaignSlug }: MainProps) => {
                   onClick={() => setActiveTab("our-story")}
                   className={`flex-1 px-6 py-4 text-base font-medium transition-colors ${
                     activeTab === "our-story"
-                      ? "text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50/50"
+                      ? "border-b-2 bg-[#F0F9EC]"
                       : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                   }`}
+                  style={activeTab === "our-story" ? { color: "#104901", borderBottomColor: "#104901" } : {}}
                 >
                   Our Story
                 </button>
@@ -616,13 +620,14 @@ const Main = ({ campaignSlug }: MainProps) => {
                   onClick={() => setActiveTab("updates")}
                   className={`flex-1 px-6 py-4 text-base font-medium transition-colors relative ${
                     activeTab === "updates"
-                      ? "text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50/50"
+                      ? "border-b-2 bg-[#F0F9EC]"
                       : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                   }`}
+                  style={activeTab === "updates" ? { color: "#104901", borderBottomColor: "#104901" } : {}}
                 >
                   Updates
                   {updates.length > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-emerald-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center" style={{ backgroundColor: "#104901" }}>
                       {updates.length}
                     </span>
                   )}
@@ -631,13 +636,14 @@ const Main = ({ campaignSlug }: MainProps) => {
                   onClick={() => setActiveTab("documents")}
                   className={`flex-1 px-6 py-4 text-base font-medium transition-colors relative ${
                     activeTab === "documents"
-                      ? "text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50/50"
+                      ? "border-b-2 bg-[#F0F9EC]"
                       : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                   }`}
+                  style={activeTab === "documents" ? { color: "#104901", borderBottomColor: "#104901" } : {}}
                 >
                   Documents
                   {campaignDocuments.length > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-emerald-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center" style={{ backgroundColor: "#104901" }}>
                       {campaignDocuments.length}
                     </span>
                   )}
@@ -658,7 +664,7 @@ const Main = ({ campaignSlug }: MainProps) => {
                   <div>
                     {loadingUpdates ? (
                       <div className="text-center py-12">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-4" style={{ borderBottomColor: "#104901" }}></div>
                         <p className="text-gray-600">Loading updates...</p>
                       </div>
                     ) : updates.length > 0 ? (
@@ -669,7 +675,7 @@ const Main = ({ campaignSlug }: MainProps) => {
                             className="bg-gray-50 rounded-lg p-5 border border-gray-200"
                           >
                             <div className="flex items-start justify-between mb-3">
-                              <h4 className="font-semibold text-lg text-gray-900">
+                              <h4 className="font-plusjakarta text-lg text-gray-900">
                                 {update.title}
                               </h4>
                               <span className="text-sm text-gray-500">
@@ -691,7 +697,8 @@ const Main = ({ campaignSlug }: MainProps) => {
                           <div className="text-center pt-4">
                             <Button
                               onClick={() => setUpdateModalOpen(true)}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                              style={{ backgroundColor: "#104901" }}
+                              className="text-white hover:opacity-90"
                             >
                               <PlusSquare className="h-4 w-4 mr-2" />
                               Add Update
@@ -707,7 +714,8 @@ const Main = ({ campaignSlug }: MainProps) => {
                         {campaign?.canEdit && (
                           <Button
                             onClick={() => setUpdateModalOpen(true)}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                            style={{ backgroundColor: "#104901" }}
+                            className="text-white hover:opacity-90"
                           >
                             <PlusSquare className="h-4 w-4 mr-2" />
                             Add Update
@@ -730,12 +738,12 @@ const Main = ({ campaignSlug }: MainProps) => {
                             <button
                               key={index}
                               onClick={() => window.open(doc, '_blank')}
-                              className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-emerald-600 hover:bg-emerald-50/50 transition-all group"
+                              className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-[#104901] hover:bg-[#F0F9EC] transition-all group"
                             >
                               <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
                                 <svg className="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 24 24">
                                   <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
-                                </svg>
+                                  </svg>
                               </div>
                               <div className="flex-1 text-left min-w-0">
                                 <p className="text-sm font-medium text-gray-900 truncate">
@@ -745,7 +753,7 @@ const Main = ({ campaignSlug }: MainProps) => {
                                   Click to view/download
                                 </p>
                               </div>
-                              <svg className="w-5 h-5 text-gray-400 group-hover:text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-5 h-5 text-gray-400 group-hover:text-[#104901]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                               </svg>
                             </button>
@@ -789,8 +797,8 @@ const Main = ({ campaignSlug }: MainProps) => {
               <div className="mb-6">
                 <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                   <div
-                    className="bg-emerald-600 h-full transition-all duration-500 rounded-full"
-                    style={{ width: `${percent}%` }}
+                    className="h-full transition-all duration-500 rounded-full"
+                    style={{ width: `${percent}%`, backgroundColor: "#104901" }}
                   ></div>
                 </div>
                 <p className="text-sm text-gray-600 mt-2">{percent}%</p>
@@ -799,7 +807,9 @@ const Main = ({ campaignSlug }: MainProps) => {
               {/* Stats */}
               <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-200">
                 <div className="flex items-center gap-2 text-gray-700">
-                  <Users className="w-5 h-5" />
+                  <svg className="w-5 h-5" style={{ color: "#104901" }} fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                  </svg>
                   <span className="font-medium">{campaignData?.stats?.uniqueDonors}</span>
                   <span className="text-sm text-gray-600">people donated</span>
                 </div>
@@ -812,7 +822,8 @@ const Main = ({ campaignSlug }: MainProps) => {
                     {donations.slice(0, 3).map((donation, idx) => (
                       <div
                         key={donation.id}
-                        className="w-10 h-10 rounded-full border-2 border-white bg-gradient-to-br from-emerald-600 to-emerald-400 flex items-center justify-center text-white font-semibold text-sm overflow-hidden"
+                        className="w-10 h-10 rounded-full border-2 border-white flex items-center justify-center text-white font-plusjakarta text-sm overflow-hidden"
+                        style={{ background: "linear-gradient(to bottom right, #104901, #2ea853)" }}
                       >
                         {donation.donorAvatar && !donation.isAnonymous ? (
                           <Image
@@ -840,27 +851,96 @@ const Main = ({ campaignSlug }: MainProps) => {
 
               {/* Action Buttons */}
               <div className="space-y-3 mb-6">
-                <Button
+                <button
                   onClick={() => setDonateModalOpen(true)}
-                  className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-lg rounded-lg"
+                  className="font-plusjakarta flex items-center justify-center w-full"
+                  style={{
+                    height: "56px",
+                    padding: "16px 0",
+                    gap: "8px",
+                    borderRadius: "12px",
+                    backgroundColor: "#104901",
+                    color: "#FFFFFF",
+                    border: "none",
+                    cursor: "pointer",
+                    boxShadow: "0px 4px 6px -4px rgba(6, 78, 59, 0.1), 0px 10px 15px -3px rgba(6, 78, 59, 0.1)",
+                    transition: "all 0.3s ease",
+                    fontWeight: 700,
+                    fontSize: "16px",
+                    lineHeight: "24px"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#0d3a00";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#104901";
+                  }}
                 >
-                  Donate Now
-                </Button>
-                <Button
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M5 12H19M19 12L12 5M19 12L12 19"
+                      stroke="white"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <span>Donate Now</span>
+                </button>
+                <button
                   onClick={() => setShareModalOpen(true)}
-                  variant="outline"
-                  className="w-full h-12 border-2 border-gray-300 hover:border-emerald-600 hover:bg-emerald-50 text-gray-700 hover:text-emerald-600 font-semibold text-lg rounded-lg"
+                  className="font-plusjakarta flex items-center justify-center w-full"
+                  style={{
+                    height: "56px",
+                    padding: "16px 0",
+                    gap: "8px",
+                    borderRadius: "12px",
+                    backgroundColor: "transparent",
+                    color: "#104901",
+                    border: "2px solid #104901",
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                    fontWeight: 700,
+                    fontSize: "16px",
+                    lineHeight: "24px"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#F0F9EC";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                  }}
                 >
-                  <Share2 className="w-5 h-5 mr-2" />
-                  Share Campaign
-                </Button>
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M4 12a8 8 0 0 1 15.14-2.7c.5-1.25 1.68-2.2 3.09-2.2a3.3 3.3 0 0 1 3.3 3.3 3.3 3.3 0 0 1-3.3 3.3c-1.41 0-2.59-.95-3.09-2.2A8 8 0 0 1 4 12m8 4v3m0 0v2m0-2h-3m3 0h3"
+                      stroke="#104901"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <span>Share Campaign</span>
+                </button>
               </div>
 
               {/* Organizer Info */}
               <div className="pt-6 border-t border-gray-200">
                 <p className="text-sm text-gray-600 mb-3">ORGANIZER</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 flex items-center justify-center text-white font-semibold text-lg overflow-hidden">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-plusjakarta text-lg overflow-hidden" style={{ background: "linear-gradient(to bottom right, #104901, #2ea853)" }}>
                     {campaignData.creatorAvatar ? (
                       <Image
                         src={campaignData.creatorAvatar}
@@ -874,7 +954,7 @@ const Main = ({ campaignSlug }: MainProps) => {
                     )}
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900">{campaignData.creatorName}</p>
+                    <p className="font-plusjakarta text-gray-900">{campaignData.creatorName}</p>
                     <div className="flex items-center gap-1 text-sm text-gray-600">
                       <Clock className="w-3 h-3" />
                       <span>Response time: 1 day</span>
@@ -897,7 +977,7 @@ const Main = ({ campaignSlug }: MainProps) => {
           {loadingDonations ? (
             <div className="flex items-center justify-center py-12 bg-white rounded-xl border border-gray-200">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-4" style={{ borderBottomColor: "#104901" }}></div>
                 <p className="text-gray-600">Loading donations...</p>
               </div>
             </div>
@@ -906,7 +986,7 @@ const Main = ({ campaignSlug }: MainProps) => {
               {donations.slice(0, 5).map((donation) => (
                 <div key={donation.id} className="p-5 hover:bg-gray-50 transition-colors">
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 flex items-center justify-center text-white font-semibold text-lg overflow-hidden flex-shrink-0">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-plusjakarta text-lg overflow-hidden flex-shrink-0" style={{ background: "linear-gradient(to bottom right, #104901, #2ea853)" }}>
                       {donation.donorAvatar && !donation.isAnonymous ? (
                         <Image
                           src={donation.donorAvatar}
@@ -925,12 +1005,12 @@ const Main = ({ campaignSlug }: MainProps) => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-baseline gap-2 mb-1">
-                        <p className="font-semibold text-gray-900">
+                        <p className="font-plusjakarta text-gray-900">
                           {donation.isAnonymous ? "Anonymous" : donation.donorName}
                         </p>
                         <span className="text-sm text-gray-600">
                           donated{" "}
-                          <span className="font-semibold text-emerald-600">
+                          <span className="font-plusjakarta" style={{ color: "#104901" }}>
                             {formatCurrency(parseFloat(donation.amount), donation.currency)}
                           </span>
                         </span>
@@ -967,7 +1047,7 @@ const Main = ({ campaignSlug }: MainProps) => {
         <div className="mt-12">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              <MessageSquare className="w-6 h-6" />
+              <MessageSquare className="w-6 h-6" style={{ color: "#104901" }} />
               Community Words
             </h2>
           </div>
@@ -975,7 +1055,7 @@ const Main = ({ campaignSlug }: MainProps) => {
           {loadingComments ? (
             <div className="flex items-center justify-center py-12 bg-white rounded-xl border border-gray-200">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-4" style={{ borderBottomColor: "#104901" }}></div>
                 <p className="text-gray-600">Loading comments...</p>
               </div>
             </div>
@@ -985,7 +1065,7 @@ const Main = ({ campaignSlug }: MainProps) => {
                 <div key={comment.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                   <div className="p-5">
                     <div className="flex items-start gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 flex items-center justify-center text-white font-semibold text-sm overflow-hidden flex-shrink-0">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-plusjakarta text-sm overflow-hidden flex-shrink-0" style={{ background: "linear-gradient(to bottom right, #104901, #2ea853)" }}>
                         {comment.userAvatar ? (
                           <Image
                             src={comment.userAvatar}
@@ -1000,7 +1080,7 @@ const Main = ({ campaignSlug }: MainProps) => {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <p className="font-semibold text-gray-900">{comment.userName}</p>
+                          <p className="font-plusjakarta text-gray-900">{comment.userName}</p>
                           <span className="text-gray-500 text-sm">made a donation</span>
                         </div>
                         <p className="text-xs text-gray-500">
@@ -1014,15 +1094,15 @@ const Main = ({ campaignSlug }: MainProps) => {
                     </div>
                     <p className="text-gray-700 leading-relaxed mb-4">{comment.content}</p>
                     <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <button className="flex items-center gap-1 hover:text-emerald-600 transition-colors">
+                      <button className="flex items-center gap-1 hover:text-[#104901] transition-colors">
                         <Heart className="w-4 h-4" />
                         <span>Like</span>
                       </button>
-                      <button className="flex items-center gap-1 hover:text-emerald-600 transition-colors">
+                      <button className="flex items-center gap-1 hover:text-[#104901] transition-colors">
                         <MessageSquare className="w-4 h-4" />
                         <span>Comment</span>
                       </button>
-                      <button className="flex items-center gap-1 hover:text-emerald-600 transition-colors">
+                      <button className="flex items-center gap-1 hover:text-[#104901] transition-colors">
                         <Send className="w-4 h-4" />
                         <span>Share</span>
                       </button>
@@ -1034,7 +1114,8 @@ const Main = ({ campaignSlug }: MainProps) => {
                 <Button
                   onClick={() => setCommentModalOpen(true)}
                   variant="outline"
-                  className="border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50"
+                  className="border-2"
+                  style={{ borderColor: "#104901", color: "#104901" }}
                 >
                   <PlusSquare className="w-4 h-4 mr-2" />
                   Write a Comment
@@ -1049,7 +1130,8 @@ const Main = ({ campaignSlug }: MainProps) => {
               <p className="text-gray-600 text-lg mb-4">No comments yet. Be the first to cheer them on!</p>
               <Button
                 onClick={() => setCommentModalOpen(true)}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                style={{ backgroundColor: "#104901" }}
+                className="text-white hover:opacity-90"
               >
                 Write a Comment
               </Button>
