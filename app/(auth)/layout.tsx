@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import useEmblaCarousel from "embla-carousel-react";
 import ClientToaster from "@/components/ui/client-toaster";
+import Navbar from "@/components/layout/Navbar";
 
 const carouselData = [
   {
@@ -25,28 +26,34 @@ const carouselData = [
 ];
 
 // Optimized carousel slide component
-const CarouselSlide = React.memo(({ item, index, isActive }: { 
-  item: typeof carouselData[0]; 
-  index: number; 
-  isActive: boolean; 
-}) => (
-  <div className="embla__slide flex-[0_0_100%] relative min-w-0 w-full h-full overflow-hidden bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700">
-    <Image
-      src={item.image}
-      alt={`Carousel slide ${index + 1}`}
-      fill
-      sizes="50vw"
-      className="object-cover object-center opacity-80"
-      priority={index === 0} 
-      quality={75}
-      loading={index === 0 ? "eager" : "lazy"}
-    />
-    {/* Gradient overlay */}
-    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-5" />
-  </div>
-));
+const CarouselSlide = React.memo(
+  ({
+    item,
+    index,
+    isActive,
+  }: {
+    item: (typeof carouselData)[0];
+    index: number;
+    isActive: boolean;
+  }) => (
+    <div className="embla__slide flex-[0_0_100%] relative min-w-0 w-full h-full overflow-hidden bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700">
+      <Image
+        src={item.image}
+        alt={`Carousel slide ${index + 1}`}
+        fill
+        sizes="50vw"
+        className="object-cover object-center opacity-80"
+        priority={index === 0}
+        quality={75}
+        loading={index === 0 ? "eager" : "lazy"}
+      />
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-5" />
+    </div>
+  )
+);
 
-CarouselSlide.displayName = 'CarouselSlide';
+CarouselSlide.displayName = "CarouselSlide";
 
 function Carousel() {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
@@ -92,7 +99,7 @@ function Carousel() {
           ))}
         </div>
       </div>
-      
+
       {/* Bottom content overlay */}
       <div className="absolute bottom-0 left-0 right-0 text-white z-20 p-8">
         {/* Progress bars */}
@@ -113,7 +120,7 @@ function Carousel() {
             </div>
           ))}
         </div>
-        
+
         {/* Title and description */}
         <div className="flex flex-col gap-3">
           <h3 className="text-xl font-bold leading-tight">
@@ -130,21 +137,22 @@ function Carousel() {
 
 const layout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="w-screen h-screen overflow-hidden bg-gray-100 flex items-center justify-center p-6">
-      <div className="flex w-full max-w-5xl h-[600px] rounded-3xl overflow-hidden shadow-2xl">
-        {/* Left side - Form */}
-        <div className="w-full md:w-1/2 flex flex-col justify-center bg-white px-10">
-          <div className="w-full h-fit">
-            <div className="w-full flex flex-col gap-5">
-              {children}
+    <div className="h-screen bg-gray-100 flex flex-col">
+      <Navbar />
+      <div className="flex items-center justify-center md:p-6 p-3 my-auto">
+        <div className="flex w-full max-w-5xl h-[600px] rounded-3xl overflow-hidden shadow-2xl">
+          {/* Left side - Form */}
+          <div className="w-full md:w-1/2 flex flex-col justify-center bg-white md:px-10 px-2">
+            <div className="w-full h-fit">
+              <div className="w-full flex flex-col gap-5">{children}</div>
+              <ClientToaster />
             </div>
-            <ClientToaster />
           </div>
-        </div>
 
-        {/* Right side - Carousel */}
-        <div className="hidden md:flex md:w-1/2 h-full">
-          <Carousel />
+          {/* Right side - Carousel */}
+          <div className="hidden md:flex md:w-1/2 h-full">
+            <Carousel />
+          </div>
         </div>
       </div>
     </div>

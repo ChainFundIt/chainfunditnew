@@ -100,7 +100,7 @@ export function SignupForm({
 
   return (
     <form className={cn("flex flex-col w-full gap-3", className)} onSubmit={handleSubmit} {...props}>
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 text-center md:text-left">
         <div>
           <h2 className="text-xl font-bold text-gray-900 mb-0.5">
             Create your Account

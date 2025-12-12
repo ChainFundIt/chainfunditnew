@@ -6,7 +6,7 @@ import Image from "next/image";
 
 export default function SignupPage() {
   return (
-    <div className="w-full flex flex-col gap-4">
+    <div className="w-full flex flex-col md:items-start items-center gap-4 px-4">
       {/* Logo */}
       <div className="mb-2">
         <Image
@@ -19,7 +19,7 @@ export default function SignupPage() {
       </div>
 
       {/* Main Heading */}
-      <div className="mb-4">
+      <div className="mb-4 md:text-left text-center">
         <h1 className="font-bold text-2xl md:text-3xl text-gray-900 mb-2">
           Create your Account
         </h1>

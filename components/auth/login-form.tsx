@@ -171,7 +171,7 @@ export function LoginForm({
       onSubmit={handleSubmit}
       {...props}
     >
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 md:text-left text-center">
         <div>
           <h2 className="text-xl font-bold text-gray-900 mb-0.5">
             Log in to your Account.
