@@ -13,18 +13,20 @@ import { Button } from "@/components/ui/button";
 import CompleteProfile from "../complete-profile";
 import Image from "next/image";
 import { formatCurrency } from "@/lib/utils/currency";
-import {
-  ArrowRight,
-  TrendingUp,
-  Users,
-  DollarSign,
-  Share2,
-  Calendar,
-  Eye,
-} from "lucide-react";
+import { ArrowRight, TrendingUp } from "lucide-react";
 import { R2Image } from "@/components/ui/r2-image";
+import { Loader } from "@/components/ui/Loader";
 import { EmojiFallbackImage } from "@/components/ui/emoji-fallback-image";
 import { needsEmojiFallback } from "@/lib/utils/campaign-emojis";
+import Card from "./_components/Card/page";
+import CreditCardIcon from "@/public/icons/CreditCardIcon";
+import HeartBeat from "@/public/icons/HeartBeat";
+import GiftIcon from "@/public/icons/GiftIcon";
+import PeopleIcon from "@/public/icons/PeopleIcon";
+import { CampaignsIcon } from "@/public/icons/CampaignsIcon";
+import ClockIcon from "@/public/icons/ClockIcon";
+import { capitalizeFirstLetter } from "@/lib/utils/helperFunction";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DashboardStats {
   totalCampaigns: number;
@@ -58,8 +60,108 @@ interface Campaign {
   progressPercentage: number;
   donationCount: number;
   createdAt: string;
+  description: string;
+  fundraisingFor?: string;
   reason?: string; // Campaign category for emoji fallback
 }
+
+export const CampaignInfo = ({
+  imageUrl,
+  title,
+  currentAmount,
+  goalAmount,
+  currency,
+  progressDivision,
+  id,
+  reason,
+  fundRaisingFor,
+  description,
+  status,
+}: {
+  imageUrl: string;
+  title: string;
+  currentAmount: number;
+  goalAmount: number;
+  currency: string;
+  progressDivision: number;
+  id: string;
+  reason: string;
+  fundRaisingFor: string;
+  description: string;
+  status: string;
+}) => {
+  const router = useRouter();
+  const imageExist = !needsEmojiFallback(imageUrl);
+  return (
+    <div className="w-[360px] h-[400px] border border-[#F3F4F6] bg-white rounded-[14px] flex flex-col overflow-hidden">
+      <div className="relative">
+        {imageExist ? (
+          <R2Image src={imageUrl} alt={title} width={357} height={168} />
+        ) : (
+          <EmojiFallbackImage width={357} height={168} category={reason} />
+        )}
+
+        <div className="flex items-center justify-center w-[90px] h-[21px] bg-white rounded-full font-bold text-[10px] leading-[14px] text-[#104109] absolute top-[10px] left-[10px]">
+          {fundRaisingFor}
+        </div>
+
+        <div className="flex gap-1 w-fit h-[21px] px-2 bg-[#00000099] rounded-full items-center justify-center absolute right-[10px] top-[10px]">
+          <ClockIcon />
+          <div className="text-[11px] font-bold leading-[14px] text-white">
+            {capitalizeFirstLetter(status)}
+          </div>
+        </div>
+      </div>
+
+      <div className="p-[18px] flex flex-col justify-between h-full">
+        <div className="flex flex-col gap-2">
+          <div className="font-bold text-[16px] leading-[22px] text-[#111827] truncate">
+            {title}
+          </div>
+          <div className="text-[#6B7280] text-[12px] font-normal leading-[18px] line-clamp-3 text-ellipsis">
+            {description}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1">
+            <div className="flex justify-between">
+              <div className="text-[#104109] font-bold text-[12px] leading-[18px]">
+                {formatCurrency(currentAmount, currency)}
+                <span className="text-[#6b7280] font-normal text-[12px] leading-[18px]">
+                  {" "}
+                  raised
+                </span>
+              </div>
+              <div className="text-[#6b7280] font-medium text-[12px] leading-[18px]">
+                of {formatCurrency(goalAmount, currency)}
+              </div>
+            </div>
+
+            <div className="h-[8px] w-full bg-[#f3f4f6] rounded-full relative">
+              <div
+                className="h-[8px] bg-[#104109] rounded-full absolute"
+                style={{ width: `${progressDivision}%` }}
+              ></div>
+            </div>
+          </div>
+
+          <Button className="border border-[#104109] rounded-[11px] bg-white flex items-center justify-center gap-2">
+            <div
+              className="font-semibold leading-[18px] text-[12px] text-[#104109]"
+              onClick={() => {
+                router.push(`/campaign/${id}`);
+              }}
+            >
+              View Details
+            </div>
+            <TrendingUp className="text-[#104109]" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function DashboardPage() {
   const [showWelcome, setShowWelcome] = useState(false);
@@ -68,10 +170,13 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+
   const formRef = useRef<HTMLFormElement>(
     null
   ) as React.RefObject<HTMLFormElement>;
+
+  const isMobile = useIsMobile();
+  const router = useRouter();
 
   useEffect(() => {
     async function checkProfile() {
@@ -105,7 +210,7 @@ export default function DashboardPage() {
 
         // Load dashboard stats
         const statsRes = await fetch("/api/dashboard/stats");
-      
+
         const statsData = await statsRes.json();
         if (statsData.success) {
           setStats(statsData.stats);
@@ -121,16 +226,15 @@ export default function DashboardPage() {
         } else {
           console.error("Campaigns API error:", campaignsData.error);
         }
-              } catch (error) {
-         
-        } finally {
-          setLoading(false);
-        }
+        console.log(campaignsData.campaigns);
+      } catch (error) {
+      } finally {
+        setLoading(false);
+      }
     }
     loadDashboardData();
   }, [profileChecked]);
 
-  // When closing the welcome modal, mark as seen in backend
   const handleCloseWelcome = async () => {
     setShowWelcome(false);
     setShowCompleteProfile(true);
@@ -143,16 +247,88 @@ export default function DashboardPage() {
     } catch {}
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+  const calculateTimeDifference = (date: Date) => {
+    const now = new Date();
+    const diff = (now.getTime() - date.getTime()) / 1000; // difference in seconds
+
+    const seconds = Math.floor(diff);
+    const minutes = Math.floor(diff / 60);
+    const hours = Math.floor(diff / 3600);
+    const days = Math.floor(diff / 86400);
+    const months = Math.floor(diff / 2592000); // 30 days approx
+    const years = Math.floor(diff / 31536000); // 365 days
+
+    if (seconds < 60) return `${seconds}s ago`;
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days < 30) return `${days}d ago`;
+    if (months < 12) return `${months}mo ago`;
+    return `${years}y ago`;
+  };
+
+  const DonorInfo = (
+    name: string,
+    title: string,
+    imageUrl: string,
+    amount: string,
+    time: any
+  ) => {
+    const date = new Date(time);
+    return (
+      <div className="flex gap-[14px] items-center">
+        <div className="relative border-2 border-white">
+          {imageUrl ? (
+            <Image
+              src={imageUrl}
+              alt={name}
+              width={35}
+              height={35}
+              className="rounded-full"
+            />
+          ) : (
+            <div className="w-[35px] h-[35px] flex items-center justify-center rounded-full border border-[var(--color-darkGreen)">
+              <span className="text-[var(--color-darkGreen)] font-bold text-lg">
+                {name.charAt(0).toUpperCase()}
+              </span>
+            </div>
+          )}
+
+          <div className="absolute right-[-2px] bottom-[-4px] p-[1px] bg-white rounded-full">
+            <CampaignsIcon
+              color="var(--color-darkGreen)"
+              width="10px"
+              height="10px"
+            />
+          </div>
+        </div>
+
+        {/* Donor Info */}
+        <div className="flex flex-col w-[175px]">
+          <div className="truncate text-[12px] font-bold leading-[17.5px]">
+            {name}
+          </div>
+
+          <div className="truncate text-[10.5px] leading-[14px] font-normal text-[#6B7280]">
+            {title}
+          </div>
+        </div>
+
+        {/* Amount + Time */}
+        <div className="flex flex-col text-right">
+          <div className="truncate text-[12px] font-bold leading-[17.5px] text-[var(--color-darkGreen)]">
+            +{amount}
+          </div>
+
+          <div className="truncate text-[10.5px] leading-[14px] font-normal text-[#6B7280]">
+            {calculateTimeDifference(date)}
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
-    <div className="w-full 2xl:container 2xl:mx-auto p-6 h-fit bg-gradient-to-br from-green-50 via-white to-green-50 min-h-screen">
+    <>
       {/* Welcome Modal */}
       <Dialog open={showWelcome} onOpenChange={setShowWelcome}>
         <DialogContent className='w-[80%] max-w-md md:max-w-xl bg-[url("/images/heart.jpg")] bg-cover h-[400px] md:h-[600px] px-4 md:px-10 bg-no-repeat rounded-none outline-none font-source'>
@@ -180,11 +356,11 @@ export default function DashboardPage() {
           </DialogHeader>
           <DialogFooter className="flex items-end">
             <Button
-              className="w-full h-14 md:h-[72px] font-sans font-semibold text-lg md:text-2xl flex justify-between items-center"
+              className="w-full h-14 md:h-[72px] font-sans font-semibold text-lg md:text-2xl flex justify-between items-center rounded-3xl"
               onClick={handleCloseWelcome}
             >
               Complete your profile
-              <ArrowRight />
+              <ArrowRight size={20}/>
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -203,8 +379,8 @@ export default function DashboardPage() {
             </p>
           </DialogHeader>
           <div className="py-4 md:py-5">
-            <CompleteProfile 
-              formRef={formRef} 
+            <CompleteProfile
+              formRef={formRef}
               onSuccess={() => setShowCompleteProfile(false)}
             />
           </div>
@@ -213,302 +389,205 @@ export default function DashboardPage() {
               onClick={() => {
                 formRef.current?.requestSubmit();
               }}
-              className="w-full h-14 md:h-[72px] flex justify-between items-center font-semibold text-lg md:text-2xl"
+              className="w-full h-14 md:h-[72px] flex justify-between items-center font-semibold text-lg md:text-2xl rounded-3xl"
             >
               Here we go! <ArrowRight size={20} className="md:w-6 md:h-6" />
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Dashboard Content */}
-      <div className="space-y-8">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-brand-green-dark mb-2">Dashboard</h1>
-          <p className="text-brand-green-dark">
-            Welcome back! Here&apos;s what&apos;s happening with your campaigns.
-          </p>
-        </div>
-
-        {/* Stats Cards */}
-        {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="group relative">
-              <div className="relative bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-brand-green-dark opacity-80">
-                      Total Campaigns
-                    </p>
-                    <p className="text-2xl font-bold text-brand-green-dark">
-                      {stats.totalCampaigns}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-gradient-to-br from-brand-green-light to-brand-green-dark rounded-xl">
-                    <TrendingUp className="h-6 w-6 text-white" />
-                  </div>
-                </div>
+      <div className="bg-[#F0F7Ef] p-6 font-jakarta md:min-h-[calc(100vh-122px)] ">
+        <div className="flex flex-col gap-7">
+          {/* Dashboard Heading */}
+          <div className="flex md:flex-row flex-col md:justify-between md:items-center gap-5">
+            <div className="flex flex-col">
+              <div className="text-[var(--color-darkGreen)] text-[26px] font-extrabold leading-[31.5px]">
+                Dashboard
+              </div>
+              <div className="text-[#6B7280] text-[14px] font-medium leading-[21px]">
+                Welcome back! Here's what's happening with your campaigns.
               </div>
             </div>
 
-            <div className="group relative">
-              <div className="relative bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-brand-green-dark opacity-80">
-                      Active Campaigns
-                    </p>
-                    <p className="text-2xl font-bold text-brand-green-dark">
-                      {stats.activeCampaigns}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-gradient-to-br from-brand-green-light to-brand-green-dark rounded-xl">
-                    <Calendar className="h-6 w-6 text-white" />
-                  </div>
-                </div>
-              </div>
-            </div>
+            <Button
+              onClick={() => {
+                router.push("/dashboard/campaigns/create-campaign");
+              }}
+              className="bg-[var(--color-darkGreen)] text-[14px] leading-[21px] font-bold rounded-[10.5px] flex
+                       items-center justify-center py-3 h-auto md:w-fit w-full"
+            >
+              <div> Create Campaign</div>
 
-            <div className="group relative">
-              <div className="relative bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-brand-green-dark opacity-80">
-                      Total Donations
-                    </p>
-                    <p className="text-sm font-bold text-brand-green-dark">
-                      {formatCurrency(stats.totalDonations, stats.primaryCurrency)}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-gradient-to-br from-brand-green-dark to-brand-green-light rounded-xl">
-                    <DollarSign className="h-6 w-6 text-white" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="group relative">
-              <div className="relative bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-brand-green-dark opacity-80">
-                      Total Donors
-                    </p>
-                    <p className="text-2xl font-bold text-brand-green-dark">
-                      {stats.totalDonors}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-gradient-to-br from-brand-green-light to-brand-green-dark rounded-xl">
-                    <Users className="h-6 w-6 text-white" />
-                  </div>
-                </div>
-              </div>
-            </div>
+              <ArrowRight height={18} width={18} />
+            </Button>
           </div>
-        )}
+          <div className="flex md:flex-row flex-col gap-6 flex-wrap">
+            <div className="flex flex-col gap-6 md:mr-16">
+              {/* Cards */}
+              <div className="flex gap-5 md:flex-row flex-col">
+                <Card
+                  containerStyle={isMobile ? { width: "100%" } : {}}
+                  bgColor="#104109"
+                  value={stats?.totalCampaigns || 0}
+                  text="TOTAL CAMPAIGNS"
+                  Icon={CreditCardIcon}
+                />
+                <Card
+                  containerStyle={isMobile ? { width: "100%" } : {}}
+                  bgColor="var(--color-lightGreen)"
+                  value={stats?.activeCampaigns || 0}
+                  text="ACTIVE CAMPAIGNS"
+                  Icon={HeartBeat}
+                />
+                <Card
+                  containerStyle={isMobile ? { width: "100%" } : {}}
+                  bgColor="#104109"
+                  value={stats?.totalDonors || 0}
+                  text="TOTAL DONORS"
+                  Icon={PeopleIcon}
+                />
+                <Card
+                  containerStyle={isMobile ? { width: "100%" } : {}}
+                  bgColor="var(--color-lightGreen)"
+                  value={formatCurrency(
+                    stats?.totalDonations || 0,
+                    stats?.primaryCurrency || "GBP"
+                  )}
+                  text="TOTAL DONATION"
+                  Icon={GiftIcon}
+                />
+              </div>
 
-        {/* Recent Campaigns */}
-        <div className="relative">
-          <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20">
-            <div className="p-8 border-b border-white/20">
+              {/* ACTIVE CAMPAIGNS  */}
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-brand-green-dark">
-                  Recent Campaigns
-                </h2>
+                {/* Your Active Campaigns*/}
+                <div className="flex flex-col gap-5 w-full">
+                  <div className="flex justify-between items-center">
+                    <div className="flex flex-col">
+                      <div className="text-[#111827] text-[18px] font-bold leading-[25px]">
+                        Your Active Campaigns
+                      </div>
+                    </div>
+
+                    <div
+                      className="flex gap-1 items-center cursor-pointer"
+                      onClick={() => {
+                        router.push("/dashboard/campaigns");
+                      }}
+                    >
+                      <div className="text-[13px] font-bold leading-[17px] text-[#104109]">
+                        View All Campaigns
+                      </div>
+                      <ArrowRight height={18} width={18} />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-6 md:flex-row flex-col items-center md:w-fit w-full">
+                    {loading && (
+                      <div className="md:w-[720px] w-full h-[400px] flex items-center justify-center gap-4">
+                        <Loader color="#104109" />
+                        <div
+                          style={{
+                            fontSize: "28px",
+                            lineHeight: "20px",
+                            fontWeight: "700",
+                            color: "#104109",
+                          }}
+                        >
+                          Loading Campaigns ...
+                        </div>
+                      </div>
+                    )}
+                    {!loading &&
+                      campaigns.slice(0, 2).map((data) => {
+                        return (
+                          <div key={data.id}>
+                            <CampaignInfo
+                              imageUrl={data.coverImageUrl}
+                              title={data.title}
+                              currentAmount={data.currentAmount}
+                              goalAmount={data.goalAmount}
+                              currency={data.currency}
+                              progressDivision={data.progressPercentage}
+                              reason={data.reason || "Uncategorized"}
+                              id={data.slug}
+                              description={data.description}
+                              status={data.status}
+                              fundRaisingFor={data.fundraisingFor || "Charity"}
+                            />
+                          </div>
+                        );
+                      })}
+
+                    {/* ===== Dotted Campaign Card ===== */}
+                    <div
+                      className="w-[360px] h-[400px] border-dashed border-2 border-[#e5e7eb] rounded-[14px] flex flex-col bg-transparent items-center justify-center cursor-pointer"
+                      onClick={() => {
+                        router.push("/dashboard/campaigns/create-campaign");
+                      }}
+                    >
+                      <div className="flex flex-col items-center justify-center gap-4 w-[200px]">
+                        <div className="bg-[#f0fdf4] rounded-full flex items-center justify-center w-[56px] h-[56px] shadow-[0_1px_2px_0_#00000080]">
+                          <HeartBeat
+                            width="32px"
+                            height="32px"
+                            color="#104109"
+                          />
+                        </div>
+
+                        <div className="font-bold text-[16px] leading-[25px] text-[#111827]">
+                          Start New Campaign
+                        </div>
+
+                        <div className="text-[#6b7280] font-normal leading-[18px] text-[12px] text-center">
+                          Launch a new fundraiser and start making an impact
+                          today
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-center pb-8 ">
+              {/* Recent Donations */}
+              <div className="w-[354px] h-[424px] flex flex-col gap-5 border border-[#F3F4F6] bg-white p-[28px] rounded-[21px] ">
+                <div className="text-[18px] leading-[24px] font-bold text-[#111827]">
+                  Recent Donations
+                </div>
+
+                {stats &&
+                  (stats.recentDonations.length > 0 ? (
+                    stats.recentDonations
+                      .slice(0, 5)
+                      .map((data) =>
+                        DonorInfo(
+                          data.donorName,
+                          data.campaignTitle,
+                          data.donorAvatar || "",
+                          formatCurrency(data.amount, data.currency),
+                          data.createdAt
+                        )
+                      )
+                  ) : (
+                    <div className="flex items-center text-[#111827] h-full justify-center text-[24px] font-bold leading-[14px]">
+                      No Donations Yet
+                    </div>
+                  ))}
+
                 <Button
-                  variant="outline"
-                  onClick={() => router.push("/dashboard/campaigns")}
-                  className="text-brand-green-dark border-brand-green-dark hover:bg-brand-green-dark hover:text-white rounded-xl px-6 py-2"
+                  className="bg-white border border-[#E5E7EB] rounded-[10.5px] font-bold text-[12px] leading-[18px] text-[#4b5563] mt-auto "
+                  onClick={() => {
+                    router.push("/dashboard/donations");
+                  }}
                 >
-                  View All
+                  View All Transactions
                 </Button>
               </div>
             </div>
-            <div className="p-8">
-              {loading ? (
-                <div className="flex items-center justify-center py-16">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green-dark mx-auto mb-4"></div>
-                    <p className="text-lg text-[#757575]">Loading campaigns...</p>
-                  </div>
-                </div>
-              ) : campaigns.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {campaigns.slice(0, 3).map((campaign) => (
-                    <div
-                      key={campaign.id}
-                      className="group relative overflow-hidden rounded-2xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
-                    >
-                      <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl overflow-hidden">
-                        <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200">
-                          {needsEmojiFallback(campaign.coverImageUrl) || !campaign.coverImageUrl ? (
-                            <EmojiFallbackImage
-                              category={campaign.reason || 'Uncategorized'}
-                              title={campaign.title}
-                              fill
-                              className="group-hover:scale-110 transition-transform duration-500"
-                            />
-                          ) : (
-                            <R2Image
-                              src={campaign.coverImageUrl}
-                              alt={campaign.title}
-                              fill
-                              className="object-cover group-hover:scale-110 transition-transform duration-500"
-                            />
-                          )}
-                        </div>
-                        <div className="p-6">
-                          <h3 className="font-bold text-brand-green-dark mb-3 text-lg">
-                            {campaign.title.slice(0, 40)}...
-                          </h3>
-                          <div className="space-y-3">
-                            <div className="flex justify-between text-sm">
-                              <span className="text-brand-green-dark opacity-80">Raised</span>
-                              <span className="font-semibold">
-                                {formatCurrency(
-                                  campaign.currentAmount,
-                                  campaign.currency
-                                )}
-                              </span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                              <span className="text-brand-green-dark opacity-80">Goal</span>
-                              <span className="font-semibold">
-                                {formatCurrency(
-                                  campaign.goalAmount,
-                                  campaign.currency
-                                )}
-                              </span>
-                            </div>
-                            <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                              <div
-                                className="bg-gradient-to-r from-brand-green-dark to-brand-green-light h-3 rounded-full transition-all duration-500"
-                                style={{ width: `${campaign.progressPercentage}%` }}
-                              ></div>
-                            </div>
-                            <div className="flex justify-between text-xs text-gray-500">
-                              <span>{campaign.progressPercentage}% complete</span>
-                              <span>{campaign.donationCount} donors</span>
-                            </div>
-                          </div>
-                          <Button
-                            variant="outline"
-                            className="w-full mt-6 text-brand-green-dark border-brand-green-dark hover:bg-brand-green-dark hover:text-white rounded-xl py-3 transition-all duration-300"
-                            onClick={() => router.push(`/campaign/${campaign.slug}`)}
-                          >
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Campaign
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-16">
-                  <div className="relative inline-block">
-                    <div className="relative bg-white/80 backdrop-blur-sm p-6 rounded-full">
-                      <Share2 className="h-16 w-16 text-brand-green-dark mx-auto" />
-                    </div>
-                  </div>
-                  <h3 className="text-xl font-bold text-brand-green-dark mb-3 mt-6">
-                    No campaigns yet
-                  </h3>
-                  <p className="text-brand-green-dark mb-6 opacity-80">
-                    Start your first fundraising campaign to make a difference.
-                  </p>
-                  <Button
-                    onClick={() => router.push("/create-campaign")}
-                    className="bg-gradient-to-r from-green-600 to-[#104901] text-white rounded-xl px-8 py-3 hover:shadow-lg hover:from-green-600 hover:to-[#104901] hover:text-white transition-all duration-300"
-                  >
-                    Create Campaign
-                  </Button>
-                </div>
-              )}
-            </div>
           </div>
         </div>
-
-        {/* Recent Donations */}
-        {stats && stats.recentDonations.length > 0 && (
-          <div className="relative">
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20">
-              <div className="p-8 border-b border-white/20">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-[#104901]">
-                    Recent Donations
-                  </h2>
-                  <Button
-                    variant="outline"
-                    onClick={() => router.push("/donations")}
-                    className="text-[#104901] border-[#104901] hover:bg-[#104901] hover:text-white rounded-xl px-6 py-2"
-                  >
-                    View All
-                  </Button>
-                </div>
-              </div>
-              <div className="p-8">
-                <div className="space-y-6">
-                  {stats.recentDonations.map((donation) => (
-                    <div
-                      key={donation.id}
-                      className="group relative overflow-hidden rounded-2xl hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-                    >
-                      <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
-                            <div className="relative">
-                              <div className="relative w-12 h-12 rounded-full overflow-hidden">
-                                {donation.donorAvatar ? (
-                                  <Image
-                                    src={donation.donorAvatar}
-                                    alt={donation.donorName}
-                                    width={48}
-                                    height={48}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full bg-gradient-to-r from-green-600 to-[#104901] flex items-center justify-center">
-                                    <span className="text-white font-bold text-lg">
-                                      {donation.donorName.charAt(0).toUpperCase()}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                            <div>
-                              <p className="font-bold text-[#104901] text-lg">
-                                {donation.donorName}
-                              </p>
-                              <p className="text-sm text-[#104901] opacity-80">
-                                {donation.campaignTitle}
-                              </p>
-                              {donation.message && (
-                                <p className="text-sm text-gray-600 mt-2 italic">
-                                  &quot;{donation.message}&quot;
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-bold text-[#104901] text-lg">
-                              {formatCurrency(donation.amount, donation.currency)}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              {formatDate(donation.createdAt)}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
-    </div>
+    </>
   );
 }

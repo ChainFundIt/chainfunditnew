@@ -46,6 +46,7 @@ import { useAccountManagement } from "@/hooks/use-account-management";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { Loader } from "@/components/ui/Loader";
 
 type Props = {};
 
@@ -78,7 +79,8 @@ const Payments = (props: Props) => {
     accountName: "",
   });
 
-  const [internationalAccountDetails, setInternationalAccountDetails] = useState<any>(null);
+  const [internationalAccountDetails, setInternationalAccountDetails] =
+    useState<any>(null);
   const [loadingInternational, setLoadingInternational] = useState(false);
   const [savingInternational, setSavingInternational] = useState(false);
 
@@ -137,16 +139,15 @@ const Payments = (props: Props) => {
   // Refresh account details when page becomes visible (user returns to tab)
   React.useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && !loading) {
-       
+      if (document.visibilityState === "visible" && !loading) {
         refetch();
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
@@ -243,18 +244,28 @@ const Payments = (props: Props) => {
     e.preventDefault();
 
     // Validate required fields based on country
-    if (!internationalFormData.accountNumber || !internationalFormData.country || !internationalFormData.accountName) {
+    if (
+      !internationalFormData.accountNumber ||
+      !internationalFormData.country ||
+      !internationalFormData.accountName
+    ) {
       toast.error("Please fill in all required fields");
       return;
     }
 
     // Country-specific validation
-    if (internationalFormData.country === "US" && !internationalFormData.routingNumber) {
+    if (
+      internationalFormData.country === "US" &&
+      !internationalFormData.routingNumber
+    ) {
       toast.error("Routing number is required for US accounts");
       return;
     }
 
-    if (internationalFormData.country === "GB" && !internationalFormData.sortCode) {
+    if (
+      internationalFormData.country === "GB" &&
+      !internationalFormData.sortCode
+    ) {
       toast.error("Sort code is required for UK accounts");
       return;
     }
@@ -282,17 +293,21 @@ const Payments = (props: Props) => {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || "Failed to save international bank account");
+        throw new Error(
+          result.error || "Failed to save international bank account"
+        );
       }
 
       toast.success("International bank account saved successfully!");
       setInternationalAccountDetails(result.data);
-      
+
       // Refresh the page data
       window.location.reload();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to save international bank account"
+        error instanceof Error
+          ? error.message
+          : "Failed to save international bank account"
       );
     } finally {
       setSavingInternational(false);
@@ -301,15 +316,17 @@ const Payments = (props: Props) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#104901]"></div>
-        <p className="ml-4 text-[#104901]">Loading account details...</p>
+      <div className=" flex pt-5 justify-center ">
+        <div className="text-[#104901] font-extrabold text-xl flex items-center gap-2">
+          <Loader size="medium" />
+          Loading account details...
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="2xl:container 2xl:mx-auto space-y-8">
+    <div className=" bg-white p-5 flex flex-col gap-8 font-jakarta">
       <div>
         <h4 className="font-semibold text-3xl text-[#104901] mb-2">
           Payment Settings
@@ -321,9 +338,9 @@ const Payments = (props: Props) => {
       </div>
 
       {error && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" className="flex items-center">
           <XCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription className="mb-0 mt-1 ">{error}</AlertDescription>
         </Alert>
       )}
 
@@ -362,26 +379,32 @@ const Payments = (props: Props) => {
               </div>
             )}
 
-            {!accountDetails.accountLocked && accountDetails.accountVerified && !accountDetails.accountChangeRequested && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <div className="flex items-start gap-3">
-                  <Unlock className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="font-medium text-green-900">
-                        Account Unlocked
-                      </span>
-                      <Badge variant="outline" className="bg-green-100 text-green-700">
-                        Ready for Changes
-                      </Badge>
+            {!accountDetails.accountLocked &&
+              accountDetails.accountVerified &&
+              !accountDetails.accountChangeRequested && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <Unlock className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="font-medium text-green-900">
+                          Account Unlocked
+                        </span>
+                        <Badge
+                          variant="outline"
+                          className="bg-green-100 text-green-700"
+                        >
+                          Ready for Changes
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-green-800">
+                        Your account has been unlocked. You can now update your
+                        bank account details if needed.
+                      </p>
                     </div>
-                    <p className="text-sm text-green-800">
-                      Your account has been unlocked. You can now update your bank account details if needed.
-                    </p>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {accountDetails.accountChangeRequested && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -392,17 +415,23 @@ const Payments = (props: Props) => {
                       <span className="font-medium text-blue-900">
                         Change Request Pending
                       </span>
-                      <Badge variant="outline" className="bg-blue-100 text-blue-700">
+                      <Badge
+                        variant="outline"
+                        className="bg-blue-100 text-blue-700"
+                      >
                         Under Review
                       </Badge>
                     </div>
                     <p className="text-sm text-blue-800 mb-2">
-                      Your request to change your bank account details is being reviewed by our admin team. 
-                      You will receive an email notification once a decision has been made.
+                      Your request to change your bank account details is being
+                      reviewed by our admin team. You will receive an email
+                      notification once a decision has been made.
                     </p>
                     {accountDetails.accountChangeReason && (
                       <div className="bg-white bg-opacity-50 rounded p-3 mt-2">
-                        <p className="text-xs font-medium text-blue-900 mb-1">Your Request Reason:</p>
+                        <p className="text-xs font-medium text-blue-900 mb-1">
+                          Your Request Reason:
+                        </p>
                         <p className="text-xs text-blue-700 whitespace-pre-wrap">
                           {accountDetails.accountChangeReason}
                         </p>
@@ -491,7 +520,7 @@ const Payments = (props: Props) => {
             {accountDetails.accountLocked && (
               <Alert>
                 <Lock className="h-4 w-4" />
-                <AlertDescription>
+                <AlertDescription className="mt-1">
                   Your account details are locked and cannot be changed. If you
                   need to update your account details, please contact our admin
                   team.
@@ -504,13 +533,15 @@ const Payments = (props: Props) => {
 
       {/* Account Verification Form */}
       {/* Show form if account is not verified OR if account is unlocked (after approval) */}
-      {(!accountDetails?.accountVerified || (accountDetails?.accountVerified && !accountDetails?.accountLocked)) && (
+      {(!accountDetails?.accountVerified ||
+        (accountDetails?.accountVerified &&
+          !accountDetails?.accountLocked)) && (
         <Card className="border-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-[#104901]">
               <Shield className="h-5 w-5" />
-              {accountDetails?.accountVerified && !accountDetails?.accountLocked 
-                ? "Update Bank Account" 
+              {accountDetails?.accountVerified && !accountDetails?.accountLocked
+                ? "Update Bank Account"
                 : "Verify Bank Account"}
             </CardTitle>
             <CardDescription>
@@ -569,17 +600,20 @@ const Payments = (props: Props) => {
                 </div>
               </div>
 
-              {accountDetails?.accountVerified && !accountDetails?.accountLocked ? (
+              {accountDetails?.accountVerified &&
+              !accountDetails?.accountLocked ? (
                 <Alert>
                   <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    <strong>Important:</strong> After updating your account details, they will be verified and locked again for security. Please ensure the new details are correct.
+                  <AlertDescription className="mt-1">
+                    <strong>Important:</strong> After updating your account
+                    details, they will be verified and locked again for
+                    security. Please ensure the new details are correct.
                   </AlertDescription>
                 </Alert>
               ) : (
                 <Alert>
                   <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
+                  <AlertDescription className="mt-1">
                     <strong>Important:</strong> Once verified, your account
                     details will be locked and cannot be changed without
                     contacting our admin team. Please ensure the details are
@@ -593,20 +627,22 @@ const Payments = (props: Props) => {
                 disabled={
                   verifying || !formData.accountNumber || !formData.bankCode
                 }
-                className="w-full h-12 text-lg font-semibold"
+                className="w-full h-12 text-lg font-semibold rounded-2xl"
               >
                 {verifying ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                    {accountDetails?.accountVerified && !accountDetails?.accountLocked 
-                      ? "Updating Account..." 
+                    {accountDetails?.accountVerified &&
+                    !accountDetails?.accountLocked
+                      ? "Updating Account..."
                       : "Verifying Account..."}
                   </>
                 ) : (
                   <>
                     <Shield className="h-5 w-5 mr-2" />
-                    {accountDetails?.accountVerified && !accountDetails?.accountLocked 
-                      ? "Update Account" 
+                    {accountDetails?.accountVerified &&
+                    !accountDetails?.accountLocked
+                      ? "Update Account"
                       : "Verify Account"}
                   </>
                 )}
@@ -635,7 +671,7 @@ const Payments = (props: Props) => {
               <div className="space-y-4">
                 <Alert className="flex items-center gap-2">
                   <Lock className="h-4 w-4" />
-                  <AlertDescription>
+                  <AlertDescription className="mt-1">
                     Your account details are locked. To change them, you need to
                     submit a request to our admin team.
                   </AlertDescription>
@@ -643,7 +679,7 @@ const Payments = (props: Props) => {
 
                 <Button
                   onClick={() => setShowChangeRequest(true)}
-                  className="h-12 text-lg font-semibold"
+                  className="h-12 text-lg font-semibold rounded-2xl"
                 >
                   <Mail className="h-5 w-5 mr-2" />
                   Request Account Change
@@ -680,14 +716,14 @@ const Payments = (props: Props) => {
                       setShowChangeRequest(false);
                       setChangeRequestReason("");
                     }}
-                    className="flex-1 h-12 text-lg"
+                    className="flex-1 h-12 text-lg rounded-2xl hover:bg-white"
                   >
                     Cancel
                   </Button>
                   <Button
                     type="submit"
                     disabled={changeRequestReason.trim().length < 10}
-                    className="flex-1 h-12 text-lg font-semibold"
+                    className="flex-1 h-12 text-lg font-semibold rounded-2xl"
                   >
                     <Mail className="h-5 w-5 mr-2" />
                     Submit Request
@@ -707,7 +743,8 @@ const Payments = (props: Props) => {
             International Bank Account
           </CardTitle>
           <CardDescription>
-            Add your international bank account details to receive payouts in foreign currencies (USD, EUR, GBP, etc.)
+            Add your international bank account details to receive payouts in
+            foreign currencies (USD, EUR, GBP, etc.)
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -719,69 +756,109 @@ const Payments = (props: Props) => {
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-4">
                 <CheckCircle className="h-5 w-5 text-green-600" />
-                <span className="font-medium text-green-600">International Account Verified</span>
+                <span className="font-medium text-green-600">
+                  International Account Verified
+                </span>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-sm font-medium text-gray-600">Account Name</Label>
+                  <Label className="text-sm font-medium text-gray-600">
+                    Account Name
+                  </Label>
                   <div className="flex items-center gap-2 mt-1">
                     <User className="h-4 w-4 text-gray-400" />
-                    <span className="text-lg">{internationalAccountDetails.internationalAccountName}</span>
+                    <span className="text-lg">
+                      {internationalAccountDetails.internationalAccountName}
+                    </span>
                   </div>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-gray-600">Account Number</Label>
+                  <Label className="text-sm font-medium text-gray-600">
+                    Account Number
+                  </Label>
                   <div className="flex items-center gap-2 mt-1">
                     <CreditCard className="h-4 w-4 text-gray-400" />
-                    <span className="font-mono text-lg">{internationalAccountDetails.internationalBankAccountNumber}</span>
+                    <span className="font-mono text-lg">
+                      {
+                        internationalAccountDetails.internationalBankAccountNumber
+                      }
+                    </span>
                   </div>
                 </div>
                 {internationalAccountDetails.internationalBankRoutingNumber && (
                   <div>
-                    <Label className="text-sm font-medium text-gray-600">Routing Number</Label>
+                    <Label className="text-sm font-medium text-gray-600">
+                      Routing Number
+                    </Label>
                     <div className="flex items-center gap-2 mt-1">
                       <Building2 className="h-4 w-4 text-gray-400" />
-                      <span className="font-mono text-lg">{internationalAccountDetails.internationalBankRoutingNumber}</span>
+                      <span className="font-mono text-lg">
+                        {
+                          internationalAccountDetails.internationalBankRoutingNumber
+                        }
+                      </span>
                     </div>
                   </div>
                 )}
                 {internationalAccountDetails.internationalBankSwiftBic && (
                   <div>
-                    <Label className="text-sm font-medium text-gray-600">SWIFT/BIC</Label>
+                    <Label className="text-sm font-medium text-gray-600">
+                      SWIFT/BIC
+                    </Label>
                     <div className="flex items-center gap-2 mt-1">
                       <Globe className="h-4 w-4 text-gray-400" />
-                      <span className="font-mono text-lg">{internationalAccountDetails.internationalBankSwiftBic}</span>
+                      <span className="font-mono text-lg">
+                        {internationalAccountDetails.internationalBankSwiftBic}
+                      </span>
                     </div>
                   </div>
                 )}
                 <div>
-                  <Label className="text-sm font-medium text-gray-600">Bank Name</Label>
+                  <Label className="text-sm font-medium text-gray-600">
+                    Bank Name
+                  </Label>
                   <div className="flex items-center gap-2 mt-1">
                     <Building2 className="h-4 w-4 text-gray-400" />
-                    <span className="text-lg">{internationalAccountDetails.internationalBankName || "N/A"}</span>
+                    <span className="text-lg">
+                      {internationalAccountDetails.internationalBankName ||
+                        "N/A"}
+                    </span>
                   </div>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-gray-600">Country</Label>
+                  <Label className="text-sm font-medium text-gray-600">
+                    Country
+                  </Label>
                   <div className="flex items-center gap-2 mt-1">
                     <Globe className="h-4 w-4 text-gray-400" />
-                    <span className="text-lg">{internationalAccountDetails.internationalBankCountry}</span>
+                    <span className="text-lg">
+                      {internationalAccountDetails.internationalBankCountry}
+                    </span>
                   </div>
                 </div>
               </div>
 
               {internationalAccountDetails.internationalAccountVerificationDate && (
                 <p className="text-sm text-gray-600">
-                  Verified on: {new Date(internationalAccountDetails.internationalAccountVerificationDate).toLocaleDateString()}
+                  Verified on:{" "}
+                  {new Date(
+                    internationalAccountDetails.internationalAccountVerificationDate
+                  ).toLocaleDateString()}
                 </p>
               )}
             </div>
           ) : (
-            <form onSubmit={handleSaveInternationalAccount} className="space-y-6">
+            <form
+              onSubmit={handleSaveInternationalAccount}
+              className="space-y-6"
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="country" className="text-lg font-medium text-[#104901]">
+                  <Label
+                    htmlFor="country"
+                    className="text-lg font-medium text-[#104901]"
+                  >
                     Country <span className="text-red-500">*</span>
                   </Label>
                   <Select
@@ -789,8 +866,10 @@ const Payments = (props: Props) => {
                     onValueChange={(value) => {
                       handleInternationalInputChange("country", value);
                       // Clear country-specific fields when country changes
-                      if (value !== "US") handleInternationalInputChange("routingNumber", "");
-                      if (value !== "GB") handleInternationalInputChange("sortCode", "");
+                      if (value !== "US")
+                        handleInternationalInputChange("routingNumber", "");
+                      if (value !== "GB")
+                        handleInternationalInputChange("sortCode", "");
                     }}
                   >
                     <SelectTrigger className="h-12">
@@ -821,7 +900,10 @@ const Payments = (props: Props) => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="accountName" className="text-lg font-medium text-[#104901]">
+                  <Label
+                    htmlFor="accountName"
+                    className="text-lg font-medium text-[#104901]"
+                  >
                     Account Holder Name <span className="text-red-500">*</span>
                   </Label>
                   <Input
@@ -829,14 +911,22 @@ const Payments = (props: Props) => {
                     type="text"
                     placeholder="Enter account holder name"
                     value={internationalFormData.accountName}
-                    onChange={(e) => handleInternationalInputChange("accountName", e.target.value)}
+                    onChange={(e) =>
+                      handleInternationalInputChange(
+                        "accountName",
+                        e.target.value
+                      )
+                    }
                     className="h-12 text-lg"
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="bankName" className="text-lg font-medium text-[#104901]">
+                  <Label
+                    htmlFor="bankName"
+                    className="text-lg font-medium text-[#104901]"
+                  >
                     Bank Name
                   </Label>
                   <Input
@@ -844,7 +934,9 @@ const Payments = (props: Props) => {
                     type="text"
                     placeholder="e.g., Sterling Bank UK, Citi Bank US"
                     value={internationalFormData.bankName}
-                    onChange={(e) => handleInternationalInputChange("bankName", e.target.value)}
+                    onChange={(e) =>
+                      handleInternationalInputChange("bankName", e.target.value)
+                    }
                     className="h-12 text-lg"
                   />
                 </div>
@@ -852,7 +944,10 @@ const Payments = (props: Props) => {
                 {internationalFormData.country === "US" && (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="routingNumber" className="text-lg font-medium text-[#104901]">
+                      <Label
+                        htmlFor="routingNumber"
+                        className="text-lg font-medium text-[#104901]"
+                      >
                         Routing Number <span className="text-red-500">*</span>
                       </Label>
                       <Input
@@ -860,14 +955,22 @@ const Payments = (props: Props) => {
                         type="text"
                         placeholder="9-digit routing number"
                         value={internationalFormData.routingNumber}
-                        onChange={(e) => handleInternationalInputChange("routingNumber", e.target.value)}
+                        onChange={(e) =>
+                          handleInternationalInputChange(
+                            "routingNumber",
+                            e.target.value
+                          )
+                        }
                         className="h-12 text-lg"
                         maxLength={9}
                         required
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="accountNumber" className="text-lg font-medium text-[#104901]">
+                      <Label
+                        htmlFor="accountNumber"
+                        className="text-lg font-medium text-[#104901]"
+                      >
                         Account Number <span className="text-red-500">*</span>
                       </Label>
                       <Input
@@ -875,7 +978,12 @@ const Payments = (props: Props) => {
                         type="text"
                         placeholder="Enter account number"
                         value={internationalFormData.accountNumber}
-                        onChange={(e) => handleInternationalInputChange("accountNumber", e.target.value)}
+                        onChange={(e) =>
+                          handleInternationalInputChange(
+                            "accountNumber",
+                            e.target.value
+                          )
+                        }
                         className="h-12 text-lg"
                         required
                       />
@@ -886,7 +994,10 @@ const Payments = (props: Props) => {
                 {internationalFormData.country === "GB" && (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="sortCode" className="text-lg font-medium text-[#104901]">
+                      <Label
+                        htmlFor="sortCode"
+                        className="text-lg font-medium text-[#104901]"
+                      >
                         Sort Code <span className="text-red-500">*</span>
                       </Label>
                       <Input
@@ -894,14 +1005,22 @@ const Payments = (props: Props) => {
                         type="text"
                         placeholder="6-digit sort code (e.g., 123456)"
                         value={internationalFormData.sortCode}
-                        onChange={(e) => handleInternationalInputChange("sortCode", e.target.value.replace(/\D/g, "").slice(0, 6))}
+                        onChange={(e) =>
+                          handleInternationalInputChange(
+                            "sortCode",
+                            e.target.value.replace(/\D/g, "").slice(0, 6)
+                          )
+                        }
                         className="h-12 text-lg"
                         maxLength={6}
                         required
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="accountNumber" className="text-lg font-medium text-[#104901]">
+                      <Label
+                        htmlFor="accountNumber"
+                        className="text-lg font-medium text-[#104901]"
+                      >
                         Account Number <span className="text-red-500">*</span>
                       </Label>
                       <Input
@@ -909,7 +1028,12 @@ const Payments = (props: Props) => {
                         type="text"
                         placeholder="8-digit account number"
                         value={internationalFormData.accountNumber}
-                        onChange={(e) => handleInternationalInputChange("accountNumber", e.target.value)}
+                        onChange={(e) =>
+                          handleInternationalInputChange(
+                            "accountNumber",
+                            e.target.value
+                          )
+                        }
                         className="h-12 text-lg"
                         maxLength={8}
                         required
@@ -918,56 +1042,80 @@ const Payments = (props: Props) => {
                   </>
                 )}
 
-                {internationalFormData.country && 
-                 internationalFormData.country !== "US" && 
-                 internationalFormData.country !== "GB" && (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="iban" className="text-lg font-medium text-[#104901]">
-                        IBAN or Account Number <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="iban"
-                        type="text"
-                        placeholder="Enter IBAN or account number"
-                        value={internationalFormData.accountNumber}
-                        onChange={(e) => {
-                          handleInternationalInputChange("accountNumber", e.target.value);
-                          handleInternationalInputChange("iban", e.target.value);
-                        }}
-                        className="h-12 text-lg"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="swiftBic" className="text-lg font-medium text-[#104901]">
-                        SWIFT/BIC Code
-                      </Label>
-                      <Input
-                        id="swiftBic"
-                        type="text"
-                        placeholder="e.g., CHASUS33"
-                        value={internationalFormData.swiftBic}
-                        onChange={(e) => handleInternationalInputChange("swiftBic", e.target.value.toUpperCase())}
-                        className="h-12 text-lg"
-                        maxLength={11}
-                      />
-                    </div>
-                  </>
-                )}
+                {internationalFormData.country &&
+                  internationalFormData.country !== "US" &&
+                  internationalFormData.country !== "GB" && (
+                    <>
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="iban"
+                          className="text-lg font-medium text-[#104901]"
+                        >
+                          IBAN or Account Number{" "}
+                          <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="iban"
+                          type="text"
+                          placeholder="Enter IBAN or account number"
+                          value={internationalFormData.accountNumber}
+                          onChange={(e) => {
+                            handleInternationalInputChange(
+                              "accountNumber",
+                              e.target.value
+                            );
+                            handleInternationalInputChange(
+                              "iban",
+                              e.target.value
+                            );
+                          }}
+                          className="h-12 text-lg"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="swiftBic"
+                          className="text-lg font-medium text-[#104901]"
+                        >
+                          SWIFT/BIC Code
+                        </Label>
+                        <Input
+                          id="swiftBic"
+                          type="text"
+                          placeholder="e.g., CHASUS33"
+                          value={internationalFormData.swiftBic}
+                          onChange={(e) =>
+                            handleInternationalInputChange(
+                              "swiftBic",
+                              e.target.value.toUpperCase()
+                            )
+                          }
+                          className="h-12 text-lg"
+                          maxLength={11}
+                        />
+                      </div>
+                    </>
+                  )}
               </div>
 
               <Alert>
                 <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>Important:</strong> Please ensure all bank account details are correct. 
+                <AlertDescription className="mt-1">
+                  <strong>Important:</strong> Please ensure all bank account
+                  details are correct.
                 </AlertDescription>
               </Alert>
 
               <Button
                 type="submit"
-                disabled={savingInternational || !internationalFormData.accountNumber || !internationalFormData.country || !internationalFormData.accountName}
-                className="w-full h-12 text-lg font-semibold"
+                disabled={
+                  savingInternational ||
+                  !internationalFormData.accountNumber ||
+                  !internationalFormData.country ||
+                  !internationalFormData.accountName
+                }
+                className="w-full h-12 text-lg font-semibold rounded-2xl"
               >
                 {savingInternational ? (
                   <>
@@ -1001,7 +1149,7 @@ const Payments = (props: Props) => {
             team.
           </p>
           <div className="flex gap-4">
-            <Button variant="outline">
+            <Button variant="outline" className="rounded-2xl hover:bg-white">
               <Link
                 href="mailto:campaigns@chainfundit.com"
                 className="flex items-center gap-2"
@@ -1010,7 +1158,7 @@ const Payments = (props: Props) => {
                 Email Support
               </Link>
             </Button>
-            <Button variant="outline">
+            <Button variant="outline" className="rounded-2xl hover:bg-white">
               <Link
                 href="tel:+442038380360"
                 className="flex items-center gap-2"
@@ -1083,7 +1231,7 @@ const Payments = (props: Props) => {
 
               <Alert>
                 <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
+                <AlertDescription className="mt-1">
                   <strong>Important:</strong> Please double-check that the
                   account name above matches your bank account. Once you
                   confirm, these details will be permanently saved and locked
@@ -1098,7 +1246,7 @@ const Payments = (props: Props) => {
               type="button"
               variant="outline"
               onClick={handleCancelVerification}
-              className="flex-1 h-12 text-lg"
+              className="flex-1 h-12 text-lg rounded-2xl hover:bg-white"
             >
               Cancel
             </Button>
@@ -1106,7 +1254,7 @@ const Payments = (props: Props) => {
               type="button"
               onClick={handleConfirmVerification}
               disabled={verifying}
-              className="flex-1 h-12 text-lg font-semibold"
+              className="flex-1 h-12 text-lg font-semibold rounded-2xl"
             >
               {verifying ? (
                 <>

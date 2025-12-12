@@ -313,7 +313,7 @@ function OtpPageInner() {
   return (
     <div className="flex flex-col gap-6 h-full overflow-hidden">
       <div className="h-full flex flex-col gap-2 items-center justify-center flex-1 px-3 md:p-0">
-        <div className="w-full max-w-sm md:max-w-lg pt-6">
+        <div className="w-full md:max-w-lg pt-6">
           <form className="flex flex-col gap-6 w-full pt-5 px-2">
             <div className="grid gap-8">
               <div className="flex flex-col gap-6">
@@ -332,8 +332,7 @@ function OtpPageInner() {
                 <div className="flex justify-between mt-2">
                   <Button
                     type="button"
-                    variant="outline"
-                    className="px-4"
+                    className="px-4 hover:bg-white rounded-3xl"
                     onClick={handlePasteCode}
                   >
                     <Clipboard /> Paste code
@@ -345,8 +344,7 @@ function OtpPageInner() {
                   ) : (
                     <Button
                       type="button"
-                      variant="secondary"
-                      className="px-4 ml-2 text-white"
+                        className="px-4 hover:bg-white rounded-3xl"
                       onClick={handleResendOtp}
                       disabled={isResending}
                     >

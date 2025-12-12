@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Heart, Share2, Eye, Calendar, User, Target } from 'lucide-react';
+import { Heart, Share2, Eye, Calendar, User, Target, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatCurrencyWithConversion } from '@/lib/utils/currency';
 import { GeolocationData } from '@/lib/utils/geolocation';
@@ -224,89 +224,87 @@ export function CampaignCard({ campaign, viewMode, geolocation, convertedAmounts
     );
   }
 
-  // Grid view
+  // Grid view - Updated design matching homepage
   return (
-    <div className="bg-white h-fit rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
-      {/* Image */}
-      <div className="relative">
+    <div className="group rounded-2xl overflow-hidden bg-white border border-[#E8E8E8] hover:border-[#104901] hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col">
+      {/* IMAGE SECTION */}
+      <div className="relative w-full h-[200px] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
         {needsEmojiFallback(campaign.coverImageUrl) ? (
           <EmojiFallbackImage
             category={campaign.reason}
             title={campaign.title}
-            className="w-full h-48 group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-contain bg-white group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
           <R2Image
             src={campaign.coverImageUrl!}
             alt={campaign.title}
             width={400}
-            height={300}
-            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+            height={200}
+            className="w-full h-full object-cover bg-white group-hover:scale-105 transition-transform duration-500"
           />
         )}
-        <div className="absolute top-3 left-3">
-          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(campaign.status)}`}>
-            {getStatusDisplayText(campaign.status, campaign.closedAt)}
+        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full">
+          <span className="font-jakarta font-bold text-xs text-[#104901] uppercase tracking-wider">
+            {campaign.reason || 'Campaign'}
           </span>
         </div>
-        <div className="absolute top-3 right-3">
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 bg-white/80 hover:bg-white">
-            <Heart className="h-4 w-4" />
-          </Button>
+        <div className="absolute top-4 right-4 bg-[#333333] text-white px-3 py-1.5 rounded-full">
+          <span className="font-jakarta font-bold text-xs">
+            {campaign.duration || '12 days'} left
+          </span>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-4">
-        <div className="mb-3">
-          <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2">
-            {campaign.title.slice(0, 20)}...
-          </h3>
-          <p className="text-gray-600 text-sm line-clamp-2 mb-3">
-            {campaign.description.slice(0, 30)}...
+      {/* CONTENT SECTION */}
+      <div className="p-5 md:p-6 flex flex-col gap-4 flex-grow">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <p className="font-jakarta font-regular text-xs text-[#999999] uppercase tracking-wider">
+              Organized by <b className="text-black">{campaign.reason || 'Campaign'}</b>
+            </p>
+            {campaign.status === 'active' && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-[#104901] border border-[#104901]/20">
+                <Shield className="h-3 w-3" />
+              </span>
+            )}
+          </div>
+          <Link href={`/campaign/${campaign.slug}`}>
+            <h3 className="font-jakarta font-bold text-lg text-black mb-2 hover:text-[#104901] transition-colors">
+              {campaign.title.length > 50
+                ? `${campaign.title.slice(0, 50)}...`
+                : campaign.title}
+            </h3>
+          </Link>
+          <p className="font-jakarta font-regular text-sm text-[#666666] line-clamp-2">
+            {campaign.description}
           </p>
         </div>
-
-        {/* Creator */}
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
-            <User className="h-3 w-3 text-gray-500" />
+        <div className="flex-grow" />
+        <div className="border-t border-[#E8E8E8] pt-4">
+          <div className="flex justify-between items-center mb-3">
+            <span className="font-jakarta font-bold text-[#1ABD73]">
+              {formatCurrency(displayCurrentAmount.amount, displayCurrentAmount.currency)} raised
+            </span>
+            <span className="font-jakarta font-regular text-[#999999] text-sm">
+              {formatCurrency(displayGoalAmount.amount, displayGoalAmount.currency)} goal
+            </span>
           </div>
-          <span className="text-sm text-gray-600">{campaign.creatorName}</span>
-        </div>
-
-        {/* Progress */}
-        <div className="mb-4">
-          <div className="flex justify-between text-sm text-gray-600 mb-2">
-            <span>Progress</span>
-            <span>{progressPercentage}%</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className="bg-green-600 h-2 rounded-full transition-all duration-300"
+          <div className="w-full bg-[#E8E8E8] h-2 rounded-full overflow-hidden mb-4">
+            <div
+              className="bg-[#1ABD73] h-full rounded-full transition-all duration-300"
               style={{ width: `${progressPercentage}%` }}
             ></div>
           </div>
-          <div className="flex justify-between text-sm text-gray-600 mt-2">
-            <span>{formatCurrencyWithConversion(displayCurrentAmount.amount, displayCurrentAmount.currency, displayCurrentAmount.originalAmount, displayCurrentAmount.originalCurrency)}</span>
-            <span>{formatCurrencyWithConversion(displayGoalAmount.amount, displayGoalAmount.currency, displayGoalAmount.originalAmount, displayGoalAmount.originalCurrency)}</span>
-          </div>
+          <Link href={`/campaign/${campaign.slug}`}>
+            <button
+              className="w-full py-2.5 px-4 bg-[#F5F5F4] text-black font-jakarta font-semibold text-sm rounded-lg hover:bg-[#59AD4A] hover:text-white transition-colors duration-300"
+            >
+              View Campaign
+            </button>
+          </Link>
         </div>
-
-        {/* Category and Date */}
-        <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
-          <span>{campaign.reason}</span>
-          <span>{formatDate(campaign.createdAt)}</span>
-        </div>
-
-        {/* Action Button */}
-        <Link href={`/campaign/${campaign.slug}`} className="block">
-          <Button className="w-full">
-            View Campaign
-          </Button>
-        </Link>
       </div>
     </div>
   );
 }
-

@@ -119,7 +119,10 @@ export function PayoutSuccessModal({
 
         <div className="mt-6 flex justify-center">
           <DialogClose asChild>
-            <Button type="button" className="bg-[#104901] text-white px-8">
+            <Button
+              type="button"
+              className="bg-[#104109] text-white rounded-xl px-8 py4 text-sm"
+            >
               Done
             </Button>
           </DialogClose>
@@ -128,4 +131,3 @@ export function PayoutSuccessModal({
     </Dialog>
   );
 }
-

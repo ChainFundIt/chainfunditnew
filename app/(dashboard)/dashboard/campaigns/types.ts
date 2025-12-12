@@ -47,6 +47,8 @@ export type TransformedCampaign = {
   currency: string;
   status: string;
   closedAt?: string;
+  reason?:string;
+  fundraisingFor?:string
 };
 
 // Transform function to convert Campaign to TransformedCampaign
@@ -59,8 +61,10 @@ export const transformCampaign = (campaign: Campaign): TransformedCampaign => ({
   goal: campaign.goalAmount || 0,
   donors: campaign.stats?.uniqueDonors || 0,
   chains: 0, // TODO: Implement chain counting
-  image: campaign.coverImageUrl || "/images/image.png",
+  image: campaign.coverImageUrl || "",
   currency: campaign.currency,
   status: campaign.status,
   closedAt: campaign.closedAt,
+  reason:campaign.reason,
+  fundraisingFor:campaign.fundraisingFor
 }); 

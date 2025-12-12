@@ -13,7 +13,7 @@ const Navbar = (props: Props) => {
   const { user, loading } = useAuth();
 
   const handleCreateCampaign = () => {
-    window.location.href = "/create-campaign";
+    window.location.href = "/dashboard/campaigns/create-campaign";
   };
 
   return (

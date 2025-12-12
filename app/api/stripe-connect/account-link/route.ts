@@ -63,8 +63,8 @@ export async function GET(request: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const accountLink = await createStripeAccountLink(
       userData.stripeAccountId,
-      `${baseUrl}/settings?stripe_refresh=true`,
-      `${baseUrl}/settings?stripe_success=true`
+      `${baseUrl}/dashboard/settings?stripe_refresh=true`,
+      `${baseUrl}/dashboard/settings?stripe_success=true`
     );
 
     return NextResponse.json({
