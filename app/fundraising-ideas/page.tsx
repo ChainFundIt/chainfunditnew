@@ -332,7 +332,7 @@ export default function FundraisingIdeasPage() {
                   average
                 </div>
                 <Button
-                  onClick={() => router.push("/create-campaign")}
+                  onClick={() => router.push("/dashboard/campaigns/create-campaign")}
                   className="bg-white px-8 py-3 rounded-full h-auto font-bold text-lg leading-7 text-[#104109] w-fit"
                 >
                   Start a Campaign

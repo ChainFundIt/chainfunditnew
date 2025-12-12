@@ -411,7 +411,7 @@ export default function DashboardPage() {
 
             <Button
               onClick={() => {
-                router.push("/create-campaign");
+                router.push("/dashboard/campaigns/create-campaign");
               }}
               className="bg-[var(--color-darkGreen)] text-[14px] leading-[21px] font-bold rounded-[10.5px] flex
                        items-center justify-center py-3 h-auto md:w-fit w-full"
@@ -523,7 +523,7 @@ export default function DashboardPage() {
                     <div
                       className="w-[360px] h-[400px] border-dashed border-2 border-[#e5e7eb] rounded-[14px] flex flex-col bg-transparent items-center justify-center cursor-pointer"
                       onClick={() => {
-                        router.push("/create-campaign");
+                        router.push("/dashboard/campaigns/create-campaign");
                       }}
                     >
                       <div className="flex flex-col items-center justify-center gap-4 w-[200px]">

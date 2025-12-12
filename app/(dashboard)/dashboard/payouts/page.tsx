@@ -480,7 +480,7 @@ const PayoutsPage = () => {
         </div>
         <Button
           onClick={() => {
-            router.push("/create-campaign");
+            router.push("/dashboard/campaigns/create-campaign");
           }}
           className="bg-[var(--color-darkGreen)] text-[14px] leading-[21px] font-bold rounded-[10.5px] flex items-center justify-center py-3 h-auto md:w-fit w-full"
         >

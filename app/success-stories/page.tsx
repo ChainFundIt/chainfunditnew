@@ -264,7 +264,7 @@ export default function SuccessStoriesPage() {
             Join thousands of successful fundraisers who've achieved their goals
             with ChainFundIt.
           </p>
-          <Link href="/create-campaign">
+          <Link href="/dashboard/campaigns/create-campaign">
             <Button
               size="lg"
               className="bg-white text-green-600 hover:bg-gray-100"

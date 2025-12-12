@@ -277,7 +277,7 @@ export default function FundraisingTipsPage() {
             Put these tips into practice and launch your fundraising campaign
             today.
           </p>
-          <Link href="/create-campaign">
+          <Link href="/dashboard/campaigns/create-campaign">
             <Button className="bg-[#104901] rounded-full text-white hover:bg-[#0a3a01] font-semibold py-6 px-8">
               Create Your Campaign
               <ArrowRight className="h-5 w-5 ml-2" />
