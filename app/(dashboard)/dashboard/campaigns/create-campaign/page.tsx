@@ -535,22 +535,22 @@ export default function CreateCampaignPage() {
 
         {/* Currency & Goal Amount */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="text-lg font-semibold text-[#104109] mb-3 block">
+          <div className="flex flex-col gap-3">
+            <label className="text-lg font-semibold text-[#104109]">
               Currency
             </label>
             <Select
               value={formData.currency}
               onValueChange={(value) => handleFieldChange("currency", value)}
             >
-              <SelectTrigger className="w-full bg-[#E5ECDE] border-0 text-[#5F8555] h-12">
+              <SelectTrigger className="w-full bg-[#F5F5F5] border-0 text-[#5F8555] h-12">
                 <SelectValue placeholder="Select currency" />
               </SelectTrigger>
-              <SelectContent className="bg-[#E7EDE6]">
+              <SelectContent className="bg-[#F5F5F5]">
                 <SelectGroup>
                   {currencies.map((currency) => (
                     <SelectItem key={currency.code} value={currency.code}>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 p-0">
                         {typeof currency.icon === "string"
                           ? currency.icon
                           : currency.icon}{" "}
@@ -563,11 +563,11 @@ export default function CreateCampaignPage() {
             </Select>
           </div>
 
-          <div>
-            <label className="text-lg font-semibold text-[#104109] mb-3 block">
+          <div className="flex flex-col gap-3">
+            <label className="text-lg font-semibold text-[#104109]">
               Goal Amount
             </label>
-            <div className="flex items-center gap-2 bg-[#E5ECDE] rounded-lg px-4 py-3">
+            <div className="flex items-center gap-2 bg-[#F5F5F5] rounded-lg px-4 py-3">
               <span className="text-[#5F8555] font-semibold text-lg">
                 {
                   {
@@ -597,8 +597,8 @@ export default function CreateCampaignPage() {
         </div>
 
         {/* Duration */}
-        <div>
-          <label className="text-lg font-semibold text-[#104109] mb-3 block">
+        <div className="flex flex-col gap-3">
+          <label className="text-lg font-semibold text-[#104109]">
             Campaign Duration
           </label>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -609,8 +609,8 @@ export default function CreateCampaignPage() {
                 onClick={() => handleFieldChange("duration", time.text)}
                 className={`px-3 py-3 flex gap-2 items-center justify-center rounded-lg transition-all text-sm ${
                   formData.duration === time.text
-                    ? "ring-2 ring-[#5F8555] bg-[#104109] text-white"
-                    : "bg-[#E5ECDE] text-[#5F8555] hover:bg-[#D9D9D9]"
+                    ? "bg-[#104109] text-white"
+                    : "bg-[#F5F5F5] text-[#5F8555] hover:bg-[#D9D9D9]"
                 }`}
               >
                 {time.icon}
@@ -621,7 +621,7 @@ export default function CreateCampaignPage() {
         </div>
 
         {/* Chained Campaign */}
-        <div className="space-y-4">
+        <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2">
             <label className="text-lg font-semibold text-[#104109]">
               Do you want your campaign to be chained?
@@ -651,8 +651,8 @@ export default function CreateCampaignPage() {
 
         {/* Commission Rate */}
         {formData.isChained && (
-          <div>
-            <label className="text-lg font-semibold text-[#104109] mb-3 block">
+          <div className="flex flex-col gap-3">
+            <label className="text-lg font-semibold text-[#104109]">
               Ambassador Commission Rate (%)
             </label>
             <input
@@ -663,7 +663,7 @@ export default function CreateCampaignPage() {
               onChange={(e) =>
                 handleFieldChange("chainerCommissionRate", +e.target.value)
               }
-              className="w-full md:w-64 px-4 py-3 rounded-lg bg-[#E5ECDE] font-medium text-lg text-[#5F8555] placeholder:text-[#5F8555] focus:outline-none focus:ring-2 focus:ring-[#5F8555]"
+              className="w-full md:w-64 px-4 py-3 rounded-lg bg-[#F5F5F5] font-medium text-lg text-[#5F8555] placeholder:text-[#5F8555] focus:outline-none focus:ring-2 focus:ring-[#5F8555]"
             />
           </div>
         )}
@@ -1112,7 +1112,6 @@ export default function CreateCampaignPage() {
 
   return (
     <div className="font-jakarta p-8 bg-[#F0F7EF] flex flex-col gap-8 md:min-h-[calc(100vh-122px)]">
-      
       {/* Header */}
       <div className="flex gap-2">
         {step > 1 ? (
