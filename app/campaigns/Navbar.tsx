@@ -98,9 +98,10 @@ const Navbar = (props: Props) => {
             {!user && !loading && (
               <Link href='/signin' className="font-medium text-base text-black">Signin</Link>
             )}
-            <div className="flex items-center justify-center gap-3">
-            </div>
-            <Button className="w-full px-4 py-3 border-2 border-white text-base font-semibold rounded-none">Create Campaign</Button>
+            <div className="flex items-center justify-center gap-3"></div>
+            <Button className="w-full px-4 py-3 border-2 border-white text-base font-semibold rounded-none" onClick={handleCreateCampaign}>
+              Start a Campaign
+            </Button>
           </div>
         </div>
       )}
