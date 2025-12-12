@@ -230,7 +230,6 @@ export function LoginForm({
         <Button
           type="submit"
           className="h-10 bg-[#104109] hover:bg-white text-white font-semibold text-sm rounded-lg transition-colors w-full"
-          disabled={isLoading || !(isPhone ? phone.trim() : email.trim())}
         >
           {isLoading ? "Sending..." : "Log in"}
         </Button>

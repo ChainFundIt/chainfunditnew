@@ -621,7 +621,7 @@ export default function AmbassadorAgreementPage() {
                                 {item.subtitle}
                               </h3>
                             )}
-                            <div className="">{item.text}</div>
+                            <div className="text-justify">{item.text}</div>
                           </div>
                         ))}
                       </div>

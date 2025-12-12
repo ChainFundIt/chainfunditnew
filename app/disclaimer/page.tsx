@@ -255,7 +255,7 @@ export default function DisclaimerPage() {
                             )}
                             {item.text && (
                               <div
-                                className="leading-relaxed text-sm "
+                                className="leading-relaxed text-sm text-justify"
                                 style={{
                                   color: isGreenCard ? "#FFFFFF" : "#1a1a1a",
                                 }}

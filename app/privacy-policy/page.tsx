@@ -788,7 +788,7 @@ export default function PrivacyPolicyPage() {
                             )}
                             {item.text && (
                               <div
-                                className="leading-relaxed text-sm"
+                                className="leading-relaxed text-sm text-justify"
                                 style={{
                                   color: isGreenBg ? "#FFFFFF" : "#1a1a1a",
                                 }}
