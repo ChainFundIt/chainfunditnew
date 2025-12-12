@@ -4,11 +4,18 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Copy, Download, Shield, CheckCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
+import { Loader } from "@/components/ui/Loader";
 const fetchWithAuth = (url: string, options: RequestInit = {}) =>
   fetch(url, {
     credentials: "include",
@@ -104,17 +111,21 @@ export default function Security() {
   const [isEnabled, setIsEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
-  const [step, setStep] = useState<'view' | 'setup' | 'verify' | 'complete'>('view');
+  const [step, setStep] = useState<"view" | "setup" | "verify" | "complete">(
+    "view"
+  );
   const [setupData, setSetupData] = useState<{
     secret: string;
     qrCodeUrl: string;
     backupCodes: string[];
   } | null>(null);
-  const [verificationCode, setVerificationCode] = useState('');
-  const [disableCode, setDisableCode] = useState('');
-  const [regeneratedCodes, setRegeneratedCodes] = useState<string[] | null>(null);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [disableCode, setDisableCode] = useState("");
+  const [regeneratedCodes, setRegeneratedCodes] = useState<string[] | null>(
+    null
+  );
   const [isRegenerating, setIsRegenerating] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   // Check TOTP status on mount
   useEffect(() => {
@@ -124,7 +135,7 @@ export default function Security() {
   const checkTwoFactorStatus = async () => {
     setIsChecking(true);
     try {
-      const response = await fetchWithAuth('/api/user/me');
+      const response = await fetchWithAuth("/api/user/me");
       if (response.ok) {
         const data = await response.json();
         setIsEnabled(Boolean(data?.user?.twoFactorEnabled));
@@ -132,7 +143,7 @@ export default function Security() {
         setIsEnabled(false);
       }
     } catch (err: any) {
-      console.error('Error checking 2FA status:', err);
+      console.error("Error checking 2FA status:", err);
       setIsEnabled(false);
     } finally {
       setIsChecking(false);
@@ -141,13 +152,13 @@ export default function Security() {
 
   const generateSetup = async () => {
     setIsLoading(true);
-    setError('');
-    
+    setError("");
+
     try {
-      const response = await fetchWithAuth('/api/user/2fa/setup');
+      const response = await fetchWithAuth("/api/user/2fa/setup");
       const data = await response.json();
       if (!response.ok || !data?.success) {
-        throw new Error(data?.error || 'Failed to generate setup data');
+        throw new Error(data?.error || "Failed to generate setup data");
       }
 
       setSetupData({
@@ -155,24 +166,25 @@ export default function Security() {
         qrCodeUrl: data.data.qrCodeUrl,
         backupCodes: data.data.backupCodes,
       });
-      setStep('verify');
+      setStep("verify");
     } catch (err: any) {
-      console.error('TOTP setup error:', err);
-      setError(err.message || 'Failed to generate setup data');
+      console.error("TOTP setup error:", err);
+      setError(err.message || "Failed to generate setup data");
     } finally {
       setIsLoading(false);
     }
   };
 
   const enableTwoFactor = async () => {
-    if (!setupData || !verificationCode || verificationCode.length !== 6) return;
-    
+    if (!setupData || !verificationCode || verificationCode.length !== 6)
+      return;
+
     setIsLoading(true);
-    setError('');
-    
+    setError("");
+
     try {
-      const response = await fetchWithAuth('/api/user/2fa/enable', {
-        method: 'POST',
+      const response = await fetchWithAuth("/api/user/2fa/enable", {
+        method: "POST",
         body: JSON.stringify({
           secret: setupData.secret,
           code: verificationCode,
@@ -181,16 +193,16 @@ export default function Security() {
       });
       const data = await response.json();
       if (!response.ok || !data?.success) {
-        throw new Error(data?.error || 'Failed to enable 2FA');
+        throw new Error(data?.error || "Failed to enable 2FA");
       }
 
-      setStep('complete');
+      setStep("complete");
       setIsEnabled(true);
       setRegeneratedCodes(null);
-      toast.success('Two-factor authentication enabled successfully!');
+      toast.success("Two-factor authentication enabled successfully!");
     } catch (err: any) {
-      console.error('2FA enable error:', err);
-      setError(err.message || 'Failed to enable 2FA');
+      console.error("2FA enable error:", err);
+      setError(err.message || "Failed to enable 2FA");
     } finally {
       setIsLoading(false);
     }
@@ -198,32 +210,32 @@ export default function Security() {
 
   const disableTwoFactor = async () => {
     if (!disableCode || disableCode.length !== 6) {
-      setError('Please enter a 6-digit verification code');
+      setError("Please enter a 6-digit verification code");
       return;
     }
-    
+
     setIsLoading(true);
-    setError('');
-    
+    setError("");
+
     try {
-      const response = await fetchWithAuth('/api/user/2fa/disable', {
-        method: 'POST',
+      const response = await fetchWithAuth("/api/user/2fa/disable", {
+        method: "POST",
         body: JSON.stringify({ code: disableCode }),
       });
       const data = await response.json();
       if (!response.ok || !data?.success) {
-        throw new Error(data?.error || 'Failed to disable 2FA');
+        throw new Error(data?.error || "Failed to disable 2FA");
       }
 
       setIsEnabled(false);
-      setStep('view');
-      setDisableCode('');
+      setStep("view");
+      setDisableCode("");
       setRegeneratedCodes(null);
       setSetupData(null);
-      toast.success('Two-factor authentication disabled successfully!');
+      toast.success("Two-factor authentication disabled successfully!");
     } catch (err: any) {
-      console.error('2FA disable error:', err);
-      setError(err.message || 'Failed to disable 2FA');
+      console.error("2FA disable error:", err);
+      setError(err.message || "Failed to disable 2FA");
     } finally {
       setIsLoading(false);
     }
@@ -231,40 +243,40 @@ export default function Security() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success('Copied to clipboard');
+    toast.success("Copied to clipboard");
   };
 
   const downloadBackupCodes = () => {
     const codes = setupData?.backupCodes || regeneratedCodes;
     if (!codes) return;
-    
-    const content = `ChainFundIt - 2FA Backup Codes\n\n${codes.join('\n')}\n\nKeep these codes safe! Each code can only be used once.`;
-    const blob = new Blob([content], { type: 'text/plain' });
+
+    const content = `ChainFundIt - 2FA Backup Codes\n\n${codes.join("\n")}\n\nKeep these codes safe! Each code can only be used once.`;
+    const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = '2fa-backup-codes.txt';
+    a.download = "2fa-backup-codes.txt";
     a.click();
     URL.revokeObjectURL(url);
-    toast.success('Backup codes downloaded');
+    toast.success("Backup codes downloaded");
   };
 
   const regenerateBackupCodes = async () => {
     setIsRegenerating(true);
-    setError('');
+    setError("");
     try {
-      const response = await fetchWithAuth('/api/user/2fa/backup-codes', {
-        method: 'POST',
+      const response = await fetchWithAuth("/api/user/2fa/backup-codes", {
+        method: "POST",
       });
       const data = await response.json();
       if (!response.ok || !data?.success) {
-        throw new Error(data?.error || 'Failed to regenerate backup codes');
+        throw new Error(data?.error || "Failed to regenerate backup codes");
       }
       setRegeneratedCodes(data.data);
-      toast.success('New backup codes generated. Save them in a secure place.');
+      toast.success("New backup codes generated. Save them in a secure place.");
     } catch (err: any) {
-      console.error('Backup code regeneration error:', err);
-      setError(err.message || 'Failed to regenerate backup codes');
+      console.error("Backup code regeneration error:", err);
+      setError(err.message || "Failed to regenerate backup codes");
     } finally {
       setIsRegenerating(false);
     }
@@ -272,7 +284,7 @@ export default function Security() {
 
   // Auto-submit when verification code is complete
   useEffect(() => {
-    if (step === 'verify' && verificationCode.length === 6 && !isLoading) {
+    if (step === "verify" && verificationCode.length === 6 && !isLoading) {
       enableTwoFactor();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -280,15 +292,18 @@ export default function Security() {
 
   if (isChecking) {
     return (
-      <div className="2xl:container 2xl:mx-auto">
-        <p className="text-[#104901]">Loading security settings...</p>
+      <div className=" flex pt-5 justify-center ">
+        <div className="text-[#104901] font-extrabold text-xl flex items-center gap-2">
+          <Loader size="medium" />
+          Loading security settings...
+        </div>
       </div>
     );
   }
 
-  if (step === 'setup') {
+  if (step === "setup") {
     return (
-      <div className="2xl:container 2xl:mx-auto">
+      <div className=" font-jakarta bg-white p-7 border border-b-[f3f4f6] border-r-[f3f4f6] border-l-[f3f4f6] rounded-bl-3xl rounded-br-3xl flex flex-col gap-5">
         <Card className="w-full max-w-2xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -302,21 +317,30 @@ export default function Security() {
           <CardContent className="space-y-4">
             <Alert>
               <AlertDescription>
-                Two-factor authentication adds an extra layer of security to your account. 
-                You&apos;ll need an authenticator app like Google Authenticator or Authy.
+                Two-factor authentication adds an extra layer of security to
+                your account. You&apos;ll need an authenticator app like Google
+                Authenticator or Authy.
               </AlertDescription>
             </Alert>
-            
+
             <div className="space-y-2">
-              <Button onClick={generateSetup} disabled={isLoading} className="w-full">
-                {isLoading ? 'Generating...' : 'Start Setup'}
+              <Button
+                onClick={generateSetup}
+                disabled={isLoading}
+                className="w-full rounded-2xl"
+              >
+                {isLoading ? "Generating..." : "Start Setup"}
               </Button>
-              
-              <Button variant="outline" onClick={() => setStep('view')} className="w-full">
+
+              <Button
+                variant="outline"
+                onClick={() => setStep("view")}
+                className="w-full rounded-2xl hover:bg-white"
+              >
                 Cancel
               </Button>
             </div>
-            
+
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
@@ -328,14 +352,15 @@ export default function Security() {
     );
   }
 
-  if (step === 'verify') {
+  if (step === "verify") {
     return (
-      <div className="2xl:container 2xl:mx-auto">
+      <div className=" font-jakarta bg-white p-7 border border-b-[f3f4f6] border-r-[f3f4f6] border-l-[f3f4f6] rounded-bl-3xl rounded-br-3xl flex flex-col gap-5">
         <Card className="w-full max-w-2xl">
           <CardHeader>
             <CardTitle>Complete 2FA Setup</CardTitle>
             <CardDescription>
-              Scan the QR code with your authenticator app and enter the verification code
+              Scan the QR code with your authenticator app and enter the
+              verification code
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -343,33 +368,34 @@ export default function Security() {
               <>
                 <div className="text-center">
                   <Image
-                    src={setupData.qrCodeUrl} 
-                    alt="2FA QR Code" 
+                    src={setupData.qrCodeUrl}
+                    alt="2FA QR Code"
                     className="mx-auto border rounded"
                     width={200}
                     height={200}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="secret">Manual Entry Key</Label>
-                  <div className="flex gap-2">
-                    <Input 
-                      id="secret" 
-                      value={setupData.secret} 
-                      readOnly 
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      id="secret"
+                      value={setupData.secret}
+                      readOnly
                       className="font-mono text-sm"
                     />
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => copyToClipboard(setupData.secret)}
+                      className="hover:bg-white"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="verification">Verification Code</Label>
                   <OtpInput
@@ -378,20 +404,28 @@ export default function Security() {
                     length={6}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Enter the 6-digit code from your authenticator app. Make sure your device&apos;s time is synchronized.
+                    Enter the 6-digit code from your authenticator app. Make
+                    sure your device&apos;s time is synchronized.
                   </p>
                 </div>
-                
+
                 {error && (
                   <Alert variant="destructive">
                     <AlertDescription>
                       {error}
-                      <br /><br />
+                      <br />
+                      <br />
                       <strong>Troubleshooting:</strong>
                       <ul className="list-disc list-inside mt-2 text-sm">
-                        <li>Make sure your device&apos;s time is synchronized</li>
-                        <li>Try refreshing the code in your authenticator app</li>
-                        <li>Ensure you&apos;re entering the current 6-digit code</li>
+                        <li>
+                          Make sure your device&apos;s time is synchronized
+                        </li>
+                        <li>
+                          Try refreshing the code in your authenticator app
+                        </li>
+                        <li>
+                          Ensure you&apos;re entering the current 6-digit code
+                        </li>
                       </ul>
                     </AlertDescription>
                   </Alert>
@@ -401,7 +435,11 @@ export default function Security() {
                   <p className="text-center text-[#104901]">Verifying...</p>
                 )}
 
-                <Button variant="outline" onClick={() => setStep('view')} className="w-full">
+                <Button
+                  variant="outline"
+                  onClick={() => setStep("view")}
+                  className="w-full rounded-2xl hover:bg-white"
+                >
                   Cancel
                 </Button>
               </>
@@ -412,9 +450,9 @@ export default function Security() {
     );
   }
 
-  if (step === 'complete') {
+  if (step === "complete") {
     return (
-      <div className="2xl:container 2xl:mx-auto">
+      <div className=" font-jakarta bg-white p-7 border border-b-[f3f4f6] border-r-[f3f4f6] border-l-[f3f4f6] rounded-bl-3xl rounded-br-3xl flex flex-col gap-5">
         <Card className="w-full max-w-2xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-green-600">
@@ -430,18 +468,20 @@ export default function Security() {
               <>
                 <Alert>
                   <AlertDescription>
-                    <strong>Important:</strong> Save these backup codes in a safe place. 
-                    Each code can only be used once if you lose access to your authenticator app.
+                    <strong>Important:</strong> Save these backup codes in a
+                    safe place. Each code can only be used once if you lose
+                    access to your authenticator app.
                   </AlertDescription>
                 </Alert>
-                
+
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label>Backup Codes</Label>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Label className="font-bold">Backup Codes</Label>
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={downloadBackupCodes}
+                      className="rounded-2xl hover:bg-white"
                     >
                       <Download className="h-4 w-4 mr-1" />
                       Download
@@ -449,7 +489,10 @@ export default function Security() {
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-sm font-mono">
                     {setupData.backupCodes.map((code, index) => (
-                      <div key={index} className="p-2 bg-muted rounded text-center">
+                      <div
+                        key={index}
+                        className="p-2 bg-muted rounded text-center"
+                      >
                         {code}
                       </div>
                     ))}
@@ -457,8 +500,11 @@ export default function Security() {
                 </div>
               </>
             )}
-            
-            <Button onClick={() => setStep('view')} className="w-full">
+
+            <Button
+              onClick={() => setStep("view")}
+              className="w-full rounded-2xl"
+            >
               Done
             </Button>
           </CardContent>
@@ -469,13 +515,15 @@ export default function Security() {
 
   // View mode - show current status
   return (
-    <div className="2xl:container 2xl:mx-auto">
-      <h4 className="font-semibold text-2xl md:text-3xl text-[#104901] mb-2">
-        Security Settings
-      </h4>
-      <p className="font-normal text-base md:text-xl text-[#104901] mb-6">
-        Manage your account security and two-factor authentication settings.
-      </p>
+    <div className=" font-jakarta bg-white p-5 border border-b-[f3f4f6] border-r-[f3f4f6] border-l-[f3f4f6] rounded-bl-3xl rounded-br-3xl flex flex-col gap-5">
+      <div className="flex flex-col gap-1">
+        <h4 className="font-semibold text-2xl md:text-3xl text-[#104901]">
+          Security Settings
+        </h4>
+        <p className="font-normal text-xl text-[#104901] opacity-80">
+          Manage your account security and two-factor authentication settings.
+        </p>
+      </div>
 
       <Card className="w-full max-w-2xl">
         <CardHeader>
@@ -493,7 +541,8 @@ export default function Security() {
               <Alert>
                 <CheckCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Two-factor authentication is enabled. Your account is protected with an additional security layer.
+                  Two-factor authentication is enabled. Your account is
+                  protected with an additional security layer.
                 </AlertDescription>
               </Alert>
 
@@ -502,20 +551,31 @@ export default function Security() {
                   <div className="space-y-2">
                     <Alert>
                       <AlertDescription>
-                        <strong>New backup codes generated.</strong> Save these codes securely before leaving this page.
+                        <strong>New backup codes generated.</strong> Save these
+                        codes securely before leaving this page.
                       </AlertDescription>
                     </Alert>
                     <div className="flex items-center justify-between">
                       <Label>Backup Codes</Label>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={downloadBackupCodes}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={downloadBackupCodes}
+                          className="rounded-2xl hover:bg-white"
+                        >
                           <Download className="h-4 w-4 mr-1" />
                           Download
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => navigator.clipboard.writeText(regeneratedCodes.join('\n')).then(() => toast.success('Backup codes copied'))}
+                          className="rounded-2xl hover:white"
+                          onClick={() =>
+                            navigator.clipboard
+                              .writeText(regeneratedCodes.join("\n"))
+                              .then(() => toast.success("Backup codes copied"))
+                          }
                         >
                           <Copy className="h-4 w-4 mr-1" />
                           Copy
@@ -524,7 +584,10 @@ export default function Security() {
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-sm font-mono">
                       {regeneratedCodes.map((code, index) => (
-                        <div key={index} className="p-2 bg-muted rounded text-center">
+                        <div
+                          key={index}
+                          className="p-2 bg-muted rounded text-center"
+                        >
                           {code}
                         </div>
                       ))}
@@ -536,34 +599,41 @@ export default function Security() {
                   <Label>Backup Codes</Label>
                   <Button
                     variant="outline"
-                    className="w-full flex items-center justify-center gap-2"
+                    className="w-full flex items-center justify-center gap-2 rounded-2xl hover:bg-white"
                     onClick={regenerateBackupCodes}
                     disabled={isRegenerating}
                   >
                     <RefreshCw className="h-4 w-4" />
-                    {isRegenerating ? 'Generating...' : 'Regenerate Backup Codes'}
+                    {isRegenerating
+                      ? "Generating..."
+                      : "Regenerate Backup Codes"}
                   </Button>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="disable-code">Enter verification code to disable 2FA</Label>
+                  <Label htmlFor="disable-code">
+                    Enter verification code to disable 2FA
+                  </Label>
                   <OtpInput
                     value={disableCode}
                     onChange={setDisableCode}
                     length={6}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Enter a code from your authenticator app to disable two-factor authentication.
+                    Enter a code from your authenticator app to disable
+                    two-factor authentication.
                   </p>
                 </div>
 
-                <Button 
-                  variant="destructive" 
+                <Button
+                  variant="destructive"
                   onClick={disableTwoFactor}
                   disabled={isLoading || disableCode.length !== 6}
-                  className="w-full"
+                  className="w-full rounded-full "
                 >
-                  {isLoading ? 'Disabling...' : 'Disable Two-Factor Authentication'}
+                  {isLoading
+                    ? "Disabling..."
+                    : "Disable Two-Factor Authentication"}
                 </Button>
 
                 {error && (
@@ -577,11 +647,15 @@ export default function Security() {
             <>
               <Alert>
                 <AlertDescription>
-                  Two-factor authentication is not enabled. Enable it to add an extra layer of security to your account.
+                  Two-factor authentication is not enabled. Enable it to add an
+                  extra layer of security to your account.
                 </AlertDescription>
               </Alert>
 
-              <Button onClick={() => setStep('setup')} className="w-full">
+              <Button
+                onClick={() => setStep("setup")}
+                className="w-full rounded-2xl"
+              >
                 Enable Two-Factor Authentication
               </Button>
             </>
@@ -591,4 +665,3 @@ export default function Security() {
     </div>
   );
 }
-

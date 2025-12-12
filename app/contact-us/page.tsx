@@ -3,20 +3,20 @@
 import React, { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Mail,
   Phone,
-  MapPin,
-  Clock,
   MessageSquare,
-  Send,
   HelpCircle,
   Shield,
   Users,
   FileText,
+  Lightbulb,
+  MessageCircle,
+  ArrowRight,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 const contactMethods = [
@@ -30,7 +30,7 @@ const contactMethods = [
   {
     icon: Phone,
     title: "Phone Support",
-    description: "Speak directly with our support team",
+    description: "Speak directly with our support team for urgent matters",
     contact: "+44 (0) 20 1234 5678",
     link: "tel:+442012345678",
   },
@@ -38,7 +38,7 @@ const contactMethods = [
     icon: MessageSquare,
     title: "WhatsApp Chat",
     description: "Chat with us in real-time (available 9 AM - 6 PM GMT)",
-    contact: "WhatsApp",
+    contact: "Start Chat",
     link: "https://wa.me/+238090986009?text=I have a question about the platform",
   },
 ];
@@ -80,9 +80,7 @@ export default function ContactUsPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
     console.log("Form submitted:", formData);
-    // You can add API call here
   };
 
   const handleChange = (
@@ -97,278 +95,250 @@ export default function ContactUsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
+    <div className=" bg-white font-jakarta  flex flex-col ">
       <Navbar />
 
-      <div className="relative bg-gradient-to-r from-green-600 to-[#104901] mt-16 text-white py-20">
-        <div className="container mx-auto px-4 text-center">
-          <MessageSquare className="h-16 w-16 mx-auto mb-6" />
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">Contact Us</h1>
-          <p className="text-xl md:text-2xl text-white/90 max-w-4xl mx-auto">
-            We're here to help! Get in touch with our team for support,
-            questions, or feedback.
-          </p>
+      {/* Hero Section */}
+      <div className="bg-[#104109] pt-[5rem] pb-[7rem] flex items-center justify-center font-jakarta z-0">
+        <div className="px-4 flex flex-col gap-6 items-center md:max-w-[56rem] relative">
+          <div className="flex gap-2 px-4 py-[6px] border border-[#047857] rounded-full w-fit ">
+            <MessageCircle color="#6ee7b7" size={14} />
+            <div className="text-[#6ee7b7] font-bold text-xs ">
+              GET IN TOUCH
+            </div>
+          </div>
+          <div className="font-extrabold text-white text-[4rem] leading-[4rem] text-center">
+            We're here to help
+          </div>
+          <div className="text-xl text-[#d1fae5] text-center">
+            Have questions about starting a campaign or supporting a cause? Our
+            dedicated team is ready to assist you on your journey
+          </div>
+          <div className="md:flex hidden absolute left-1/2 rounded-full h-[24rem] w-[24rem] bg-[#FACC151A] blur-[100px]"></div>
+          <div className="md:flex hidden  absolute right-1/3 -top-[50px] rounded-full h-[24rem] w-[24rem] bg-[#10B98133] blur-[100px]"></div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-16">
-        {/* Contact Methods */}
-        <div className="mb-16">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Get in Touch
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Choose the best way to reach us. We're here to help!
-            </p>
-          </div>
+      {/* Contact Methods Container */}
+      <div
+        className="flex flex-col gap-8 items-center px-4 mt-[-60px]  mb-8"
+        style={{ zIndex: "5" }}
+      >
+        {/* Cards Row */}
+        <div className="flex md:flex-row flex-col max-w-[80rem] gap-6">
+          {contactMethods.map((method, index) => {
+            const Icon = method.icon;
+            return (
+              <div
+                key={index}
+                className="bg-white w-[26rem] h-[18rem] rounded-3xl py-10 flex flex-col items-center shadow-sm gap-4 px-6"
+              >
+                <div className="bg-[#ecfdf5] rounded-3xl p-3 w-fit">
+                  <Icon size={32} color="#059669" />
+                </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {contactMethods.map((method, index) => {
-              const Icon = method.icon;
-              return (
-                <Card
-                  key={index}
-                  className="hover:shadow-lg transition-all duration-200 hover:-translate-y-1 text-center"
-                >
-                  <CardContent className="p-6">
-                    <div className="p-4 bg-green-100 rounded-full w-fit mx-auto mb-4">
-                      <Icon className="h-6 w-6 text-green-600" />
-                    </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                      {method.title}
-                    </h3>
-                    <p className="text-gray-600 mb-4 text-sm">
-                      {method.description}
-                    </p>
-                    <Link href={method.link}>
-                      <Button
-                        variant="outline"
-                        className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
-                      >
-                        {method.contact}
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                <div className="text-center font-bold text-xl text-[#111827] ">
+                  {method.title}
+                </div>
+
+                <div className="text-center text-sm text-[#6b7280]">
+                  {method.description}
+                </div>
+
+                <div className="text-[#059669] font-bold text-base flex gap-2 items-center cursor-pointer mt-auto">
+                  {method.contact}
+                  <ArrowRight size={14} color="#059669" />
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
-          {/* Contact Form */}
-          <div>
-            <Card>
-              <CardContent className="p-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                  Send Us a Message
-                </h2>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div>
-                    <label
-                      htmlFor="name"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      Name
-                    </label>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      required
-                      value={formData.name}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="Your name"
-                    />
-                  </div>
+        {/* Main Content Section */}
+        <div className="md:max-w-[80rem] w-full md:flex-row flex-col flex gap-12 rounded-3xl bg-[#fcfaf5] relative py-8  justify-center items-center">
+          {/* Yellow Blur Overlay - Top Right */}
+          <div
+            className="absolute top-0 right-0 w-[25rem] h-[25rem] bg-[radial-gradient(circle,#FFCF55_0%,transparent_70%)] 
+         blur-[64px] 
+         opacity-50 rounded-[48px] z-0 md:flex hidden"
+          ></div>
 
-                  <div>
-                    <label
-                      htmlFor="email"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      required
-                      value={formData.email}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="your.email@example.com"
-                    />
-                  </div>
+          {/* Left Sidebar - Office Locations & Hours */}
+          <div className="flex flex-col gap-8 md:w-[24rem] ">
+            {/* Send us a message Header */}
+            <div className="flex flex-col gap-4 md:text-left text-center">
+              <div className="font-bold text-3xl text-[#1a1a1a] ">
+                Send us a message
+              </div>
+              <p className="text-base text-[#666666] ">
+                Fill out the form and our team will get back to you as soon as
+                possible.
+              </p>
+            </div>
 
-                  <div>
-                    <label
-                      htmlFor="subject"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      Subject
-                    </label>
-                    <select
-                      id="subject"
-                      name="subject"
-                      required
-                      value={formData.subject}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    >
-                      <option value="">Select a subject</option>
-                      <option value="general">General Inquiry</option>
-                      <option value="support">Technical Support</option>
-                      <option value="campaign">Campaign Help</option>
-                      <option value="account">Account Issue</option>
-                      <option value="billing">Billing Question</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="message"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      Message
-                    </label>
-                    <textarea
-                      id="message"
-                      name="message"
-                      required
-                      rows={6}
-                      value={formData.message}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="Tell us how we can help..."
-                    />
-                  </div>
-
-                  <Button
-                    type="submit"
-                    className="w-full bg-green-600 text-white"
-                  >
-                    <Send className="h-4 w-4 mr-2" />
-                    Send Message
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Company Info & Quick Links */}
-          <div className="space-y-6">
-            {/* Office Information */}
-            <Card>
-              <CardContent className="p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                  Office Information
-                </h2>
-                <div className="space-y-4">
-                  <div className="flex items-start gap-4">
-                    <MapPin className="h-5 w-5 text-green-600 flex-shrink-0 mt-1" />
-                    <div>
-                      <p className="font-semibold text-gray-900">🇬🇧 United Kingdom</p>
-                      <p className="text-gray-600">
-                        ChainFundIt Limited, <br /> 71-75, Shelton Street,
-                        Covent Garden, <br /> London. WC2H 9JQ <br /> United
-                        Kingdom.
-                        <br />
-                      </p>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900">🇺🇸 United States of America</p>
-                      <p className="text-gray-600">
-                        ChainFundit Limited, <br /> 16192 Coastal Highway,
-                        Lewes, Delaware. <br /> 19958 <br /> County of Sussex.{" "}
-                        <br /> United States of America.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    <Mail className="h-5 w-5 text-green-600 flex-shrink-0 mt-1" />
-                    <div>
-                      <Link
-                        href="mailto:support@chainfundit.com"
-                        className="text-green-600 hover:underline"
-                      >
-                        support@chainfundit.com
-                      </Link>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    <Clock className="h-5 w-5 text-green-600 flex-shrink-0 mt-1" />
-                    <div>
-                      <p className="text-gray-600">
-                        Monday - Friday: 9:00 AM - 6:00 PM GMT
-                        <br />
-                        Saturday - Sunday: Closed
-                      </p>
-                    </div>
-                  </div>
+            {/* Office Locations Box */}
+            <div className="bg-[#FCFAF5] flex flex-col p-6 gap-4 rounded-3xl border border-[#e5e7eb]">
+              <div className="flex items-center gap-2">
+                <Image
+                  src="/images/officelocation.png"
+                  alt="Office Location"
+                  width={20}
+                  height={20}
+                />
+                <div className="font-bold text-base text-[#1a1a1a]">
+                  Office Locations
                 </div>
-              </CardContent>
-            </Card>
+              </div>
 
-            {/* Quick Support Links */}
-            <Card>
-              <CardContent className="p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                  Quick Support
-                </h2>
-                <div className="space-y-4">
-                  {supportTopics.map((topic, index) => {
-                    const Icon = topic.icon;
-                    return (
-                      <Link
-                        key={index}
-                        href={topic.link}
-                        className="flex items-start gap-4 p-4 rounded-lg hover:bg-gray-50 transition-colors"
-                      >
-                        <Icon className="h-5 w-5 text-green-600 flex-shrink-0 mt-1" />
-                        <div>
-                          <p className="font-semibold text-gray-900">
-                            {topic.title}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {topic.description}
-                          </p>
-                        </div>
-                      </Link>
-                    );
-                  })}
+              <div className="flex flex-col gap-6">
+                <div>
+                  <p className="font-bold text-xs text-[#1a1a1a] mb-1">
+                    UNITED KINGDOM
+                  </p>
+                  <p className="text-sm text-[#666666]">
+                    71-75 Shelton Street, Covent Garden, London. WC2H 9JQ
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
 
-        {/* Response Time Info */}
-        <Card className="bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-200">
-          <CardContent className="p-8">
-            <div className="flex items-start gap-4">
-              <Clock className="h-8 w-8 text-green-600 flex-shrink-0" />
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  Response Times
-                </h3>
-                <p className="text-gray-700 mb-4">
-                  We aim to respond to all inquiries within 24 hours during
-                  business days. For urgent matters, please call our support
-                  line or send us a text on WhatsApp.
-                </p>
-                <p className="text-gray-700">
-                  <strong>Emergency Support:</strong> For critical issues
-                  affecting active campaigns, we provide priority support.
-                  Contact us immediately if you need urgent assistance on WhatsApp.
-                </p>
+                <div>
+                  <p className="font-bold text-xs text-[#1a1a1a] mb-1">
+                    UNITED STATES
+                  </p>
+                  <p className="text-sm text-[#666666]">
+                    16192 Coastal Highway, Lewes, Delaware. 19958
+                  </p>
+                </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+
+            {/* Office Hours Box */}
+            <div className="flex flex-col gap-2 rounded-3xl bg-[#104109] shadow-sm p-6 md:items-start items-center">
+              <div className="flex items-center gap-2 ">
+                <Image
+                  src="/images/timeicon.png"
+                  alt="Time"
+                  width={20}
+                  height={20}
+                />
+                <div className="font-bold text-base text-white">
+                  Office Hours
+                </div>
+              </div>
+              <p className="text-sm text-[#d1fae5] md:text-left text-center">
+                <strong>Monday - Friday</strong>
+                <br />
+                9:00 AM - 6:00 PM GMT
+              </p>
+            </div>
+          </div>
+
+          {/* Right Side - Contact Form */}
+          <div className="z-10 bg-white md:w-[47rem] w-full rounded-3xl border border-[#f3f4f6] shadow-sm p-5">
+            <form
+              onSubmit={handleSubmit}
+              className="flex flex-col gap-6 md:w-[44rem] w-full  "
+            >
+              {/* Name and Email Row */}
+              <div className="flex md:flex-row flex-col gap-6 md:w-[43rem]">
+                {/* Name Field */}
+                <div className="flex flex-col gap-2 md:w-[21rem] w-full ">
+                  <label
+                    htmlFor="name"
+                    className="md:w-[21rem] w-full font-bold text-sm text-[#1a1a1a]"
+                  >
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    required
+                    value={formData.name}
+                    onChange={handleChange}
+                    className="md:w-[21rem] w-full  px-4 py-3 rounded-xl border border-[#e5e7eb] text-base bg-[#f9fafb]"
+                    placeholder="John Doe"
+                  />
+                </div>
+
+                {/* Email Field */}
+                <div className="flex flex-col gap-2 md:w-[21rem] w-full ">
+                  <label
+                    htmlFor="email"
+                    className="md:w-[21rem] w-full  font-bold text-sm text-[#1a1a1a]"
+                  >
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    required
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="md:w-[21rem] w-full  px-4 py-3 rounded-xl border border-[#e5e7eb] text-base bg-[#f9fafb]"
+                    placeholder="john@example.com"
+                  />
+                </div>
+              </div>
+
+              {/* Subject Field */}
+              <div className="flex flex-col gap-2 md:w-[50rem] w-full ">
+                <label
+                  htmlFor="subject"
+                  className="md:w-[43rem] w-full  font-bold text-sm text-[#1a1a1a]"
+                >
+                  Subject
+                </label>
+                <select
+                  id="subject"
+                  name="subject"
+                  required
+                  value={formData.subject}
+                  onChange={handleChange}
+                  className="md:w-[43rem] w-full text-[#666666] py-3 px-4 rounded-lg border border-[#e5e7eb] bg-[#f9fafb] text-base"
+                >
+                  <option value="">Select a topic</option>
+                  <option value="general">General Inquiry</option>
+                  <option value="support">Technical Support</option>
+                  <option value="campaign">Campaign Help</option>
+                  <option value="account">Account Issue</option>
+                  <option value="billing">Billing Question</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              {/* Message Field */}
+              <div className="md:w-[43rem] w-full  gap-2 pb-[6px] flex flex-col">
+                <label
+                  htmlFor="message"
+                  className="md:w-[43rem] w-full  font-bold text-sm text-[#1a1a1a]"
+                >
+                  Message
+                </label>
+                <textarea
+                  id="message"
+                  name="message"
+                  required
+                  value={formData.message}
+                  onChange={handleChange}
+                  className="md:w-[43rem] w-full h-48 px-4 py-3 rounded-xl border border-[#e5e7eb] bg-[#f9fafb] text-base resize-none overflow-y-auto"
+                  placeholder="How can we help you?"
+                />
+              </div>
+
+              {/* Submit Button */}
+              <Button type="submit" className=" rounded-xl h-auto py-3">
+                <Image
+                  src="/images/sendmessageicon.png"
+                  alt="Send"
+                  width={20}
+                  height={20}
+                />
+                Send Message
+              </Button>
+            </form>
+          </div>
+        </div>
       </div>
 
       <Footer />
