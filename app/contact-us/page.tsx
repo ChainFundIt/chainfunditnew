@@ -16,6 +16,7 @@ import {
   Users,
   FileText,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 const contactMethods = [
@@ -94,47 +95,238 @@ export default function ContactUsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white font-plusjakarta overflow-x-hidden">
       <Navbar />
 
       {/* Hero Section */}
-      <div className="relative bg-[#104901] mt-16 text-white py-24 pb-40">
-        <div className="container mx-auto px-4 text-center">
-          <div className="inline-flex items-center mb-8 px-5 py-2 border border-green-400 rounded-full text-sm font-semibold text-green-300">
-            <MessageSquare className="h-4 w-5 mr-2" />
-            GET IN TOUCH
+      <div
+        className="relative bg-[#104901] text-white overflow-hidden w-full flex justify-center"
+        style={{
+          height: "400px",
+          paddingBottom: "96px",
+          boxSizing: "border-box",
+        }}
+      >
+        {/* Right Corner Blur Overlay */}
+        <div
+          className="absolute top-0 right-0 pointer-events-none"
+          style={{
+            width: "400px",
+            height: "400px",
+            background: "radial-gradient(circle, #59AD4A 0%, transparent 70%)",
+            filter: "blur(64px)",
+            opacity: 0.2,
+          }}
+        ></div>
+
+        {/* Left Corner Blur Overlay */}
+        <div
+          className="absolute top-0 left-0 pointer-events-none"
+          style={{
+            width: "400px",
+            height: "400px",
+            background: "radial-gradient(circle, #59AD4A 0%, transparent 70%)",
+            filter: "blur(64px)",
+            opacity: 0.1,
+          }}
+        ></div>
+
+        {/* Center Content Container */}
+        <div
+          className="relative mx-auto flex flex-col items-center justify-center font-plusjakarta"
+          style={{
+            width: "896px",
+            maxWidth: "896px",
+            height: "198.2px",
+            paddingLeft: "16px",
+            paddingRight: "16px",
+            paddingTop: "80.8px",
+            gap: "24px",
+          }}
+        >
+          {/* Get In Touch Badge */}
+          <div
+            className="inline-flex items-center gap-2 px-4 py-2 font-plusjakarta"
+            style={{
+              border: "1px solid #047857",
+              borderRadius: "24px",
+            }}
+          >
+            <Image
+              src="/images/getintouch.png"
+              alt="Get in touch"
+              width={16}
+              height={16}
+            />
+            <span
+              className="font-plusjakarta"
+              style={{
+                fontWeight: 700,
+                fontSize: "12px",
+                lineHeight: "16px",
+                textTransform: "uppercase",
+                color: "#59AD4A",
+              }}
+            >
+              GET IN TOUCH
+            </span>
           </div>
-          <h1 className="text-6xl font-bold mb-6">We're here to help</h1>
-          <p className="text-lg text-white/80 max-w-3xl mx-auto">
-            Have questions about starting a campaign or supporting a cause? Our
-            dedicated team is ready to assist you on your journey.
-          </p>
+
+          {/* Main Heading */}
+          <div
+            className="flex items-center justify-center font-plusjakarta"
+            style={{
+              width: "864px",
+              height: "60px",
+            }}
+          >
+            <h1
+              className="font-plusjakarta text-center"
+              style={{
+                fontWeight: 800,
+                fontSize: "60px",
+                lineHeight: "60px",
+                color: "#FFFFFF",
+              }}
+            >
+              We're here to help
+            </h1>
+          </div>
+
+          {/* Subheading */}
+          <div
+            className="flex items-center justify-center font-plusjakarta"
+            style={{
+              width: "672px",
+              maxWidth: "672px",
+              height: "59px",
+            }}
+          >
+            <p
+              className="font-plusjakarta text-center"
+              style={{
+                fontWeight: 400,
+                fontSize: "18px",
+                color: "#D1FAE5CC",
+                lineHeight: "1.5",
+              }}
+            >
+              Have questions about starting a campaign or supporting a cause?
+              Our dedicated team is ready to assist you on your journey.
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4">
-        {/* Contact Methods */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 -mt-32 relative z-10 mb-16">
+      {/* Contact Methods Container */}
+      <div
+        className="flex flex-col font-plusjakarta"
+        style={{
+          width: "100%",
+          maxWidth: "1280px",
+          height: "989.2000122070312px",
+          gap: "64px",
+          marginTop: "-80px",
+          position: "relative",
+          zIndex: 10,
+          marginLeft: "auto",
+          marginRight: "auto",
+          paddingLeft: "20px",
+          paddingRight: "20px",
+        }}
+      >
+        {/* Cards Row */}
+        <div
+          className="flex font-plusjakarta justify-center"
+          style={{
+            width: "100%",
+            maxWidth: "1280px",
+            height: "282px",
+            gap: "24px",
+          }}
+        >
           {contactMethods.map((method, index) => {
             const Icon = method.icon;
             return (
               <div
                 key={index}
-                className="bg-white rounded-2xl p-8 shadow-lg text-center"
+                className="bg-white font-plusjakarta contact-method-container"
+                style={{
+                  width: "410.6px",
+                  height: "282px",
+                  borderRadius: "24px",
+                  padding: "32px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "flex-start",
+                  flexGrow: 1,
+                  minWidth: "200px",
+                }}
               >
-                <div className="p-4 bg-green-100 rounded-full w-fit mx-auto mb-4">
-                  <Icon className="h-6 w-6 text-green-600" />
+                <div
+                  className="flex items-center justify-center mb-4 font-plusjakarta"
+                  style={{
+                    backgroundColor: "#ECFDF5",
+                    width: "70px",
+                    height: "64px",
+                    borderRadius: "16px",
+                  }}
+                >
+                  <Image
+                    src={`/images/${index === 0 ? "emailicon.png" : index === 1 ? "phonesupport.png" : "whatsappicon.png"}`}
+                    alt={method.title}
+                    width={35}
+                    height={32}
+                  />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  {method.title}
-                </h3>
-                <p className="text-gray-600 mb-6 text-sm">
-                  {method.description}
-                </p>
-                <Link href={method.link}>
+
+                <div className="text-center font-plusjakarta title-container">
+                  <h3
+                    className="font-plusjakarta"
+                    style={{
+                      fontWeight: 700,
+                      fontSize: "20px",
+                      lineHeight: "28px",
+                      color: "#1a1a1a",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {method.title}
+                  </h3>
+                </div>
+
+                <div
+                  className="text-center font-plusjakarta"
+                  style={{
+                    width: "346.9700012207031px",
+                    height: "46px",
+                    paddingRight: "5.98px",
+                    paddingLeft: "5.99px",
+                  }}
+                >
+                  <p
+                    className="font-plusjakarta text-center"
+                    style={{
+                      width: "335px",
+                      height: "46px",
+                      fontFamily: "Plus Jakarta Sans",
+                      fontWeight: 400,
+                      fontSize: "14px",
+                      lineHeight: "22.75px",
+                      color: "#666666",
+                    }}
+                  >
+                    {method.description}
+                  </p>
+                </div>
+
+                <Link href={method.link} className="mt-auto pt-4">
                   <Button
                     variant="ghost"
-                    className="text-green-600 hover:text-green-700 font-plusjakarta"
+                    className="text-white hover:text-green-700 bg-[#47a341] font-plusjakarta"
                   >
                     {method.contact}
                     <span className="ml-2">→</span>
@@ -146,173 +338,536 @@ export default function ContactUsPage() {
         </div>
 
         {/* Main Content Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 py-16">
-          {/* Left Sidebar - Office Locations & Hours */}
-          <div className="space-y-6">
-            {/* Send us a message Header */}
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Send us a message
-              </h2>
-              <p className="text-gray-600 text-sm">
-                Fill out the form and our team will get back to you
-                as soon as possible.
-              </p>
-            </div>
+        <div
+          className="relative font-plusjakarta mx-auto"
+          style={{
+            width: "100%",
+            maxWidth: "1280px",
+            height: "643.2px",
+            gap: "48px",
+            borderRadius: "48px",
+            padding: "48px",
+            backgroundColor: "#FFFFFF",
+            boxSizing: "border-box",
+          }}
+        >
+          {/* Yellow Blur Overlay - Top Right */}
+          <div
+            className="absolute top-0 right-0 pointer-events-none"
+            style={{
+              width: "400px",
+              height: "400px",
+              background:
+                "radial-gradient(circle, #FFCF55 0%, transparent 70%)",
+              filter: "blur(64px)",
+              opacity: 0.5,
+              borderRadius: "48px",
+            }}
+          ></div>
 
-            {/* Office Locations Box */}
-            <div className="bg-[#FCFAF5] rounded-2xl p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <MapPin className="h-5 w-5 text-green-600" />
-                <h3 className="text-base font-bold text-gray-900">
-                  Office Locations
-                </h3>
+          <div
+            className="relative flex gap-12 font-plusjakarta"
+            style={{ gap: "48px" }}
+          >
+            {/* Left Sidebar - Office Locations & Hours */}
+            <div
+              className="font-plusjakarta"
+              style={{
+                width: "377px",
+                height: "547px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "32px",
+              }}
+            >
+              {/* Send us a message Header */}
+              <div
+                className="font-plusjakarta"
+                style={{
+                  width: "377px",
+                  height: "104px",
+                  gap: "15.4px",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <h2
+                  className="font-plusjakarta"
+                  style={{
+                    width: "377px",
+                    height: "36px",
+                    fontFamily: "Plus Jakarta Sans",
+                    fontWeight: 700,
+                    fontSize: "30px",
+                    lineHeight: "36px",
+                    color: "#1a1a1a",
+                  }}
+                >
+                  Send us a message
+                </h2>
+                <p
+                  className="font-plusjakarta"
+                  style={{
+                    fontFamily: "Plus Jakarta Sans",
+                    fontWeight: 400,
+                    fontSize: "16px",
+                    lineHeight: "26px",
+                    color: "#666666",
+                  }}
+                >
+                  Fill out the form and our team will get back to you as soon as
+                  possible.
+                </p>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <p className="font-plusjakarta text-gray-900 text-sm mb-1">
-                    UNITED KINGDOM
-                  </p>
-                  <p className="text-xs text-gray-600 leading-relaxed">
-                    71-75 Shelton Street, Covent Garden, London. WC2H 9JQ
-                  </p>
+              {/* Office Locations Box */}
+              <div
+                className="bg-[#FCFAF5] font-plusjakarta"
+                style={{
+                  width: "377px",
+                  height: "233px",
+                  gap: "16px",
+                  borderRadius: "24px",
+                  border: "1px solid #E5E7EB",
+                  padding: "23.8px",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <div
+                  className="flex items-center font-plusjakarta"
+                  style={{
+                    width: "328px",
+                    height: "24px",
+                    gap: "8px",
+                  }}
+                >
+                  <Image
+                    src="/images/officelocation.png"
+                    alt="Office Location"
+                    width={20}
+                    height={20}
+                  />
+                  <h3
+                    className="font-plusjakarta"
+                    style={{
+                      fontFamily: "Plus Jakarta Sans",
+                      fontWeight: 700,
+                      fontSize: "16px",
+                      lineHeight: "24px",
+                      color: "#1a1a1a",
+                    }}
+                  >
+                    Office Locations
+                  </h3>
                 </div>
 
-                <div>
-                  <p className="font-plusjakarta text-gray-900 text-sm mb-1">
-                    UNITED STATES
-                  </p>
-                  <p className="text-xs text-gray-600 leading-relaxed">
-                    16192 Coastal Highway, Lewes, Delaware. 19958
-                  </p>
+                <div
+                  className="font-plusjakarta"
+                  style={{
+                    width: "328px",
+                    height: "144px",
+                    gap: "24px",
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  <div className="font-plusjakarta">
+                    <p
+                      className="font-plusjakarta mb-1"
+                      style={{
+                        fontFamily: "Plus Jakarta Sans",
+                        fontWeight: 700,
+                        fontSize: "12px",
+                        lineHeight: "16px",
+                        textTransform: "uppercase",
+                        color: "#1a1a1a",
+                      }}
+                    >
+                      UNITED KINGDOM
+                    </p>
+                    <p
+                      className="font-plusjakarta"
+                      style={{
+                        fontFamily: "Plus Jakarta Sans",
+                        fontWeight: 400,
+                        fontSize: "14px",
+                        lineHeight: "20px",
+                        color: "#666666",
+                      }}
+                    >
+                      71-75 Shelton Street, Covent Garden, London. WC2H 9JQ
+                    </p>
+                  </div>
+
+                  <div className="font-plusjakarta">
+                    <p
+                      className="font-plusjakarta mb-1"
+                      style={{
+                        fontFamily: "Plus Jakarta Sans",
+                        fontWeight: 700,
+                        fontSize: "12px",
+                        lineHeight: "16px",
+                        textTransform: "uppercase",
+                        color: "#1a1a1a",
+                      }}
+                    >
+                      UNITED STATES
+                    </p>
+                    <p
+                      className="font-plusjakarta"
+                      style={{
+                        fontFamily: "Plus Jakarta Sans",
+                        fontWeight: 400,
+                        fontSize: "14px",
+                        lineHeight: "20px",
+                        color: "#666666",
+                      }}
+                    >
+                      16192 Coastal Highway, Lewes, Delaware. 19958
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Office Hours Box */}
-            <div className="bg-[#104901] rounded-2xl p-6 text-white">
-              <div className="flex items-center gap-2 mb-3">
-                <Clock className="h-5 w-5" />
-                <h3 className="text-base font-bold">Office Hours</h3>
+              {/* Office Hours Box */}
+              <div
+                className="font-plusjakarta"
+                style={{
+                  width: "377px",
+                  height: "120px",
+                  gap: "8px",
+                  borderRadius: "24px",
+                  padding: "24px",
+                  backgroundColor: "#104901",
+                  boxShadow:
+                    "0px 4px 6px -4px rgba(0, 0, 0, 0.1), 0px 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <div className="flex items-center gap-2 font-plusjakarta">
+                  <Image
+                    src="/images/timeicon.png"
+                    alt="Time"
+                    width={20}
+                    height={20}
+                  />
+                  <h3
+                    className="font-plusjakarta"
+                    style={{
+                      width: "99px",
+                      height: "24px",
+                      fontFamily: "Plus Jakarta Sans",
+                      fontWeight: 700,
+                      fontSize: "16px",
+                      lineHeight: "24px",
+                      color: "#FFFFFF",
+                    }}
+                  >
+                    Office Hours
+                  </h3>
+                </div>
+                <p
+                  className="font-plusjakarta"
+                  style={{
+                    width: "329px",
+                    height: "40px",
+                    fontFamily: "Plus Jakarta Sans",
+                    fontWeight: 400,
+                    fontSize: "14px",
+                    lineHeight: "20px",
+                    color: "#D1FAE5",
+                  }}
+                >
+                  <strong>Monday - Friday</strong>
+                  <br />
+                  9:00 AM - 6:00 PM GMT
+                </p>
               </div>
-              <p className="text-white/90 text-sm">
-                <strong>Monday - Friday</strong>
-                <br />
-                9:00 AM - 6:00 PM GMT
-              </p>
             </div>
-          </div>
 
-          {/* Right Side - Contact Form */}
-          <div>
-            <div className="relative">
-              {/* Yellow overlay background */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FEF9C3]/40 to-[#FEF9C3]/80 rounded-2xl"></div>
-
-              {/* Form container */}
-              <div className="relative bg-white rounded-2xl p-8">
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  {/* Name and Email Row */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label
-                        htmlFor="name"
-                        className="block text-sm font-plusjakarta text-gray-900 mb-2"
-                      >
-                        Name
-                      </label>
-                      <input
-                        type="text"
-                        id="name"
-                        name="name"
-                        required
-                        value={formData.name}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
-                        placeholder="John Doe"
-                      />
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor="email"
-                        className="block text-sm font-plusjakarta text-gray-900 mb-2"
-                      >
-                        Email
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="email"
-                          id="email"
-                          name="email"
-                          required
-                          value={formData.email}
-                          onChange={handleChange}
-                          className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
-                          placeholder="john@example.com"
-                        />
-                        <Mail className="h-4 w-4 text-green-600 absolute right-3 top-3.5" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Subject */}
-                  <div>
+            {/* Right Side - Contact Form */}
+            <div
+              className="font-plusjakarta bg-white"
+              style={{
+                width: "758px",
+                height: "547px",
+                borderRadius: "24px",
+                border: "1px solid #F3F4F6",
+                padding: "31.8px",
+                boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.05)",
+              }}
+            >
+              <form
+                onSubmit={handleSubmit}
+                className="font-plusjakarta"
+                style={{
+                  width: "692px",
+                  height: "481px",
+                  gap: "24px",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                {/* Name and Email Row */}
+                <div
+                  className="font-plusjakarta"
+                  style={{
+                    width: "692px",
+                    height: "76px",
+                    gap: "23.99px",
+                    display: "flex",
+                  }}
+                >
+                  {/* Name Field */}
+                  <div
+                    className="font-plusjakarta"
+                    style={{
+                      width: "334px",
+                      height: "76px",
+                      gap: "8px",
+                      display: "flex",
+                      flexDirection: "column",
+                    }}
+                  >
                     <label
-                      htmlFor="subject"
-                      className="block text-sm font-plusjakarta text-gray-900 mb-2"
+                      htmlFor="name"
+                      className="font-plusjakarta"
+                      style={{
+                        width: "334px",
+                        height: "20px",
+                        fontFamily: "Plus Jakarta Sans",
+                        fontWeight: 700,
+                        fontSize: "14px",
+                        lineHeight: "20px",
+                        color: "#1a1a1a",
+                      }}
                     >
-                      Subject
+                      Name
                     </label>
-                    <select
-                      id="subject"
-                      name="subject"
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
                       required
-                      value={formData.subject}
+                      value={formData.name}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm text-gray-600"
-                    >
-                      <option value="">Select a topic</option>
-                      <option value="general">General Inquiry</option>
-                      <option value="support">Technical Support</option>
-                      <option value="campaign">Campaign Help</option>
-                      <option value="account">Account Issue</option>
-                      <option value="billing">Billing Question</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
-
-                  {/* Message */}
-                  <div>
-                    <label
-                      htmlFor="message"
-                      className="block text-sm font-plusjakarta text-gray-900 mb-2"
-                    >
-                      Message
-                    </label>
-                    <textarea
-                      id="message"
-                      name="message"
-                      required
-                      rows={4}
-                      value={formData.message}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-sm"
-                      placeholder="How can we help you?"
+                      className="font-plusjakarta"
+                      style={{
+                        width: "334px",
+                        height: "48px",
+                        padding: "12px 16px",
+                        borderRadius: "12px",
+                        border: "1px solid #E5E7EB",
+                        backgroundColor: "#F9FAFB",
+                        fontFamily: "Plus Jakarta Sans",
+                        fontSize: "16px",
+                        lineHeight: "24px",
+                      }}
+                      placeholder="John Doe"
                     />
                   </div>
 
-                  {/* Submit Button */}
-                  <Button
-                    type="submit"
-                    className="w-full bg-[#104901] text-white hover:bg-[#0a3a01] font-plusjakarta py-6 rounded-lg flex items-center justify-center gap-2 mt-4"
+                  {/* Email Field */}
+                  <div
+                    className="font-plusjakarta"
+                    style={{
+                      width: "334px",
+                      height: "76px",
+                      gap: "8px",
+                      display: "flex",
+                      flexDirection: "column",
+                    }}
                   >
-                    <Send className="h-4 w-4" />
+                    <label
+                      htmlFor="email"
+                      className="font-plusjakarta"
+                      style={{
+                        width: "334px",
+                        height: "20px",
+                        fontFamily: "Plus Jakarta Sans",
+                        fontWeight: 700,
+                        fontSize: "14px",
+                        lineHeight: "20px",
+                        color: "#1a1a1a",
+                      }}
+                    >
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      required
+                      value={formData.email}
+                      onChange={handleChange}
+                      className="font-plusjakarta"
+                      style={{
+                        width: "334px",
+                        height: "48px",
+                        padding: "12px 16px",
+                        borderRadius: "12px",
+                        border: "1px solid #E5E7EB",
+                        backgroundColor: "#F9FAFB",
+                        fontFamily: "Plus Jakarta Sans",
+                        fontSize: "16px",
+                        lineHeight: "24px",
+                      }}
+                      placeholder="john@example.com"
+                    />
+                  </div>
+                </div>
+
+                {/* Subject Field */}
+                <div
+                  className="font-plusjakarta"
+                  style={{
+                    width: "692px",
+                    height: "76px",
+                    gap: "8px",
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  <label
+                    htmlFor="subject"
+                    className="font-plusjakarta"
+                    style={{
+                      width: "692px",
+                      height: "20px",
+                      fontFamily: "Plus Jakarta Sans",
+                      fontWeight: 700,
+                      fontSize: "14px",
+                      lineHeight: "20px",
+                      color: "#1a1a1a",
+                    }}
+                  >
+                    Subject
+                  </label>
+                  <select
+                    id="subject"
+                    name="subject"
+                    required
+                    value={formData.subject}
+                    onChange={handleChange}
+                    className="font-plusjakarta"
+                    style={{
+                      width: "692px",
+                      height: "48px",
+                      padding: "12px 16px",
+                      borderRadius: "12px",
+                      border: "1px solid #E5E7EB",
+                      backgroundColor: "#F9FAFB",
+                      fontFamily: "Plus Jakarta Sans",
+                      fontWeight: 400,
+                      fontSize: "16px",
+                      lineHeight: "24px",
+                      color: "#666666",
+                    }}
+                  >
+                    <option value="">Select a topic</option>
+                    <option value="general">General Inquiry</option>
+                    <option value="support">Technical Support</option>
+                    <option value="campaign">Campaign Help</option>
+                    <option value="account">Account Issue</option>
+                    <option value="billing">Billing Question</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+
+                {/* Message Field */}
+                <div
+                  className="font-plusjakarta"
+                  style={{
+                    width: "692px",
+                    height: "201px",
+                    paddingBottom: "5.6px",
+                    gap: "8px",
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  <label
+                    htmlFor="message"
+                    className="font-plusjakarta"
+                    style={{
+                      width: "692px",
+                      height: "20px",
+                      fontFamily: "Plus Jakarta Sans",
+                      fontWeight: 700,
+                      fontSize: "14px",
+                      lineHeight: "20px",
+                      color: "#1a1a1a",
+                    }}
+                  >
+                    Message
+                  </label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    required
+                    value={formData.message}
+                    onChange={handleChange}
+                    className="font-plusjakarta"
+                    style={{
+                      width: "692px",
+                      height: "168px",
+                      padding: "12px 16px 132px 16px",
+                      borderRadius: "12px",
+                      border: "1px solid #E5E7EB",
+                      backgroundColor: "#F9FAFB",
+                      fontFamily: "Plus Jakarta Sans",
+                      fontWeight: 400,
+                      fontSize: "16px",
+                      lineHeight: "24px",
+                      resize: "none",
+                      overflow: "auto",
+                    }}
+                    placeholder="How can we help you?"
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  className="font-plusjakarta flex items-center justify-center"
+                  style={{
+                    width: "692px",
+                    height: "56px",
+                    padding: "16px 0",
+                    gap: "8px",
+                    borderRadius: "12px",
+                    backgroundColor: "#104901",
+                    color: "#FFFFFF",
+                    border: "none",
+                    cursor: "pointer",
+                    boxShadow:
+                      "0px 4px 6px -4px rgba(6, 78, 59, 0.1), 0px 10px 15px -3px rgba(6, 78, 59, 0.1)",
+                  }}
+                >
+                  <Image
+                    src="/images/sendmessageicon.png"
+                    alt="Send"
+                    width={20}
+                    height={20}
+                  />
+                  <span
+                    className="font-plusjakarta"
+                    style={{
+                      width: "114px",
+                      height: "24px",
+                      fontFamily: "Plus Jakarta Sans",
+                      fontWeight: 700,
+                      fontSize: "16px",
+                      lineHeight: "24px",
+                      textAlign: "center",
+                    }}
+                  >
                     Send Message
-                  </Button>
-                </form>
-              </div>
+                  </span>
+                </button>
+              </form>
             </div>
           </div>
         </div>

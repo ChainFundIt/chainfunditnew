@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,8 +20,23 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+const tableOfContents = [
+  { id: "a-introduction", label: "A. Introduction & Scope" },
+  { id: "b-roles", label: "B. Roles & Obligations" },
+  { id: "c-fees", label: "C. Fees & Payments" },
+  { id: "d-media", label: "D. Media & Uploaded Content" },
+  { id: "e-donors", label: "E. Donors & Donations" },
+  { id: "f-organisers", label: "F. Campaign Organisers" },
+  { id: "f1-prohibited", label: "F.1. Prohibited Campaigns" },
+  { id: "g-ambassadors", label: "G. Chain Ambassadors" },
+  { id: "h-suspension", label: "H. Account Suspension" },
+  { id: "i-liability", label: "I. Liability & Risk" },
+  { id: "j-changes", label: "J. Changes & Legal Terms" },
+];
+
 const sections = [
   {
+    id: "a-introduction",
     title: "A. Introduction & Scope",
     icon: FileText,
     content: [
@@ -58,14 +73,14 @@ const sections = [
                 agree to these Terms, the{" "}
                 <Link
                   href="/privacy-policy"
-                  className="text-[#104901] hover:underline font-semibold"
+                  className="text-[#104901] hover:underline font-plusjakarta"
                 >
                   Privacy Policy
                 </Link>
                 , the{" "}
                 <Link
                   href="/privacy-policy#cookies"
-                  className="text-[#104901] hover:underline font-semibold"
+                  className="text-[#104901] hover:underline font-plusjakarta"
                 >
                   Cookie Policy
                 </Link>
@@ -83,6 +98,7 @@ const sections = [
     ],
   },
   {
+    id: "b-roles",
     title: "B. Roles & Obligations",
     icon: Users,
     content: [
@@ -127,23 +143,17 @@ const sections = [
               You agree to only use the platform in accordance with these Terms
               and applicable laws.
             </li>
-              <li>
-                You may not use ChainFundIt to fundraise for or promote any
-                illegal, deceptive, or prohibited activity (see Section F and{" "}
-                <a
-                  href="#f.1.-prohibited-campaigns-policy"
-                  className="text-[#104901] hover:underline font-semibold"
-                >
-                  Prohibited Campaigns Policy
-                </a>
-                ).
-              </li>
+            <li>
+              You may not use ChainFundIt to fundraise for or promote any
+              illegal, deceptive, or prohibited activity.
+            </li>
           </ul>
         ),
       },
     ],
   },
   {
+    id: "c-fees",
     title: "C. Fees & Payments",
     icon: DollarSign,
     content: [
@@ -181,6 +191,7 @@ const sections = [
     ],
   },
   {
+    id: "d-media",
     title: "D. Media & Uploaded Content",
     icon: Image,
     content: [
@@ -216,6 +227,7 @@ const sections = [
     ],
   },
   {
+    id: "e-donors",
     title: "E. Donors & Donations",
     icon: Heart,
     content: [
@@ -255,6 +267,7 @@ const sections = [
     ],
   },
   {
+    id: "f-organisers",
     title: "F. Campaign Organisers",
     icon: Briefcase,
     content: [
@@ -309,9 +322,9 @@ const sections = [
     ],
   },
   {
+    id: "f1-prohibited",
     title: "F.1. Prohibited Campaigns Policy",
     icon: Ban,
-    id: "f.1.-prohibited-campaigns-policy",
     content: [
       {
         subtitle:
@@ -320,7 +333,7 @@ const sections = [
           <>
             <div className="space-y-4">
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">
+                <h4 className="font-plusjakarta text-gray-900 mb-2">
                   1. Illegal or Unlawful Activity
                 </h4>
                 <ul className="list-disc list-inside ml-4 space-y-1 text-gray-700">
@@ -335,7 +348,7 @@ const sections = [
               </div>
 
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">
+                <h4 className="font-plusjakarta text-gray-900 mb-2">
                   2. Harmful or Dangerous Causes
                 </h4>
                 <ul className="list-disc list-inside ml-4 space-y-1 text-gray-700">
@@ -350,7 +363,7 @@ const sections = [
               </div>
 
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">
+                <h4 className="font-plusjakarta text-gray-900 mb-2">
                   3. Misinformation or Misleading Claims
                 </h4>
                 <ul className="list-disc list-inside ml-4 space-y-1 text-gray-700">
@@ -365,7 +378,7 @@ const sections = [
               </div>
 
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">
+                <h4 className="font-plusjakarta text-gray-900 mb-2">
                   4. Adult or Inappropriate Content
                 </h4>
                 <ul className="list-disc list-inside ml-4 space-y-1 text-gray-700">
@@ -376,7 +389,7 @@ const sections = [
               </div>
 
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">
+                <h4 className="font-plusjakarta text-gray-900 mb-2">
                   5. Gambling or Speculative Investments
                 </h4>
                 <ul className="list-disc list-inside ml-4 space-y-1 text-gray-700">
@@ -388,7 +401,7 @@ const sections = [
               </div>
 
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">
+                <h4 className="font-plusjakarta text-gray-900 mb-2">
                   6. Political Manipulation
                 </h4>
                 <ul className="list-disc list-inside ml-4 space-y-1 text-gray-700">
@@ -400,7 +413,7 @@ const sections = [
               </div>
 
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">
+                <h4 className="font-plusjakarta text-gray-900 mb-2">
                   7. Other Prohibited Purposes
                 </h4>
                 <ul className="list-disc list-inside ml-4 space-y-1 text-gray-700">
@@ -409,20 +422,13 @@ const sections = [
                     transparency.
                   </li>
                   <li>
-                    Any content that violates our{" "}
-                    <Link
-                      href="/terms-and-conditions"
-                      className="text-[#104901] hover:underline font-semibold"
-                    >
-                      Terms & Conditions
-                    </Link>{" "}
-                    or local laws.
+                    Any content that violates our Terms & Conditions or local laws.
                   </li>
                 </ul>
               </div>
 
               <div className="mt-6 p-4 bg-red-50 border-l-4 border-red-500">
-                <p className="text-gray-900 font-semibold">
+                <p className="text-gray-900 font-plusjakarta">
                   Violation of this policy may result in immediate campaign
                   removal, account suspension, or reporting to relevant
                   authorities.
@@ -435,6 +441,7 @@ const sections = [
     ],
   },
   {
+    id: "g-ambassadors",
     title: "G. Chain Ambassadors",
     icon: Share2,
     content: [
@@ -466,6 +473,7 @@ const sections = [
     ],
   },
   {
+    id: "h-suspension",
     title: "H. Account Suspension, Campaign Closure & Termination",
     icon: AlertTriangle,
     content: [
@@ -499,6 +507,7 @@ const sections = [
     ],
   },
   {
+    id: "i-liability",
     title: "I. Liability, Risk & Fund Protection",
     icon: Shield,
     content: [
@@ -549,6 +558,7 @@ const sections = [
     ],
   },
   {
+    id: "j-changes",
     title: "J. Changes, Notifications & Legal Terms",
     icon: Scale,
     content: [
@@ -585,101 +595,293 @@ const sections = [
 ];
 
 export default function TermsAndConditionsPage() {
+  const [activeSection, setActiveSection] = useState("a-introduction");
+
+  const scrollToSection = (sectionId: string) => {
+    setActiveSection(sectionId);
+    const element = document.getElementById(sectionId);
+    if (element) {
+      setTimeout(() => {
+        element.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
+    <div className="min-h-screen via-[#000000ff] to-blue-50 font-plusjakarta w-full">
       <Navbar />
 
-      <div className="relative bg-gradient-to-r from-green-600 to-[#104901] mt-16 text-white py-20">
-        <div className="container mx-auto px-4 text-center">
-          <FileText className="h-16 w-16 mx-auto mb-6" />
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Terms and Conditions
-          </h1>
-          <p className="text-xl md:text-2xl text-white/90 max-w-4xl mx-auto">
-            Please read these terms carefully before using ChainFundIt. By using
-            our platform, you agree to be bound by these terms.
-          </p>
-          <p className="text-sm text-white/80 mt-4">
-            Effective Date: November 19, 2025
-          </p>
-        </div>
-      </div>
+      {/* Hero Section */}
+<div
+  className="relative text-[#000000ff] overflow-hidden rounded-3xl w-full"
+  style={{
+    boxSizing: "border-box",
+  }}
+>
+  {/* Right Corner Blur Overlay */}
+  <div
+    className="absolute top-0 right-0 pointer-events-none"
+    style={{
+      width: "400px",
+      height: "400px",
+      background: "radial-gradient(circle, #104109 0%, transparent 70%)",
+      filter: "blur(64px)",
+      opacity: 0.2,
+    }}
+  ></div>
 
-      <div className="container mx-auto px-4 py-16 max-w-4xl">
-        {sections.map((section, index) => {
-          const Icon = section.icon;
-          return (
-            <div
-              key={index}
-              id={section.id}
-              className="mb-8 scroll-mt-20"
-            >
-              <Card>
-                <CardContent className="p-8">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-3 bg-green-100 rounded-full">
-                      <Icon className="h-6 w-6 text-green-600" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-gray-900">
-                      {section.title}
-                    </h2>
-                  </div>
-                  <div className="space-y-6">
-                    {section.content.map((item, idx) => (
-                      <div key={idx}>
-                        {item.subtitle && (
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                            {item.subtitle}
-                          </h3>
-                        )}
-                        <div className="text-gray-700 leading-relaxed">
-                          {item.text}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+  {/* Left Corner Blur Overlay */}
+  <div
+    className="absolute top-0 left-0 pointer-events-none"
+    style={{
+      width: "400px",
+      height: "400px",
+      background: "radial-gradient(circle, #59AD4A 0%, transparent 70%)",
+      filter: "blur(64px)",
+      opacity: 0.1,
+    }}
+  ></div>
+
+  {/* Center Content Container */}
+  <div
+    className="relative mx-auto flex flex-col items-center justify-center font-plusjakarta"
+    style={{
+      width: "896px",
+      maxWidth: "100%",
+      paddingLeft: "16px",
+      paddingRight: "16px",
+      paddingTop: "40.8px",
+      gap: "24px",
+    }}
+  >
+    {/* Shield Icon Badge */}
+    <div
+      className="inline-flex items-center justify-center font-plusjakarta"
+      style={{
+        backgroundColor: "#ECFDF5",
+        width: "64px",
+        height: "64px",
+        borderRadius: "10px",
+        marginTop: "26px",
+      }}
+    >
+      <Shield className="h-8 w-8 mx-auto mb-4 text-[#059669]" />
+    </div>
+
+    {/* Main Heading */}
+    <div
+      className="flex items-center justify-center font-plusjakarta text-center px-3"
+      style={{
+        width: "100%",
+        maxWidth: "864px",
+      }}
+    >
+      <h1
+        className="font-plusjakarta"
+        style={{
+          fontWeight: 800,
+          fontSize: "48px",
+          lineHeight: "1.2",
+          color: "#000000ff", // Black text color (as per your request)
+        }}
+      >
+        Terms and Conditions
+      </h1>
+    </div>
+
+    {/* Subheading */}
+    <div
+      className="flex items-center justify-center font-plusjakarta text-center px-4"
+      style={{
+        width: "100%",
+        maxWidth: "672px",
+      }}
+    >
+      <p
+        className="font-plusjakarta"
+        style={{
+          fontWeight: 400,
+          fontSize: "18px",
+          color: "#4B5563", // Black text color (same as the title)
+          lineHeight: "1.5",
+        }}
+      >
+        Please read these terms carefully before using ChainFundIt. By using our platform, you agree to be bound by these terms.
+      </p>
+    </div>
+  </div>
+</div>
+
+      {/* Main Content */}
+      <div className="w-full font-plusjakarta px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {/* Sidebar - Table of Contents */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-24 bg-gray-50 rounded-lg p-6 border border-gray-200 max-h-[calc(100vh-120px)] overflow-y-auto font-plusjakarta">
+                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4 font-plusjakarta">
+                  TABLE OF CONTENTS
+                </h3>
+                <nav className="space-y-1 font-plusjakarta">
+                  {tableOfContents.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => scrollToSection(item.id)}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors font-plusjakarta ${
+                        activeSection === item.id
+                          ? "bg-green-100 text-green-700 font-plusjakarta"
+                          : "text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </nav>
+              </div>
             </div>
-          );
-        })}
 
-        <div className="mb-8">
-          <Card>
-            <CardContent className="p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-green-100 rounded-full">
-                  <Mail className="h-6 w-6 text-green-600" />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Questions or Concerns?
-                </h2>
-              </div>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                Please contact:
-              </p>
-              <div className="space-y-2 text-gray-700">
-                <p>
-                  <strong>Email:</strong>{" "}
-                  <Link
-                    href="mailto:campaigns@chainfundit.com"
-                    className="text-[#104901] hover:underline font-semibold"
+            {/* Main Content */}
+            <div className="lg:col-span-3 space-y-8 font-plusjakarta">
+              {sections.map((section, index) => {
+                const Icon = section.icon;
+                const isGreenCard = ["C. Fees & Payments", "E. Donors & Donations", "G. Chain Ambassadors"].includes(section.title);
+
+                return (
+                  <div
+                    key={section.id}
+                    id={section.id}
+                    className="scroll-mt-20 font-plusjakarta"
+                    onMouseEnter={() => setActiveSection(section.id)}
                   >
-                    campaigns@chainfundit.com
-                  </Link>
-                </p>
-                <p>
-                  <strong>Website:</strong>{" "}
-                  <Link
-                    href="https://www.chainfundit.com"
-                    className="text-[#104901] hover:underline font-semibold"
-                  >
-                    www.chainfundit.com
-                  </Link>
-                </p>
+                    <Card
+                      style={{
+                        backgroundColor: isGreenCard ? "#104901 !important" : "#FFFFFF !important",
+                        borderRadius: "16px",
+                        padding: "0",
+                        border: "none"
+                      }}
+                    >
+                      <CardContent className="p-6 font-plusjakarta">
+                        <div className="flex items-center gap-3 mb-6 font-plusjakarta">
+                          <div
+                            className="p-3 rounded-full flex items-center justify-center font-plusjakarta flex-shrink-0"
+                            style={{
+                              backgroundColor: isGreenCard ? "#1a5a2a" : "#f0fdf4",
+                              width: "48px",
+                              height: "48px",
+                            }}
+                          >
+                            <Icon
+                              className="h-5 w-5"
+                              style={{
+                                color: isGreenCard ? "#FFFFFF" : "#059669",
+                              }}
+                            />
+                          </div>
+                          <h2
+                            className="font-bold font-plusjakarta"
+                            style={{
+                              fontSize: "18px",
+                              color: isGreenCard ? "#FFFFFF" : "#1a1a1a",
+                            }}
+                          >
+                            {section.title}
+                          </h2>
+                        </div>
+                        <div className="space-y-6 font-plusjakarta">
+                          {section.content.map((item, contentIdx) => (
+                            <div key={contentIdx} className="font-plusjakarta">
+                              {item.subtitle && (
+                                <h3
+                                  className="text-base font-plusjakarta mb-3 font-plusjakarta"
+                                  style={{
+                                    color: isGreenCard ? "#FFFFFF" : "#1a1a1a",
+                                  }}
+                                >
+                                  {item.subtitle}
+                                </h3>
+                              )}
+                              {item.text && (
+                                <div
+                                  className="leading-relaxed text-sm font-plusjakarta"
+                                  style={{
+                                    color: isGreenCard ? "#FFFFFF" : "#4b5563",
+                                  }}
+                                >
+                                  {item.text}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                );
+              })}
+
+              {/* Questions or Concerns Section */}
+              <div className="mb-8 scroll-mt-20 font-plusjakarta">
+                <Card style={{ borderRadius: "16px", padding: "0" }}>
+                  <CardContent className="p-6 font-plusjakarta">
+                    <div className="flex items-center gap-3 mb-6 font-plusjakarta">
+                      <div
+                        className="p-3 rounded-full flex items-center justify-center font-plusjakarta flex-shrink-0"
+                        style={{
+                          backgroundColor: "#f0fdf4",
+                          width: "48px",
+                          height: "48px",
+                        }}
+                      >
+                        <Mail className="h-5 w-5 text-green-600" />
+                      </div>
+                      <h2
+                        className="font-bold font-plusjakarta"
+                        style={{
+                          fontSize: "18px",
+                          color: "#1a1a1a",
+                        }}
+                      >
+                        Questions or Concerns?
+                      </h2>
+                    </div>
+                    <p
+                      className="leading-relaxed mb-4 font-plusjakarta"
+                      style={{ color: "#4b5563" }}
+                    >
+                      Please contact:
+                    </p>
+                    <div
+                      className="space-y-2 font-plusjakarta"
+                      style={{ color: "#4b5563" }}
+                    >
+                      <p>
+                        <strong>Email:</strong>{" "}
+                        <Link
+                          href="mailto:campaigns@chainfundit.com"
+                          className="text-[#104901] hover:underline font-plusjakarta"
+                        >
+                          campaigns@chainfundit.com
+                        </Link>
+                      </p>
+                      <p>
+                        <strong>Website:</strong>{" "}
+                        <Link
+                          href="https://www.chainfundit.com"
+                          className="text-[#104901] hover:underline font-plusjakarta"
+                        >
+                          www.chainfundit.com
+                        </Link>
+                      </p>
+                      <p>
+                        <strong>Effective Date:</strong> November 19, 2025
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
 
