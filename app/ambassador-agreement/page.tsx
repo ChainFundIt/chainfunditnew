@@ -632,8 +632,10 @@ export default function AmbassadorAgreementPage() {
             })}
 
             {/* REVISION DATE */}
-            <div className="text-center text-sm text-[#666666] h-8">
+            <div className="w-full flex justify-center">
+            <div className="bg-[#ECFDF5] text-sm text-[#059669] h-8 w-fit flex items-center text-center px-2 rounded-md">
               Date of Last Revision: November 19, 2025
+            </div>
             </div>
           </div>
         </div>
