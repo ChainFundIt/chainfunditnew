@@ -2,11 +2,155 @@
 
 import { db } from '@/lib/db';
 import { charities, type NewCharity } from '@/lib/schema/charities';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
 /**
  * Script to manually seed charities into the database
  * Usage: npm run seed-charities
  */
+
+const s3Client = new S3Client({
+  region: 'auto',
+  endpoint: process.env.AWS_ENDPOINT_URL,
+  credentials: process.env.R2_ACCESS_KEY && process.env.R2_SECRET_ACCESS_KEY ? {
+    accessKeyId: process.env.R2_ACCESS_KEY,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+  } : undefined,
+});
+
+function getR2PublicBaseUrl(): string | null {
+  const baseUrl = process.env.R2_PUBLIC_ACCESS_KEY;
+  return baseUrl ? baseUrl.replace(/\/$/, '') : null;
+}
+
+function canUploadToR2(): boolean {
+  return Boolean(
+    process.env.AWS_ENDPOINT_URL &&
+    process.env.R2_ACCESS_KEY &&
+    process.env.R2_SECRET_ACCESS_KEY &&
+    process.env.S3_BUCKET_NAME &&
+    process.env.R2_PUBLIC_ACCESS_KEY
+  );
+}
+
+function safeDomainFromWebsite(website?: string | null): string | null {
+  if (!website) return null;
+  try {
+    const u = new URL(website);
+    return u.hostname.replace(/^www\./, '');
+  } catch {
+    return null;
+  }
+}
+
+function isClearbitLogo(url?: string | null): boolean {
+  return Boolean(url && url.includes('logo.clearbit.com'));
+}
+
+function getFaviconFallbackUrls(domain: string): string[] {
+  // These are *favicons* (not full logos), but are usually more reliable than Clearbit.
+  // We’ll still cache them into R2 so the app never hotlinks.
+  return [
+    `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=256`,
+    `https://icons.duckduckgo.com/ip3/${encodeURIComponent(domain)}.ico`,
+  ];
+}
+
+async function fetchImage(url: string): Promise<{ bytes: Buffer; contentType: string; extension: string } | null> {
+  try {
+    const res = await fetch(url, {
+      headers: {
+        // Some hosts block “no UA” / bot-looking requests.
+        'User-Agent': 'Mozilla/5.0 (compatible; ChainfunditSeeder/1.0; +https://chainfundit.com)',
+        Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+      },
+    });
+
+    if (!res.ok) return null;
+    const contentType = res.headers.get('content-type') || 'application/octet-stream';
+    if (!contentType.startsWith('image/')) return null;
+
+    const arrayBuffer = await res.arrayBuffer();
+    const bytes = Buffer.from(arrayBuffer);
+
+    // Best-effort extension mapping
+    const extension =
+      contentType.includes('png') ? 'png' :
+      contentType.includes('jpeg') || contentType.includes('jpg') ? 'jpg' :
+      contentType.includes('webp') ? 'webp' :
+      contentType.includes('svg') ? 'svg' :
+      contentType.includes('ico') ? 'ico' :
+      'png';
+
+    return { bytes, contentType, extension };
+  } catch {
+    return null;
+  }
+}
+
+async function uploadToR2(params: { key: string; body: Buffer; contentType: string }): Promise<string> {
+  const baseUrl = getR2PublicBaseUrl();
+  if (!baseUrl) throw new Error('R2_PUBLIC_ACCESS_KEY env var is not set');
+  if (!process.env.S3_BUCKET_NAME) throw new Error('S3_BUCKET_NAME env var is not set');
+
+  await s3Client.send(new PutObjectCommand({
+    Bucket: process.env.S3_BUCKET_NAME,
+    Key: params.key,
+    Body: params.body,
+    ContentType: params.contentType,
+  }));
+
+  return `${baseUrl}/${params.key}`;
+}
+
+async function cacheCharityLogoToR2(charity: NewCharity): Promise<string | undefined> {
+  const existingLogo = charity.logo ?? undefined;
+  if (!canUploadToR2()) return existingLogo;
+  if (!charity.slug) return existingLogo;
+  if (!existingLogo) return undefined;
+
+  // Don’t touch local/static assets
+  if (existingLogo.startsWith('/')) return existingLogo;
+
+  const candidates: string[] = [];
+
+  // Prefer the provided logo if it’s not Clearbit.
+  if (!isClearbitLogo(existingLogo)) {
+    candidates.push(existingLogo);
+  }
+
+  // If it is Clearbit (or the non-clearbit fetch fails), fallback to favicon sources derived from website.
+  const domain = safeDomainFromWebsite(charity.website);
+  if (domain) {
+    candidates.push(...getFaviconFallbackUrls(domain));
+  }
+
+  // Last: try Clearbit anyway (sometimes it works), but cache if it succeeds.
+  if (isClearbitLogo(existingLogo)) {
+    candidates.push(existingLogo);
+  }
+
+  for (const url of candidates) {
+    const fetched = await fetchImage(url);
+    if (!fetched) continue;
+
+    const key = `charities/logos/${charity.slug}-${Date.now()}.${fetched.extension}`;
+    try {
+      const uploadedUrl = await uploadToR2({
+        key,
+        body: fetched.bytes,
+        contentType: fetched.contentType,
+      });
+      return uploadedUrl;
+    } catch {
+      // Try next candidate
+      continue;
+    }
+  }
+
+  // If nothing worked, keep existing value (may still be clearbit, but UI layer avoids it).
+  return existingLogo;
+}
 
 const sampleCharities: NewCharity[] = [
   // International Charities
@@ -154,7 +298,8 @@ const sampleCharities: NewCharity[] = [
     mission: 'To prevent and alleviate human suffering, protect life and health and ensure respect for human beings in Nigeria.',
     email: 'info@redcrossnigeria.org',
     website: 'https://www.redcrossnigeria.org',
-    logo: 'https://logo.clearbit.com/redcrossnigeria.org',
+    // Clearbit frequently 403s; for this specific charity use a stable favicon-based logo.
+    logo: 'https://www.google.com/s2/favicons?domain=redcrossnigeria.org&sz=256',
     category: 'Disaster Relief',
     focusAreas: ['Emergency Response', 'Disaster Relief', 'Health Services', 'Community Support'],
     country: 'Nigeria',
@@ -313,7 +458,8 @@ const sampleCharities: NewCharity[] = [
     mission: 'To provide quality care, education, and support for orphaned and vulnerable children in Ibadan and surrounding communities.',
     email: 'info@fomwanofficial.org',
     website: 'https://www.fomwanofficial.org',
-    logo: 'https://logo.clearbit.com/fomwanofficial.org',
+    // Clearbit frequently 403s; for this specific charity use a stable favicon-based logo.
+    logo: 'https://www.google.com/s2/favicons?domain=fomwanofficial.org&sz=256',
     category: 'Children & Youth',
     focusAreas: ['Child Care', 'Education', 'Community Support', 'Women Empowerment'],
     country: 'Nigeria',
@@ -481,10 +627,16 @@ async function seedCharities() {
 
     for (const charity of sampleCharities) {
       try {
-        await db.insert(charities).values(charity).onConflictDoUpdate({
+        const cachedLogo = await cacheCharityLogoToR2(charity);
+        const values: NewCharity = {
+          ...charity,
+          logo: cachedLogo,
+        };
+
+        await db.insert(charities).values(values).onConflictDoUpdate({
           target: charities.slug,
           set: {
-            ...charity,
+            ...values,
             updatedAt: new Date(),
           },
         });
