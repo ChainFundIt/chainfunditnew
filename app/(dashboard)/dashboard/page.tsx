@@ -77,6 +77,7 @@ export const CampaignInfo = ({
   fundRaisingFor,
   description,
   status,
+  showEdit = false,
 }: {
   imageUrl: string;
   title: string;
@@ -89,11 +90,12 @@ export const CampaignInfo = ({
   fundRaisingFor: string;
   description: string;
   status: string;
+  showEdit?: boolean;
 }) => {
   const router = useRouter();
   const imageExist = !needsEmojiFallback(imageUrl);
   return (
-    <div className="w-[360px] h-[400px] border border-[#F3F4F6] bg-white rounded-[14px] flex flex-col overflow-hidden">
+    <div className="w-[23rem] h-[30rem] border border-[#F3F4F6] bg-white rounded-[14px] flex flex-col overflow-hidden">
       <div className="relative">
         {imageExist ? (
           <R2Image src={imageUrl} alt={title} width={357} height={168} />
@@ -146,17 +148,31 @@ export const CampaignInfo = ({
             </div>
           </div>
 
-          <Button className="border border-[#104109] rounded-[11px] bg-white flex items-center justify-center gap-2">
-            <div
-              className="font-semibold leading-[18px] text-[12px] text-[#104109]"
-              onClick={() => {
-                router.push(`/campaign/${id}`);
-              }}
-            >
-              View Details
-            </div>
-            <TrendingUp className="text-[#104109]" />
-          </Button>
+          <div className="flex flex-col gap-2">
+            {showEdit && (
+              <Button className="border border-[#104109] rounded-[11px] bg-white flex items-center justify-center gap-2">
+                <div
+                  className="font-semibold leading-[18px] text-[12px] text-[#104109]"
+                  onClick={() => {
+                    router.push(`/dashboard/campaigns/edit/${id}`);
+                  }}
+                >
+                  Edit
+                </div>
+              </Button>
+            )}
+            <Button className="border  rounded-[11px] flex items-center justify-center gap-2">
+              <div
+                className="font-semibold leading-[18px] text-[12px] "
+                onClick={() => {
+                  router.push(`/campaign/${id}`);
+                }}
+              >
+                View Details
+              </div>
+              <TrendingUp className="text-[#104109]" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -360,7 +376,7 @@ export default function DashboardPage() {
               onClick={handleCloseWelcome}
             >
               Complete your profile
-              <ArrowRight size={20}/>
+              <ArrowRight size={20} />
             </Button>
           </DialogFooter>
         </DialogContent>

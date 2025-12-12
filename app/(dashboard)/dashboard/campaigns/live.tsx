@@ -59,6 +59,7 @@ const LiveCampaigns = ({ campaigns }: Props) => {
                   description={data.description}
                   status={data.status}
                   fundRaisingFor={data.fundraisingFor || "Charity"}
+                  showEdit={true}
                 />
               </div>
             );
