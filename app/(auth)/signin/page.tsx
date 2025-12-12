@@ -27,14 +27,6 @@ export default function LoginPage() {
       <Suspense fallback={<div className="w-full text-center py-4 text-gray-500 text-sm">Loading...</div>}>
         <LoginForm />
       </Suspense>
-
-      {/* Sign Up Link */}
-      <p className="text-center text-xs text-gray-600 mt-2">
-        Don't have an account?{" "}
-        <a href="/signup" className="font-semibold text-[#104901] hover:text-[#0d3a00] underline underline-offset-2 transition-colors">
-          Sign up
-        </a>
-      </p>
     </div>
   );
 }

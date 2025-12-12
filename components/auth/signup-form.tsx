@@ -132,7 +132,7 @@ export function SignupForm({
             id="email"
             type="email"
             placeholder="name@example.com"
-            className="h-10 bg-gray-50 rounded-lg border border-gray-300 text-xs focus:border-blue-500 focus:ring-blue-500 outline-none placeholder:text-gray-400 transition-colors"
+            className="h-10 bg-gray-50 rounded-lg border border-gray-300 text-xs focus:border-[#109104] focus:ring-[#109104] shadow-none outline-none placeholder:text-gray-400 transition-colors"
             required
             value={email}
             onChange={e => setEmail(e.target.value)}
@@ -143,7 +143,7 @@ export function SignupForm({
 
         <Button
           type="submit"
-          className="h-10 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg transition-colors w-full"
+          className="h-10 bg-[#104109] hover:bg-white text-white font-semibold text-sm rounded-lg transition-colors w-full"
           disabled={isLoading || !email.trim()}
         >
           {isLoading ? "Creating account..." : "Create account"}

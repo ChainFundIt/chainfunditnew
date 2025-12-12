@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect, useCallback } from "react";
-import { ArrowRight, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -198,7 +197,7 @@ export function LoginForm({
             htmlFor={isPhone ? "phone" : "email"}
             className="font-medium text-xs text-gray-700"
           >
-            {isPhone ? "Phone Number" : "Email"}
+            {isPhone ? "Phone Number" : "Email Address"}
           </Label>
 
           {isPhone ? (
@@ -206,7 +205,7 @@ export function LoginForm({
               id="phone"
               type="tel"
               placeholder="+234 801 234 5678"
-              className="h-10 bg-gray-50 rounded-lg border border-gray-300 text-xs focus:border-blue-500 focus:ring-blue-500 outline-none placeholder:text-gray-400 transition-colors"
+              className="h-10 bg-gray-50 rounded-lg border border-gray-300 text-xs focus:border-[#109104] focus:ring-[#109104] shadow-none outline-none placeholder:text-gray-400 transition-colors"
               required
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
@@ -218,7 +217,7 @@ export function LoginForm({
               id="email"
               type="email"
               placeholder="name@example.com"
-              className="h-10 bg-gray-50 rounded-lg border border-gray-300 text-xs focus:border-blue-500 focus:ring-blue-500 outline-none placeholder:text-gray-400 transition-colors"
+              className="h-10 bg-gray-50 rounded-lg border border-gray-300 text-xs focus:border-[#109104] focus:ring-[#109104] shadow-none outline-none placeholder:text-gray-400 transition-colors"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -228,20 +227,9 @@ export function LoginForm({
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="remember"
-            className="w-3 h-3 rounded border-gray-300 text-blue-600"
-          />
-          <Label htmlFor="remember" className="text-xs text-gray-700 cursor-pointer">
-            Remember me
-          </Label>
-        </div>
-
         <Button
           type="submit"
-          className="h-10 bg-[#104109] hover:bg-[#59AD4A] text-white font-semibold text-sm rounded-lg transition-colors w-full"
+          className="h-10 bg-[#104109] hover:bg-white text-white font-semibold text-sm rounded-lg transition-colors w-full"
           disabled={isLoading || !(isPhone ? phone.trim() : email.trim())}
         >
           {isLoading ? "Sending..." : "Log in"}
@@ -251,7 +239,7 @@ export function LoginForm({
       <div className="text-center text-xs text-gray-600">
         Don't have an account?{" "}
         <Link href="/signup" className="font-semibold text-blue-600 hover:text-blue-700">
-          Create an account
+          Sign up
         </Link>
       </div>
     </form>
