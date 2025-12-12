@@ -170,6 +170,7 @@ export function normalizeCharity(charity: any): UnifiedItem {
     isVerified: charity.isVerified,
     mission: charity.mission,
     logo: charity.logo,
+    website: charity.website,
   };
 }
 

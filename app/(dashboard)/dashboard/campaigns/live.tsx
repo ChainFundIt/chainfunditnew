@@ -5,7 +5,7 @@ import React from "react";
 import { Campaign, transformCampaign } from "./types";
 import EmptyCampaign from "./emptyCampaign";
 import { useRouter } from "next/navigation";
-import { CampaignInfo } from "../page";
+import { CampaignInfo } from "../_components/CampaignInfo";
 
 type Props = {
   campaigns: Campaign[];

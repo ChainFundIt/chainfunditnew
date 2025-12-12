@@ -27,6 +27,7 @@ import { itemNeedsEmojiFallback } from "@/lib/utils/unified-items";
 import { UnifiedItem } from "@/lib/types/unified-item";
 import { GeolocationData } from "@/lib/utils/geolocation";
 import { useAuth } from "@/hooks/use-auth";
+import { needsEmojiFallback } from "@/lib/utils/campaign-emojis";
 
 // Category icon mapping
 const categoryIcons: Record<string, any> = {
@@ -186,7 +187,19 @@ export function UnifiedItemCard({
     return `/virtual-giving-mall/${item.slug}`;
   };
 
-  const needsFallback = itemNeedsEmojiFallback(item);
+  const getValidCharityLogo = (logo?: string | null) => {
+    if (!logo) return null;
+    if (logo === "undefined") return null;
+    if (logo.includes("logo.clearbit.com")) return null;
+    return logo;
+  };
+
+  const charityLogo = isCharity ? getValidCharityLogo((item as any).logo) : null;
+  const charityCardImageSrc =
+    (charityLogo ?? item.coverImage ?? item.image ?? "") || "";
+  const needsFallback = isCharity
+    ? needsEmojiFallback(charityCardImageSrc || undefined)
+    : itemNeedsEmojiFallback(item);
 
   if (viewMode === "list") {
     return (
@@ -194,7 +207,13 @@ export function UnifiedItemCard({
         <div className="flex flex-col md:flex-row">
           {/* Image */}
           <div className="md:w-1/3 h-[400px] relative">
-            {needsFallback ? (
+            {isCharity && charityLogo ? (
+              <img
+                src={charityLogo}
+                alt={item.title}
+                className="w-full h-full object-contain bg-white"
+              />
+            ) : needsFallback ? (
               <EmojiFallbackImage
                 category={item.category}
                 title={item.title}
@@ -203,7 +222,7 @@ export function UnifiedItemCard({
               />
             ) : (
               <R2Image
-                src={item.coverImage || item.image || ""}
+                src={charityCardImageSrc}
                 alt={item.title}
                 width={400}
                 height={400}
@@ -376,7 +395,13 @@ export function UnifiedItemCard({
     <div className="group rounded-2xl overflow-hidden bg-white border border-[#E8E8E8] hover:border-[#104901] hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col">
       {/* IMAGE SECTION */}
       <div className="relative w-full h-[200px] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden flex items-center justify-center">
-        {needsFallback ? (
+        {charityLogo ? (
+          <img
+            src={charityLogo}
+            alt={item.title}
+            className="w-full h-full object-contain bg-white group-hover:scale-105 transition-transform duration-500"
+          />
+        ) : needsFallback ? (
           <div className="text-center">
             <div className="relative inline-block">
               <div className="absolute inset-0 bg-gradient-to-br from-green-400 to-blue-500 rounded-full blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
@@ -386,11 +411,9 @@ export function UnifiedItemCard({
             </div>
           </div>
         ) : (
-          <R2Image
-            src={imageUrl}
+          <img
+            src={charityCardImageSrc}
             alt={item.title}
-            width={400}
-            height={200}
             className="w-full h-full object-contain bg-white group-hover:scale-105 transition-transform duration-500"
           />
         )}

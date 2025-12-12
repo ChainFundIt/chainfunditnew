@@ -6,7 +6,7 @@ import { Campaign } from "./types";
 import { getCampaignStatus } from "@/lib/utils/campaign-status";
 import EmptyCampaign from "./emptyCampaign";
 import { useRouter } from "next/navigation";
-import { CampaignInfo } from "../page";
+import { CampaignInfo } from "../_components/CampaignInfo";
 
 type Props = {
   campaigns: Campaign[];
