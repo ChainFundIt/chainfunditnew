@@ -7,6 +7,7 @@ import CampaignCreatorAvatar from "@/components/ui/campaign-creator-avatar";
 import { EmojiFallbackImage } from "@/components/ui/emoji-fallback-image";
 import { R2Image } from "@/components/ui/r2-image";
 import { needsEmojiFallback } from "@/lib/utils/campaign-emojis";
+import { Heart } from "lucide-react";
 import { getTimeRemaining } from "@/lib/utils/campaign-status";
 import { getRelatedItems } from "@/lib/utils/unified-items";
 import { UnifiedItem } from "@/lib/types/unified-item";
@@ -14,6 +15,64 @@ import { normalizeCampaign, normalizeCharity } from "@/lib/utils/unified-items";
 import { getCharityCategoriesForCampaignReason } from "@/lib/utils/category-mapping";
 import { Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+
+// Component to show charity image with heart icon fallback on error
+const CharityImageWithFallback = ({ 
+  src, 
+  alt, 
+  title, 
+  height,
+  width,
+  className
+}: { 
+  src: string | null | undefined; 
+  alt: string; 
+  title: string; 
+  height: number; 
+  width: number; 
+  className: string;
+}) => {
+  const [imageError, setImageError] = React.useState(false);
+
+  React.useEffect(() => {
+    setImageError(false);
+  }, [src]);
+
+  const HeartIconPlaceholder = () => (
+    <div className="w-full h-48 bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 flex items-center justify-center relative">
+      <div className="text-center p-4 relative z-10">
+        <div className="relative inline-block">
+          <div className="absolute inset-0 bg-gradient-to-br from-green-400 to-blue-500 rounded-full blur-xl opacity-30 transition-opacity duration-500"></div>
+          <div className="relative bg-gradient-to-br from-green-500 to-blue-600 p-4 rounded-full">
+            <Heart className="h-12 w-12 text-white" />
+          </div>
+        </div>
+        <p className="text-xs font-semibold text-gray-600 mt-3 max-w-[120px] mx-auto line-clamp-2">
+          {title}
+        </p>
+      </div>
+    </div>
+  );
+
+  if (!src || imageError) {
+    return <HeartIconPlaceholder />;
+  }
+
+  return (
+    <div className="relative w-full h-48">
+      <img
+        src={src}
+        alt={alt}
+        height={height}
+        width={width}
+        className={className}
+        onError={() => setImageError(true)}
+        onLoad={() => setImageError(false)}
+      />
+      {imageError && <HeartIconPlaceholder />}
+    </div>
+  );
+};
 
 const Cards = ({ 
   campaignId, 
@@ -112,6 +171,12 @@ const Cards = ({
             const currencySymbol = isCampaign ? getCurrencySymbol(item.currency || 'USD') : '$';
             
             const getImageUrl = () => {
+              // For charities, don't use fallback - return null if no image
+              // This allows the component to show heart icon placeholder
+              if (isCharity) {
+                return item.coverImage || item.image || null;
+              }
+              // For campaigns, use fallback
               return item.coverImage || item.image || "/images/card-img1.png";
             };
 
@@ -320,7 +385,18 @@ const Cards = ({
             onClick={() => handleCardClick(card)}
           >
             <div className="relative">
-              {needsEmojiFallback(card.coverImageUrl || card.image) ? (
+              {card.type === 'charity' ? (
+                // For charities, use heart icon fallback
+                <CharityImageWithFallback
+                  src={card.image}
+                  alt={card.title}
+                  title={card.title}
+                  height={192}
+                  width={400}
+                  className="w-full h-48 object-cover"
+                />
+              ) : needsEmojiFallback(card.coverImageUrl || card.image) ? (
+                // For campaigns, use emoji fallback if needed
                 <EmojiFallbackImage
                   category={card.reason}
                   title={card.title}
@@ -329,6 +405,7 @@ const Cards = ({
                   height={192}
                 />
               ) : (
+                // For campaigns, use R2Image
                 <R2Image
                   src={card.image}
                   alt={card.title}
