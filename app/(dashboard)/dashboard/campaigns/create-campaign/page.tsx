@@ -1073,38 +1073,6 @@ export default function CreateCampaignPage() {
             </div>
           </div>
         )}
-
-        {/* Chain Info Modal */}
-        {showChainInfoModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg space-y-4">
-              <div className="flex justify-between items-start">
-                <div className="flex gap-3 items-start">
-                  <HelpCircle
-                    size={28}
-                    className="text-[#5F8555] flex-shrink-0"
-                  />
-                  <h2 className="text-2xl font-semibold text-[#104109]">
-                    About Chained Campaigns
-                  </h2>
-                </div>
-                <button
-                  className="text-[#5F8555] hover:text-[#104109]"
-                  onClick={() => setShowChainInfoModal(false)}
-                >
-                  <XCircle size={24} />
-                </button>
-              </div>
-              <p className="text-[#5F8555] leading-relaxed">
-                Having your campaign chained means you can allow others, who may
-                be interested in earning a commission to help promote your
-                campaign, potentially increasing donations. The ambassador
-                commission rate must be a valid percentage between 0% and 10% of
-                campaign proceeds.
-              </p>
-            </div>
-          </div>
-        )}
       </div>
     );
   };
@@ -1239,6 +1207,38 @@ export default function CreateCampaignPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Chain Info Modal */}
+      {showChainInfoModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg space-y-4">
+            <div className="flex justify-between items-center">
+              <div className="flex gap-3 items-center">
+                <HelpCircle
+                  size={28}
+                  className="text-[#5F8555] flex-shrink-0"
+                />
+                <h2 className="text-2xl font-semibold text-[#104109]">
+                  About Chained Campaigns
+                </h2>
+              </div>
+              <button
+                className="text-[#5F8555] hover:text-[#104109]"
+                onClick={() => setShowChainInfoModal(false)}
+              >
+                <XCircle size={24} />
+              </button>
+            </div>
+            <p className="text-[#5F8555] leading-relaxed">
+              Having your campaign chained means you can allow others, who may
+              be interested in earning a commission to help promote your
+              campaign, potentially increasing donations. The ambassador
+              commission rate must be a valid percentage between 0% and 10% of
+              campaign proceeds.
+            </p>
           </div>
         </div>
       )}
