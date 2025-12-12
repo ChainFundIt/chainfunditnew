@@ -411,7 +411,7 @@ export default function CreateCampaignPage() {
               <div
                 className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg transition-all ${
                   step >= s.number
-                    ? "bg-[#104901] text-white"
+                    ? "bg-[#104109] text-white"
                     : "bg-[#E5ECDE] text-[#5F8555]"
                 }`}
               >
@@ -423,7 +423,7 @@ export default function CreateCampaignPage() {
                 </p>
                 <p
                   className={`font-semibold ${
-                    step === s.number ? "text-[#104901]" : "text-[#ADADAD]"
+                    step === s.number ? "text-[#104109]" : "text-[#ADADAD]"
                   }`}
                 >
                   {s.label}
@@ -438,14 +438,14 @@ export default function CreateCampaignPage() {
           <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
             {/* Step 1: Details */}
             {step === 1 && (
-              <div className="bg-white rounded-2xl p-8 shadow-sm space-y-8">
-                <h2 className="text-3xl font-bold text-[#104901]">
+              <div className="bg-white rounded-2xl p-8 shadow-sm flex flex-col gap-8">
+                <h2 className="text-3xl font-bold text-[#104109]">
                   Campaign Details
                 </h2>
 
                 {/* Campaign Title */}
-                <div>
-                  <label className="text-lg font-semibold text-[#104901] mb-3 block">
+                <div className="flex flex-col gap-3">
+                  <label className="text-lg font-semibold text-[#104109]">
                     Campaign Title
                   </label>
                   <input
@@ -453,13 +453,13 @@ export default function CreateCampaignPage() {
                     placeholder="e.g. Clean Water for Village"
                     value={formData.title}
                     onChange={(e) => handleFieldChange("title", e.target.value)}
-                    className="w-full px-4 py-3 bg-[#F5F5F5] border border-[#E5ECDE] rounded-lg text-[#104901] placeholder:text-[#B3B3B3] focus:outline-none focus:ring-2 focus:ring-[#104901]"
+                    className="w-full px-4 py-3 bg-[#F5F5F5] border border-[#E5ECDE] rounded-lg text-[#104109] placeholder:text-[#B3B3B3] focus:outline-none focus:ring-2 focus:ring-[#104109]"
                   />
                 </div>
 
                 {/* Subtitle */}
-                <div className="bg-[#E5ECDE] p-4 rounded-xl">
-                  <label className="text-lg font-semibold text-[#5F8555] mb-2 block">
+                <div className="flex flex-col gap-1">
+                  <label className="text-lg font-semibold text-[#104109] mb-2">
                     Subtitle (Optional)
                   </label>
                   <input
@@ -469,16 +469,16 @@ export default function CreateCampaignPage() {
                     onChange={(e) =>
                       handleFieldChange("subtitle", e.target.value)
                     }
-                    className="w-full px-4 py-2 bg-transparent text-[#5F8555] placeholder:text-[#5F8555] focus:outline-none"
+                    className="w-full px-4 py-3 bg-[#F5F5F5] border border-[#E5ECDE] rounded-lg text-[#104109] placeholder:text-[#B3B3B3] focus:outline-none focus:ring-2 focus:ring-[#104109]"
                   />
-                  <p className="text-sm text-[#5F8555] mt-2">
+                   <p className="text-sm text-[#5F8555]">
                     A catchy hook to attract donors (150 characters max)
                   </p>
                 </div>
 
                 {/* Visibility */}
-                <div>
-                  <label className="text-lg font-semibold text-[#104901] mb-3 block">
+                <div className="flex flex-col gap-3">
+                  <label className="text-lg font-semibold text-[#104109]">
                     Visibility
                   </label>
                   <Select
@@ -490,10 +490,10 @@ export default function CreateCampaignPage() {
                       )
                     }
                   >
-                    <SelectTrigger className="w-full bg-[#E5ECDE] border-0 text-[#5F8555] h-12">
+                    <SelectTrigger className="w-full bg-[#F5F5F5] border-0 text-[#5F8555] h-12">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#E7EDE6]">
+                    <SelectContent className="bg-[#F5F5F5]">
                       <SelectGroup>
                         <SelectItem value="public">
                           <div className="flex items-center gap-2">
@@ -513,8 +513,8 @@ export default function CreateCampaignPage() {
                 </div>
 
                 {/* Category */}
-                <div>
-                  <label className="text-lg font-semibold text-[#104901] mb-3 block">
+                <div className="flex flex-col gap-3">
+                  <label className="text-lg font-semibold text-[#104109]">
                     Category
                   </label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -525,8 +525,8 @@ export default function CreateCampaignPage() {
                         onClick={() => handleFieldChange("reason", reason.text)}
                         className={`px-4 py-3 flex gap-2 items-center rounded-lg transition-all ${
                           formData.reason === reason.text
-                            ? "ring-2 ring-[#5F8555] bg-[#104901] text-white"
-                            : "bg-[#E5ECDE] text-[#5F8555] hover:bg-[#D9D9D9]"
+                            ? "bg-[#104109] text-white"
+                            : "bg-[#F5F5F5] text-[#5F8555] hover:bg-[#D9D9D9]"
                         }`}
                       >
                         {reason.icon}
@@ -537,8 +537,8 @@ export default function CreateCampaignPage() {
                 </div>
 
                 {/* Fundraising For */}
-                <div>
-                  <label className="text-lg font-semibold text-[#104901] mb-3 block">
+                <div className="flex flex-col gap-3">
+                  <label className="text-lg font-semibold text-[#104109]">
                     Who are you fundraising for?{" "}
                     <span className="text-red-600">*</span>
                   </label>
@@ -552,8 +552,8 @@ export default function CreateCampaignPage() {
                         }
                         className={`px-4 py-3 flex gap-2 items-center rounded-lg transition-all ${
                           formData.fundraisingFor === person.text
-                            ? "ring-2 ring-[#5F8555] bg-[#104901] text-white"
-                            : "bg-[#E5ECDE] text-[#5F8555] hover:bg-[#D9D9D9]"
+                            ? "bg-[#104109] text-white"
+                            : "bg-[#F5F5F5] text-[#5F8555] hover:bg-[#D9D9D9]"
                         }`}
                       >
                         {person.icon}
@@ -567,15 +567,15 @@ export default function CreateCampaignPage() {
 
             {/* Step 2: Goal */}
             {step === 2 && (
-              <div className="bg-white rounded-2xl p-8 shadow-sm space-y-8">
-                <h2 className="text-3xl font-bold text-[#104901]">
+              <div className="bg-white rounded-2xl p-8 shadow-sm flex flex-col gap-8">
+                <h2 className="text-3xl font-bold text-[#104109]">
                   Set Your Goal
                 </h2>
 
                 {/* Currency & Goal Amount */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="text-lg font-semibold text-[#104901] mb-3 block">
+                    <label className="text-lg font-semibold text-[#104109] mb-3 block">
                       Currency
                     </label>
                     <Select
@@ -608,7 +608,7 @@ export default function CreateCampaignPage() {
                   </div>
 
                   <div>
-                    <label className="text-lg font-semibold text-[#104901] mb-3 block">
+                    <label className="text-lg font-semibold text-[#104109] mb-3 block">
                       Goal Amount
                     </label>
                     <div className="flex items-center gap-2 bg-[#E5ECDE] rounded-lg px-4 py-3">
@@ -642,7 +642,7 @@ export default function CreateCampaignPage() {
 
                 {/* Duration */}
                 <div>
-                  <label className="text-lg font-semibold text-[#104901] mb-3 block">
+                  <label className="text-lg font-semibold text-[#104109] mb-3 block">
                     Campaign Duration
                   </label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -653,7 +653,7 @@ export default function CreateCampaignPage() {
                         onClick={() => handleFieldChange("duration", time.text)}
                         className={`px-3 py-3 flex gap-2 items-center justify-center rounded-lg transition-all text-sm ${
                           formData.duration === time.text
-                            ? "ring-2 ring-[#5F8555] bg-[#104901] text-white"
+                            ? "ring-2 ring-[#5F8555] bg-[#104109] text-white"
                             : "bg-[#E5ECDE] text-[#5F8555] hover:bg-[#D9D9D9]"
                         }`}
                       >
@@ -667,13 +667,13 @@ export default function CreateCampaignPage() {
                 {/* Chained Campaign */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
-                    <label className="text-lg font-semibold text-[#104901]">
+                    <label className="text-lg font-semibold text-[#104109]">
                       Do you want your campaign to be chained?
                     </label>
                     <button
                       type="button"
                       onClick={() => setShowChainInfoModal(true)}
-                      className="text-[#5F8555] hover:text-[#104901] transition-colors"
+                      className="text-[#5F8555] hover:text-[#104109] transition-colors"
                       aria-label="Learn more about chained campaigns"
                     >
                       <HelpCircle size={20} />
@@ -696,7 +696,7 @@ export default function CreateCampaignPage() {
                 {/* Commission Rate */}
                 {formData.isChained && (
                   <div>
-                    <label className="text-lg font-semibold text-[#104901] mb-3 block">
+                    <label className="text-lg font-semibold text-[#104109] mb-3 block">
                       Ambassador Commission Rate (%)
                     </label>
                     <input
@@ -719,14 +719,14 @@ export default function CreateCampaignPage() {
 
             {/* Step 3: Media */}
             {step === 3 && (
-              <div className="bg-white rounded-2xl p-8 shadow-sm space-y-8">
-                <h2 className="text-3xl font-bold text-[#104901]">
+              <div className="bg-white rounded-2xl p-8 shadow-sm flex flex-col gap-8">
+                <h2 className="text-3xl font-bold text-[#104109]">
                   Campaign Media
                 </h2>
 
                 {/* Cover Image */}
                 <div>
-                  <label className="text-lg font-semibold text-[#104901] mb-3 block">
+                  <label className="text-lg font-semibold text-[#104109] mb-3 block">
                     Cover Image
                   </label>
                   <div className="relative bg-[#F5F5F5] rounded-2xl border-2 border-dashed border-[#E5ECDE] overflow-hidden">
@@ -764,7 +764,7 @@ export default function CreateCampaignPage() {
                         />
                         <label
                           htmlFor="cover-image-input"
-                          className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white hover:bg-gray-100 text-[#104901] px-6 py-2 rounded-lg font-semibold cursor-pointer transition-colors shadow-lg"
+                          className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white hover:bg-gray-100 text-[#104109] px-6 py-2 rounded-lg font-semibold cursor-pointer transition-colors shadow-lg"
                         >
                           Choose New
                         </label>
@@ -799,7 +799,7 @@ export default function CreateCampaignPage() {
                             />
                           </div>
                           <div className="text-center">
-                            <p className="text-lg font-semibold text-[#104901]">
+                            <p className="text-lg font-semibold text-[#104109]">
                               Upload Cover Image
                             </p>
                             <p className="text-sm text-[#999]">
@@ -817,7 +817,7 @@ export default function CreateCampaignPage() {
 
                 {/* Video */}
                 <div>
-                  <label className="text-lg font-semibold text-[#104901] mb-3 block">
+                  <label className="text-lg font-semibold text-[#104109] mb-3 block">
                     Cover Video (Optional)
                   </label>
                   <div className="bg-[#E5ECDE] p-4 rounded-lg">
@@ -841,7 +841,7 @@ export default function CreateCampaignPage() {
 
                 {/* Gallery Images */}
                 <div>
-                  <label className="text-lg font-semibold text-[#104901] mb-1 block">
+                  <label className="text-lg font-semibold text-[#104109] mb-1 block">
                     Gallery Images
                   </label>
                   <p className="text-sm text-[#5F8555] mb-4">
@@ -897,7 +897,7 @@ export default function CreateCampaignPage() {
 
                 {/* Documents */}
                 <div>
-                  <label className="text-lg font-semibold text-[#104901] mb-1 block">
+                  <label className="text-lg font-semibold text-[#104109] mb-1 block">
                     Supporting Documents
                   </label>
                   <p className="text-sm text-[#5F8555] mb-4">
@@ -955,8 +955,8 @@ export default function CreateCampaignPage() {
 
             {/* Step 4: Review & Launch */}
             {step === 4 && (
-              <div className="bg-white rounded-2xl p-8 shadow-sm space-y-8">
-                <h2 className="text-3xl font-bold text-[#104901]">
+              <div className="bg-white rounded-2xl p-8 shadow-sm flex flex-col gap-8">
+                <h2 className="text-3xl font-bold text-[#104109]">
                   Review & Launch
                 </h2>
 
@@ -973,7 +973,7 @@ export default function CreateCampaignPage() {
                     </div>
                   )}
                   <div className="p-6">
-                    <h3 className="text-2xl font-bold text-[#104901] mb-2">
+                    <h3 className="text-2xl font-bold text-[#104109] mb-2">
                       {formData.title || "Untitled Campaign"}
                     </h3>
                     <p className="text-sm text-[#5F8555] mb-4 uppercase tracking-wide">
@@ -987,7 +987,7 @@ export default function CreateCampaignPage() {
 
                 {/* Story Section */}
                 <div>
-                  <label className="text-lg font-semibold text-[#104901] mb-3 block">
+                  <label className="text-lg font-semibold text-[#104109] mb-3 block">
                     Campaign Story
                   </label>
                   <div className="bg-[#E5ECDE] rounded-xl overflow-hidden">
@@ -1026,25 +1026,25 @@ export default function CreateCampaignPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-[#E5ECDE] rounded-xl p-6">
                   <div>
                     <p className="text-sm text-[#5F8555]">Currency</p>
-                    <p className="text-xl font-bold text-[#104901]">
+                    <p className="text-xl font-bold text-[#104109]">
                       {formData.currency || "—"}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-[#5F8555]">Goal</p>
-                    <p className="text-xl font-bold text-[#104901]">
+                    <p className="text-xl font-bold text-[#104109]">
                       {formData.goal || "—"}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-[#5F8555]">Duration</p>
-                    <p className="text-xl font-bold text-[#104901]">
+                    <p className="text-xl font-bold text-[#104109]">
                       {formData.duration || "—"}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-[#5F8555]">Visibility</p>
-                    <p className="text-xl font-bold text-[#104901] capitalize">
+                    <p className="text-xl font-bold text-[#104109] capitalize">
                       {formData.visibility}
                     </p>
                   </div>
@@ -1058,7 +1058,7 @@ export default function CreateCampaignPage() {
                         <div className="flex gap-2 items-start">
                           <Loader size={32} color="#5F8555" />
                           <div>
-                            <h2 className="text-2xl font-semibold text-[#104901]">
+                            <h2 className="text-2xl font-semibold text-[#104109]">
                               Suggest Description
                             </h2>
                             <p className="text-[#5F8555]">
@@ -1067,7 +1067,7 @@ export default function CreateCampaignPage() {
                           </div>
                         </div>
                         <button
-                          className="text-[#5F8555] hover:text-[#104901]"
+                          className="text-[#5F8555] hover:text-[#104109]"
                           onClick={() => setShowAiModal(false)}
                         >
                           <XCircle size={24} />
@@ -1075,7 +1075,7 @@ export default function CreateCampaignPage() {
                       </div>
 
                       <div className="space-y-3">
-                        <label className="text-[#104901] font-semibold">
+                        <label className="text-[#104109] font-semibold">
                           Length
                         </label>
                         <div className="flex gap-2 bg-[#E5ECDE] w-fit p-1 rounded-lg">
@@ -1086,7 +1086,7 @@ export default function CreateCampaignPage() {
                               onClick={() => setActiveTab(tab)}
                               className={`px-6 py-2 rounded-md font-semibold transition-colors ${
                                 activeTab === tab
-                                  ? "bg-[#104901] text-white"
+                                  ? "bg-[#104109] text-white"
                                   : "bg-transparent text-[#5F8555] hover:bg-[#D9D9D9]"
                               }`}
                             >
@@ -1097,7 +1097,7 @@ export default function CreateCampaignPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-[#104901] font-semibold block">
+                        <label className="text-[#104109] font-semibold block">
                           Additional Instructions
                         </label>
                         <textarea
@@ -1111,7 +1111,7 @@ export default function CreateCampaignPage() {
 
                       <div className="flex justify-between gap-3">
                         <Button
-                          className="flex-1 bg-[#104901] hover:bg-[#0a3a01] text-white font-semibold py-2 h-12 text-lg"
+                          className="flex-1 bg-[#104109] hover:bg-[#0a3a01] text-white font-semibold py-2 h-12 text-lg"
                           onClick={generateAiSuggestion}
                           disabled={isLoading}
                         >
@@ -1143,12 +1143,12 @@ export default function CreateCampaignPage() {
                             size={28}
                             className="text-[#5F8555] flex-shrink-0"
                           />
-                          <h2 className="text-2xl font-semibold text-[#104901]">
+                          <h2 className="text-2xl font-semibold text-[#104109]">
                             About Chained Campaigns
                           </h2>
                         </div>
                         <button
-                          className="text-[#5F8555] hover:text-[#104901]"
+                          className="text-[#5F8555] hover:text-[#104109]"
                           onClick={() => setShowChainInfoModal(false)}
                         >
                           <XCircle size={24} />
@@ -1189,7 +1189,7 @@ export default function CreateCampaignPage() {
           <div className="bg-white rounded-2xl p-8 w-full max-w-xl shadow-2xl space-y-6">
             <div className="flex justify-between items-start">
               <div>
-                <h2 className="text-3xl font-bold text-[#104901] mb-2">
+                <h2 className="text-3xl font-bold text-[#104109] mb-2">
                   Campaign Created Successfully! 🎉
                 </h2>
                 <p className="text-[#5F8555]">
@@ -1204,7 +1204,7 @@ export default function CreateCampaignPage() {
 
             {/* Campaign Link */}
             <div
-              className="bg-[#104901] p-4 flex items-center justify-between text-white rounded-lg cursor-pointer hover:bg-[#0a3a01] transition-colors"
+              className="bg-[#104109] p-4 flex items-center justify-between text-white rounded-lg cursor-pointer hover:bg-[#0a3a01] transition-colors"
               onClick={handleViewCampaign}
             >
               <span className="font-medium truncate">
@@ -1219,34 +1219,34 @@ export default function CreateCampaignPage() {
 
             {/* Share Section */}
             <div className="space-y-3">
-              <p className="text-lg font-semibold text-[#104901]">
+              <p className="text-lg font-semibold text-[#104109]">
                 Share Your Campaign
               </p>
               <div className="flex gap-3 justify-center">
                 <button
                   onClick={() => handleShareCampaign("facebook")}
-                  className="w-14 h-14 rounded-full flex items-center justify-center bg-[#E5ECDE] text-[#104901] hover:bg-[#104901] hover:text-white transition-colors"
+                  className="w-14 h-14 rounded-full flex items-center justify-center bg-[#E5ECDE] text-[#104109] hover:bg-[#104109] hover:text-white transition-colors"
                   title="Share on Facebook"
                 >
                   <Facebook size={28} />
                 </button>
                 <button
                   onClick={() => handleShareCampaign("instagram")}
-                  className="w-14 h-14 rounded-full flex items-center justify-center bg-[#E5ECDE] text-[#104901] hover:bg-[#104901] hover:text-white transition-colors"
+                  className="w-14 h-14 rounded-full flex items-center justify-center bg-[#E5ECDE] text-[#104109] hover:bg-[#104109] hover:text-white transition-colors"
                   title="Share on Instagram"
                 >
                   <Instagram size={28} />
                 </button>
                 <button
                   onClick={() => handleShareCampaign("twitter")}
-                  className="w-14 h-14 rounded-full flex items-center justify-center bg-[#E5ECDE] text-[#104901] hover:bg-[#104901] hover:text-white transition-colors"
+                  className="w-14 h-14 rounded-full flex items-center justify-center bg-[#E5ECDE] text-[#104109] hover:bg-[#104109] hover:text-white transition-colors"
                   title="Share on Twitter"
                 >
                   <Twitter size={28} />
                 </button>
                 <button
                   onClick={() => handleShareCampaign("linkedin")}
-                  className="w-14 h-14 rounded-full flex items-center justify-center bg-[#E5ECDE] text-[#104901] hover:bg-[#104901] hover:text-white transition-colors"
+                  className="w-14 h-14 rounded-full flex items-center justify-center bg-[#E5ECDE] text-[#104109] hover:bg-[#104109] hover:text-white transition-colors"
                   title="Share on LinkedIn"
                 >
                   <Linkedin size={28} />
