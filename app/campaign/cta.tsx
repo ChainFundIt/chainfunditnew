@@ -6,9 +6,9 @@ type Props = {};
 
 const CTA = (props: Props) => {
   return (
-    <div className="w-full py-16 md:py-20">
+    <div className="w-full py-16 md:py-12 flex items-center justify-center flex-col">
       {/* Main CTA Card */}
-      <div className="bg-gradient-to-br from-emerald-50 to-white rounded-3xl shadow-lg border border-emerald-100 overflow-hidden">
+      <div className="bg-gradient-to-br from-emerald-50 to-white rounded-3xl shadow-lg border border-emerald-100 overflow-hidden max-w-[80rem]">
         <div className="p-8 md:p-12">
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-center">
             {/* Left Content */}
@@ -111,16 +111,16 @@ const CTA = (props: Props) => {
       </div>
 
       {/* Optional: Trust Badges */}
-      <div className="mt-12 text-center">
+      {/* <div className="mt-12 text-center">
         <p className="text-sm text-gray-500 mb-4">Trusted by organizations worldwide</p>
-        <div className="flex flex-wrap justify-center items-center gap-8 opacity-50">
+        <div className="flex flex-wrap justify-center items-center gap-8 opacity-50"> */}
           {/* Add your trust badge logos here */}
-          <div className="text-gray-400 font-semibold">STRIPE</div>
+          {/* <div className="text-gray-400 font-semibold">STRIPE</div>
           <div className="text-gray-400 font-semibold">PAYPAL</div>
           <div className="text-gray-400 font-semibold">VISA</div>
           <div className="text-gray-400 font-semibold">MASTERCARD</div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

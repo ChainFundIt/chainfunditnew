@@ -18,6 +18,8 @@ import {
   X,
   Share2,
   Clock,
+  ArrowLeft,
+  ArrowRight,
 } from "lucide-react";
 import CTA from "./cta";
 import ChainModal from "./chain-modal";
@@ -428,7 +430,7 @@ const Main = ({ campaignSlug }: MainProps) => {
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="text-6xl mb-4">😔</div>
-            <h2 className="text-2xl font-plusjakarta text-gray-900 mb-2">
+            <h2 className="text-2xl  text-gray-900 mb-2">
               {error === "Campaign not found"
                 ? "Campaign Not Found"
                 : "Something went wrong"}
@@ -480,7 +482,7 @@ const Main = ({ campaignSlug }: MainProps) => {
 
   const campaignDocuments = parseJsonArray(campaignData?.documents);
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-gray-50 font-jakarta">
       {/* Breadcrumb */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 py-3">
@@ -675,7 +677,7 @@ const Main = ({ campaignSlug }: MainProps) => {
                             className="bg-gray-50 rounded-lg p-5 border border-gray-200"
                           >
                             <div className="flex items-start justify-between mb-3">
-                              <h4 className="font-plusjakarta text-lg text-gray-900">
+                              <h4 className=" text-lg text-gray-900">
                                 {update.title}
                               </h4>
                               <span className="text-sm text-gray-500">
@@ -822,7 +824,7 @@ const Main = ({ campaignSlug }: MainProps) => {
                     {donations.slice(0, 3).map((donation, idx) => (
                       <div
                         key={donation.id}
-                        className="w-10 h-10 rounded-full border-2 border-white flex items-center justify-center text-white font-plusjakarta text-sm overflow-hidden"
+                        className="w-10 h-10 rounded-full border-2 border-white flex items-center justify-center text-white  text-sm overflow-hidden"
                         style={{ background: "linear-gradient(to bottom right, #104901, #2ea853)" }}
                       >
                         {donation.donorAvatar && !donation.isAnonymous ? (
@@ -850,25 +852,10 @@ const Main = ({ campaignSlug }: MainProps) => {
               )}
 
               {/* Action Buttons */}
-              <div className="space-y-3 mb-6">
-                <button
+              <div className="flex flex-col gap-2 mb-6">
+                <Button
                   onClick={() => setDonateModalOpen(true)}
-                  className="font-plusjakarta flex items-center justify-center w-full"
-                  style={{
-                    height: "56px",
-                    padding: "16px 0",
-                    gap: "8px",
-                    borderRadius: "12px",
-                    backgroundColor: "#104901",
-                    color: "#FFFFFF",
-                    border: "none",
-                    cursor: "pointer",
-                    boxShadow: "0px 4px 6px -4px rgba(6, 78, 59, 0.1), 0px 10px 15px -3px rgba(6, 78, 59, 0.1)",
-                    transition: "all 0.3s ease",
-                    fontWeight: 700,
-                    fontSize: "16px",
-                    lineHeight: "24px"
-                  }}
+                  className="rounded-3xl h-auto py-3"
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = "#0d3a00";
                   }}
@@ -876,40 +863,12 @@ const Main = ({ campaignSlug }: MainProps) => {
                     e.currentTarget.style.backgroundColor = "#104901";
                   }}
                 >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M5 12H19M19 12L12 5M19 12L12 19"
-                      stroke="white"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+                  <ArrowRight/>
                   <span>Donate Now</span>
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={() => setShareModalOpen(true)}
-                  className="font-plusjakarta flex items-center justify-center w-full"
-                  style={{
-                    height: "56px",
-                    padding: "16px 0",
-                    gap: "8px",
-                    borderRadius: "12px",
-                    backgroundColor: "transparent",
-                    color: "#104901",
-                    border: "2px solid #104901",
-                    cursor: "pointer",
-                    transition: "all 0.3s ease",
-                    fontWeight: 700,
-                    fontSize: "16px",
-                    lineHeight: "24px"
-                  }}
+                  className="rounded-3xl h-auto py-3"
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = "#F0F9EC";
                   }}
@@ -917,30 +876,16 @@ const Main = ({ campaignSlug }: MainProps) => {
                     e.currentTarget.style.backgroundColor = "transparent";
                   }}
                 >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M4 12a8 8 0 0 1 15.14-2.7c.5-1.25 1.68-2.2 3.09-2.2a3.3 3.3 0 0 1 3.3 3.3 3.3 3.3 0 0 1-3.3 3.3c-1.41 0-2.59-.95-3.09-2.2A8 8 0 0 1 4 12m8 4v3m0 0v2m0-2h-3m3 0h3"
-                      stroke="#104901"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+                  <Share2/>
                   <span>Share Campaign</span>
-                </button>
+                </Button>
               </div>
 
               {/* Organizer Info */}
               <div className="pt-6 border-t border-gray-200">
                 <p className="text-sm text-gray-600 mb-3">ORGANIZER</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-plusjakarta text-lg overflow-hidden" style={{ background: "linear-gradient(to bottom right, #104901, #2ea853)" }}>
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-white  text-lg overflow-hidden" style={{ background: "linear-gradient(to bottom right, #104901, #2ea853)" }}>
                     {campaignData.creatorAvatar ? (
                       <Image
                         src={campaignData.creatorAvatar}
@@ -954,19 +899,13 @@ const Main = ({ campaignSlug }: MainProps) => {
                     )}
                   </div>
                   <div>
-                    <p className="font-plusjakarta text-gray-900">{campaignData.creatorName}</p>
+                    <p className=" text-gray-900">{campaignData.creatorName}</p>
                     <div className="flex items-center gap-1 text-sm text-gray-600">
                       <Clock className="w-3 h-3" />
                       <span>Response time: 1 day</span>
                     </div>
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  className="w-full mt-4 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg"
-                >
-                  Contact Organizer
-                </Button>
               </div>
             </div>
           </div>
@@ -986,7 +925,7 @@ const Main = ({ campaignSlug }: MainProps) => {
               {donations.slice(0, 5).map((donation) => (
                 <div key={donation.id} className="p-5 hover:bg-gray-50 transition-colors">
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-plusjakarta text-lg overflow-hidden flex-shrink-0" style={{ background: "linear-gradient(to bottom right, #104901, #2ea853)" }}>
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center text-white  text-lg overflow-hidden flex-shrink-0" style={{ background: "linear-gradient(to bottom right, #104901, #2ea853)" }}>
                       {donation.donorAvatar && !donation.isAnonymous ? (
                         <Image
                           src={donation.donorAvatar}
@@ -1005,12 +944,12 @@ const Main = ({ campaignSlug }: MainProps) => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-baseline gap-2 mb-1">
-                        <p className="font-plusjakarta text-gray-900">
+                        <p className=" text-gray-900">
                           {donation.isAnonymous ? "Anonymous" : donation.donorName}
                         </p>
                         <span className="text-sm text-gray-600">
                           donated{" "}
-                          <span className="font-plusjakarta" style={{ color: "#104901" }}>
+                          <span className="" style={{ color: "#104901" }}>
                             {formatCurrency(parseFloat(donation.amount), donation.currency)}
                           </span>
                         </span>
@@ -1065,7 +1004,7 @@ const Main = ({ campaignSlug }: MainProps) => {
                 <div key={comment.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                   <div className="p-5">
                     <div className="flex items-start gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-plusjakarta text-sm overflow-hidden flex-shrink-0" style={{ background: "linear-gradient(to bottom right, #104901, #2ea853)" }}>
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-white  text-sm overflow-hidden flex-shrink-0" style={{ background: "linear-gradient(to bottom right, #104901, #2ea853)" }}>
                         {comment.userAvatar ? (
                           <Image
                             src={comment.userAvatar}
@@ -1080,7 +1019,7 @@ const Main = ({ campaignSlug }: MainProps) => {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <p className="font-plusjakarta text-gray-900">{comment.userName}</p>
+                          <p className=" text-gray-900">{comment.userName}</p>
                           <span className="text-gray-500 text-sm">made a donation</span>
                         </div>
                         <p className="text-xs text-gray-500">
