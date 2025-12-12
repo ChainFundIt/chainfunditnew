@@ -677,8 +677,8 @@ export default function CreateCampaignPage() {
         <h2 className="text-3xl font-bold text-[#104109]">Campaign Media</h2>
 
         {/* Cover Image */}
-        <div>
-          <label className="text-lg font-semibold text-[#104109] mb-3 block">
+        <div className="flex flex-col gap-3">
+          <label className="text-lg font-semibold text-[#104109]">
             Cover Image
           </label>
           <div className="relative bg-[#F5F5F5] rounded-2xl border-2 border-dashed border-[#E5ECDE] overflow-hidden">
@@ -768,33 +768,32 @@ export default function CreateCampaignPage() {
         </div>
 
         {/* Video */}
-        <div>
-          <label className="text-lg font-semibold text-[#104109] mb-3 block">
+        <div className="flex flex-col gap-1">
+          <label className="text-lg font-semibold text-[#104109] mb-2">
             Cover Video (Optional)
           </label>
-          <div className="bg-[#E5ECDE] p-4 rounded-lg">
-            <div className="flex items-center gap-3 mb-2">
-              <Youtube color="#5F8555" size={24} />
-              <span className="font-semibold text-[#5F8555]">
-                YouTube or Video Link
-              </span>
-            </div>
-            <input
-              type="text"
-              placeholder="Paste video link from YouTube or other sources"
-              value={formData.video}
-              onChange={(e) => handleFieldChange("video", e.target.value)}
-              className="w-full px-4 py-3 bg-transparent text-[#5F8555] placeholder:text-[#5F8555] focus:outline-none"
-            />
+
+          <div className="flex items-center gap-3 mb-2">
+            <Youtube color="#5F8555" size={24} />
+            <span className="font-semibold text-[#5F8555]">
+              YouTube or Video Link
+            </span>
           </div>
+          <input
+            type="text"
+            placeholder="Paste video link from YouTube or other sources"
+            value={formData.video}
+            onChange={(e) => handleFieldChange("video", e.target.value)}
+            className="w-full px-4 py-3 bg-[#F5F5F5] border border-[#E5ECDE] rounded-lg text-[#104109] placeholder:text-[#B3B3B3] focus:outline-none focus:ring-2 focus:ring-[#104109]"
+          />
         </div>
 
         {/* Gallery Images */}
-        <div>
-          <label className="text-lg font-semibold text-[#104109] mb-1 block">
+        <div className="flex flex-col gap-1">
+          <label className="text-lg font-semibold text-[#104109]">
             Gallery Images
           </label>
-          <p className="text-sm text-[#5F8555] mb-4">
+          <p className="text-sm text-[#5F8555]">
             Add up to 5 images (PNG, JPG, WEBP - max 1MB each)
           </p>
 
@@ -810,7 +809,7 @@ export default function CreateCampaignPage() {
 
             <label
               htmlFor="campaign-images"
-              className="bg-[#E5ECDE] flex flex-col gap-3 items-center justify-center px-8 py-12 rounded-xl text-[#5F8555] cursor-pointer hover:bg-[#D9D9D9] transition-colors border-2 border-dashed border-[#5F8555]"
+              className="bg-[#F5F5F5] flex flex-col gap-3 items-center justify-center px-8 py-12 rounded-xl text-[#5F8555] cursor-pointer hover:bg-[#D9D9D9] transition-colors border-2 border-dashed border-[#5F8555]"
             >
               <ImageIcon size={40} />
               <span className="text-center font-medium">
@@ -821,7 +820,7 @@ export default function CreateCampaignPage() {
             {uploadedFiles.imageUrls.map((url, index) => (
               <div
                 key={index}
-                className="relative bg-[#E5ECDE] rounded-xl overflow-hidden flex items-center justify-center group"
+                className="relative bg-[#F5F5F5] rounded-xl overflow-hidden flex items-center justify-center group"
               >
                 <Image
                   src={url}
@@ -846,11 +845,11 @@ export default function CreateCampaignPage() {
         </div>
 
         {/* Documents */}
-        <div>
-          <label className="text-lg font-semibold text-[#104109] mb-1 block">
+        <div className="flex flex-col gap-1">
+          <label className="text-lg font-semibold text-[#104109]">
             Supporting Documents
           </label>
-          <p className="text-sm text-[#5F8555] mb-4">
+          <p className="text-sm text-[#5F8555]">
             Add supporting documents (PDF, DOC, DOCX - max 10MB total)
           </p>
 
@@ -866,7 +865,7 @@ export default function CreateCampaignPage() {
 
             <label
               htmlFor="supporting-documents"
-              className="bg-[#E5ECDE] flex flex-col gap-3 items-center justify-center px-8 py-12 rounded-xl text-[#5F8555] cursor-pointer hover:bg-[#D9D9D9] transition-colors border-2 border-dashed border-[#5F8555]"
+              className="bg-[#F5F5F5] flex flex-col gap-3 items-center justify-center px-8 py-12 rounded-xl text-[#5F8555] cursor-pointer hover:bg-[#D9D9D9] transition-colors border-2 border-dashed border-[#5F8555]"
             >
               <Paperclip size={40} />
               <span className="text-center font-medium">
@@ -879,7 +878,7 @@ export default function CreateCampaignPage() {
               return (
                 <div
                   key={index}
-                  className="relative bg-[#E5ECDE] px-4 py-4 rounded-xl flex items-center gap-3 text-[#5F8555] group hover:bg-[#D9D9D9] transition-colors"
+                  className="relative bg-[#F5F5F5] px-4 py-4 rounded-xl flex items-center gap-3 text-[#5F8555] group hover:bg-[#D9D9D9] transition-colors"
                 >
                   <Paperclip size={20} className="flex-shrink-0" />
                   <span className="text-sm truncate flex-1">
