@@ -298,9 +298,12 @@ export default function CharityDetailPage() {
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Focus Areas</h2>
                 <div className="flex flex-wrap gap-2">
                   {charity.focusAreas.map((area, index) => (
-                    <Badge key={index} variant="secondary" className="bg-gray-100 text-gray-700 text-lg">
+                    <p
+                      key={index}
+                      className="text-sm font-plusjakarta bg-green-100 text-green-600 rounded-lg px-3 py-1 inline-block"
+                    >
                       {area}
-                    </Badge>
+                    </p>
                   ))}
                 </div>
               </div>
@@ -381,7 +384,7 @@ export default function CharityDetailPage() {
                         onClick={() => setAmount(preset)}
                         className={`py-3 px-2 rounded-lg text-sm transition-all border-2 ${
                           amount === preset
-                            ? 'border-[#59AD4A] bg-[#59AD4A] text-white font-semibold'
+                            ? 'border-[#59AD4A] bg-[#104109] text-white font-plusjakarta'
                             : 'border-gray-300 bg-white text-gray-900 hover:border-[#59AD4A]'
                         }`}
                       >
@@ -394,7 +397,7 @@ export default function CharityDetailPage() {
                     onClick={() => setAmount('custom')}
                     className={`w-full py-3 px-4 rounded-lg text-sm transition-all border-2 ${
                       amount === 'custom'
-                        ? 'border-[#59AD4A] bg-[#59AD4A] text-white font-semibold'
+                        ? 'border-[#59AD4A] bg-[#104109] text-white font-plusjakarta'
                         : 'border-gray-300 bg-white text-gray-900 hover:border-[#59AD4A]'
                     }`}
                   >
@@ -416,45 +419,111 @@ export default function CharityDetailPage() {
                 {/* Donor Information */}
                 <div className="space-y-3">
                   <div>
-                    <Label htmlFor="donorName" className="text-sm font-medium text-gray-900 mb-2 block">
+                    <label
+                      htmlFor="donorName"
+                      className="font-plusjakarta block mb-2"
+                      style={{
+                        fontFamily: "Plus Jakarta Sans",
+                        fontWeight: 700,
+                        fontSize: "14px",
+                        lineHeight: "20px",
+                        color: "#1a1a1a"
+                      }}
+                    >
                       Your Name (Optional)
-                    </Label>
-                    <Input
+                    </label>
+                    <input
+                      type="text"
                       id="donorName"
                       value={donorName}
                       onChange={(e) => setDonorName(e.target.value)}
                       placeholder="John Doe"
                       disabled={isAnonymous}
-                      className="bg-gray-50 border-gray-300"
+                      className="font-plusjakarta w-full"
+                      style={{
+                        height: "48px",
+                        padding: "12px 16px",
+                        borderRadius: "12px",
+                        border: "1px solid #E5E7EB",
+                        backgroundColor: "#F9FAFB",
+                        fontFamily: "Plus Jakarta Sans",
+                        fontWeight: 400,
+                        fontSize: "16px",
+                        lineHeight: "24px",
+                        color: "#1a1a1a"
+                      }}
                     />
                   </div>
-
                   <div>
-                    <Label htmlFor="donorEmail" className="text-sm font-medium text-gray-900 mb-2 block">
-                      Email Address <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="donorEmail"
+                    <label
+                      htmlFor="donorEmail"
+                      className="font-plusjakarta block mb-2"
+                      style={{
+                        fontFamily: "Plus Jakarta Sans",
+                        fontWeight: 700,
+                        fontSize: "14px",
+                        lineHeight: "20px",
+                        color: "#1a1a1a"
+                      }}
+                    >
+                      Email Address <span style={{ color: "#ef4444" }}>*</span>
+                    </label>
+                    <input
                       type="email"
+                      id="donorEmail"
                       value={donorEmail}
                       onChange={(e) => setDonorEmail(e.target.value)}
                       placeholder="john@example.com"
                       required
-                      className="bg-gray-50 border-gray-300"
+                      className="font-plusjakarta w-full"
+                      style={{
+                        height: "48px",
+                        padding: "12px 16px",
+                        borderRadius: "12px",
+                        border: "1px solid #E5E7EB",
+                        backgroundColor: "#F9FAFB",
+                        fontFamily: "Plus Jakarta Sans",
+                        fontWeight: 400,
+                        fontSize: "16px",
+                        lineHeight: "24px",
+                        color: "#1a1a1a"
+                      }}
                     />
                   </div>
-
                   <div>
-                    <Label htmlFor="message" className="text-sm font-medium text-gray-900 mb-2 block">
+                    <label
+                      htmlFor="message"
+                      className="font-plusjakarta block mb-2"
+                      style={{
+                        fontFamily: "Plus Jakarta Sans",
+                        fontWeight: 700,
+                        fontSize: "14px",
+                        lineHeight: "20px",
+                        color: "#1a1a1a"
+                      }}
+                    >
                       Message (Optional)
-                    </Label>
-                    <Textarea
+                    </label>
+                    <textarea
                       id="message"
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
                       placeholder="Leave a message of support..."
                       rows={3}
-                      className="bg-gray-50 border-gray-300 resize-none"
+                      className="font-plusjakarta w-full"
+                      style={{
+                        padding: "12px 16px",
+                        borderRadius: "12px",
+                        border: "1px solid #E5E7EB",
+                        backgroundColor: "#F9FAFB",
+                        fontFamily: "Plus Jakarta Sans",
+                        fontWeight: 400,
+                        fontSize: "16px",
+                        lineHeight: "24px",
+                        color: "#1a1a1a",
+                        resize: "none",
+                        overflow: "auto"
+                      }}
                     />
                   </div>
                 </div>
@@ -498,13 +567,48 @@ export default function CharityDetailPage() {
                   <span>Secure and encrypted payment</span>
                 </div>
 
-                <Button 
-                  type="submit" 
-                  className="w-full bg-[#59AD4A] hover:bg-[#4a9a3e] text-white font-semibold py-3 transition"
-                  disabled={donating || !amount}
+                <button
+                type="submit"
+                disabled={donating || !amount}
+                className="font-plusjakarta flex items-center justify-center w-full"
+                style={{
+                  height: "56px",
+                  padding: "16px 0",
+                  gap: "8px",
+                  borderRadius: "12px",
+                  backgroundColor: donating || !amount ? "#9CA3AF" : "#104901",
+                  color: "#FFFFFF",
+                  border: "none",
+                  cursor: donating || !amount ? "not-allowed" : "pointer",
+                  boxShadow: "0px 4px 6px -4px rgba(6, 78, 59, 0.1), 0px 10px 15px -3px rgba(6, 78, 59, 0.1)",
+                  transition: "all 0.3s ease"
+                }}
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M17.5 5H12.5V2.5C12.5 2.1 12.2 1.8 11.8 1.8C11.4 1.8 11.1 2.1 11.1 2.5V5H8.9V2.5C8.9 2.1 8.6 1.8 8.2 1.8C7.8 1.8 7.5 2.1 7.5 2.5V5H2.5C1.1 5 0 6.1 0 7.5V16.5C0 18.9 1.6 20 2.5 20H17.5C18.9 20 20 18.9 20 17.5V7.5C20 6.1 18.9 5 17.5 5ZM18.3 17.5C18.3 18.1 17.9 18.5 17.3 18.5H2.7C2.1 18.5 1.7 18.1 1.7 17.5V9.2H18.3V17.5Z"
+                    fill="white"
+                  />
+                </svg>
+                <span
+                  className="font-plusjakarta"
+                  style={{
+                    fontFamily: "Plus Jakarta Sans",
+                    fontWeight: 700,
+                    fontSize: "16px",
+                    lineHeight: "24px",
+                    textAlign: "center"
+                  }}
                 >
                   {donating ? 'Processing...' : `Donate ${amount && amount !== 'custom' ? formatAmount(amount, locationInfo?.currency.code || 'USD') : customAmount ? formatAmount(customAmount, locationInfo?.currency.code || 'USD') : ''}`}
-                </Button>
+                </span>
+              </button>
               </form>
             </div>
           </div>
