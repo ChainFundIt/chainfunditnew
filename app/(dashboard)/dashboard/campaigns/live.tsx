@@ -29,7 +29,7 @@ const LiveCampaigns = ({ campaigns }: Props) => {
           className="bg-[var(--color-darkGreen)] text-[14px] leading-[21px] font-bold rounded-[10.5px] flex
                             items-center justify-center py-3 h-auto md:w-fit w-full"
         >
-          <div> Create Campaign</div>
+          <div> Start a Campaign</div>
 
           <PlusIcon height={18} width={18} />
         </Button>
@@ -76,7 +76,7 @@ const LiveCampaigns = ({ campaigns }: Props) => {
             className="bg-[var(--color-darkGreen)] text-[14px] leading-[21px] font-bold rounded-[10.5px] flex
                        items-center justify-center py-3 h-auto md:w-fit w-full"
           >
-            <div> Create Campaign</div>
+            <div> Start a Campaign</div>
 
             <Plus height={18} width={18} />
           </Button>

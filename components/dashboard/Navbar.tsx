@@ -113,7 +113,7 @@ const Navbar = (props: Props) => {
             href="/dashboard/campaigns/create-campaign"
             className="w-full h-full flex items-center justify-center"
           >
-            Create Campaign
+            Start a Campaign
           </Link>
         </Button>
         <NotificationAlert />
@@ -207,7 +207,7 @@ const Navbar = (props: Props) => {
             </li>
           </ul>
           <div className="flex flex-col gap-2">
-            <Button className="w-full">Create Campaign</Button>
+            <Button className="w-full">Start a Campaign</Button>
             <div className="flex gap-3 items-center justify-center">
               <NotificationAlert />
               <Link href="/logout" onClick={handleLogout}>

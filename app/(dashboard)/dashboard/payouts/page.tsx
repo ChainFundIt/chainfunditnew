@@ -131,16 +131,16 @@ async function requestPayout(params: any): Promise<any> {
 }
 
 const TrendingUpIcon = () => {
-  return (<TrendingUp size={24} color="white" />);
-}
+  return <TrendingUp size={24} color="white" />;
+};
 
 const DollarSignIcon = () => {
-  return (<DollarSign size={24} color="white" />);
-}
+  return <DollarSign size={24} color="white" />;
+};
 
 const ClockIcon = () => {
-  return (<Clock size={24} color="white" />);
-}
+  return <Clock size={24} color="white" />;
+};
 
 const PayoutsPage = () => {
   const isMobile = useIsMobile();
@@ -484,7 +484,7 @@ const PayoutsPage = () => {
           }}
           className="bg-[var(--color-darkGreen)] text-[14px] leading-[21px] font-bold rounded-[10.5px] flex items-center justify-center py-3 h-auto md:w-fit w-full"
         >
-          <div> Create Campaign</div>
+          <div> Start a Campaign</div>
           <PlusIcon height={18} width={18} />
         </Button>
       </div>
