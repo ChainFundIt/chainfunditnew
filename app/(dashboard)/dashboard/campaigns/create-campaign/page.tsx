@@ -45,6 +45,7 @@ import {
   Image as ImageIcon,
   ArrowLeft,
   ArrowRight,
+  BotMessageSquare,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -933,12 +934,12 @@ export default function CreateCampaignPage() {
         </div>
 
         {/* Story Section */}
-        <div>
-          <label className="text-lg font-semibold text-[#104109] mb-3 block">
+        <div className="flex flex-col gap-3">
+          <label className="text-lg font-semibold text-[#104109]">
             Campaign Story
           </label>
-          <div className="bg-[#E5ECDE] rounded-xl overflow-hidden">
-            <div className="p-4 space-y-3">
+          <div>
+            <div className="p-4 space-y-3 bg-[#F5F5F5] rounded-tl-xl rounded-tr-xl">
               <div className="flex items-start gap-3">
                 <PenTool
                   size={24}
@@ -948,10 +949,10 @@ export default function CreateCampaignPage() {
                   placeholder="Tell the world what your campaign is about..."
                   value={formData.story}
                   onChange={(e) => handleFieldChange("story", e.target.value)}
-                  className="w-full bg-transparent text-[#5F8555] placeholder:text-[#5F8555] focus:outline-none resize-none min-h-40"
+                  className="w-full bg-transparent text-[#5F8555] placeholder:text-[#5F8555] focus:outline-none resize-none min-h-40 max-h-64 overflow-y-auto"
                 />
               </div>
-              <div className="text-sm text-[#5F8555] px-4">
+              <div className="text-sm text-[#5F8555] pt-2 px-4 border-t border-[#D9D9D9]">
                 Tell the world what your campaign is about and why they should
                 support you.
               </div>
@@ -959,7 +960,7 @@ export default function CreateCampaignPage() {
             <button
               type="button"
               onClick={() => setShowAiModal(true)}
-              className="w-full bg-[#5F8555] py-3 px-4 flex gap-2 items-center justify-center font-semibold text-white hover:bg-[#3f5f3d] transition-colors"
+              className="w-full bg-[#104109] py-3 px-4 flex gap-2 items-center justify-center font-semibold text-white hover:bg-white hover:text-[#104109] hover:border-[#104109] border transition-colors rounded-bl-xl rounded-br-xl"
             >
               <Airplay size={20} />
               Suggest with AI
@@ -998,11 +999,12 @@ export default function CreateCampaignPage() {
         {/* AI Modal */}
         {showAiModal && (
           <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl p-6 w-full max-w-2xl shadow-lg space-y-4 max-h-96 overflow-y-auto">
+            <div className="bg-white rounded-xl p-6 w-full max-w-2xl shadow-lg space-y-4 overflow-hidden">
+              { /* Modal Header */ }
               <div className="flex justify-between items-start">
-                <div className="flex gap-2 items-start">
-                  <Loader size={32} color="#5F8555" />
-                  <div>
+                <div className="flex gap-4 items-center">
+                  <BotMessageSquare size={32} className="text-[#5F8555]" />
+                  <div className="flex flex-col gap-1">
                     <h2 className="text-2xl font-semibold text-[#104109]">
                       Suggest Description
                     </h2>
@@ -1019,9 +1021,10 @@ export default function CreateCampaignPage() {
                 </button>
               </div>
 
-              <div className="space-y-3">
+              {/* Content Length */}
+              <div className="flex flex-col gap-2">
                 <label className="text-[#104109] font-semibold">Length</label>
-                <div className="flex gap-2 bg-[#E5ECDE] w-fit p-1 rounded-lg">
+                <div className="flex gap-2 bg-[#F5F5F5] w-fit p-1 rounded-lg">
                   {tabs.map((tab) => (
                     <button
                       key={tab}
@@ -1038,8 +1041,9 @@ export default function CreateCampaignPage() {
                   ))}
                 </div>
               </div>
-
-              <div className="space-y-2">
+              
+              {/* Additional Instructions */}
+              <div className="flex flex-col gap-2">
                 <label className="text-[#104109] font-semibold block">
                   Additional Instructions
                 </label>
@@ -1054,7 +1058,7 @@ export default function CreateCampaignPage() {
 
               <div className="flex justify-between gap-3">
                 <Button
-                  className="flex-1 bg-[#104109] hover:bg-[#0a3a01] text-white font-semibold py-2 h-12 text-lg"
+                  className="flex-1 h-auto py-2 text-white bg-[#104109] font-semibold text-lg hover:bg-white rounded-3xl"
                   onClick={generateAiSuggestion}
                   disabled={isLoading}
                 >
@@ -1064,7 +1068,7 @@ export default function CreateCampaignPage() {
                 {aiInstruction && (
                   <Button
                     onClick={handleAiDone}
-                    className="flex-1 bg-[#5F8555] hover:bg-[#3f5f3d] text-white font-semibold py-2 h-12 text-lg"
+                    className="flex-1 h-auto py-2 text-white bg-[#104109] font-semibold text-lg hover:bg-white rounded-3xl"
                   >
                     Done <Check className="ml-2" size={20} />
                   </Button>
