@@ -95,7 +95,7 @@ export const CampaignInfo = ({
   const router = useRouter();
   const imageExist = !needsEmojiFallback(imageUrl);
   return (
-    <div className="w-[23rem] h-[30rem] border border-[#F3F4F6] bg-white rounded-[14px] flex flex-col overflow-hidden">
+    <div className="w-[360px] h-[30rem] border border-[#F3F4F6] bg-white rounded-[14px] flex flex-col overflow-hidden">
       <div className="relative">
         {imageExist ? (
           <R2Image src={imageUrl} alt={title} width={357} height={168} />
@@ -150,24 +150,22 @@ export const CampaignInfo = ({
 
           <div className="flex flex-col gap-2">
             {showEdit && (
-              <Button className="border border-[#104109] rounded-[11px] bg-white flex items-center justify-center gap-2">
-                <div
-                  className="font-semibold leading-[18px] text-[12px] text-[#104109]"
-                  onClick={() => {
-                    router.push(`/dashboard/campaigns/edit/${id}`);
-                  }}
-                >
-                  Edit
-                </div>
+              <Button
+                onClick={() => {
+                  router.push(`/dashboard/campaigns/edit/${id}`);
+                }}
+                className="border border-[#104109] rounded-[11px] bg-white flex items-center justify-center gap-2 font-semibold leading-[18px] text-[12px] text-[#104109] hover:text-white hover:bg-[#104109]"
+              >
+                Edit
               </Button>
             )}
-            <Button className="border  rounded-[11px] flex items-center justify-center gap-2">
-              <div
-                className="font-semibold leading-[18px] text-[12px] "
-                onClick={() => {
-                  router.push(`/campaign/${id}`);
-                }}
-              >
+            <Button
+              onClick={() => {
+                router.push(`/campaign/${id}`);
+              }}
+              className="border  rounded-[11px] flex items-center justify-center gap-2"
+            >
+              <div className="font-semibold leading-[18px] text-[12px] ">
                 View Details
               </div>
               <TrendingUp className="text-[#104109]" />
