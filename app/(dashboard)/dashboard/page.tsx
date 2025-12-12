@@ -98,9 +98,9 @@ export const CampaignInfo = ({
     <div className="w-[360px] h-[30rem] border border-[#F3F4F6] bg-white rounded-[14px] flex flex-col overflow-hidden">
       <div className="relative">
         {imageExist ? (
-          <R2Image src={imageUrl} alt={title} width={357} height={168} />
+          <R2Image src={imageUrl} alt={title} width={357} height={100} className="w-full h-[200px] object-cover" />
         ) : (
-          <EmojiFallbackImage width={357} height={168} category={reason} />
+          <EmojiFallbackImage width={357} height={100} category={reason} />
         )}
 
         <div className="flex items-center justify-center w-[90px] h-[21px] bg-white rounded-full font-bold text-[10px] leading-[14px] text-[#104109] absolute top-[10px] left-[10px]">

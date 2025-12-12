@@ -84,10 +84,10 @@ const persons = [
 ];
 
 const currencies = [
-  { code: "GBP", text: "British Pound", icon: <PoundSterling /> },
-  { code: "USD", text: "US Dollar", icon: <DollarSign /> },
+  { code: "GBP", text: "British Pound", icon: "£" },
+  { code: "USD", text: "US Dollar", icon: "$" },
   { code: "NGN", text: "Nigerian Naira", icon: "₦" },
-  { code: "EUR", text: "Euro", icon: <Euro /> },
+  { code: "EUR", text: "Euro", icon: "€" },
   { code: "CAD", text: "Canadian Dollar", icon: "C$" },
 ];
 
@@ -616,7 +616,7 @@ export default function CreateCampaignPage() {
                               key={currency.code}
                               value={currency.code}
                             >
-                              <div className="flex items-center gap-2 p-0">
+                              <div className="flex items-center gap-2 p-0 text-lg">
                                 {typeof currency.icon === "string"
                                   ? currency.icon
                                   : currency.icon}{" "}
@@ -1179,7 +1179,7 @@ export default function CreateCampaignPage() {
           <div className="bg-white rounded-2xl p-8 w-full max-w-xl shadow-2xl space-y-6">
             <div className="flex justify-between items-start">
               <div>
-                <h2 className="text-3xl font-bold text-[#104109] mb-2">
+                <h2 className="text-2xl font-bold text-[#104109] mb-2">
                   Campaign Created Successfully! 🎉
                 </h2>
                 <p className="text-[#5F8555]">

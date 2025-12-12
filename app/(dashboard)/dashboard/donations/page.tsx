@@ -224,7 +224,7 @@ const DonationsPage = () => {
               {!loading && !error && donations.length > 0 && (
                 <>
                   {/* Table Header */}
-                  <div className="bg-[#Fcfdfd] flex  py-3 px-5 text-[#6b7280] text-[11px] leading-[14px] font-bold md:justify-between gap-5 border-t">
+                  <div className="bg-[#Fcfdfd] flex py-3 px-5 text-[#6b7280] text-[11px] leading-[14px] font-bold md:justify-between gap-2 border-t">
                     <div className="w-[15rem]">DONOR</div>
                     <div className="w-[15rem]">AMOUNT</div>
                     <div className="w-[15rem]">CAMPAIGN</div>

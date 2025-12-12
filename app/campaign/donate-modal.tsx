@@ -855,7 +855,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
                 <Button
                   onClick={() => setStep("donate")}
                   variant="outline"
-                  className="flex-1 h-12 border-2 border-[#5F8555] text-[#5F8555] hover:bg-[#5F8555] hover:text-white"
+                  className="flex-1 h-12 border-2 border-[#5F8555] text-[#5F8555] hover:bg-[#5F8555] hover:text-white rounded-full"
                 >
                   Back
                 </Button>
@@ -863,7 +863,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
                   onClick={handlePayment}
                   disabled={donationLoading}
                   variant="default"
-                  className="flex-1 h-12 bg-[#104901] text-white hover:bg-[#104901] hover:text-white flex items-center justify-center gap-2"
+                  className="flex-1 h-12 bg-[#104901] text-white hover:bg-[#104901] hover:text-white flex items-center justify-center gap-2 rounded-full"
                 >
                   {donationLoading ? (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>

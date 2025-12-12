@@ -56,7 +56,7 @@ const LiveCampaigns = ({ campaigns }: Props) => {
                   )}
                   reason={data.reason || "Uncategorized"}
                   id={data.slug}
-                  description={data.description}
+                  description={data.description.slice(0, 30)}
                   status={data.status}
                   fundRaisingFor={data.fundraisingFor || "Charity"}
                   showEdit={true}
