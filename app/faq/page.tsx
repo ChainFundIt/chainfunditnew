@@ -16,6 +16,7 @@ import {
   Clock,
   Users,
   Heart,
+  ArrowRight,
 } from "lucide-react";
 import {
   Select,
@@ -61,12 +62,13 @@ const faqDataByCategory = {
             actively share and promote across his or her social network.{" "}
           </p>
           <p>
-            The Chainfundit campaign page incorporates a &quot;Chain&quot; feature
-            optionality in addition to the conventional &quot;Donate&quot; and &quot;Share&quot;
-            functionality that exists on fundraising campaign pages from
-            conventional crowdfunding platforms. Chain Ambassadors will receive
-            the specified chain commission in any and all successful donations
-            on their Chain campaign pages.
+            The Chainfundit campaign page incorporates a &quot;Chain&quot;
+            feature optionality in addition to the conventional
+            &quot;Donate&quot; and &quot;Share&quot; functionality that exists
+            on fundraising campaign pages from conventional crowdfunding
+            platforms. Chain Ambassadors will receive the specified chain
+            commission in any and all successful donations on their Chain
+            campaign pages.
           </p>
         </div>
       ),
@@ -107,10 +109,11 @@ const faqDataByCategory = {
       answer: (
         <div className="space-y-2">
           <p>
-            KYC means &quot;Know Your Customer&quot;. This is a standard verification
-            process to ensure compliance with local regulations. The objective
-            of asking for your KYC information is to prevent the platform from
-            being used, by criminal elements for money laundering activities.
+            KYC means &quot;Know Your Customer&quot;. This is a standard
+            verification process to ensure compliance with local regulations.
+            The objective of asking for your KYC information is to prevent the
+            platform from being used, by criminal elements for money laundering
+            activities.
           </p>
           <p>
             KYC details are used to verify the customers upon withdrawal of
@@ -139,7 +142,7 @@ const faqDataByCategory = {
       id: 6,
       question: "How do I create a campaign?",
       answer:
-        'Click the &quot;Create Campaign&quot; button, fill in your campaign details, upload images, set your funding goal, and submit. Your campaign will go live immediately.',
+        "Click the &quot;Create Campaign&quot; button, fill in your campaign details, upload images, set your funding goal, and submit. Your campaign will go live immediately.",
     },
     {
       id: 7,
@@ -153,7 +156,7 @@ const faqDataByCategory = {
       id: 8,
       question: "How do I update my profile?",
       answer:
-        'Go to your dashboard, click on &quot;Settings&quot; or &quot;Profile&quot;, and update your information. You can change your display name, profile picture, and contact preferences.',
+        "Go to your dashboard, click on &quot;Settings&quot; or &quot;Profile&quot;, and update your information. You can change your display name, profile picture, and contact preferences.",
     },
     {
       id: 9,
@@ -192,22 +195,28 @@ export default function FAQPage() {
   const categories = [{ id: "all", name: "All Categories" }, ...faqCategories];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
+    <div className="font-jakarta">
       <Navbar />
 
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-r from-green-600 to-[#104901] mt-16 text-white py-16">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4">
+
+      <div className="bg-[#104109] pt-[5rem] pb-[7rem] flex items-center justify-center font-jakarta z-0">
+        <div className="px-4 flex flex-col gap-6 items-center md:max-w-[64rem] relative">
+          <div className="font-extrabold text-white text-[4rem] leading-[4rem] text-center">
             Frequently Asked Questions
-          </h1>
-          <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto">
+          </div>
+          <div className="text-xl text-[#d1fae5] text-center">
             Find answers to common questions about ChainFundIt
-          </p>
+          </div>
+          <div className="md:flex hidden absolute left-1/2 rounded-full h-[24rem] w-[24rem] bg-[#FACC151A] blur-[100px]"></div>
+          <div className="md:flex hidden  absolute right-1/3 -top-[50px] rounded-full h-[24rem] w-[24rem] bg-[#10B98133] blur-[100px]"></div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div
+        className="bg-white relative container mx-auto px-4 py-8"
+        style={{ zIndex: "5" }}
+      >
         {/* Search and Filter Section */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
           <div className="flex flex-col lg:flex-row gap-6">
@@ -261,7 +270,7 @@ export default function FAQPage() {
                   onClick={() => setSelectedCategory(category.id)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
                     selectedCategory === category.id
-                      ? "bg-green-600 text-white shadow-lg"
+                      ? "bg-[#104109] text-white shadow-lg"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
@@ -369,53 +378,71 @@ export default function FAQPage() {
         {/* Contact Section */}
         <div className="mt-16 bg-white rounded-2xl shadow-lg p-8">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl font-extrabold text-gray-900 mb-4">
               Still have questions?
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Can&apos;t find what you&apos;re looking for? Our support team is here to
-              help you.
+              Can&apos;t find what you&apos;re looking for? Our support team is
+              here to help you.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center p-6 bg-gray-50 rounded-xl">
-              <div className="p-3 bg-green-100 rounded-full w-fit mx-auto mb-4">
-                <Mail className="h-6 w-6 text-green-600" />
+          <div className="flex md:flex-row flex-col md:justify-between">
+            <div className="bg-white w-[26rem] h-[18rem] rounded-3xl py-10 flex flex-col items-center shadow-sm gap-4 px-6">
+              <div className="bg-[#ecfdf5] rounded-3xl p-3 w-fit">
+                <Mail size={32} color="#059669" />
               </div>
-              <h3 className="font-semibold text-lg mb-2">Email Support</h3>
-              <p className="text-gray-600 mb-4">Get help via email</p>
-              <Button
-                variant="outline"
-                className="text-green-600 border-green-600 hover:bg-green-600 hover:text-white"
-              >
+
+              <div className="text-center font-bold text-xl text-[#111827] ">
+                Email Support
+              </div>
+
+              <div className="text-center text-sm text-[#6b7280]">
+                Get help via email
+              </div>
+
+              <div className="text-[#059669] font-bold text-base flex gap-2 items-center cursor-pointer mt-auto">
                 campaigns@chainfundit.com
-              </Button>
+                <ArrowRight size={14} color="#059669" />
+              </div>
             </div>
 
-            <div className="text-center p-6 bg-gray-50 rounded-xl">
-              <div className="p-3 bg-green-100 rounded-full w-fit mx-auto mb-4">
-                <Phone className="h-6 w-6 text-green-600" />
+            <div className="bg-white w-[26rem] h-[18rem] rounded-3xl py-10 flex flex-col items-center shadow-sm gap-4 px-6">
+              <div className="bg-[#ecfdf5] rounded-3xl p-3 w-fit">
+                <Phone size={32} color="#059669" />
               </div>
-              <h3 className="font-semibold text-lg mb-2">Phone Support</h3>
-              <p className="text-gray-600 mb-4">Speak with our team</p>
-              <Button
-                variant="outline"
-                className="text-green-600 border-green-600 hover:bg-green-600 hover:text-white"
-              >
-               +44 20 3838 0360
-              </Button>
+
+              <div className="text-center font-bold text-xl text-[#111827] ">
+                Phone Support
+              </div>
+
+              <div className="text-center text-sm text-[#6b7280]">
+                Speak with our team
+              </div>
+
+              <div className="text-[#059669] font-bold text-base flex gap-2 items-center cursor-pointer mt-auto">
+                +44 20 3838 0360
+                <ArrowRight size={14} color="#059669" />
+              </div>
             </div>
 
-            <div className="text-center p-6 bg-gray-50 rounded-xl">
-              <div className="p-3 bg-green-100 rounded-full w-fit mx-auto mb-4">
-                <Clock className="h-6 w-6 text-green-600" />
+            <div className="bg-white w-[26rem] h-[18rem] rounded-3xl py-10 flex flex-col items-center shadow-sm gap-4 px-6">
+              <div className="bg-[#ecfdf5] rounded-3xl p-3 w-fit">
+                <Clock size={32} color="#059669" />
               </div>
-              <h3 className="font-semibold text-lg mb-2">Live Chat</h3>
-              <p className="text-gray-600 mb-4">Chat with us online</p>
-              <Button className="bg-green-600 hover:bg-green-700 text-white">
+
+              <div className="text-center font-bold text-xl text-[#111827] ">
+                Live Chat
+              </div>
+
+              <div className="text-center text-sm text-[#6b7280]">
+                Chat with us online
+              </div>
+
+              <div className="text-[#059669] font-bold text-base flex gap-2 items-center cursor-pointer mt-auto">
                 Start Chat
-              </Button>
+                <ArrowRight size={14} color="#059669" />
+              </div>
             </div>
           </div>
         </div>
@@ -425,3 +452,44 @@ export default function FAQPage() {
     </div>
   );
 }
+
+//  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+//             <div className="text-center p-6 bg-gray-50 rounded-xl">
+//               <div className="p-3 bg-green-100 rounded-full w-fit mx-auto mb-4">
+//                 <Mail className="h-6 w-6 text-green-600" />
+//               </div>
+//               <h3 className="font-semibold text-lg mb-2">Email Support</h3>
+//               <p className="text-gray-600 mb-4">Get help via email</p>
+//               <Button
+//                 variant="outline"
+//                 className="text-green-600 border-green-600 hover:bg-green-600 hover:text-white"
+//               >
+//                 campaigns@chainfundit.com
+//               </Button>
+//             </div>
+
+//             <div className="text-center p-6 bg-gray-50 rounded-xl">
+//               <div className="p-3 bg-green-100 rounded-full w-fit mx-auto mb-4">
+//                 <Phone className="h-6 w-6 text-green-600" />
+//               </div>
+//               <h3 className="font-semibold text-lg mb-2">Phone Support</h3>
+//               <p className="text-gray-600 mb-4">Speak with our team</p>
+//               <Button
+//                 variant="outline"
+//                 className="text-green-600 border-green-600 hover:bg-green-600 hover:text-white"
+//               >
+//                 +44 20 3838 0360
+//               </Button>
+//             </div>
+
+//             <div className="text-center p-6 bg-gray-50 rounded-xl">
+//               <div className="p-3 bg-green-100 rounded-full w-fit mx-auto mb-4">
+//                 <Clock className="h-6 w-6 text-green-600" />
+//               </div>
+//               <h3 className="font-semibold text-lg mb-2">Live Chat</h3>
+//               <p className="text-gray-600 mb-4">Chat with us online</p>
+//               <Button className="bg-green-600 hover:bg-green-700 text-white">
+//                 Start Chat
+//               </Button>
+//             </div>
+//           </div>

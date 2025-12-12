@@ -13,6 +13,7 @@ import {
   PencilLine,
   Check,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const tips = [
   {
@@ -118,6 +119,7 @@ const quickTips = [
 ];
 
 export default function FundraisingTipsPage() {
+  const router = useRouter();
   return (
     <div className="font-jakarta">
       <Navbar />
@@ -191,7 +193,12 @@ export default function FundraisingTipsPage() {
               Put these tips into practice and launch your fundraising campaign
               today.
             </div>
-            <Button className="rounded-2xl h-auto py-4 w-full">
+            <Button
+              className="rounded-2xl h-auto py-4 w-full"
+              onClick={() => {
+                router.push("/dashboard/campaigns/create-campaign");
+              }}
+            >
               Create Your Campaign
             </Button>
           </div>
