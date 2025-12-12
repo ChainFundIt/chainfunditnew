@@ -377,7 +377,7 @@ const Main = () => {
             transition={{ duration: 0.7, delay: 0.2 }}
           >
             <Button
-              onClick={() => router.push("/Charities")}
+              onClick={() => router.push("/campaigns")}
               className="bg-[#104109] px-8 py-4 rounded-full h-auto font-bold text-lg leading-7 border-none w-full md:w-fit"
             >
               Donate Now

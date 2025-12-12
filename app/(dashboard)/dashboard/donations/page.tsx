@@ -108,7 +108,7 @@ const DonationsPage = () => {
   const EmptyDonations = () => {
     if (activeTab === "Received") {
       return (
-        <div className="flex flex-col pt-8 justify-center items-center gap-2 overflow-hidden w-[20rem]">
+        <div className="flex flex-col pt-8 justify-center items-center gap-2 overflow-hidden md:w-full w-[20rem]">
           <h3 className="font-semibold text-3xl text-[#104901]">
             No donations received
           </h3>
