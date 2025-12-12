@@ -128,7 +128,7 @@ export default function FundraisingTipsPage() {
             EXPERT ADVICE
           </div>
           <div className="font-extrabold md:text-[60px] text-[48px] leading-[60px] text-[#022c22]">
-            Essential Fundraising Strategies
+            Essential Fundraising Tips
           </div>
           <div className="text-lg text-[#4b5563]">
             Learn from successful campaigns and implement these proven
