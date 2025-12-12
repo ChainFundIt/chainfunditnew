@@ -271,7 +271,7 @@ export function UnifiedItemCard({
   const CategoryIcon = categoryIcons[item.category || "Uncategorized"] || Heart;
   const imageUrl = item.coverImage || item.image || "";
 
-  // Campaign cards - updated design matching homepage
+  // Campaign cards
   if (isCampaign) {
     return (
       <div className="group rounded-2xl overflow-hidden bg-white border border-[#E8E8E8] hover:border-[#104901] hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col">
@@ -298,9 +298,6 @@ export function UnifiedItemCard({
             <span className="font-jakarta font-bold text-xs text-[#104901] uppercase tracking-wider">
               {item.category || "Campaign"}
             </span>
-          </div>
-          <div className="absolute top-4 right-4 bg-[#333333] text-white px-3 py-1.5 rounded-full">
-            <span className="font-jakarta font-bold text-xs">12 days left</span>
           </div>
           <div className="absolute top-3 right-3">
             <Button
@@ -374,7 +371,7 @@ export function UnifiedItemCard({
     );
   }
 
-  // Charity cards - updated design matching campaign cards
+  // Charity cards
   return (
     <div className="group rounded-2xl overflow-hidden bg-white border border-[#E8E8E8] hover:border-[#104901] hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col">
       {/* IMAGE SECTION */}

@@ -204,7 +204,7 @@ export default function FundraisingIdeasPage() {
         </div>
       </div>
 
-      <div className="bg-[#104109]">
+      <div className="bg-[#104109] font-jakarta">
         <div className="bg-[#fcfaf5] rounded-tr-[48px] rounded-tl-[48px] pt-16 pb-[96px] md:px-0 px-4 flex flex-col items-center justify-center gap-[96px]">
           {/* Events & activities */}
           <div className="flex flex-col gap-12 md:max-w-[80rem] w-full">

@@ -5,22 +5,22 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import {
-  Lightbulb,
-  Target,
   Share2,
-  Heart,
   Camera,
-  MessageSquare,
   TrendingUp,
   Users,
-  CheckCircle,
-  ArrowRight,
+  PanelsLeftBottom,
+  PencilLine,
+  Check,
 } from "lucide-react";
-import Link from "next/link";
 
 const tips = [
   {
-    icon: Target,
+    Icon: (
+      <div className="rounded-2xl bg-[#ecfdf5] w-fit p-3 ">
+        <PanelsLeftBottom color="#10b981" size={28} />
+      </div>
+    ),
     title: "Set a Realistic Goal",
     description:
       "Research similar campaigns to determine an appropriate funding goal. Setting a realistic target increases your chances of success and builds donor confidence.",
@@ -31,7 +31,11 @@ const tips = [
     ],
   },
   {
-    icon: Camera,
+    Icon: (
+      <div className="rounded-2xl bg-[#eff6ff] w-fit p-3 ">
+        <Camera color="#3b82f6" size={28} />
+      </div>
+    ),
     title: "Use Compelling Visuals",
     description:
       "High-quality images and videos can significantly increase engagement and donations. Visual storytelling helps donors connect with your cause.",
@@ -42,7 +46,11 @@ const tips = [
     ],
   },
   {
-    icon: MessageSquare,
+    Icon: (
+      <div className="rounded-2xl bg-[#faf5ff] w-fit p-3 ">
+        <PencilLine color="#a855f7" size={28} />
+      </div>
+    ),
     title: "Tell Your Story",
     description:
       "A compelling narrative is the heart of a successful campaign. Share your personal connection to the cause and explain why it matters.",
@@ -53,7 +61,11 @@ const tips = [
     ],
   },
   {
-    icon: Share2,
+    Icon: (
+      <div className="rounded-2xl bg-[#fff7ed] w-fit p-3 ">
+        <Share2 color="#f97316" size={28} />
+      </div>
+    ),
     title: "Leverage Social Media",
     description:
       "Social media is one of the most powerful tools for spreading awareness. Create a consistent posting schedule and engage with your audience.",
@@ -65,7 +77,11 @@ const tips = [
     ],
   },
   {
-    icon: Users,
+    Icon: (
+      <div className="rounded-2xl bg-[#fdf2f8] w-fit p-3 ">
+        <Users color="#ec4899" size={28} />
+      </div>
+    ),
     title: "Build a Support Network",
     description:
       "Enlist friends, family, and community members to help share your campaign. The more people promoting your cause, the wider your reach.",
@@ -76,7 +92,11 @@ const tips = [
     ],
   },
   {
-    icon: TrendingUp,
+    Icon: (
+      <div className="rounded-2xl bg-[#ecfeff] w-fit p-3 ">
+        <TrendingUp color="#06b6d4" size={28} />
+      </div>
+    ),
     title: "Track and Optimize",
     description:
       "Monitor your campaign performance and adjust your strategy based on what works. Use analytics to understand your audience better.",
@@ -99,190 +119,169 @@ const quickTips = [
 
 export default function FundraisingTipsPage() {
   return (
-    <div className="min-h-screen bg-[#F2F2F2]">
+    <div className="font-jakarta">
       <Navbar />
-
-      {/* Hero Section */}
-      <div className="relative bg-[#FCFAF5] mt-16 py-20">
-        <div className="container mx-auto px-4 text-center">
-          <div className="inline-block mb-6 px-4 py-2 bg-yellow-100 rounded-full text-sm font-semibold text-yellow-700 uppercase tracking-wide">
-            Expert Advice
+      {/* Header Box */}
+      <div className="flex items-center justify-center pt-20  pb-[140px] bg-[#FCFAF5]">
+        <div className="flex flex-col gap-6 px-4 items-center justify-center md:max-w-[56rem] text-center">
+          <div className="bg-[#fef9c3] rounded-full py-2 px-4 text-[#854D0E] text-xs font-bold flex items-center justify-center">
+            EXPERT ADVICE
           </div>
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            Essential Fundraising Strategies
-          </h1>
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            Learn from successful campaigns and implement these proven strategies
-            to reach your fundraising goals.
-          </p>
+          <div className="font-extrabold md:text-[60px] text-[48px] leading-[60px] text-[#022c22]">
+            Essential Fundraising Tips
+          </div>
+          <div className="text-lg text-[#4b5563]">
+            Learn from successful campaigns and implement these proven
+            strategies to reach your fundraising goals
+          </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-20">
-        {/* Main Tips Grid */}
-        <div className="mb-20">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tips.map((tip, index) => {
-              const Icon = tip.icon;
-              const colors = [
-                { bg: "#E0F5E0", text: "#10B981" },
-                { bg: "#E0F0FF", text: "#3B82F6" },
-                { bg: "#F0E0FF", text: "#8B5CF6" },
-                { bg: "#FFE0F0", text: "#EC4899" },
-                { bg: "#FFF0E0", text: "#F59E0B" },
-                { bg: "#E0F5FF", text: "#06B6D4" },
-              ];
-              const color = colors[index % 6];
-
+      {/* Boxes */}
+      <div className="flex items-center justify-center py-[4rem] px-4">
+        <div className="flex flex-col gap-8  w-[82rem] items-center md:items-start">
+          <div className="flex md:flex-row flex-col gap-8 flex-wrap">
+            {tips.map((data, index) => {
               return (
                 <div
+                  className="border border-[#f3f4f6] rounded-[32px] w-[26rem] h-[17rem] p-8 flex flex-col gap-5 md:items-start items-center"
                   key={index}
-                  className="bg-[#FCFAF5] rounded-2xl p-8"
                 >
-                  <div className="mb-4">
-                    <div
-                      className="inline-flex p-3 rounded-full"
-                      style={{ backgroundColor: color.bg }}
-                    >
-                      <Icon
-                        className="h-6 w-6"
-                        style={{ color: color.text }}
-                      />
-                    </div>
+                  {data.Icon}
+                  <div className="font-bold text-xl text-[#022c22]">
+                    {data.title}
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">
-                    {tip.title}
-                  </h3>
-                  <p className="text-gray-600 text-sm mb-4">
-                    {tip.description}
-                  </p>
-                  <ul className="space-y-2">
-                    {tip.tips.map((item, idx) => (
-                      <li key={idx} className="flex items-start gap-2">
-                        <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
-                        <span className="text-xs text-gray-700">{item}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="text-sm text-[#4b5563] md:text-left text-center">
+                    {data.description}
+                  </div>
                 </div>
               );
             })}
           </div>
         </div>
+      </div>
 
-        {/* Quick Tips and Best Practices */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-20]">
-          {/* Quick Tips */}
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">
+      {/* Quick Tips for success */}
+      <div className="bg-[#ecfdf5] py-24 px-4 flex items-center justify-center">
+        <div className="w-[70rem] flex gap-16 items-center md:flex-row flex-col ">
+          {/* Left container */}
+          <div className="flex flex-col gap-6 ">
+            <div className="font-bold text-[#022c22] text-[30px] leading-[36px] md:text-left text-center">
               Quick Tips for Success
-            </h2>
-            <div className="space-y-4">
-              {quickTips.map((tip, index) => (
-                <div
-                  key={index}
-                  className="bg-white rounded-2xl p-6 flex items-start gap-4 shadow-sm"
-                >
-                  <div className="flex justify-center items-center bg-green-100 rounded-full h-7 w-7 mr-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+            </div>
+            {quickTips.map((data, index) => {
+              return (
+                <div className="flex rounded-xl p-4 gap-3 items-center bg-white">
+                  <div className="bg-[#d1fae5] p-1 rounded-full">
+                    <Check size={24} color="#059669" />
                   </div>
-                  <p className="text-gray-700 text-sm">{tip}</p>
+                  <div className="font-medium text-sm text-[#1f2937]">
+                    {data}
+                  </div>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
-
-          {/* Best Practices */}
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">
-              Best Practices
-            </h2>
-            <div className="space-y-8">
-              {/* Before Launch */}
-              <div className="bg-white rounded-2xl p-8 shadow-sm">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">
-                  Before Launch
-                </h3>
-                <ul className="space-y-3">
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-gray-700">
-                      Prepare all content and visuals in advance
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-gray-700">
-                      Build your initial support network
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-gray-700">
-                      Set up social media accounts and pages
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-gray-700">
-                      Create a content calendar for updates
-                    </span>
-                  </li>
-                </ul>
-              </div>
-
-              {/* During Campaign */}
-              <div className="bg-white rounded-2xl p-8 shadow-sm">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">
-                  During Campaign
-                </h3>
-                <ul className="space-y-3">
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-gray-700">
-                      Post regular updates (at least weekly)
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-gray-700">
-                      Respond to all comments and messages promptly
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-gray-700">
-                      Thank donors publicly and privately
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-gray-700">
-                      Share milestones and celebrate progress
-                    </span>
-                  </li>
-                </ul>
-              </div>
+          {/* Right Container */}
+          <div className=" flex flex-col gap-8 rounded-[40px] p-10 bg-white items-center justify-center shadow-xl">
+            <div className="text-[#022c22] font-bold text-2xl">
+              Ready to Start?
             </div>
+            <div className="text-[#4b5563] text-base text-center">
+              Put these tips into practice and launch your fundraising campaign
+              today.
+            </div>
+            <Button className="rounded-2xl h-auto py-4 w-full">
+              Create Your Campaign
+            </Button>
           </div>
         </div>
+      </div>
 
-        {/* CTA Section */}
-        <div className="bg-white rounded-2xl p-12 text-center shadow-lg">
-          <Heart className="h-0 w-0 text-red-500 mx-auto mb-6" />
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Ready to Start Your Campaign?
-          </h2>
-          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-            Put these tips into practice and launch your fundraising campaign
-            today.
-          </p>
-          <Link href="/dashboard/campaigns/create-campaign">
-            <Button className="bg-[#104901] rounded-full text-white hover:bg-[#0a3a01] font-semibold py-6 px-8">
-              Create Your Campaign
-              <ArrowRight className="h-5 w-5 ml-2" />
-            </Button>
-          </Link>
+      {/* Best practices */}
+      <div className="bg-white flex items-center justify-center py-24 px-4">
+        <div className="flex flex-col  justify-center gap-8 w-[70rem]">
+          <div className="font-bold text-[#022c22] text-[45px] leading-[48px] text-center">
+            Best Practices
+          </div>
+          <div className="flex md:flex-row flex-col gap-16">
+            {/* Before launch */}
+            <div className="flex flex-col gap-3 border border-[#f3f4f6] rounded-3xl p-5 flex-1">
+              <div className="font-bold text-[#022c22] text-[30px] leading-[36px] text-center">
+                Before Launch
+              </div>
+              <div className="flex rounded-xl p-4 gap-3 items-center bg-white">
+                <div className="bg-[#d1fae5] p-1 rounded-full">
+                  <Check size={24} color="#059669" />
+                </div>
+                <div className="font-medium text-sm text-[#1f2937]">
+                  Prepare all content and visuals in advance
+                </div>
+              </div>
+              <div className="flex rounded-xl p-4 gap-3 items-center bg-white">
+                <div className="bg-[#d1fae5] p-1 rounded-full">
+                  <Check size={24} color="#059669" />
+                </div>
+                <div className="font-medium text-sm text-[#1f2937]">
+                  Build your initial support network.
+                </div>
+              </div>
+              <div className="flex rounded-xl p-4 gap-3 items-center bg-white">
+                <div className="bg-[#d1fae5] p-1 rounded-full">
+                  <Check size={24} color="#059669" />
+                </div>
+                <div className="font-medium text-sm text-[#1f2937]">
+                  Set up social media accounts and pages.
+                </div>
+              </div>
+              <div className="flex rounded-xl p-4 gap-3 items-center bg-white">
+                <div className="bg-[#d1fae5] p-1 rounded-full">
+                  <Check size={24} color="#059669" />
+                </div>
+                <div className="font-medium text-sm text-[#1f2937]">
+                  Create a content calendat for updates.
+                </div>
+              </div>
+            </div>
+            {/* during campaign */}
+            <div className="flex flex-col gap-3 border border-[#f3f4f6] rounded-3xl p-5 flex-1">
+              <div className="font-bold text-[#022c22] text-[30px] leading-[36px] text-center">
+                During Campaigns
+              </div>
+              <div className="flex rounded-xl p-4 gap-3 items-center bg-white">
+                <div className="bg-[#d1fae5] p-1 rounded-full">
+                  <Check size={24} color="#059669" />
+                </div>
+                <div className="font-medium text-sm text-[#1f2937]">
+                  Post regular updates (atleast weekly).
+                </div>
+              </div>
+              <div className="flex rounded-xl p-4 gap-3 items-center bg-white">
+                <div className="bg-[#d1fae5] p-1 rounded-full">
+                  <Check size={24} color="#059669" />
+                </div>
+                <div className="font-medium text-sm text-[#1f2937]">
+                  Respond to all comments and messages promptly.
+                </div>
+              </div>
+              <div className="flex rounded-xl p-4 gap-3 items-center bg-white">
+                <div className="bg-[#d1fae5] p-1 rounded-full">
+                  <Check size={24} color="#059669" />
+                </div>
+                <div className="font-medium text-sm text-[#1f2937]">
+                  Thank donors publicly and privately.
+                </div>
+              </div>
+              <div className="flex rounded-xl p-4 gap-3 items-center bg-white">
+                <div className="bg-[#d1fae5] p-1 rounded-full">
+                  <Check size={24} color="#059669" />
+                </div>
+                <div className="font-medium text-sm text-[#1f2937]">
+                  Share milestones and celebrate progress.
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

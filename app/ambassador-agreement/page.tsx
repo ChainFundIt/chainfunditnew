@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,15 +15,27 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+const tableOfContents = [
+  { id: "section-1", label: "1. Interpretation" },
+  { id: "section-2", label: "2. Commencement and Duration" },
+  { id: "section-3", label: "3. Referrals and Assurance" },
+  { id: "section-4", label: "4. Commission and Payment" },
+  { id: "section-5", label: "5. Data Protection" },
+  { id: "section-6", label: "6. Limitation of Liability" },
+  { id: "section-7", label: "7. Termination" },
+  { id: "section-8", label: "8. General" },
+];
+
 const sections = [
   {
+    id: "section-1",
     title: "1. Interpretation",
     icon: FileText,
     content: [
       {
         subtitle: "1.1 Definitions",
         text: (
-          <div className="space-y-3 text-gray-700">
+          <div className="space-y-3">
             <p>
               <strong>"Applicable Commission"</strong> means the applicable
               Commission payable on a Chained Fundraising Campaign.
@@ -35,7 +47,7 @@ const sections = [
             </p>
             <p>
               <strong>"Chain"</strong> or <strong>"Chaining"</strong> means the
-              art of opting to share and promote a Fundraising Campaign by
+              act of opting to share and promote a Fundraising Campaign by
               anyone other than the Campaign Organiser in exchange for a reward
               on successful donations.
             </p>
@@ -44,78 +56,56 @@ const sections = [
               chain functionality incorporated. Upon the acceptance of these
               terms and conditions, a replica page (i.e Chainfund) of the
               applicable Fundraising Campaign created to recognise the Chain
-              Ambassador electronic identity will be created and sent across to
-              the Chain Ambassador.
+              Ambassador electronic identity will be created and sent across.
             </p>
             <p>
               <strong>"Chainfunding"</strong> means the practice of sharing or
               promoting a ChainfundIt Fundraising Campaign for the purpose of
-              soliciting donations from an individual's social network in
-              exchange for a reward. This reward for the purposes of this
-              document shall be a commission unless otherwise stated in the
-              specified campaign.
+              soliciting donations from an individual's network in exchange for
+              a commission.
             </p>
             <p>
-              <strong>"Chain Ambassador"</strong> means any individual or
-              corporate entity who opts to chain a Fundraising Campaign by
-              submitting an application to Chainfundit and agreeing to these
-              terms and conditions.
+              <strong>"Chain Ambassador"</strong> means any individual or entity
+              who opts to chain a Fundraising Campaign.
             </p>
             <p>
               <strong>"Chained Fundraising Campaign"</strong> means the replica
-              campaign page created and given to a Chain Ambassador to share and
-              promote on behalf of the Fundraising Campaign they opted to chain.
+              page provided to a Chain Ambassador to share.
             </p>
             <p>
-              <strong>"Commission"</strong> means commission calculated on any
-              successful donations (with the exclusion of any donations made by
-              the chain Ambassador) at the applicable commission rate for the
-              Fundraising Campaign specified by the Campaign Organiser. Please
-              note that any such commission is earned outside of the ChainFundIt
-              fees or any other payment processors adopted for the campaign.
+              <strong>"Commission"</strong> means commission calculated on
+              successful donations, excluding donations by the Chain Ambassador.
             </p>
             <p>
-              <strong>"Data Protection Legislation"</strong> all applicable data
-              protection and privacy legislation in force from time to time in
-              the UK including UK GDPR (which has the meaning given to it in
-              section 3(10) (as supplemented by section 205(4)) of the Data
-              Protection Act 2018) and the Data Protection Act 2018. This also
-              includes applicable data protection and privacy legislation in any
-              country in which ChainFundIt is operational.
+              <strong>"Data Protection Legislation"</strong> includes UK GDPR,
+              Data Protection Act 2018, and any applicable data regulations.
             </p>
             <p>
-              <strong>"Donor"</strong> means an individual (other than the
-              Chain Ambassador) who makes a donation on the Platform.
+              <strong>"Donor"</strong> means an individual who makes a donation
+              on the Platform.
             </p>
             <p>
-              <strong>"Fundraising Campaign"</strong> means raising funds from a
-              social network to finance a desired goal or objective.
+              <strong>"Fundraising Campaign"</strong> means raising funds to
+              achieve a goal.
             </p>
             <p>
               <strong>"Platform"</strong> means ChainFundIt's crowdfunding
               platform.
             </p>
             <p>
-              Words following the terms "including" or "include" or any similar
-              expression are illustrative and shall not limit the sense of the
-              words, phrase or term preceding those terms.
+              Words following "including" or similar expressions are
+              illustrative and do not limit preceding terms.
             </p>
             <p>
-              Unless the context otherwise requires, words in the singular
-              shall include the plural and, in the plural, shall include the
-              singular.
+              Singular includes plural; plural includes singular.
             </p>
             <p>
-              <strong>"Referral"</strong> or <strong>"Sharing"</strong> means
-              the activity of introducing Donors to the Platform for the
-              purpose of soliciting donations from an individual's social
-              network for the benefit of the Fundraising Campaign.
+              <strong>"Referral"</strong> means introducing donors to the
+              Platform.
             </p>
             <p>
-              <strong>"Relevant Donation"</strong> means each cash donation made
-              by a Donor through the Platform with the unique Chain Ambassador
-              link linked to it that donations on the Chainfund are not the
-              subject of dispute, challenge, or refund.
+              <strong>"Relevant Donation"</strong> means a cash donation properly
+              attributed to a Chain Ambassador link.
             </p>
           </div>
         ),
@@ -123,20 +113,17 @@ const sections = [
     ],
   },
   {
+    id: "section-2",
     title: "2. Commencement and Duration",
     icon: FileText,
     content: [
       {
         subtitle: "",
         text: (
-          <div className="space-y-4 text-gray-700">
+          <div className="space-y-4">
+            <p>This Agreement commences upon acceptance.</p>
             <p>
-              This Agreement shall commence on the date this agreement is
-              accepted.
-            </p>
-            <p>
-              This Agreement shall continue in force unless and until terminated
-              in accordance with Clause 7 (the "Term").
+              This Agreement continues until terminated under Clause 7.
             </p>
           </div>
         ),
@@ -144,71 +131,38 @@ const sections = [
     ],
   },
   {
+    id: "section-3",
     title: "3. Referrals and Assurance",
     icon: Handshake,
     content: [
       {
         subtitle: "",
         text: (
-          <div className="space-y-4 text-gray-700">
-            <p>
-              ChainFundIt appoints the Chain Ambassador to make Referrals on and
-              subject to the terms and conditions of this Agreement.
-            </p>
-            <p>
-              When making Referrals or otherwise performing this Agreement, the
-              Chain Ambassador shall at all times:
-            </p>
+          <div className="space-y-4">
+            <p>ChainFundIt appoints the Chain Ambassador to make referrals.</p>
+            <p>The Chain Ambassador must:</p>
             <ul className="list-disc list-inside ml-4 space-y-2">
-              <li>act promptly upon the reasonable and lawful instructions of Chainfundit;</li>
-              <li>act honestly, respectfully and in good faith;</li>
-              <li>act in accordance with applicable law;</li>
-              <li>
-                not act in a way that would damage the goodwill or reputation of
-                Chainfundit and/or the applicable Fundraising Campaign;
-              </li>
-              <li>
-                not mislead or apply any undue pressure or duress to any Donor or
-                potential Donor;
-              </li>
-              <li>
-                comply with all applicable laws relating to anti-bribery and
-                anti-corruption including the Bribery Act 2010 ("BA 2010");
-              </li>
-              <li>
-                refrain from engaging in any activity, practice or conduct
-                outside the UK which would constitute an offence under sections
-                1, 2 or 6 of the BA 2010 if such activity, practice or conduct
-                had been carried out/inside the UK; and
-              </li>
-              <li>
-                promptly report to ChainFundIt any request or demand for any
-                undue financial or other advantage of any kind received by
-                Ambassador.
-              </li>
+              <li>Act promptly on all lawful instructions.</li>
+              <li>Act honestly and respectfully.</li>
+              <li>Always comply with applicable laws.</li>
+              <li>Avoid damaging ChainFundIt's reputation.</li>
+              <li>Not mislead donors or pressure them.</li>
+              <li>Comply with anti-bribery laws (BA 2010).</li>
+              <li>Refrain from offenses outside UK equivalent to BA 2010.</li>
+              <li>Report any request for undue benefits.</li>
             </ul>
             <p>
-              Chain Ambassador represents and warrants to ChainFundIt that they
-              have not been convicted of a criminal offence (excluding any
-              conviction deemed to be spent under the Rehabilitation of
-              Offenders Act 1974, or other similar or applicable legislation).
+              The Chain Ambassador represents they are not convicted of criminal
+              offences (excluding spent convictions).
             </p>
             <p>
-              Chain Ambassador represents and warrants that they do not indulge
-              in any obscene activity on social media channels this includes
-              pornography, unauthorised content, other offensive/illegal
-              materials, or links.
+              The Ambassador must not engage in obscene social media activity.
             </p>
             <p>
-              Chain Ambassador agrees to avail his or her social media handles
-              (i.e. Twitter, Facebook, TikTok, Snapchat and Instagram) to
-              ChainFundIt; and Chain Ambassador equally agrees to accept any
-              follow requests from ChainFundIt.
+              Social media handles must be made available to ChainFundIt.
             </p>
             <p>
-              Chain Ambassador agrees to follow and interact with all
-              ChainFundIt's social media channels, this includes likes, sharing,
-              commenting on our posts.
+              Ambassador must follow and engage with ChainFundIt's social media.
             </p>
           </div>
         ),
@@ -216,65 +170,37 @@ const sections = [
     ],
   },
   {
+    id: "section-4",
     title: "4. Commission and Payment",
     icon: DollarSign,
     content: [
       {
         subtitle: "",
         text: (
-          <div className="space-y-4 text-gray-700">
+          <div className="space-y-4">
             <p>
-              Chain Ambassador is entitled to receive the Applicable Commission
-              in relation to each successful Donation made on their Chainfund
-              during the campaign.
+              Ambassador is entitled to Applicable Commission for donations made
+              on their Chainfund.
             </p>
             <p>
-              Applicable Commission will be calculated and paid by ChainFundIt
-              periodically or at the end of the campaign. Any dispute with the
-              commission should be addressed to{" "}
-              <Link
-                href="mailto:ambassadors@chainfundit.com"
-                className="text-[#104901] hover:underline font-semibold"
-              >
+              Commission disputes should be sent to{" "}
+              <Link href="mailto:ambassadors@chainfundit.com" className="font-plusjakarta">
                 ambassadors@chainfundit.com
               </Link>
             </p>
+            <p>Commission is paid in the campaign's currency.</p>
+            <p>No commission is paid if donations are refunded.</p>
             <p>
-              Applicable Commission shall be paid to the Chain Ambassador in the
-              currency of the applicable Fundraising Campaign that is registered
-              on the Platform.
+              Taxes apply. ChainFundIt may request a refund if taxes were not
+              withheld.
+            </p>
+            <p>ChainFundIt may set off amounts owed by the Ambassador.</p>
+            <p>
+              ChainFundIt reserves the right to charge admin fees up to 30%.
             </p>
             <p>
-              Where campaigns are unable to fulfil their intended objectives, all
-              donations will be refunded i.e. no commission will be payable on
-              such a campaign.
-            </p>
-            <p>
-              Applicable Commission will be subject to any and all income taxes
-              payable in the jurisdiction of the Chain Ambassador and / or
-              Fundraising Campaign. In any instance where such taxes are not
-              deducted or withheld upon payment, ChainFundIt retains the right
-              to demand for an immediate refund of these taxes from the Chain
-              Ambassador (in which case such refund shall be effected within
-              10 business days), or deduct same from subsequent Applicable
-              Commissions payable on any other Chainfunds of the Chain
-              Ambassador.
-            </p>
-            <p>
-              ChainFundIt may set-off from any Commission any and all amount due
-              to it from Chain Ambassador.
-            </p>
-            <p>
-              ChainFundIt reserves the right to charge an administration fee of
-              up to 30% on the chain commission payable to a chain ambassador on
-              any fundraising campaign chained.
-            </p>
-            <p>
-              Chain Ambassadors should be aware that any funds raised on behalf
-              of a charity will be transferred directly to the charity, Chain
-              Ambassadors will only receive the Applicable Commission. Under no
-              circumstances should donations be sent to the Chain Ambassador's
-              personal account.
+              Donations for charities go directly to the charity; ambassadors
+              only receive commission.
             </p>
           </div>
         ),
@@ -282,26 +208,20 @@ const sections = [
     ],
   },
   {
+    id: "section-5",
     title: "5. Data Protection",
     icon: Shield,
     content: [
       {
         subtitle: "",
         text: (
-          <div className="space-y-4 text-gray-700">
+          <div className="space-y-4">
             <p>
-              Both parties will comply with all applicable requirements of the
-              Data Protection Legislation. This clause 5 is in addition to, and
-              does not relieve, remove or replace, a party's obligations or
-              rights under the Data Protection Legislation.
+              Both parties must comply with all Data Protection Legislation.
             </p>
             <p>
-              The personal data that you provide to us or that we obtain about
-              you will be processed in accordance with our{" "}
-              <Link
-                href="/privacy-policy"
-                className="text-[#104901] hover:underline font-semibold"
-              >
+              Personal data is processed according to ChainFundIt's{" "}
+              <Link href="/privacy-policy" className="font-plusjakarta">
                 privacy policy
               </Link>
               .
@@ -312,121 +232,64 @@ const sections = [
     ],
   },
   {
+    id: "section-6",
     title: "6. Limitation of Liability",
     icon: AlertTriangle,
     content: [
       {
         subtitle: "",
         text: (
-          <div className="space-y-4 text-gray-700">
-            <p>
-              Nothing in this Agreement limits any liability:
-            </p>
+          <div className="space-y-4">
+            <p>Nothing limits liability for:</p>
             <ul className="list-disc list-inside ml-4 space-y-2">
-              <li>
-                that cannot legally be limited, including liability for death or
-                personal injury caused by negligence; or
-              </li>
-              <li>for fraud or fraudulent misrepresentation.</li>
+              <li>Death or injury from negligence</li>
+              <li>Fraud</li>
             </ul>
             <p>
-              Subject to clause 4.1, neither party shall be liable to the other
-              for any loss arising out of the lawful termination of this
-              Agreement.
+              ChainFundIt is not liable for losses from platform unavailability,
+              data issues, or uncontrollable circumstances.
             </p>
             <p>
-              Subject to 4.1, ChainFundIt shall not be liable to Chain
-              Ambassador for any loss (whether foreseeable or not) arising from:
+              Each party is liable for foreseeable loss due to breach or
+              negligence.
             </p>
-            <ul className="list-disc list-inside ml-4 space-y-2">
-              <li>the unavailability, or functional limitations, of the Platform;</li>
-              <li>
-                code that may be transmitted to or through, the Platform or in
-                relation to our third-party service providers;
-              </li>
-              <li>
-                any errors, inaccuracies, omissions, or losses in or to any data
-                provided to us; or
-              </li>
-              <li>circumstances beyond our reasonable control.</li>
-            </ul>
             <p>
-              Subject to clause 4.1, each party shall be liable to the other
-              for any foreseeable loss suffered as a result of the party's:
+              ChainFundIt's maximum liability is limited to 12 months of
+              commission.
             </p>
-            <ul className="list-disc list-inside ml-4 space-y-2">
-              <li>breach of any provision of this Agreement; or</li>
-              <li>negligence or willful default.</li>
-            </ul>
             <p>
-              Subject to clause 4.1, the maximum aggregate liability under or in
-              connection with this Agreement, whether in contract, tort
-              (including negligence) or otherwise of:
+              Ambassador's liability is limited to twice the commission paid.
             </p>
-            <ul className="list-disc list-inside ml-4 space-y-2">
-              <li>
-                ChainFundIt to Chain Ambassador, shall not exceed the Commission
-                payable to the Chain Ambassador in the twelve months preceding
-                the date the claim arose; and
-              </li>
-              <li>
-                Chain Ambassador to ChainFundIt, shall not exceed the greater of
-                two times the Commission paid to Chain Ambassador.
-              </li>
-            </ul>
           </div>
         ),
       },
     ],
   },
   {
+    id: "section-7",
     title: "7. Termination",
     icon: AlertTriangle,
     content: [
       {
         subtitle: "",
         text: (
-          <div className="space-y-4 text-gray-700">
-            <p>
-              ChainFundIt may terminate this Agreement with immediate effect by
-              giving notice to Chain Ambassador at any time if:
-            </p>
+          <div className="space-y-4">
+            <p>ChainFundIt may terminate immediately if:</p>
             <ul className="list-disc list-inside ml-4 space-y-2">
-              <li>The Fundraising Campaign goal has been reached;</li>
-              <li>
-                There has been no activity on the Chain Agent's payment link
-                within 14 days of receiving Chainfund;
-              </li>
-              <li>We suspect an abuse of the Fundraising Campaign; or</li>
-              <li>
-                ChainFundIt ceases to operate the Fundraising Campaign to which
-                this Agreement relates.
-              </li>
+              <li>Campaign goal reached</li>
+              <li>No activity within 14 days</li>
+              <li>Suspected abuse</li>
+              <li>Campaign discontinued</li>
             </ul>
             <p>
-              Chain Ambassador may terminate this Agreement at any point. However,
-              ChainFundIt is not obliged to deactivate Chain Ambassador's
-              Chainfund link. For the avoidance of doubt, the Chain Ambassador
-              will no longer earn any Commission from proceeds received from
-              Beneficiary's Fundraising Campaign.
+              Ambassador may terminate anytime but will no longer earn
+              commission.
             </p>
             <p>
-              Clauses 2, 4, 6.10 and 6.1 shall continue in force despite
-              termination.
+              Some clauses survive termination.
             </p>
             <p>
-              Termination of this Agreement shall not affect any of the rights,
-              remedies, obligations or liabilities of the parties that have
-              accrued up to the date of termination.
-            </p>
-            <p>
-              ChainFundIt reserves the right to monitor the activity of the Chain
-              Ambassador in relation to the campaign the ambassador has opted
-              to chain. Hence, ChainFundIt reserves the right to withdraw or
-              deactivate the Chain Ambassador's chain page and/or deny subsequent
-              applications by the Chain Ambassador to chain a campaign page(s)
-              should we find that the Chain Ambassador is passive in promoting
-              the ChainFundIt campaign(s).
+              ChainFundIt may deactivate the Chainfund if Ambassador is passive.
             </p>
           </div>
         ),
@@ -434,76 +297,46 @@ const sections = [
     ],
   },
   {
+    id: "section-8",
     title: "8. General",
     icon: Gavel,
     content: [
       {
         subtitle: "8.1 Entire Agreement",
         text: (
-          <p className="text-gray-700">
-            This Agreement constitutes the entire agreement between the parties
-            relating to its subject matter.
+          <p>
+            This Agreement is the entire agreement between parties.
           </p>
         ),
       },
       {
         subtitle: "8.2 Assignment",
         text: (
-          <p className="text-gray-700">
-            This Agreement is personal to the Chain Ambassador and the Chain
-            Ambassador may not assign, transfer or sub-contract or deal in any
-            other manner with its rights under this Agreement.
+          <p>
+            Ambassador may not assign or transfer rights.
           </p>
         ),
       },
       {
         subtitle: "8.3 No partnership or agency",
         text: (
-          <p className="text-gray-700">
-            Nothing in this Agreement is intended to, or shall be deemed to,
-            establish a partnership or joint venture between the parties,
-            constitute any party the agent of another party, or authorise any
-            party to make or enter into any commitments for or on behalf of
-            any other party. The relationship of employer and employee shall not
-            exist between the parties. Each party confirms it is acting on its
-            own behalf and not for the benefit of any other person.
+          <p>
+            Nothing creates a partnership, agency, or employment relationship.
           </p>
         ),
       },
       {
         subtitle: "8.4 Variation",
         text: (
-          <div className="space-y-3 text-gray-700">
-            <p>
-              ChainFundIt may vary the terms and conditions of this Agreement
-              without requiring the consent of the Chain Agent for the following
-              reasons:
-            </p>
+          <div className="space-y-3">
+            <p>ChainFundIt may vary terms without consent when required by:</p>
             <ul className="list-disc list-inside ml-4 space-y-2">
-              <li>
-                to reflect changes in the way ChainFundIt operates the business,
-                the Chain funding scheme or the Platform or if changes are made
-                to ChainFundIt's systems, policies, processes or standards; and
-              </li>
-              <li>
-                to adapt to changes in law, regulation or industry guidance or
-                implementing changes as a result of the decisions of a court,
-                regulator or ombudsman.
-              </li>
+              <li>Changes in operations, policies, systems</li>
+              <li>Law, regulation, court decisions</li>
             </ul>
             <p>
-              ChainFundIt will aim to give Chain Ambassador at least 7 days'
-              notice of any change to these terms and conditions by notifying
-              Chain ambassador through the Platform or by email but this may not
-              always be possible.
-            </p>
-            <p>
-              If Chain Ambassador does not agree with the changes ChainFundIt
-              may make then Chain Agent may terminate this Agreement in
-              accordance with clause 7.1(a). By continuing to participate in
-              the chaining scheme after changes to the terms and conditions of
-              this Agreement, Chain Agent agrees to be bound by the amended
-              terms.
+              ChainFundIt aims to notify 7 days prior, but may not always be
+              possible.
             </p>
           </div>
         ),
@@ -511,111 +344,56 @@ const sections = [
       {
         subtitle: "8.5 No automatic waiver",
         text: (
-          <p className="text-gray-700">
-            No failure or delay by a party to exercise any right or remedy
-            provided under this Agreement or by law shall constitute a waiver of
-            that or any other right or remedy, nor shall it prevent or restrict
-            the further exercise of that or any other right or remedy.
+          <p>
+            Delay in enforcing rights does not waive them.
           </p>
         ),
       },
       {
         subtitle: "8.6 Severance",
         text: (
-          <p className="text-gray-700">
-            If any part of this Agreement is or becomes invalid, illegal or
-            unenforceable, it shall be deemed modified to the minimum extent
-            necessary to make it valid, legal and enforceable. If such
-            modification is not possible, the relevant part shall be deemed
-            deleted. Any modification to or deletion of a provision or
-            part-provision under this clause shall not affect the validity and
-            enforceability of the rest of this Agreement.
+          <p>
+            Invalid terms are modified minimally or removed; remainder stays valid.
           </p>
         ),
       },
       {
         subtitle: "8.7 Notices",
         text: (
-          <div className="space-y-3 text-gray-700">
-            <p>
-              Any notice or other communication given to a party under this
-              Agreement shall be in writing and sent by email to the email
-              address specified in the Contract Details.
-            </p>
-            <p>
-              Any notice or communication shall be deemed to have been received
-              if sent by email, at the time of transmission, or, if this time
-              falls outside Business Hours, when Business Hours resume.
-            </p>
+          <div className="space-y-3">
+            <p>Notices must be sent by email.</p>
+            <p>Email notices are effective immediately or next business hour.</p>
           </div>
         ),
       },
       {
         subtitle: "8.8 Counterparty",
-        text: (
-          <p className="text-gray-700">
-            This Agreement may be executed in counterpart.
-          </p>
-        ),
+        text: <p>This Agreement may be executed in counterparts.</p>,
       },
       {
         subtitle: "8.9 Third Party Rights",
         text: (
-          <p className="text-gray-700">
-            Except for Chainfundit who may benefit from and enforce any right of
-            Chainfundit Nigeria Limited under this Agreement, no provision of
-            this Agreement shall be enforceable under the Contracts (Rights of
-            Third Parties) Act 1999 by any person who is not a party to it.
+          <p>
+            Only ChainFundIt may enforce third-party rights.
           </p>
         ),
       },
       {
         subtitle: "8.10 Governing Law",
         text: (
-          <div className="space-y-3 text-gray-700">
-            <p>
-              This Agreement shall be governed by and construed in accordance
-              with the laws of England and Wales for Fundraising Campaigns
-              originating in the UK and US, and laws of Nigeria for Fundraising
-              Campaigns originated in Nigeria.
-            </p>
-            <p>
-              This Agreement and any matter, dispute or claim (whether
-              contractual or otherwise) arising out of or in connection with it,
-              including any question regarding its existence, validity or
-              termination, shall be referred to and finally resolved by
-              arbitration by the International Court of Arbitration. Nothing in
-              this Agreement shall affect the right to serve process in any
-              manner permitted by law.
-            </p>
-            <p>
-              Its subject matter or formation (including non-contractual
-              disputes or claims) shall be governed by and construed in
-              accordance with either English or Nigerian law.
-            </p>
-            <p>
-              All activities of the chain ambassadors should be carried out in
-              line with all extant regulations and laws.
-            </p>
+          <div className="space-y-3">
+            <p>UK/US campaigns follow laws of England & Wales.</p>
+            <p>Nigeria campaigns follow Nigerian law.</p>
           </div>
         ),
       },
       {
         subtitle: "8.11 Jurisdiction",
         text: (
-          <div className="space-y-3 text-gray-700">
+          <div className="space-y-3">
+            <p>Arbitration seat is London or Nigeria depending on campaign origin.</p>
             <p>
-              The seat or legal place of arbitration shall be London, England, or
-              Nigeria, dependent on the country where the Fundraising Campaign
-              was originated and the language to be used in the arbitral
-              proceedings shall be English.
-            </p>
-            <p>
-              Each party irrevocably agrees that the courts of England and Wales
-              shall have non-exclusive jurisdiction to settle any dispute or
-              claim arising out of or in connection with this agreement or its
-              subject matter or formation (including non-contractual disputes or
-              claims). (Whether contractual or otherwise)
+              Courts of England & Wales have non-exclusive jurisdiction.
             </p>
           </div>
         ),
@@ -625,111 +403,271 @@ const sections = [
 ];
 
 export default function AmbassadorAgreementPage() {
+  const [activeSection, setActiveSection] = useState("section-1");
+
+  const scrollToSection = (sectionId: string) => {
+    setActiveSection(sectionId);
+    const element = document.getElementById(sectionId);
+    if (element) {
+      setTimeout(() => {
+        element.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
+    <div className="min-h-screen via-white to-blue-50 font-plusjakarta w-full">
       <Navbar />
 
-      <div className="relative bg-gradient-to-r from-green-600 to-[#104901] mt-16 text-white py-20">
-        <div className="container mx-auto px-4 text-center">
-          <Handshake className="h-16 w-16 mx-auto mb-6" />
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Ambassador Agreement
-          </h1>
-          <p className="text-xl md:text-2xl text-white/90 max-w-4xl mx-auto">
-            Terms & Conditions for Chain Ambassadors
-          </p>
+      {/* HERO SECTION */}
+      <div className="relative text-[#000000ff] overflow-hidden rounded-3xl w-full" style={{ boxSizing: "border-box" }}>
+        {/* RIGHT BLUR */}
+        <div
+          className="absolute top-0 right-0 pointer-events-none"
+          style={{
+            width: "400px",
+            height: "400px",
+            background: "radial-gradient(circle, #104109 0%, transparent 70%)",
+            filter: "blur(64px)",
+            opacity: 0.2,
+          }}
+        ></div>
+
+        {/* LEFT BLUR */}
+        <div
+          className="absolute top-0 left-0 pointer-events-none"
+          style={{
+            width: "400px",
+            height: "400px",
+            background: "radial-gradient(circle, #59AD4A 0%, transparent 70%)",
+            filter: "blur(64px)",
+            opacity: 0.1,
+          }}
+        ></div>
+
+        {/* CENTER CONTAINER */}
+        <div
+          className="relative mx-auto flex flex-col items-center justify-center font-plusjakarta"
+          style={{
+            width: "896px",
+            maxWidth: "100%",
+            paddingLeft: "16px",
+            paddingRight: "16px",
+            paddingTop: "80.8px",
+            gap: "24px",
+          }}
+        >
+          {/* ICON BADGE */}
+          <div
+            className="inline-flex items-center justify-center font-plusjakarta"
+            style={{
+              backgroundColor: "#ECFDF5",
+              width: "64px",
+              height: "64px",
+              borderRadius: "16px",
+              marginTop: "24px",
+            }}
+          >
+            <Handshake className="h-8 w-8 mx-auto text-[#059669]" />
+          </div>
+
+          {/* MAIN HEADING */}
+          <div
+            className="flex items-center justify-center font-plusjakarta text-center px-4"
+            style={{ width: "100%", maxWidth: "864px" }}
+          >
+            <h1
+              className="font-plusjakarta"
+              style={{
+                fontWeight: 800,
+                fontSize: "48px",
+                lineHeight: "1.2",
+                color: "#000000ff",
+              }}
+            >
+              Ambassador Agreement
+            </h1>
+          </div>
+
+          {/* SUBHEADING */}
+          <div
+            className="flex items-center justify-center font-plusjakarta text-center px-4"
+            style={{ width: "100%", maxWidth: "672px" }}
+          >
+            <p
+              className="font-plusjakarta"
+              style={{
+                fontWeight: 400,
+                fontSize: "18px",
+                color: "#4B5563",
+                lineHeight: "1.5",
+              }}
+            >
+              Terms & Conditions for Chain Ambassadors
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-16 max-w-4xl">
-        {/* Contract Details */}
-        <div className="mb-8">
-          <Card>
-            <CardContent className="p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Contract Details
-              </h2>
-              <div className="space-y-2 text-gray-700">
-                <p>
-                  <strong>Parties:</strong> ChainFundIt Limited and Chain
-                  Ambassador
-                </p>
-                <p>
-                  <strong>Effective Date:</strong> Upon acceptance of this
-                  Agreement
-                </p>
-                <p>
-                  <strong>Contact:</strong>{" "}
-                  <Link
-                    href="mailto:ambassadors@chainfundit.com"
-                    className="text-[#104901] hover:underline font-semibold"
-                  >
-                    ambassadors@chainfundit.com
-                  </Link>
-                </p>
+      {/* MAIN CONTENT */}
+      <div className="w-full font-plusjakarta px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {/* SIDEBAR - TABLE OF CONTENTS */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-24 bg-gray-50 rounded-lg p-6 border border-gray-200 max-h-[calc(100vh-120px)] overflow-y-auto font-plusjakarta">
+                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4 font-plusjakarta">
+                  TABLE OF CONTENTS
+                </h3>
+                <nav className="space-y-1 font-plusjakarta">
+                  {tableOfContents.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => scrollToSection(item.id)}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors font-plusjakarta ${
+                        activeSection === item.id
+                          ? "bg-green-100 text-green-700 font-plusjakarta"
+                          : "text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </nav>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
 
-        {/* Terms & Conditions */}
-        <div className="mb-8">
-          <Card>
-            <CardContent className="p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                Terms & Conditions
-              </h2>
-              <p className="text-gray-700 leading-relaxed">
-                This Agreement sets out the terms and conditions under which you
-                may participate as a Chain Ambassador in ChainFundIt's
-                ambassador program. By accepting this Agreement, you agree to
-                be bound by all terms and conditions set forth herein. This
-                Agreement should be read in conjunction with our{" "}
-                <Link
-                  href="/terms-and-conditions"
-                  className="text-[#104901] hover:underline font-semibold"
-                >
-                  Terms and Conditions
-                </Link>
-                .
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {sections.map((section, index) => {
-          const Icon = section.icon;
-          return (
-            <div key={index} className="mb-8">
-          <Card>
-            <CardContent className="p-8">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-3 bg-green-100 rounded-full">
-                      <Icon className="h-6 w-6 text-green-600" />
+            {/* MAIN CONTENT */}
+            <div className="lg:col-span-3 space-y-8 font-plusjakarta">
+              {/* CONTRACT DETAILS */}
+              <div className="font-plusjakarta">
+                <Card style={{ borderRadius: "16px", padding: "0", backgroundColor: "#FFFFFF !important" }}>
+                  <CardContent className="p-8 font-plusjakarta">
+                    <h2 className="font-plusjakarta font-bold" style={{ fontSize: "24px", color: "#1a1a1a" }}>
+                      Contract Details
+                    </h2>
+                    <div style={{ fontSize: "16px", color: "#4b5563" }} className="space-y-2 mt-4 font-plusjakarta">
+                      <p>
+                        <strong>Parties:</strong> ChainFundIt Limited and Chain Ambassador
+                      </p>
+                      <p>
+                        <strong>Effective Date:</strong> Upon acceptance of this Agreement
+                      </p>
+                      <p>
+                        <strong>Contact:</strong>{" "}
+                        <Link href="mailto:ambassadors@chainfundit.com" style={{ color: "#104901", fontWeight: 600 }}>
+                          ambassadors@chainfundit.com
+                        </Link>
+                      </p>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-900">
-                      {section.title}
-              </h2>
-                  </div>
-                  <div className="space-y-6">
-                    {section.content.map((item, idx) => (
-                      <div key={idx}>
-                        {item.subtitle && (
-                          <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                            {item.subtitle}
-                          </h3>
-                        )}
-                        <div className="text-gray-700 leading-relaxed">
-                          {item.text}
-                        </div>
-                      </div>
-                    ))}
+                  </CardContent>
+                </Card>
               </div>
-            </CardContent>
-          </Card>
+
+              {/* TERMS & CONDITIONS INTRO */}
+              <div className="font-plusjakarta">
+                <Card style={{ borderRadius: "16px", padding: "0", backgroundColor: "#FFFFFF !important" }}>
+                  <CardContent className="p-8 font-plusjakarta">
+                    <h2 className="font-plusjakarta font-bold mb-4" style={{ fontSize: "24px", color: "#1a1a1a" }}>
+                      Terms & Conditions
+                    </h2>
+                    <p style={{ fontSize: "16px", color: "#4b5563", lineHeight: "1.6" }} className="font-plusjakarta">
+                      This Agreement sets out the terms and conditions under which you may participate as a Chain Ambassador.
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* DYNAMIC SECTIONS */}
+              {sections.map((section, index) => {
+                const Icon = section.icon;
+                const isGreenCard = [2, 4, 6].includes(index);
+
+                return (
+                  <div
+                    key={section.id}
+                    id={section.id}
+                    className="scroll-mt-20 font-plusjakarta"
+                    onMouseEnter={() => setActiveSection(section.id)}
+                  >
+                    <Card
+                      style={{
+                        backgroundColor: isGreenCard ? "#104901" : "#FFFFFF",
+                        borderRadius: "16px",
+                        padding: "0",
+                        border: "none"
+                      }}
+                      className={isGreenCard ? "!bg-[#104901]" : "!bg-white"}
+                    >
+                      <CardContent className="p-6 font-plusjakarta">
+                        {/* CARD HEADER */}
+                        <div className="flex items-center gap-3 mb-6 font-plusjakarta">
+                          <div
+                            className="flex items-center justify-center rounded-full flex-shrink-0"
+                            style={{
+                              backgroundColor: isGreenCard ? "#1a5a2a" : "#f0fdf4",
+                              width: "48px",
+                              height: "48px",
+                            }}
+                          >
+                            <Icon
+                              className="h-5 w-5"
+                              style={{
+                                color: isGreenCard ? "#FFFFFF" : "#059669",
+                              }}
+                            />
+                          </div>
+
+                          <h2
+                            className="font-bold font-plusjakarta"
+                            style={{
+                              fontSize: "18px",
+                              color: isGreenCard ? "#FFFFFF" : "#1a1a1a",
+                            }}
+                          >
+                            {section.title}
+                          </h2>
+                        </div>
+
+                        {/* SECTION CONTENT */}
+                        <div
+                          className="space-y-6 font-plusjakarta"
+                          style={{
+                            fontSize: "16px",
+                            lineHeight: "1.65",
+                            color: isGreenCard ? "#FFFFFF" : "#4b5563",
+                          }}
+                        >
+                          {section.content.map((item, idx) => (
+                            <div key={idx} className="font-plusjakarta">
+                              {item.subtitle && (
+                                <h3
+                                  className="font-plusjakarta mb-2 font-plusjakarta"
+                                  style={{
+                                    fontSize: "18px",
+                                    color: isGreenCard ? "#FFFFFF" : "#1a1a1a",
+                                  }}
+                                >
+                                  {item.subtitle}
+                                </h3>
+                              )}
+                              <div className="font-plusjakarta">{item.text}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                );
+              })}
+
+              {/* REVISION DATE */}
+              <div className="text-center font-plusjakarta" style={{ fontSize: "14px", color: "#666", marginTop: "48px" }}>
+                Date of Last Revision: November 19, 2025
+              </div>
+            </div>
+          </div>
         </div>
-          );
-        })}
       </div>
 
       <Footer />
