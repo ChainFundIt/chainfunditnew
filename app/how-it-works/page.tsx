@@ -213,7 +213,7 @@ export default function HowItWorksPage() {
           <h2 className="text-3xl md:text-5xl font-bold text-black mb-8 font-plusjakarta">
             Ready to make a difference?
           </h2>
-          <Link href="/create-campaign">
+          <Link href="/dashboard/campaigns/create-campaign">
             <button className="inline-flex items-center gap-2 px-10 py-4 bg-[#59AD4A] text-white font-bold text-lg rounded-full hover:bg-[#4a9339] transition-colors duration-300 shadow-lg hover:shadow-xl font-plusjakarta">
               Start Fundraising <span>→</span>
             </button>

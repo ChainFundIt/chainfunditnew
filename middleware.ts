@@ -13,7 +13,6 @@ export async function middleware(request: NextRequest) {
   
   // Define protected routes
   const protectedRoutes = [
-    '/create-campaign',
     '/dashboard',
     '/admin',
     '/api/dashboard',
@@ -151,7 +150,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/create-campaign/:path*',
     '/dashboard/:path*',
     '/admin/:path*',
     '/api/dashboard/:path*',

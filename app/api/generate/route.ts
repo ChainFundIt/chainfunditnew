@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 
+const MAX_TOKENS_BY_LENGTH: Record<string, number> = {
+  short: 150,
+  medium: 400,
+  long: 800,
+};
+
 export async function POST(req: NextRequest) {
   const { prompt, length } = await req.json();
+
+  const normalizedLength =
+    length === "short" || length === "medium" || length === "long"
+      ? length
+      : "medium";
+  const max_tokens = MAX_TOKENS_BY_LENGTH[normalizedLength];
 
   try {
     const response = await fetch(
@@ -33,10 +45,11 @@ export async function POST(req: NextRequest) {
             },
             {
               role: "user",
-              content: `Write a ${length} fundraising campaign description based on this prompt: ${prompt}. Begin output immediately.`,
+              content: `Write a ${normalizedLength} fundraising campaign description based on this prompt: ${prompt}. Begin output immediately.`,
             },
           ],
           temperature: 0.6,
+          max_tokens,
         }),
       }
     );

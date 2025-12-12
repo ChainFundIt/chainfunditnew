@@ -110,7 +110,7 @@ const Navbar = (props: Props) => {
         <SessionStatusIndicator />
         <Button className="">
           <Link
-            href="/create-campaign"
+            href="/dashboard/campaigns/create-campaign"
             className="w-full h-full flex items-center justify-center"
           >
             Create Campaign
