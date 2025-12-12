@@ -266,27 +266,28 @@ export default function AllCampaignsPage() {
         )}
 
         {/* Search and Filters */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Search */}
-            <div className="flex-1">
-              <Label
-                htmlFor="search"
-                className="text-sm font-medium text-gray-700 mb-2 block"
-              >
-                Search Campaigns
-              </Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  id="search"
-                  placeholder="Search by title, description, or creator..."
-                  value={searchQuery}
-                  onChange={handleSearch}
-                  className="pl-10"
-                />
-              </div>
-            </div>
+<div className="bg-white rounded-2xl p-6 mb-8">
+  <div className="flex flex-col lg:flex-row gap-6">
+    {/* Search */}
+    <div className="flex-1">
+      <Label
+        htmlFor="search"
+        className="text-sm font-medium text-gray-700 mb-2 block"
+      >
+        Search Campaigns
+      </Label>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+        <Input
+          id="search"
+          placeholder="Search by title, description, or creator..."
+          value={searchQuery}
+          onChange={handleSearch}
+          className="pl-10 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md shadow-none"
+        />
+      </div>
+    </div>
+  
 
             {/* Category Filter */}
             <div className="lg:w-48">
