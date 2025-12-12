@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Shield,
   Lock,
@@ -13,6 +14,8 @@ import {
   CookieIcon,
   Check,
   ChevronRight,
+  Info,
+  Building,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -35,6 +38,83 @@ const tableOfContents = [
 ];
 
 const sections = [
+  {
+    id: "introduction",
+    title: "Introduction",
+    icon: Info,
+    content: [
+      {
+        subtitle: "",
+        text: (
+          <>
+            <p className="mb-4">
+              ChainFundIt ("we", "our", or "us") is committed to protecting
+              your privacy and personal data. This Privacy Policy explains
+              what information we collect, how we use it, who we share it
+              with, and your rights under applicable data protection laws,
+              including the UK General Data Protection Regulation (UK GDPR)
+              and the Nigeria Data Protection Regulation (NDPR).
+            </p>
+            <p className="">
+              By using{" "}
+              <Link
+                href="https://www.chainfundit.com"
+                className="text-green-600 hover:underline font-semibold"
+              >
+                www.chainfundit.com
+              </Link>
+              , you agree to this Privacy Policy, our Terms and Conditions,
+              and our Cookie Policy.
+            </p>
+          </>
+        ),
+      },
+    ],
+  },
+  {
+    id: "who-we-are",
+    title: "Who We Are",
+    icon: Building,
+    content: [
+      {
+        subtitle: "",
+        text: (
+          <>
+            <p className="">
+              <strong>ChainFundIt Limited</strong>
+              <br />
+              Company No. 13253451
+              <br />
+              Registered in England & Wales
+              <br />
+              71–75 Shelton Street, Covent Garden, London, WC2H 9JQ
+              <br />
+              <br />
+              <strong>General Support Email:</strong>{" "}
+              <Link
+                href="mailto:campaigns@chainfundit.com"
+                className="text-green-600 hover:underline font-semibold"
+              >
+                campaigns@chainfundit.com
+              </Link>
+              <br />
+              <strong>Privacy Matters Contact:</strong>{" "}
+              <Link
+                href="mailto:mngt@chainfundit.com"
+                className="text-green-600 hover:underline font-semibold"
+              >
+                mngt@chainfundit.com
+              </Link>
+              <br />
+              <br />
+              We are the <strong>data controller</strong> for personal data
+              collected through our platform.
+            </p>
+          </>
+        ),
+      },
+    ],
+  },
   {
     id: "information-we-collect",
     title: "Information We Collect",
@@ -566,154 +646,69 @@ export default function PrivacyPolicyPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FCFAF5] font-plusjakarta">
+    <div className="font-jakarta bg-white">
       <Navbar />
 
       {/* Hero Section */}
-      <div
-        className="bg-white font-plusjakarta"
-        style={{
-          width: "1440px",
-          height: "368.8px",
-
-          paddingRight: "272px",
-
-          paddingLeft: "272px",
-          borderBottom: "0.8px solid #F3F4F6",
-
-          boxSizing: "border-box",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+      <div className="flex justify-center px-4 py-20 bg-[#FCFAF5]">
+        {/* Right Corner Blur Overlay */}
         <div
-          className="font-plusjakarta flex flex-col items-center"
+          className="absolute top-0 right-0 pointer-events-none hidden md:flex"
           style={{
-            width: "896px",
-            height: "224px",
-            maxWidth: "896px",
+            width: "400px",
+            height: "400px",
+            background: "radial-gradient(circle, #104109 0%, transparent 70%)",
+            filter: "blur(64px)",
+            opacity: 0.2,
           }}
-        >
-          {/* Logo */}
-          <div
-            className="flex items-center justify-center mb-6 font-plusjakarta"
-            style={{
-              backgroundColor: "#ECFDF5",
-              width: "64px",
-              height: "64px",
-              borderRadius: "16px",
-            }}
-          >
-            <Shield className="h-8 w-8 text-green-600" />
+        ></div>
+
+        {/* Left Corner Blur Overlay */}
+        <div
+          className="absolute top-0 left-0 pointer-events-none hidden md:flex"
+          style={{
+            width: "400px",
+            height: "400px",
+            background: "radial-gradient(circle, #59AD4A 0%, transparent 70%)",
+            filter: "blur(64px)",
+            opacity: 0.1,
+          }}
+        ></div>
+
+        {/* Center Content Container */}
+        <div className="flex flex-col items-center justify-center gap-6 md:max-w-[80rem] w-full">
+          {/* Trophy Icon Badge */}
+          <div className="p-3 bg-[#ECFDF5] rounded-xl">
+            <Shield className="h-8 w-8 text-[#059669]" />
           </div>
 
           {/* Main Heading */}
-          <h1
-            className="font-plusjakarta text-center"
-            style={{
-              width: "864px",
-              height: "24px",
-              fontWeight: 800,
-              fontSize: "48px",
-              lineHeight: "1",
-              marginBottom: "24px",
-            }}
-          >
+          <div className="font-extrabold text-[#022C22] text-[4rem] leading-[4rem] text-center">
             Privacy Policy
-          </h1>
-
-          {/* Subheading Container */}
-          <div
-            className="flex items-center justify-center font-plusjakarta"
-            style={{
-              width: "864px",
-              height: "28px",
-              marginTop: "16px",
-            }}
-          >
-            <p
-              className="font-plusjakarta text-center"
-              style={{
-                width: "512px",
-                height: "28px",
-                fontWeight: 400,
-                fontSize: "18px",
-                color: "#4B5563",
-              }}
-            >
-              Your trust is our top priority. Here's how we protect your data.
-            </p>
           </div>
 
-          {/* Last Updated Badge */}
-          <div
-            className="flex items-center justify-center font-plusjakarta"
-            style={{
-              width: "306px",
-              height: "28px",
-              marginTop: "16px",
-
-              paddingTop: "4px",
-              paddingRight: "16px",
-              paddingBottom: "4px",
-              paddingLeft: "16px",
-              borderRadius: "12px",
-              boxSizing: "border-box",
-            }}
-          >
-            <span
-              className="font-plusjakarta text-center"
-              style={{
-                fontWeight: 700,
-                fontSize: "14px",
-                color: "#059669",
-                backgroundColor: "#ECFDF5",
-                padding: "4px 8px",
-                borderRadius: "8px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                height: "20px",
-              }}
-            >
-              Last updated: 19 November 2025
-            </span>
+          {/* Subheading */}
+          <div className="text-xl text-[#4B5563] text-center">
+            Your trust is our top priority. Here's how we protect your data.
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div
-        className="font-plusjakarta mx-auto"
-        style={{
-          width: "1440px",
-          minHeight: "900px",
-          paddingTop: "64px",
-          paddingLeft: "160px",
-          paddingRight: "160px",
-          boxSizing: "border-box",
-        }}
-      >
-        <div
-          className="flex font-plusjakarta"
-          style={{
-            width: "1120px",
-            gap: "48px",
-          }}
-        >
+      <div className="px-4 py-20 flex justify-center">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 max-w-[80rem] w-full">
           {/* Sidebar - Table of Contents */}
-          <div style={{ width: "256px", flexShrink: 0 }}>
-            <div className="sticky top-24 bg-gray-50 rounded-lg p-6 border border-gray-200 max-h-[calc(100vh-120px)] overflow-y-auto font-plusjakarta">
-              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4 font-plusjakarta">
+          <div className="lg:col-span-1">
+            <div className="sticky top-24 bg-gray-50 rounded-lg p-6 border border-gray-200 max-h-[calc(100vh-120px)] overflow-y-auto ">
+              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4 ">
                 TABLE OF CONTENTS
               </h3>
-              <nav className="space-y-1 font-plusjakarta">
+              <nav className="space-y-1 ">
                 {tableOfContents.map((item) => (
                   <button
                     key={item.id}
                     onClick={() => scrollToSection(item.id)}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors font-plusjakarta ${
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
                       activeSection === item.id
                         ? "bg-green-100 text-green-700 font-semibold"
                         : "text-gray-700 hover:bg-gray-100"
@@ -727,91 +722,10 @@ export default function PrivacyPolicyPage() {
           </div>
 
           {/* Main Content */}
-          <div
-            className="font-plusjakarta"
-            style={{
-              width: "804px",
-              gap: "48px",
-            }}
-          >
-            {/* Introduction Section */}
-            <div
-              id="introduction"
-              className="scroll-mt-20 mb-12 font-plusjakarta"
-              onMouseEnter={() => setActiveSection("introduction")}
-            >
-              <div className="bg-white rounded-2xl p-8 font-plusjakarta">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4 font-plusjakarta">
-                  1. Introduction
-                </h2>
-                <p className="text-gray-700 leading-relaxed mb-4 font-plusjakarta">
-                  ChainFundIt ("we", "our", or "us") is committed to protecting
-                  your privacy and personal data. This Privacy Policy explains
-                  what information we collect, how we use it, who we share it
-                  with, and your rights under applicable data protection laws,
-                  including the UK General Data Protection Regulation (UK GDPR)
-                  and the Nigeria Data Protection Regulation (NDPR).
-                </p>
-                <p className="text-gray-700 leading-relaxed font-plusjakarta">
-                  By using{" "}
-                  <Link
-                    href="https://www.chainfundit.com"
-                    className="text-green-600 hover:underline font-semibold"
-                  >
-                    www.chainfundit.com
-                  </Link>
-                  , you agree to this Privacy Policy, our Terms and Conditions,
-                  and our Cookie Policy.
-                </p>
-              </div>
-            </div>
-
-            {/* Who We Are Section */}
-            <div
-              id="who-we-are"
-              className="scroll-mt-20 mb-12 font-plusjakarta"
-              onMouseEnter={() => setActiveSection("who-we-are")}
-            >
-              <div className="bg-white rounded-2xl p-8 font-plusjakarta">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4 font-plusjakarta">
-                  2. Who We Are
-                </h2>
-                <p className="text-gray-700 leading-relaxed font-plusjakarta">
-                  <strong>ChainFundIt Limited</strong>
-                  <br />
-                  Company No. 13253451
-                  <br />
-                  Registered in England & Wales
-                  <br />
-                  71–75 Shelton Street, Covent Garden, London, WC2H 9JQ
-                  <br />
-                  <br />
-                  <strong>General Support Email:</strong>{" "}
-                  <Link
-                    href="mailto:campaigns@chainfundit.com"
-                    className="text-green-600 hover:underline font-semibold"
-                  >
-                    campaigns@chainfundit.com
-                  </Link>
-                  <br />
-                  <strong>Privacy Matters Contact:</strong>{" "}
-                  <Link
-                    href="mailto:mngt@chainfundit.com"
-                    className="text-green-600 hover:underline font-semibold"
-                  >
-                    mngt@chainfundit.com
-                  </Link>
-                  <br />
-                  <br />
-                  We are the <strong>data controller</strong> for personal data
-                  collected through our platform.
-                </p>
-              </div>
-            </div>
-
+          <div className="lg:col-span-3 space-y-8">
             {/* Dynamic Sections */}
             {sections.map((section, idx) => {
-              const sectionNumber = idx + 3;
+              const sectionNumber = idx + 1;
               const greenBgSections = [9, 11, 13];
               const isGreenBg = greenBgSections.includes(sectionNumber);
               const IconComponent = section.icon;
@@ -820,54 +734,73 @@ export default function PrivacyPolicyPage() {
                 <div
                   key={section.id}
                   id={section.id}
-                  className="scroll-mt-20 mb-12 font-plusjakarta"
+                  className="scroll-mt-20"
                   onMouseEnter={() => setActiveSection(section.id)}
                 >
-                  <div
-                    className={`rounded-2xl p-8 font-plusjakarta ${
-                      isGreenBg ? "bg-[#104901]" : "bg-white"
-                    }`}
+                  <Card
+                    style={{
+                      borderRadius: "16px",
+                      padding: "0",
+                      border: "none",
+                    }}
+                    className={isGreenBg ? "bg-[#104901]" : "bg-white"}
                   >
-                    <div className="flex items-center gap-3 mb-6 font-plusjakarta">
-                      <IconComponent
-                        className={`h-5 w-5 ${
-                          isGreenBg ? "text-white" : "text-green-600"
-                        }`}
-                      />
-                      <h2
-                        className={`text-2xl font-bold font-plusjakarta ${
-                          isGreenBg ? "text-white" : "text-gray-900"
-                        }`}
-                      >
-                        {sectionNumber}. {section.title}
-                      </h2>
-                    </div>
-
-                    <div className="space-y-6 font-plusjakarta">
-                      {section.content.map((item, contentIdx) => (
-                        <div key={contentIdx} className="font-plusjakarta">
-                          {item.subtitle && (
-                            <h3
-                              className={`text-base font-semibold mb-3 font-plusjakarta ${
-                                isGreenBg ? "text-white" : "text-gray-900"
-                              }`}
-                            >
-                              {item.subtitle}
-                            </h3>
-                          )}
-                          {item.text && (
-                            <div
-                              className={`leading-relaxed text-sm font-plusjakarta ${
-                                isGreenBg ? "text-white" : "text-gray-700"
-                              }`}
-                            >
-                              {item.text}
-                            </div>
-                          )}
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div
+                          className="p-3 rounded-full flex items-center justify-center flex-shrink-0"
+                          style={{
+                            backgroundColor: isGreenBg ? "#1a5a2a" : "#ECFDF5",
+                            width: "48px",
+                            height: "48px",
+                          }}
+                        >
+                          <IconComponent
+                            className="h-5 w-5"
+                            style={{
+                              color: isGreenBg ? "#FFFFFF" : "#059669",
+                            }}
+                          />
                         </div>
-                      ))}
-                    </div>
-                  </div>
+                        <h2
+                          className="font-bold"
+                          style={{
+                            fontSize: "18px",
+                            color: isGreenBg ? "#FFFFFF" : "#1a1a1a",
+                          }}
+                        >
+                          {sectionNumber}. {section.title}
+                        </h2>
+                      </div>
+
+                      <div className="space-y-6">
+                        {section.content.map((item, contentIdx) => (
+                          <div key={contentIdx}>
+                            {item.subtitle && (
+                              <h3
+                                className="text-base mb-3 font-bold"
+                                style={{
+                                  color: isGreenBg ? "#FFFFFF" : "#4b5563",
+                                }}
+                              >
+                                {item.subtitle}
+                              </h3>
+                            )}
+                            {item.text && (
+                              <div
+                                className="leading-relaxed text-sm"
+                                style={{
+                                  color: isGreenBg ? "#FFFFFF" : "#1a1a1a",
+                                }}
+                              >
+                                {item.text}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               );
             })}
@@ -875,27 +808,59 @@ export default function PrivacyPolicyPage() {
             {/* Contact Us Section */}
             <div
               id="contact-us"
-              className="scroll-mt-20 mb-12 font-plusjakarta"
+              className="scroll-mt-20"
               onMouseEnter={() => setActiveSection("contact-us")}
             >
-              <div className="bg-white rounded-2xl p-8 font-plusjakarta">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6 font-plusjakarta">
-                  {sections.length + 3}. Contact Us
-                </h2>
-                <p className="text-gray-700 leading-relaxed mb-6 font-plusjakarta">
-                  If you have any questions about this Privacy Policy, please
-                  contact our Data Protection Officer:
-                </p>
-                <div className="flex items-center gap-2 font-plusjakarta">
-                  <Link
-                    href="mailto:privacy@chainfundit.com"
-                    className="text-green-600 hover:underline font-semibold text-base flex items-center gap-2 font-plusjakarta"
-                  >
-                    privacy@chainfundit.com
-                    <ChevronRight className="h-5 w-5" />
-                  </Link>
-                </div>
-              </div>
+              <Card
+                style={{
+                  borderRadius: "16px",
+                  padding: "0",
+                  border: "none",
+                }}
+                className="bg-white"
+              >
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div
+                      className="p-3 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{
+                        backgroundColor: "#ECFDF5",
+                        width: "48px",
+                        height: "48px",
+                      }}
+                    >
+                      <Shield
+                        className="h-5 w-5"
+                        style={{
+                          color: "#059669",
+                        }}
+                      />
+                    </div>
+                    <h2
+                      className="font-bold"
+                      style={{
+                        fontSize: "18px",
+                        color: "#1a1a1a",
+                      }}
+                    >
+                      {sections.length + 1}. Contact Us
+                    </h2>
+                  </div>
+                  <p className="mb-6" style={{ color: "#1a1a1a" }}>
+                    If you have any questions about this Privacy Policy, please
+                    contact our Data Protection Officer:
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href="mailto:privacy@chainfundit.com"
+                      className="text-green-600 hover:underline font-semibold text-base flex items-center gap-2"
+                    >
+                      privacy@chainfundit.com
+                      <ChevronRight className="h-5 w-5" />
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>

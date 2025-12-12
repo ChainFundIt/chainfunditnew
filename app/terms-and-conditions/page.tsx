@@ -46,8 +46,8 @@ const sections = [
           <>
             <ul className="list-disc list-inside space-y-2">
               <li>
-                ChainFundIt Limited ("ChainFundIt", "we", "us") is registered
-                in England & Wales (Company No. 13253451), with its registered
+                ChainFundIt Limited ("ChainFundIt", "we", "us") is registered in
+                England & Wales (Company No. 13253451), with its registered
                 office at 71–75 Shelton Street, Covent Garden, London, England,
                 WC2H 9JQ.
               </li>
@@ -73,14 +73,14 @@ const sections = [
                 agree to these Terms, the{" "}
                 <Link
                   href="/privacy-policy"
-                  className="text-[#104901] hover:underline font-plusjakarta"
+                  className="text-[#104901] hover:underline "
                 >
                   Privacy Policy
                 </Link>
                 , the{" "}
                 <Link
                   href="/privacy-policy#cookies"
-                  className="text-[#104901] hover:underline font-plusjakarta"
+                  className="text-[#104901] hover:underline "
                 >
                   Cookie Policy
                 </Link>
@@ -277,8 +277,8 @@ const sections = [
           <>
             <ul className="list-disc list-inside space-y-2 mb-4">
               <li>
-                Organisers are responsible for ensuring that all campaign details
-                are <strong>truthful, transparent, and legal</strong>.
+                Organisers are responsible for ensuring that all campaign
+                details are <strong>truthful, transparent, and legal</strong>.
               </li>
               <li>
                 Organisers may not use ChainFundIt for campaigns involving:
@@ -289,8 +289,8 @@ const sections = [
                   <li>Medical misinformation</li>
                   <li>Fraud or impersonation</li>
                 </ul>
-                See our <strong>Prohibited Campaigns Policy</strong> below for full
-                details.
+                See our <strong>Prohibited Campaigns Policy</strong> below for
+                full details.
               </li>
               <li>
                 ChainFundIt reserves the right to{" "}
@@ -304,16 +304,16 @@ const sections = [
                 and reporting rules.
               </li>
               <li>
-                If a donor overpays or donates in error, the Organiser must issue
-                a refund within <strong>2 business days</strong>.
+                If a donor overpays or donates in error, the Organiser must
+                issue a refund within <strong>2 business days</strong>.
               </li>
               <li>
                 Organisers may propose an "Alternative Recipient" to receive
                 campaign funds, but ChainFundIt must approve the change.
               </li>
               <li>
-                Changes to a campaign's payment account must be requested through
-                the dashboard and are subject to admin verification.
+                Changes to a campaign's payment account must be requested
+                through the dashboard and are subject to admin verification.
               </li>
             </ul>
           </>
@@ -333,13 +333,13 @@ const sections = [
           <>
             <div className="space-y-4">
               <div>
-                <h4 className="font-plusjakarta text-gray-900 mb-2">
+                <h4 className=" text-gray-900 mb-2">
                   1. Illegal or Unlawful Activity
                 </h4>
                 <ul className="list-disc list-inside ml-4 space-y-1 text-gray-700">
                   <li>
-                    Funding for terrorism, money laundering, drug trafficking, or
-                    any other criminal enterprise.
+                    Funding for terrorism, money laundering, drug trafficking,
+                    or any other criminal enterprise.
                   </li>
                   <li>
                     Violations of financial regulations or sanctions laws.
@@ -348,13 +348,11 @@ const sections = [
               </div>
 
               <div>
-                <h4 className="font-plusjakarta text-gray-900 mb-2">
+                <h4 className=" text-gray-900 mb-2">
                   2. Harmful or Dangerous Causes
                 </h4>
                 <ul className="list-disc list-inside ml-4 space-y-1 text-gray-700">
-                  <li>
-                    Weapons, explosives, or tools for violence.
-                  </li>
+                  <li>Weapons, explosives, or tools for violence.</li>
                   <li>
                     Promotion of hate speech, racism, xenophobia, or
                     discrimination.
@@ -363,7 +361,7 @@ const sections = [
               </div>
 
               <div>
-                <h4 className="font-plusjakarta text-gray-900 mb-2">
+                <h4 className=" text-gray-900 mb-2">
                   3. Misinformation or Misleading Claims
                 </h4>
                 <ul className="list-disc list-inside ml-4 space-y-1 text-gray-700">
@@ -378,7 +376,7 @@ const sections = [
               </div>
 
               <div>
-                <h4 className="font-plusjakarta text-gray-900 mb-2">
+                <h4 className=" text-gray-900 mb-2">
                   4. Adult or Inappropriate Content
                 </h4>
                 <ul className="list-disc list-inside ml-4 space-y-1 text-gray-700">
@@ -389,7 +387,7 @@ const sections = [
               </div>
 
               <div>
-                <h4 className="font-plusjakarta text-gray-900 mb-2">
+                <h4 className=" text-gray-900 mb-2">
                   5. Gambling or Speculative Investments
                 </h4>
                 <ul className="list-disc list-inside ml-4 space-y-1 text-gray-700">
@@ -401,7 +399,7 @@ const sections = [
               </div>
 
               <div>
-                <h4 className="font-plusjakarta text-gray-900 mb-2">
+                <h4 className=" text-gray-900 mb-2">
                   6. Political Manipulation
                 </h4>
                 <ul className="list-disc list-inside ml-4 space-y-1 text-gray-700">
@@ -413,7 +411,7 @@ const sections = [
               </div>
 
               <div>
-                <h4 className="font-plusjakarta text-gray-900 mb-2">
+                <h4 className=" text-gray-900 mb-2">
                   7. Other Prohibited Purposes
                 </h4>
                 <ul className="list-disc list-inside ml-4 space-y-1 text-gray-700">
@@ -422,13 +420,14 @@ const sections = [
                     transparency.
                   </li>
                   <li>
-                    Any content that violates our Terms & Conditions or local laws.
+                    Any content that violates our Terms & Conditions or local
+                    laws.
                   </li>
                 </ul>
               </div>
 
               <div className="mt-6 p-4 bg-red-50 border-l-4 border-red-500">
-                <p className="text-gray-900 font-plusjakarta">
+                <p className="text-gray-900 ">
                   Violation of this policy may result in immediate campaign
                   removal, account suspension, or reporting to relevant
                   authorities.
@@ -527,15 +526,16 @@ const sections = [
                   <li>Downtime, bugs, or errors</li>
                   <li>Cyberattacks or data breaches</li>
                   <li>Payment processor failures</li>
-                  <li>
-                    Force majeure events (e.g. natural disasters, war)
-                  </li>
+                  <li>Force majeure events (e.g. natural disasters, war)</li>
                 </ul>
               </li>
               <li>
                 Funds may be pooled in a holding account and are{" "}
-                <strong>not insured or protected by the Financial Services
-                Compensation Scheme (FSCS)</strong> or similar schemes.
+                <strong>
+                  not insured or protected by the Financial Services
+                  Compensation Scheme (FSCS)
+                </strong>{" "}
+                or similar schemes.
               </li>
               <li>
                 <strong>No interest will be paid</strong> to users on held
@@ -572,7 +572,8 @@ const sections = [
               notification. Shorter notice may be provided in urgent cases.
             </li>
             <li>
-              Continued use of the platform after changes constitutes acceptance.
+              Continued use of the platform after changes constitutes
+              acceptance.
             </li>
             <li>
               All communications will be delivered via the platform or your
@@ -608,128 +609,73 @@ export default function TermsAndConditionsPage() {
   };
 
   return (
-    <div className="min-h-screen via-[#000000ff] to-blue-50 font-plusjakarta w-full">
+    <div className="font-jakarta bg-white">
       <Navbar />
 
       {/* Hero Section */}
-<div
-  className="relative text-[#000000ff] overflow-hidden rounded-3xl w-full"
-  style={{
-    boxSizing: "border-box",
-  }}
->
-  {/* Right Corner Blur Overlay */}
-  <div
-    className="absolute top-0 right-0 pointer-events-none"
-    style={{
-      width: "400px",
-      height: "400px",
-      background: "radial-gradient(circle, #104109 0%, transparent 70%)",
-      filter: "blur(64px)",
-      opacity: 0.2,
-    }}
-  ></div>
+      <div className="flex justify-center px-4 py-20 bg-[#FCFAF5]">
+        {/* Right Corner Blur Overlay */}
+        <div
+          className="absolute top-0 right-0 pointer-events-none hidden md:flex"
+          style={{
+            width: "400px",
+            height: "400px",
+            background: "radial-gradient(circle, #104109 0%, transparent 70%)",
+            filter: "blur(64px)",
+            opacity: 0.2,
+          }}
+        ></div>
 
-  {/* Left Corner Blur Overlay */}
-  <div
-    className="absolute top-0 left-0 pointer-events-none"
-    style={{
-      width: "400px",
-      height: "400px",
-      background: "radial-gradient(circle, #59AD4A 0%, transparent 70%)",
-      filter: "blur(64px)",
-      opacity: 0.1,
-    }}
-  ></div>
+        {/* Left Corner Blur Overlay */}
+        <div
+          className="absolute top-0 left-0 pointer-events-none hidden md:flex"
+          style={{
+            width: "400px",
+            height: "400px",
+            background: "radial-gradient(circle, #59AD4A 0%, transparent 70%)",
+            filter: "blur(64px)",
+            opacity: 0.1,
+          }}
+        ></div>
 
-  {/* Center Content Container */}
-  <div
-    className="relative mx-auto flex flex-col items-center justify-center font-plusjakarta"
-    style={{
-      width: "896px",
-      maxWidth: "100%",
-      paddingLeft: "16px",
-      paddingRight: "16px",
-      paddingTop: "40.8px",
-      gap: "24px",
-    }}
-  >
-    {/* Shield Icon Badge */}
-    <div
-      className="inline-flex items-center justify-center font-plusjakarta"
-      style={{
-        backgroundColor: "#ECFDF5",
-        width: "64px",
-        height: "64px",
-        borderRadius: "10px",
-        marginTop: "26px",
-      }}
-    >
-      <Shield className="h-8 w-8 mx-auto mb-4 text-[#059669]" />
-    </div>
+        {/* Center Content Container */}
+        <div className="flex flex-col items-center justify-center gap-6 md:max-w-[80rem] w-full">
+          {/* Trophy Icon Badge */}
+          <div className="p-3 bg-[#ECFDF5] rounded-xl">
+            <Shield className="h-8 w-8 text-[#059669]" />
+          </div>
 
-    {/* Main Heading */}
-    <div
-      className="flex items-center justify-center font-plusjakarta text-center px-3"
-      style={{
-        width: "100%",
-        maxWidth: "864px",
-      }}
-    >
-      <h1
-        className="font-plusjakarta"
-        style={{
-          fontWeight: 800,
-          fontSize: "48px",
-          lineHeight: "1.2",
-          color: "#000000ff", // Black text color (as per your request)
-        }}
-      >
-        Terms and Conditions
-      </h1>
-    </div>
+          {/* Main Heading */}
+          <div className="font-extrabold text-[#022C22] text-[4rem] leading-[4rem] text-center">
+            Terms and Conditions
+          </div>
 
-    {/* Subheading */}
-    <div
-      className="flex items-center justify-center font-plusjakarta text-center px-4"
-      style={{
-        width: "100%",
-        maxWidth: "672px",
-      }}
-    >
-      <p
-        className="font-plusjakarta"
-        style={{
-          fontWeight: 400,
-          fontSize: "18px",
-          color: "#4B5563", // Black text color (same as the title)
-          lineHeight: "1.5",
-        }}
-      >
-        Please read these terms carefully before using ChainFundIt. By using our platform, you agree to be bound by these terms.
-      </p>
-    </div>
-  </div>
-</div>
+          {/* Subheading */}
+          <div className="text-xl text-[#4B5563] text-center">
+            Please read these terms carefully before using ChainFundIt. By using
+            our platform, you agree to be bound by these terms.
+          </div>
+        </div>
+      </div>
 
       {/* Main Content */}
-      <div className="w-full font-plusjakarta px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+      <div className="w-full  px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         <div className="mx-auto max-w-7xl">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Sidebar - Table of Contents */}
             <div className="lg:col-span-1">
-              <div className="sticky top-24 bg-gray-50 rounded-lg p-6 border border-gray-200 max-h-[calc(100vh-120px)] overflow-y-auto font-plusjakarta">
-                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4 font-plusjakarta">
+              <div className="sticky top-24 bg-gray-50 rounded-lg p-6 border border-gray-200 max-h-[calc(100vh-120px)] overflow-y-auto ">
+                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4 ">
                   TABLE OF CONTENTS
                 </h3>
-                <nav className="space-y-1 font-plusjakarta">
+                <nav className="space-y-1 ">
                   {tableOfContents.map((item) => (
                     <button
                       key={item.id}
                       onClick={() => scrollToSection(item.id)}
-                      className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors font-plusjakarta ${
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors  ${
                         activeSection === item.id
-                          ? "bg-green-100 text-green-700 font-plusjakarta"
+                          ? "bg-green-100 text-green-700 "
                           : "text-gray-700 hover:bg-gray-100"
                       }`}
                     >
@@ -741,32 +687,32 @@ export default function TermsAndConditionsPage() {
             </div>
 
             {/* Main Content */}
-            <div className="lg:col-span-3 space-y-8 font-plusjakarta">
+            <div className="lg:col-span-3 space-y-8 ">
               {sections.map((section, index) => {
                 const Icon = section.icon;
-                const isGreenCard = ["C. Fees & Payments", "E. Donors & Donations", "G. Chain Ambassadors"].includes(section.title);
+                const isGreenCard = [2, 5, 10].includes(index);
 
                 return (
                   <div
                     key={section.id}
                     id={section.id}
-                    className="scroll-mt-20 font-plusjakarta"
+                    className="scroll-mt-20 "
                     onMouseEnter={() => setActiveSection(section.id)}
                   >
                     <Card
                       style={{
-                        backgroundColor: isGreenCard ? "#104901 !important" : "#FFFFFF !important",
                         borderRadius: "16px",
                         padding: "0",
-                        border: "none"
+                        border: "none",
                       }}
+                      className={isGreenCard ? "bg-[#104901]" : "bg-white"}
                     >
-                      <CardContent className="p-6 font-plusjakarta">
-                        <div className="flex items-center gap-3 mb-6 font-plusjakarta">
+                      <CardContent className="p-6 ">
+                        <div className="flex items-center gap-3 mb-6 ">
                           <div
-                            className="p-3 rounded-full flex items-center justify-center font-plusjakarta flex-shrink-0"
+                            className="p-3 rounded-full flex items-center justify-center  flex-shrink-0"
                             style={{
-                              backgroundColor: isGreenCard ? "#1a5a2a" : "#f0fdf4",
+                              backgroundColor: "#1a5a2a", // Green background for icon in second card
                               width: "48px",
                               height: "48px",
                             }}
@@ -774,12 +720,12 @@ export default function TermsAndConditionsPage() {
                             <Icon
                               className="h-5 w-5"
                               style={{
-                                color: isGreenCard ? "#FFFFFF" : "#059669",
+                                color: isGreenCard ? "#FFFFFF" : "white",
                               }}
                             />
                           </div>
                           <h2
-                            className="font-bold font-plusjakarta"
+                            className="font-bold "
                             style={{
                               fontSize: "18px",
                               color: isGreenCard ? "#FFFFFF" : "#1a1a1a",
@@ -788,14 +734,14 @@ export default function TermsAndConditionsPage() {
                             {section.title}
                           </h2>
                         </div>
-                        <div className="space-y-6 font-plusjakarta">
+                        <div className="space-y-6 ">
                           {section.content.map((item, contentIdx) => (
-                            <div key={contentIdx} className="font-plusjakarta">
+                            <div key={contentIdx} className="">
                               {item.subtitle && (
                                 <h3
-                                  className="text-base font-plusjakarta mb-3 font-plusjakarta"
+                                  className="text-base  mb-3 "
                                   style={{
-                                    color: isGreenCard ? "#FFFFFF" : "#1a1a1a",
+                                    color: isGreenCard ? "#FFFFFF" : "#4b5563",
                                   }}
                                 >
                                   {item.subtitle}
@@ -803,9 +749,9 @@ export default function TermsAndConditionsPage() {
                               )}
                               {item.text && (
                                 <div
-                                  className="leading-relaxed text-sm font-plusjakarta"
+                                  className="leading-relaxed text-sm "
                                   style={{
-                                    color: isGreenCard ? "#FFFFFF" : "#4b5563",
+                                    color: isGreenCard ? "#FFFFFF" : "#1a1a1a",
                                   }}
                                 >
                                   {item.text}
@@ -821,12 +767,12 @@ export default function TermsAndConditionsPage() {
               })}
 
               {/* Questions or Concerns Section */}
-              <div className="mb-8 scroll-mt-20 font-plusjakarta">
+              <div className="mb-8 scroll-mt-20 ">
                 <Card style={{ borderRadius: "16px", padding: "0" }}>
-                  <CardContent className="p-6 font-plusjakarta">
-                    <div className="flex items-center gap-3 mb-6 font-plusjakarta">
+                  <CardContent className="p-6 ">
+                    <div className="flex items-center gap-3 mb-6 ">
                       <div
-                        className="p-3 rounded-full flex items-center justify-center font-plusjakarta flex-shrink-0"
+                        className="p-3 rounded-full flex items-center justify-center  flex-shrink-0"
                         style={{
                           backgroundColor: "#f0fdf4",
                           width: "48px",
@@ -836,7 +782,7 @@ export default function TermsAndConditionsPage() {
                         <Mail className="h-5 w-5 text-green-600" />
                       </div>
                       <h2
-                        className="font-bold font-plusjakarta"
+                        className="font-bold "
                         style={{
                           fontSize: "18px",
                           color: "#1a1a1a",
@@ -846,20 +792,17 @@ export default function TermsAndConditionsPage() {
                       </h2>
                     </div>
                     <p
-                      className="leading-relaxed mb-4 font-plusjakarta"
+                      className="leading-relaxed mb-4 "
                       style={{ color: "#4b5563" }}
                     >
                       Please contact:
                     </p>
-                    <div
-                      className="space-y-2 font-plusjakarta"
-                      style={{ color: "#4b5563" }}
-                    >
+                    <div className="space-y-2 " style={{ color: "#4b5563" }}>
                       <p>
                         <strong>Email:</strong>{" "}
                         <Link
                           href="mailto:campaigns@chainfundit.com"
-                          className="text-[#104901] hover:underline font-plusjakarta"
+                          className="text-[#104901] hover:underline "
                         >
                           campaigns@chainfundit.com
                         </Link>
@@ -868,7 +811,7 @@ export default function TermsAndConditionsPage() {
                         <strong>Website:</strong>{" "}
                         <Link
                           href="https://www.chainfundit.com"
-                          className="text-[#104901] hover:underline font-plusjakarta"
+                          className="text-[#104901] hover:underline "
                         >
                           www.chainfundit.com
                         </Link>
