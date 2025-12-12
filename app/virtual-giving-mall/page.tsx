@@ -131,7 +131,7 @@ export default function VirtualGivingMallPage() {
                     onClick={() => setSelectedCategory(category.id)}
                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
                       selectedCategory === category.id
-                        ? "bg-green-600 text-white shadow-lg"
+                        ? "bg-[#104109] text-white shadow-lg"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                   >
