@@ -43,7 +43,7 @@ const Footer = (props: Props) => {
               <div
                 className="hover:text-[#59ad4a] cursor-pointer"
                 onClick={() => {
-                  router.push("/join-the-chain-reaction");
+                  router.push("/signin");
                 }}
               >
                 Join the Chain Reaction
@@ -81,9 +81,9 @@ const Footer = (props: Props) => {
               </div>
               <div
                 className="hover:text-[#59ad4a] cursor-pointer"
-                onClick={() => {
-                  router.push("/pricing");
-                }}
+                // onClick={() => {
+                //   router.push("/pricing");
+                // }}
               >
                 Pricing
               </div>
@@ -120,9 +120,9 @@ const Footer = (props: Props) => {
               </div>
               <div
                 className="hover:text-[#59ad4a] cursor-pointer"
-                onClick={() => {
-                  router.push("/blog");
-                }}
+                // onClick={() => {
+                //   router.push("/blog");
+                // }}
               >
                 Blog
               </div>
