@@ -19,7 +19,9 @@
     "setup-admin-notifications": "tsx scripts/setup-admin-notifications.ts",
     "debug-bank-names": "tsx scripts/debug-bank-names.ts",
     "check-admin-notifications": "tsx scripts/check-admin-notifications.ts",
-    "fix-undefined-urls": "tsx scripts/fix-undefined-image-urls.ts"
+    "fix-undefined-urls": "tsx scripts/fix-undefined-image-urls.ts",
+    "add-charity-categories": "tsx scripts/add-charity-categories.ts",
+    "update-charities-to-global": "tsx scripts/update-charities-to-global.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.883.0",
@@ -63,6 +65,7 @@
     "clsx": "^2.1.1",
     "cobe": "^0.6.4",
     "cookie": "^1.0.2",
+    "date-fns": "^4.1.0",
     "drizzle-orm": "^0.44.3",
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",

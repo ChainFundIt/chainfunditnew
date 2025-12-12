@@ -11,6 +11,8 @@ import {
   isDonationFailed 
 } from '@/lib/utils/donation-status';
 import { checkAndUpdateGoalReached } from '@/lib/utils/campaign-validation';
+import { shouldNotifyUserOfDonation, formatDonationNotificationMessage } from '@/lib/utils/donation-notification-utils';
+import { sendDonorConfirmationEmailById } from '@/lib/notifications/donor-confirmation-email';
 
 // Helper function to update campaign currentAmount based on completed donations
 async function updateCampaignAmount(campaignId: string) {
@@ -74,21 +76,57 @@ async function createSuccessfulDonationNotification(donationId: string, campaign
       return;
     }
 
+    // Check user preferences before creating notification
+    const notificationCheck = await shouldNotifyUserOfDonation(
+      campaign[0].creatorId,
+      donation[0].amount,
+      donation[0].currency
+    );
+
+    if (!notificationCheck.shouldNotify) {
+      console.log(`Skipping notification for user ${campaign[0].creatorId}: ${notificationCheck.reason}`);
+      return;
+    }
+
+    // Format notification message based on whether it's a large donation
+    const { title, message } = formatDonationNotificationMessage(
+      donation[0].amount,
+      donation[0].currency,
+      notificationCheck.isLargeDonation
+    );
+
     // Create notification for campaign creator
     await db.insert(notifications).values({
       userId: campaign[0].creatorId,
-      type: 'donation_received',
-      title: 'New Donation Received!',
-      message: `You received a donation of ${donation[0].currency} ${donation[0].amount} for your campaign.`,
+      type: notificationCheck.isLargeDonation ? 'large_donation_received' : 'donation_received',
+      title,
+      message,
       metadata: JSON.stringify({
         donationId,
         campaignId,
         amount: donation[0].amount,
         currency: donation[0].currency,
-        donorId: donation[0].donorId
+        donorId: donation[0].donorId,
+        isLargeDonation: notificationCheck.isLargeDonation
       }),
       createdAt: new Date(),
     });
+
+    console.log(`✅ Donation notification created for user ${campaign[0].creatorId}${notificationCheck.isLargeDonation ? ' (Large Donation)' : ''}`);
+
+    // Send email to campaign creator
+    const { sendCampaignDonationEmailById } = await import('@/lib/notifications/campaign-donation-email');
+    const emailResult = await sendCampaignDonationEmailById(
+      donationId,
+      campaign[0].creatorId,
+      notificationCheck.isLargeDonation
+    );
+
+    if (emailResult.sent) {
+      console.log(`✅ Campaign donation email sent to creator`);
+    } else {
+      console.warn(`⚠️ Failed to send campaign donation email: ${emailResult.reason}`);
+    }
 
   } catch (error) {
     console.error('Error creating success notification:', error);
@@ -166,6 +204,8 @@ export async function POST(request: NextRequest) {
     if (newStatus === 'completed') {
       await updateCampaignAmount(donationRecord.campaignId);
       await createSuccessfulDonationNotification(donationId, donationRecord.campaignId);
+      // Send confirmation email to donor
+      await sendDonorConfirmationEmailById(donationId);
     }
 
     return NextResponse.json({ 

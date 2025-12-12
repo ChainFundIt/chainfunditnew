@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { donations } from '@/lib/schema/donations';
+import { recurringDonations, recurringDonationPayments } from '@/lib/schema/recurring-donations';
 import { campaigns } from '@/lib/schema/campaigns';
 import { notifications } from '@/lib/schema/notifications';
 import { eq, sum, and } from 'drizzle-orm';
 import { verifyStripeWebhook } from '@/lib/payments/stripe';
 import Stripe from 'stripe';
 import { shouldCloseForGoalReached, closeCampaign } from '@/lib/utils/campaign-closure';
+import { shouldNotifyUserOfDonation, formatDonationNotificationMessage } from '@/lib/utils/donation-notification-utils';
+import { sendDonorConfirmationEmailById } from '@/lib/notifications/donor-confirmation-email';
 
 // Helper function to update campaign currentAmount based on completed donations
 async function updateCampaignAmount(campaignId: string) {
@@ -69,20 +72,56 @@ async function createSuccessfulDonationNotification(donationId: string, campaign
       return;
     }
 
-    // Create notification for campaign creator
+    // Check user preferences before creating notification
+    const notificationCheck = await shouldNotifyUserOfDonation(
+      campaign[0].creatorId,
+      donation[0].amount,
+      donation[0].currency
+    );
+
+    if (!notificationCheck.shouldNotify) {
+      console.log(`Skipping notification for user ${campaign[0].creatorId}: ${notificationCheck.reason}`);
+      return;
+    }
+
+    // Format notification message based on whether it's a large donation
+    const { title, message } = formatDonationNotificationMessage(
+      donation[0].amount,
+      donation[0].currency,
+      notificationCheck.isLargeDonation
+    );
+
+    // Create in-app notification for campaign creator
     await db.insert(notifications).values({
       userId: campaign[0].creatorId,
-      type: 'donation_received',
-      title: 'New Donation Received!',
-      message: `You received a donation of ${donation[0].currency} ${donation[0].amount}. Thank you for your campaign!`,
+      type: notificationCheck.isLargeDonation ? 'large_donation_received' : 'donation_received',
+      title,
+      message,
       metadata: JSON.stringify({
         donationId,
         campaignId,
         amount: donation[0].amount,
         currency: donation[0].currency,
-        donorId: donation[0].donorId
+        donorId: donation[0].donorId,
+        isLargeDonation: notificationCheck.isLargeDonation
       })
     });
+
+    console.log(`✅ Donation notification created for user ${campaign[0].creatorId}${notificationCheck.isLargeDonation ? ' (Large Donation)' : ''}`);
+
+    // Send email to campaign creator
+    const { sendCampaignDonationEmailById } = await import('@/lib/notifications/campaign-donation-email');
+    const emailResult = await sendCampaignDonationEmailById(
+      donationId,
+      campaign[0].creatorId,
+      notificationCheck.isLargeDonation
+    );
+
+    if (emailResult.sent) {
+      console.log(`✅ Campaign donation email sent to creator`);
+    } else {
+      console.warn(`⚠️ Failed to send campaign donation email: ${emailResult.reason}`);
+    }
 
   } catch (error) {
     console.error('Error creating successful donation notification:', error);
@@ -164,6 +203,20 @@ export async function POST(request: NextRequest) {
       case 'payment_intent.payment_failed':
         await handlePaymentFailed(event.data.object);
         break;
+
+      // Subscription events
+      case 'invoice.payment_succeeded':
+        await handleSubscriptionPaymentSuccess(event.data.object as Stripe.Invoice);
+        break;
+
+      case 'invoice.payment_failed':
+        await handleSubscriptionPaymentFailed(event.data.object as Stripe.Invoice);
+        break;
+
+      case 'customer.subscription.deleted':
+      case 'customer.subscription.updated':
+        await handleSubscriptionUpdate(event.data.object as Stripe.Subscription, event.type);
+        break;
       
       default:
     }
@@ -236,8 +289,134 @@ async function handlePaymentSuccess(paymentIntent: any) {
     // Create notification for successful donation
     await createSuccessfulDonationNotification(donationId, donation[0].campaignId);
 
+    // Send confirmation email to donor
+    await sendDonorConfirmationEmailById(donationId);
+
   } catch (error) {
     console.error('Error handling payment success:', error);
+  }
+}
+
+// Handle subscription payment success
+async function handleSubscriptionPaymentSuccess(invoice: Stripe.Invoice) {
+  try {
+    const subscriptionId = invoice.subscription as string;
+    if (!subscriptionId) return;
+
+    // Find recurring donation by Stripe subscription ID
+    const recurringDonation = await db.query.recurringDonations.findFirst({
+      where: eq(recurringDonations.stripeSubscriptionId, subscriptionId),
+    });
+
+    if (!recurringDonation) return;
+
+    // Process the recurring donation payment
+    const { processRecurringDonationPayment, updateSubscriptionAfterPayment } = await import('@/lib/services/subscription-service');
+    const result = await processRecurringDonationPayment(recurringDonation.id);
+
+    if (result.success && result.donationId) {
+      // Update donation status to completed
+      await db
+        .update(donations)
+        .set({
+          paymentStatus: 'completed',
+          paymentIntentId: invoice.payment_intent as string,
+          processedAt: new Date(),
+        })
+        .where(eq(donations.id, result.donationId));
+
+      // Update campaign amount
+      await updateCampaignAmount(recurringDonation.campaignId);
+
+      // Update subscription after successful payment
+      await updateSubscriptionAfterPayment(recurringDonation.id, result.donationId, true);
+
+      // Create notification and send email
+      await createSuccessfulDonationNotification(result.donationId, recurringDonation.campaignId);
+      await sendDonorConfirmationEmailById(result.donationId);
+    }
+  } catch (error) {
+    console.error('Error handling subscription payment success:', error);
+  }
+}
+
+// Handle subscription payment failure
+async function handleSubscriptionPaymentFailed(invoice: Stripe.Invoice) {
+  try {
+    const subscriptionId = invoice.subscription as string;
+    if (!subscriptionId) return;
+
+    const recurringDonation = await db.query.recurringDonations.findFirst({
+      where: eq(recurringDonations.stripeSubscriptionId, subscriptionId),
+    });
+
+    if (!recurringDonation) return;
+
+    // Find the pending payment for this invoice
+    const payment = await db.query.recurringDonationPayments.findFirst({
+      where: and(
+        eq(recurringDonationPayments.recurringDonationId, recurringDonation.id),
+        eq(recurringDonationPayments.stripeInvoiceId, invoice.id)
+      ),
+    });
+
+    if (payment) {
+      // Update payment status
+      await db
+        .update(recurringDonationPayments)
+        .set({
+          paymentStatus: 'failed',
+        })
+        .where(eq(recurringDonationPayments.id, payment.id));
+
+      // Update donation status
+      await db
+        .update(donations)
+        .set({
+          paymentStatus: 'failed',
+        })
+        .where(eq(donations.id, payment.donationId));
+
+      // Update subscription
+      const { updateSubscriptionAfterPayment } = await import('@/lib/services/subscription-service');
+      await updateSubscriptionAfterPayment(recurringDonation.id, payment.donationId, false);
+    }
+  } catch (error) {
+    console.error('Error handling subscription payment failure:', error);
+  }
+}
+
+// Handle subscription updates (cancelled, paused, etc.)
+async function handleSubscriptionUpdate(subscription: Stripe.Subscription, eventType: string) {
+  try {
+    const recurringDonation = await db.query.recurringDonations.findFirst({
+      where: eq(recurringDonations.stripeSubscriptionId, subscription.id),
+    });
+
+    if (!recurringDonation) return;
+
+    let status = 'active';
+    let isActive = true;
+
+    if (eventType === 'customer.subscription.deleted' || subscription.status === 'canceled') {
+      status = 'cancelled';
+      isActive = false;
+    } else if (subscription.status === 'past_due' || subscription.status === 'unpaid') {
+      status = 'paused';
+      isActive = false;
+    }
+
+    await db
+      .update(recurringDonations)
+      .set({
+        status,
+        isActive,
+        cancelledAt: status === 'cancelled' ? new Date() : recurringDonation.cancelledAt,
+        pausedAt: status === 'paused' ? new Date() : recurringDonation.pausedAt,
+      })
+      .where(eq(recurringDonations.id, recurringDonation.id));
+  } catch (error) {
+    console.error('Error handling subscription update:', error);
   }
 }
 

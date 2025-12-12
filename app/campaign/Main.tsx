@@ -497,7 +497,7 @@ const Main = ({ campaignSlug }: MainProps) => {
           <div className="lg:col-span-2 space-y-6">
             {/* Title */}
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 mt-6">
                 {campaignData.title}
               </h1>
             </div>

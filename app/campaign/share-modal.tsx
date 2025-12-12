@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Copy, Facebook, Instagram, Twitter, Linkedin, XCircle } from "lucide-react";
+import { X, Copy, Facebook, Instagram, Twitter, Linkedin, XCircle, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useShortenLink } from "@/hooks/use-shorten-link";
@@ -66,9 +66,11 @@ const ShareModal: React.FC<ShareModalProps> = ({ open, onOpenChange, campaign })
       case "linkedin":
         shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(campaignUrl)}`;
         break;
+        case "whatsapp":
+        shareUrl = `https://wa.me/?text=${encodeURIComponent(shareText)} ${encodeURIComponent(campaignUrl)}`;
+        break;
       case "instagram":
-        // Instagram doesn't support direct sharing via URL, copy to clipboard
-        navigator.clipboard.writeText(`${shareText} ${campaignUrl}`);
+        shareUrl = `https://www.instagram.com/sharer/sharer.php?u=${encodeURIComponent(campaignUrl)}`;
         return;
     }
 
@@ -132,6 +134,9 @@ const ShareModal: React.FC<ShareModalProps> = ({ open, onOpenChange, campaign })
                 Share campaign
               </h3>
               <div className="flex space-x-5">
+                <Button variant="ghost" onClick={() => handleShare("whatsapp")}>
+                  <MessageCircle strokeWidth={1.5} color="#104901" size={32} />
+                </Button>
                 <Button variant="ghost" onClick={() => handleShare("facebook")}>
                   <Facebook strokeWidth={1.5} color="#104901" size={32} />
                 </Button>

@@ -1,73 +1,181 @@
 "use client";
 
-import React from 'react';
-import Link from 'next/link';
-import { Heart, Share2, Eye, Calendar, User, Target, Shield, Globe, Stethoscope, GraduationCap, Home, TreePine, Music, BookOpen } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { R2Image } from '@/components/ui/r2-image';
-import { EmojiFallbackImage } from '@/components/ui/emoji-fallback-image';
-import { itemNeedsEmojiFallback } from '@/lib/utils/unified-items';
-import { UnifiedItem } from '@/lib/types/unified-item';
-import { GeolocationData } from '@/lib/utils/geolocation';
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  Heart,
+  Share2,
+  Eye,
+  Calendar,
+  User,
+  Target,
+  Shield,
+  Globe,
+  Stethoscope,
+  GraduationCap,
+  Home,
+  TreePine,
+  Music,
+  BookOpen,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { R2Image } from "@/components/ui/r2-image";
+import { EmojiFallbackImage } from "@/components/ui/emoji-fallback-image";
+import { itemNeedsEmojiFallback } from "@/lib/utils/unified-items";
+import { UnifiedItem } from "@/lib/types/unified-item";
+import { GeolocationData } from "@/lib/utils/geolocation";
+import { useAuth } from "@/hooks/use-auth";
 
 // Category icon mapping
 const categoryIcons: Record<string, any> = {
-  "Health": Stethoscope,
-  "Children": User,
+  Health: Stethoscope,
+  Children: User,
   "Children & Youth": User,
-  "Education": GraduationCap,
-  "Community": Home,
-  "Environment": TreePine,
-  "Arts": Music,
-  "Housing": Home,
+  Education: GraduationCap,
+  Community: Home,
+  Environment: TreePine,
+  Arts: Music,
+  Housing: Home,
   "Housing & Shelter": Home,
-  "Global": Globe,
+  Global: Globe,
   "Disaster Relief": Shield,
   "Hunger & Poverty": Heart,
   "Employment & Training": BookOpen,
-  "Medical": Stethoscope,
-  "Family": User,
-  "Welfare": Heart,
-  "Creative": Music,
-  "Emergency": Shield,
-  "Business": BookOpen,
-  "Charity": Heart,
-  "Memorial": Heart,
-  "Religion": Heart,
-  "Sports": Target,
-  "Uncategorized": Globe,
+  Medical: Stethoscope,
+  Family: User,
+  Welfare: Heart,
+  Creative: Music,
+  Emergency: Shield,
+  Business: BookOpen,
+  Charity: Heart,
+  Memorial: Heart,
+  Religion: Heart,
+  Sports: Target,
+  Uncategorized: Globe,
 };
 
 interface UnifiedItemCardProps {
   item: UnifiedItem;
-  viewMode: 'grid' | 'list';
+  viewMode: "grid" | "list";
   geolocation?: GeolocationData | null;
 }
 
-export function UnifiedItemCard({ item, viewMode, geolocation }: UnifiedItemCardProps) {
-  const isCampaign = item.type === 'campaign';
-  const isCharity = item.type === 'charity';
-  
-  const progressPercentage = isCampaign && item.goalAmount 
-    ? Math.min(100, Math.round((item.currentAmount || 0) / item.goalAmount) * 100)
-    : 0;
+export function UnifiedItemCard({
+  item,
+  viewMode,
+  geolocation,
+}: UnifiedItemCardProps) {
+  const isCampaign = item.type === "campaign";
+  const isCharity = item.type === "charity";
+  const [isFavourited, setIsFavourited] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
+  const [isToggling, setIsToggling] = useState(false);
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+
+  const progressPercentage =
+    isCampaign && item.goalAmount
+      ? Math.min(
+          100,
+          Math.round((item.currentAmount || 0) / item.goalAmount) * 100
+        )
+      : 0;
+
+  // Check favourite status on mount (only if user is authenticated)
+  useEffect(() => {
+    if (authLoading) return;
+
+    if (!user) {
+      setIsChecking(false);
+      return;
+    }
+
+    const checkFavouriteStatus = async () => {
+      try {
+        const response = await fetch(
+          `/api/favourites/check?itemType=${item.type}&itemId=${item.id}`
+        );
+        const data = await response.json();
+        if (data.success) {
+          setIsFavourited(data.data.isFavourited);
+        }
+      } catch (error) {
+        console.error("Error checking favourite status:", error);
+      } finally {
+        setIsChecking(false);
+      }
+    };
+
+    checkFavouriteStatus();
+  }, [item.id, item.type, user, authLoading]);
+
+  const handleToggleFavourite = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (isToggling) return;
+
+    // Check if user is authenticated
+    if (!user) {
+      // Store pending favorite action
+      localStorage.setItem(
+        "pending_favorite",
+        JSON.stringify({
+          itemType: item.type,
+          itemId: item.id,
+          itemTitle: item.title,
+        })
+      );
+
+      // Redirect to signin with message
+      const currentPath = window.location.pathname + window.location.search;
+      const itemTypeLabel = item.type === "campaign" ? "campaign" : "charity";
+      router.push(
+        `/signin?redirect=${encodeURIComponent(currentPath)}&message=${encodeURIComponent(`Log in to add this ${itemTypeLabel} to your favorites`)}`
+      );
+      return;
+    }
+
+    setIsToggling(true);
+    try {
+      const response = await fetch("/api/favourites", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          itemType: item.type,
+          itemId: item.id,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setIsFavourited(data.data.isFavourited);
+      }
+    } catch (error) {
+      console.error("Error toggling favourite:", error);
+    } finally {
+      setIsToggling(false);
+    }
+  };
 
   const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency || 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currency || "USD",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
   };
 
   const formatDate = (dateString: string | Date) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -80,7 +188,7 @@ export function UnifiedItemCard({ item, viewMode, geolocation }: UnifiedItemCard
 
   const needsFallback = itemNeedsEmojiFallback(item);
 
-  if (viewMode === 'list') {
+  if (viewMode === "list") {
     return (
       <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
         <div className="flex flex-col md:flex-row">
@@ -95,7 +203,7 @@ export function UnifiedItemCard({ item, viewMode, geolocation }: UnifiedItemCard
               />
             ) : (
               <R2Image
-                src={item.coverImage || item.image || ''}
+                src={item.coverImage || item.image || ""}
                 alt={item.title}
                 width={400}
                 height={400}
@@ -127,7 +235,7 @@ export function UnifiedItemCard({ item, viewMode, geolocation }: UnifiedItemCard
                   </h3>
                 </Link>
               </div>
-              
+
               <p className="text-gray-600 mb-4 line-clamp-3">
                 {item.description}
               </p>
@@ -135,10 +243,11 @@ export function UnifiedItemCard({ item, viewMode, geolocation }: UnifiedItemCard
               {isCampaign && item.creatorName && (
                 <div className="flex items-center gap-2 mb-4">
                   <User className="h-4 w-4 text-gray-400" />
-                  <span className="text-sm text-gray-600">by {item.creatorName}</span>
+                  <span className="text-sm text-gray-600">
+                    by {item.creatorName}
+                  </span>
                 </div>
               )}
-
             </div>
 
             <div className="flex items-center justify-between pt-4 border-t">
@@ -147,7 +256,7 @@ export function UnifiedItemCard({ item, viewMode, geolocation }: UnifiedItemCard
                 <span>{formatDate(item.createdAt)}</span>
               </div>
               <Link href={getItemUrl()}>
-                <Button className="bg-[#104901] hover:bg-[#0d3a01] text-white">
+                <Button className="bg-[#104901] text-white">
                   View Details
                 </Button>
               </Link>
@@ -159,10 +268,10 @@ export function UnifiedItemCard({ item, viewMode, geolocation }: UnifiedItemCard
   }
 
   // Grid view
-  const CategoryIcon = categoryIcons[item.category || 'Uncategorized'] || Heart;
-  const imageUrl = item.coverImage || item.image || '';
-  
-  // Campaign cards - updated design matching homepage
+  const CategoryIcon = categoryIcons[item.category || "Uncategorized"] || Heart;
+  const imageUrl = item.coverImage || item.image || "";
+
+  // Campaign cards
   if (isCampaign) {
     return (
       <div className="group rounded-2xl overflow-hidden bg-white border border-[#E8E8E8] hover:border-[#104901] hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col">
@@ -187,22 +296,31 @@ export function UnifiedItemCard({ item, viewMode, geolocation }: UnifiedItemCard
           )}
           <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full">
             <span className="font-jakarta font-bold text-xs text-[#104901] uppercase tracking-wider">
-              {item.category || 'Campaign'}
+              {item.category || "Campaign"}
             </span>
           </div>
-          <div className="absolute top-4 right-4 bg-[#333333] text-white px-3 py-1.5 rounded-full">
-            <span className="font-jakarta font-bold text-xs">
-              12 days left
-            </span>
+          <div className="absolute top-3 right-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`h-8 w-8 p-0 bg-white/80 hover:bg-white ${isFavourited ? "text-red-500" : ""}`}
+              onClick={handleToggleFavourite}
+              disabled={isToggling || isChecking}
+            >
+              <Heart
+                className={`h-4 w-4 ${isFavourited ? "fill-current" : ""}`}
+              />
+            </Button>
           </div>
         </div>
-        
+
         {/* CONTENT SECTION */}
         <div className="p-5 md:p-6 flex flex-col gap-4 flex-grow">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <p className="font-jakarta font-regular text-xs text-[#999999] uppercase tracking-wider">
-                Organized by <b className="text-black">{item.category || 'Campaign'}</b>
+                Organized by{" "}
+                <b className="text-black">{item.category || "Campaign"}</b>
               </p>
               {item.isVerified && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-[#104901] border border-[#104901]/20">
@@ -225,10 +343,15 @@ export function UnifiedItemCard({ item, viewMode, geolocation }: UnifiedItemCard
           <div className="border-t border-[#E8E8E8] pt-4">
             <div className="flex justify-between items-center mb-3">
               <span className="font-jakarta font-bold text-[#1ABD73]">
-                {formatCurrency(item.currentAmount || 0, item.currency || 'USD')} raised
+                {formatCurrency(
+                  item.currentAmount || 0,
+                  item.currency || "USD"
+                )}{" "}
+                raised
               </span>
               <span className="font-jakarta font-regular text-[#999999] text-sm">
-                {formatCurrency(item.goalAmount || 0, item.currency || 'USD')} goal
+                {formatCurrency(item.goalAmount || 0, item.currency || "USD")}{" "}
+                goal
               </span>
             </div>
             <div className="w-full bg-[#E8E8E8] h-2 rounded-full overflow-hidden mb-4">
@@ -238,9 +361,7 @@ export function UnifiedItemCard({ item, viewMode, geolocation }: UnifiedItemCard
               ></div>
             </div>
             <Link href={getItemUrl()}>
-              <button
-                className="w-full py-2.5 px-4 bg-[#F5F5F4] text-black font-jakarta font-semibold text-sm rounded-lg hover:bg-[#59AD4A] hover:text-white transition-colors duration-300"
-              >
+              <button className="w-full py-2.5 px-4 bg-[#F5F5F4] text-black font-jakarta font-semibold text-sm rounded-lg hover:bg-[#59AD4A] hover:text-white transition-colors duration-300">
                 View Campaign
               </button>
             </Link>
@@ -249,8 +370,8 @@ export function UnifiedItemCard({ item, viewMode, geolocation }: UnifiedItemCard
       </div>
     );
   }
-  
-  // Charity cards - updated design matching campaign cards
+
+  // Charity cards
   return (
     <div className="group rounded-2xl overflow-hidden bg-white border border-[#E8E8E8] hover:border-[#104901] hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col">
       {/* IMAGE SECTION */}
@@ -275,7 +396,7 @@ export function UnifiedItemCard({ item, viewMode, geolocation }: UnifiedItemCard
         )}
         <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full">
           <span className="font-jakarta font-bold text-xs text-[#104901] uppercase tracking-wider">
-            {item.category || 'Charity'}
+            {item.category || "Charity"}
           </span>
         </div>
         {item.isVerified && (
@@ -291,7 +412,8 @@ export function UnifiedItemCard({ item, viewMode, geolocation }: UnifiedItemCard
         <div>
           <div className="flex items-center gap-2 mb-2">
             <p className="font-jakarta font-regular text-xs text-[#999999] uppercase tracking-wider">
-              Charity <b className="text-black">{item.category || 'Organization'}</b>
+              Charity{" "}
+              <b className="text-black">{item.category || "Organization"}</b>
             </p>
           </div>
           <Link href={getItemUrl()}>
@@ -315,9 +437,7 @@ export function UnifiedItemCard({ item, viewMode, geolocation }: UnifiedItemCard
             </div>
           </div>
           <Link href={getItemUrl()}>
-            <button
-              className="w-full py-2.5 px-4 bg-white text-black font-jakarta font-semibold text-sm rounded-lg hover:bg-[#59AD4A] hover:text-white transition-colors duration-300 flex items-center justify-center gap-2 border border-gray-200"
-            >
+            <button className="w-full py-2.5 px-4 bg-white text-black font-jakarta font-semibold text-sm rounded-lg hover:bg-[#59AD4A] hover:text-white transition-colors duration-300 flex items-center justify-center gap-2 border border-gray-200">
               <Heart className="h-0 w-0" />
               Donate Now
             </button>

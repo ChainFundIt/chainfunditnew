@@ -20,7 +20,7 @@ const Navbar = (props: Props) => {
   };
 
   return (
-    <nav className="sticky top-0 md:px-20 py-3 border-b border-[#E7E5E4]  bg-[white] z-10">
+    <nav className="sticky top-0 px-20 py-3 border-b border-[#E7E5E4]  bg-[white] z-10">
       <div className="px-8 flex justify-between">
         <Link href="/" className="flex gap-2 items-center">
           <Image

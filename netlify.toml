@@ -1,0 +1,22 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  # Exclude NEXT_PUBLIC_ variables from secrets scanning
+  # These are intentionally public and safe to expose in client-side code
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Netlify Scheduled Functions Configuration
+# These functions are defined in netlify/functions/ directory
+# They will automatically trigger your Next.js API routes at the specified times
+#
+# Alternative: Use external cron services (see SUMMARY_REPORTS_SETUP.md)
+# - /api/cron/send-daily-summaries (schedule: 0 9 * * *)
+# - /api/cron/send-weekly-summaries (schedule: 0 9 * * 1)
+# - /api/cron/payouts (schedule: 0 * * * *)
+# - /api/cron/verify-pending-paystack (schedule: */15 * * * * - every 15 minutes)
+

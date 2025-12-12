@@ -17,17 +17,17 @@ const links = [
     label: "Campaigns",
   },
   {
-    href: "/donations",
+    href: "/dashboard/donations",
     icon: <BiDonateHeart size={24} />,
     label: "Donations",
   },
   {
-    href: "/payouts",
+    href: "/dashboard/payouts",
     icon: <Share size={24} />,
     label: "Payouts",
   },
   {
-    href: "/settings",
+    href: "/dashboard/settings",
     icon: <LifeBuoy size={24} />,
     label: "Settings",
   },
@@ -39,22 +39,22 @@ const MobileSidebar = (props: Props) => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
 
       if (response.ok) {
-        toast.success('Logged out successfully');
-        router.push('/signin');
+        toast.success("Logged out successfully");
+        router.push("/signin");
       } else {
-        toast.error('Failed to logout');
+        toast.error("Failed to logout");
       }
     } catch (error) {
-      console.error('Logout error:', error);
-      toast.error('Failed to logout');
+      console.error("Logout error:", error);
+      toast.error("Failed to logout");
     }
   };
 
@@ -76,10 +76,12 @@ const MobileSidebar = (props: Props) => {
             >
               {link.icon}
             </section>
-            <span className="text-xs font-medium text-center">{link.label}</span>
+            <span className="text-xs font-medium text-center">
+              {link.label}
+            </span>
           </Link>
         ))}
-        
+
         {/* Logout Button for Mobile */}
         {/* <button
           onClick={handleLogout}

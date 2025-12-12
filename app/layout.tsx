@@ -5,6 +5,7 @@ import PerformanceMonitor from "@/components/performance/PerformanceMonitor";
 import ClientToaster from "@/components/ui/client-toaster";
 import { GoogleAnalytics } from "@/components/layout/GoogleAnalytics";
 import { CookieBanner } from "@/components/layout/CookieBanner";
+import { AutoFavoriteHandler } from "@/components/auth/auto-favorite-handler";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,6 +17,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const logoUrl = `/images/logo.svg`;
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
@@ -25,6 +27,32 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "Chainfundit",
   description: "Raise funds - support dreams",
+  openGraph: {
+    title: "Chainfundit",
+    description: "Raise funds - support dreams",
+    url: process.env.NEXT_PUBLIC_APP_URL || "https://chainfundit.com",
+    siteName: "Chainfundit",
+    images: [
+      {
+        url: logoUrl,
+        width: 512,
+        height: 512,
+        alt: "Chainfundit Logo",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Chainfundit",
+    description: "Raise funds - support dreams",
+    images: [logoUrl],
+  },
+  icons: {
+    icon: "/images/logo.svg",
+    apple: "/images/logo.svg",
+  },
 };
 
 export default function RootLayout({
@@ -82,6 +110,7 @@ export default function RootLayout({
           <PerformanceMonitor />
           <ClientToaster />
           <CookieBanner />
+          <AutoFavoriteHandler />
         </div>
       </body>
     </html>

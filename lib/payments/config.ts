@@ -119,9 +119,8 @@ export function getPaymentModeStatus(): {
   };
 } {
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-  const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
   const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY;
-  const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || process.env.PAYSTACK_PUBLIC_KEY;
+  const paystackPublicKey = process.env.PAYSTACK_PUBLIC_KEY;
 
   const getStripeSecretMode = (): 'test' | 'live' | 'missing' | 'unknown' => {
     if (!stripeSecretKey) return 'missing';
@@ -131,10 +130,10 @@ export function getPaymentModeStatus(): {
   };
 
   const getStripePublishableMode = (): 'test' | 'live' | 'missing' | 'unknown' => {
-    if (!stripePublishableKey) return 'missing';
-    if (stripePublishableKey.startsWith('pk_test_')) return 'test';
-    if (stripePublishableKey.startsWith('pk_live_')) return 'live';
-    return 'unknown';
+    const secretMode = getStripeSecretMode();
+    if (secretMode === 'test') return 'test';
+    if (secretMode === 'live') return 'live';
+    return 'missing';
   };
 
   const getPaystackSecretMode = (): 'test' | 'live' | 'missing' | 'unknown' => {
@@ -145,10 +144,10 @@ export function getPaymentModeStatus(): {
   };
 
   const getPaystackPublicMode = (): 'test' | 'live' | 'missing' | 'unknown' => {
-    if (!paystackPublicKey) return 'missing';
-    if (paystackPublicKey.startsWith('pk_test_')) return 'test';
-    if (paystackPublicKey.startsWith('pk_live_')) return 'live';
-    return 'unknown';
+    const secretMode = getPaystackSecretMode();
+    if (secretMode === 'test') return 'test';
+    if (secretMode === 'live') return 'live';
+    return 'missing';
   };
 
   const stripeSecretMode = getStripeSecretMode();

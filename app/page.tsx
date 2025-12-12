@@ -20,16 +20,6 @@ export default function HomePage() {
       <CustomerStories />
       <FAQs />
       <Footer />
-      
-      {/* Floating Create Campaign Button - Mobile Only */}
-      <Link href="/create-campaign" className="md:hidden">
-        <Button
-          className="fixed bottom-3 z-50 w-full h-14 px-6 bg-[#104901] text-white shadow-lg shadow-black/20 flex items-center gap-2 font-semibold text-base"
-        >
-          <Plus className="h-5 w-5" />
-          Create Campaign
-        </Button>
-      </Link>
     </main>
   );
 }

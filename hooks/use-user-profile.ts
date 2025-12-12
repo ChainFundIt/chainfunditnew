@@ -18,6 +18,7 @@ interface UserProfile {
   hasSeenWelcomeModal: boolean;
   createdAt: string;
   updatedAt: string;
+  role?: string;
 }
 
 export function useUserProfile() {

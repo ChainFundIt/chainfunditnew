@@ -106,7 +106,9 @@ const sections = [
             </li>
             <li className="flex items-start gap-3">
               <Check className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-              <span>Verify your identity and compliance (e.g. KYC, fraud screening)</span>
+              <span>
+                Verify your identity and compliance (e.g. KYC, fraud screening)
+              </span>
             </li>
             <li className="flex items-start gap-3">
               <Check className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
@@ -118,7 +120,9 @@ const sections = [
             </li>
             <li className="flex items-start gap-3">
               <Check className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-              <span>Facilitate chain ambassador referrals and commission payouts</span>
+              <span>
+                Facilitate chain ambassador referrals and commission payouts
+              </span>
             </li>
             <li className="flex items-start gap-3">
               <Check className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
@@ -314,9 +318,9 @@ const sections = [
               <li>KYC verification for campaign recipients</li>
             </ul>
             <p className="text-gray-700 leading-relaxed text-sm bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <strong>Note:</strong> Despite these measures, no online system is completely secure. We
-              recommend that you use strong passwords and do not share your
-              login credentials with anyone.
+              <strong>Note:</strong> Despite these measures, no online system is
+              completely secure. We recommend that you use strong passwords and
+              do not share your login credentials with anyone.
             </p>
           </>
         ),
@@ -566,76 +570,76 @@ export default function PrivacyPolicyPage() {
       <Navbar />
 
       {/* Hero Section */}
-      <div 
+      <div
         className="bg-white font-plusjakarta"
-        style={{ 
-          width: "1440px", 
+        style={{
+          width: "1440px",
           height: "368.8px",
-          
+
           paddingRight: "272px",
-          
+
           paddingLeft: "272px",
           borderBottom: "0.8px solid #F3F4F6",
-          
+
           boxSizing: "border-box",
           display: "flex",
           alignItems: "center",
-          justifyContent: "center"
+          justifyContent: "center",
         }}
       >
-        <div 
+        <div
           className="font-plusjakarta flex flex-col items-center"
-          style={{ 
-            width: "896px", 
+          style={{
+            width: "896px",
             height: "224px",
-            maxWidth: "896px"
+            maxWidth: "896px",
           }}
         >
           {/* Logo */}
-          <div 
+          <div
             className="flex items-center justify-center mb-6 font-plusjakarta"
-            style={{ 
+            style={{
               backgroundColor: "#ECFDF5",
-              width: "64px", 
+              width: "64px",
               height: "64px",
-              borderRadius: "16px"
+              borderRadius: "16px",
             }}
           >
             <Shield className="h-8 w-8 text-green-600" />
           </div>
 
           {/* Main Heading */}
-          <h1 
+          <h1
             className="font-plusjakarta text-center"
-            style={{ 
-              width: "864px", 
+            style={{
+              width: "864px",
               height: "24px",
               fontWeight: 800,
               fontSize: "48px",
               lineHeight: "1",
-              marginBottom: "24px"
+              marginBottom: "24px",
             }}
           >
             Privacy Policy
           </h1>
 
           {/* Subheading Container */}
-          <div 
+          <div
             className="flex items-center justify-center font-plusjakarta"
-            style={{ 
-              width: "864px", 
+            style={{
+              width: "864px",
               height: "28px",
-              marginTop: "16px"
+              marginTop: "16px",
             }}
           >
-            <p 
+            <p
               className="font-plusjakarta text-center"
-              style={{ 
-                width: "512px", 
+              style={{
+                width: "512px",
                 height: "28px",
                 fontWeight: 400,
                 fontSize: "18px",
-                color: "#4B5563"
+                color: "#4B5563",
               }}
             >
               Your trust is our top priority. Here's how we protect your data.
@@ -643,25 +647,24 @@ export default function PrivacyPolicyPage() {
           </div>
 
           {/* Last Updated Badge */}
-          <div 
+          <div
             className="flex items-center justify-center font-plusjakarta"
-            style={{ 
-              width: "306px", 
+            style={{
+              width: "306px",
               height: "28px",
               marginTop: "16px",
-              
-              
+
               paddingTop: "4px",
               paddingRight: "16px",
               paddingBottom: "4px",
               paddingLeft: "16px",
               borderRadius: "12px",
-              boxSizing: "border-box"
+              boxSizing: "border-box",
             }}
           >
-            <span 
+            <span
               className="font-plusjakarta text-center"
-              style={{ 
+              style={{
                 fontWeight: 700,
                 fontSize: "14px",
                 color: "#059669",
@@ -671,7 +674,7 @@ export default function PrivacyPolicyPage() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                height: "20px"
+                height: "20px",
               }}
             >
               Last updated: 19 November 2025
@@ -681,22 +684,22 @@ export default function PrivacyPolicyPage() {
       </div>
 
       {/* Main Content */}
-      <div 
+      <div
         className="font-plusjakarta mx-auto"
-        style={{ 
-          width: "1440px", 
+        style={{
+          width: "1440px",
           minHeight: "900px",
           paddingTop: "64px",
           paddingLeft: "160px",
           paddingRight: "160px",
-          boxSizing: "border-box"
+          boxSizing: "border-box",
         }}
       >
-        <div 
+        <div
           className="flex font-plusjakarta"
-          style={{ 
-            width: "1120px", 
-            gap: "48px"
+          style={{
+            width: "1120px",
+            gap: "48px",
           }}
         >
           {/* Sidebar - Table of Contents */}
@@ -724,11 +727,11 @@ export default function PrivacyPolicyPage() {
           </div>
 
           {/* Main Content */}
-          <div 
+          <div
             className="font-plusjakarta"
-            style={{ 
+            style={{
               width: "804px",
-              gap: "48px"
+              gap: "48px",
             }}
           >
             {/* Introduction Section */}

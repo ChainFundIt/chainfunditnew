@@ -4,26 +4,28 @@ import { Suspense } from "react";
 
 export default function LoginPage() {
   return (
-    <div className="w-full flex flex-col gap-5 px-3">
-      <div className="flex flex-col items-center justify-center">
+     <div className="w-full flex flex-col md:items-start items-center gap-4 px-4">
+      {/* Logo */}
+      <div className="mb-2">
         <Image
           src="/images/logo.svg"
           alt="Chainfundit Logo"
-          width={64}
-          height={62}
-          className="md:w-[82px] md:h-[80px]"
+          width={40}
+          height={40}
+          className="md:w-10 md:h-10"
         />
-
-        <h2 className="font-semibold text-2xl md:text-4xl text-[#104901] text-center">
-          Create life-changing <br /> experiences on Chainfundit
-        </h2>
-        <p className="font-normal text-base md:text-xl text-[#104901]">
-          Please sign in below.
-        </p>
       </div>
 
-      <Suspense fallback={<div className="w-full text-center py-8">Loading...</div>}>
-          <LoginForm />
+      {/* Main Heading */}
+      <div className="mb-4 md:text-left text-center">
+        <h1 className="font-bold text-2xl md:text-3xl text-gray-900 mb-2">
+          Create life-changing-<br></br>experiences on Chainfundit.
+        </h1>
+      </div>
+
+      {/* Form Section */}
+      <Suspense fallback={<div className="w-full text-center py-4 text-gray-500 text-sm">Loading...</div>}>
+        <LoginForm />
       </Suspense>
     </div>
   );

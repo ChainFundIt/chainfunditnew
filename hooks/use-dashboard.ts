@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface DashboardStats {
   totalCampaigns: number;
@@ -215,8 +215,13 @@ export function useDonations(status: string = 'all', page: number = 1) {
     total: 0,
     totalPages: 0,
   });
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const fetchDonations = async () => {
+    abortControllerRef.current?.abort();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try {
       setLoading(true);
       setError(null);
@@ -227,8 +232,14 @@ export function useDonations(status: string = 'all', page: number = 1) {
         limit: '10',
       });
 
-      const response = await fetch(`/api/dashboard/donations?${params}`);
+      const response = await fetch(`/api/dashboard/donations?${params}`, {
+        signal: controller.signal,
+      });
       const data = await response.json();
+
+      if (controller.signal.aborted) {
+        return;
+      }
 
       if (data.success) {
         setDonations(data.donations);
@@ -237,14 +248,22 @@ export function useDonations(status: string = 'all', page: number = 1) {
         setError(data.error || 'Failed to load donations');
       }
     } catch (error) {
+      if ((error as Error).name === 'AbortError') {
+        return;
+      }
       setError('Failed to load donations');
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
     fetchDonations();
+    return () => {
+      abortControllerRef.current?.abort();
+    };
   }, [status, page]);
 
   // Auto-refresh donations every 30 seconds when donations are not loading

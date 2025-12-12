@@ -10,7 +10,6 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { OAuthButtons } from "./oauth-buttons";
-import { track } from "@/lib/analytics";
 
 export function SignupForm({
   className,
@@ -72,13 +71,6 @@ export function SignupForm({
 
       toast.success("Verification code sent! Check your email.");
       
-      // Track OTP sent event
-      track("otp_sent", {
-        user_email: email.trim(),
-        category: "authentication",
-        label: "signup",
-      });
-      
       // Use router.push for better performance instead of window.location
       let otpUrl = `/otp?email=${encodeURIComponent(email.trim())}&mode=signup`;
       if (redirect) otpUrl += `&redirect=${encodeURIComponent(redirect)}`;
@@ -107,20 +99,40 @@ export function SignupForm({
   }, [email, redirect]);
 
   return (
-    <form className={cn("flex flex-col w-full pt-3 px-2", className)} onSubmit={handleSubmit} {...props}>
-      <div className="grid gap-4">
-        <div className="grid gap-3">
+    <form className={cn("flex flex-col w-full gap-3", className)} onSubmit={handleSubmit} {...props}>
+      <div className="flex flex-col gap-3 text-center md:text-left">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900 mb-0.5">
+            Create your Account
+          </h2>
+          <p className="text-xs text-gray-600">
+            Get started in a few minutes
+          </p>
+        </div>
+
+        <OAuthButtons mode="signup" />
+
+        <div className="relative py-2">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300"></div>
+          </div>
+          <div className="relative flex justify-center text-xs">
+            <span className="px-2 bg-white text-gray-500 font-medium">or continue with email</span>
+          </div>
+        </div>
+
+        <div className="grid gap-2">
           <Label
             htmlFor="email"
-            className="font-normal text-xl text-[#104901]"
+            className="font-medium text-xs text-gray-700"
           >
-            Email
+            Email Address
           </Label>
           <Input
             id="email"
             type="email"
-            placeholder="tolulope.smith@gmail.com"
-            className="w-[360px] md:w-full bg-white rounded-lg border border-[#D9D9DC] outline-[#104901] placeholder:text-[#767676]"
+            placeholder="name@example.com"
+            className="h-10 bg-gray-50 rounded-lg border border-gray-300 text-xs focus:border-[#109104] focus:ring-[#109104] shadow-none outline-none placeholder:text-gray-400 transition-colors"
             required
             value={email}
             onChange={e => setEmail(e.target.value)}
@@ -128,19 +140,22 @@ export function SignupForm({
             autoComplete="email"
           />
         </div>
+
         <Button
           type="submit"
-          className="w-[360px] md:w-full h-16 flex justify-between font-semibold text-2xl"
+          className="h-10 bg-[#104109] hover:bg-white text-white font-semibold text-sm rounded-lg transition-colors w-full"
           disabled={isLoading || !email.trim()}
         >
-          {isLoading ? "Sending OTP" : "Continue with Email"}
-          <ArrowRight className={isLoading ? "animate-pulse" : ""} />
+          {isLoading ? "Creating account..." : "Create account"}
         </Button>
-        <OAuthButtons mode="signup" />
       </div>
-      <p className="text-center text-sm font-normal text-[#104901] mt-4">
-        Already have an account? <Link href='/signin' className="font-medium text-base underline">Sign in</Link>
-      </p>
+
+      <div className="text-center text-xs text-gray-600">
+        Already have an account?{" "}
+        <Link href="/signin" className="font-semibold text-blue-600 hover:text-blue-700">
+          Log in
+        </Link>
+      </div>
     </form>
   );
 }

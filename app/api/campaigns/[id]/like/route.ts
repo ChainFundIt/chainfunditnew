@@ -2,12 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { campaigns } from '@/lib/schema/campaigns';
 import { users } from '@/lib/schema/users';
+import { favourites } from '@/lib/schema/favourites';
 import { eq, and } from 'drizzle-orm';
 import { parse } from 'cookie';
 import { verifyUserJWT } from '@/lib/auth';
 
-// We'll use a simple approach for likes - storing them in a separate table
-// For now, we'll create a simple likes table in the schema
 
 async function getUserFromRequest(request: NextRequest) {
   const cookie = request.headers.get('cookie') || '';
@@ -49,11 +48,22 @@ export async function GET(
       );
     }
 
-    // For now, return false as we haven't implemented the likes table yet
-    // TODO: Implement likes table and check if user has liked
+    // Check if campaign is in favourites
+    const [favourite] = await db
+      .select()
+      .from(favourites)
+      .where(
+        and(
+          eq(favourites.userId, user[0].id),
+          eq(favourites.itemType, 'campaign'),
+          eq(favourites.itemId, campaignId)
+        )
+      )
+      .limit(1);
+
     return NextResponse.json({
       success: true,
-      data: { isLiked: false },
+      data: { isLiked: !!favourite },
     });
   } catch (error) {
     console.error('Error checking like status:', error);
@@ -108,12 +118,45 @@ export async function POST(
       );
     }
 
-    // For now, return success as we haven't implemented the likes table yet
-    // TODO: Implement likes table and toggle like status
-    return NextResponse.json({
-      success: true,
-      data: { isLiked: true },
-    });
+    // Check if already favourited
+    const [existing] = await db
+      .select()
+      .from(favourites)
+      .where(
+        and(
+          eq(favourites.userId, user[0].id),
+          eq(favourites.itemType, 'campaign'),
+          eq(favourites.itemId, campaignId)
+        )
+      )
+      .limit(1);
+
+    if (existing) {
+      // Remove favourite
+      await db
+        .delete(favourites)
+        .where(eq(favourites.id, existing.id));
+
+      return NextResponse.json({
+        success: true,
+        data: { isLiked: false },
+      });
+    } else {
+      // Add favourite
+      const [newFavourite] = await db
+        .insert(favourites)
+        .values({
+          userId: user[0].id,
+          itemType: 'campaign',
+          itemId: campaignId,
+        })
+        .returning();
+
+      return NextResponse.json({
+        success: true,
+        data: { isLiked: true, favourite: newFavourite },
+      });
+    }
   } catch (error) {
     console.error('Error toggling like:', error);
     return NextResponse.json(

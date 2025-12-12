@@ -11,6 +11,7 @@ import { getTimeRemaining } from "@/lib/utils/campaign-status";
 import { getRelatedItems } from "@/lib/utils/unified-items";
 import { UnifiedItem } from "@/lib/types/unified-item";
 import { normalizeCampaign, normalizeCharity } from "@/lib/utils/unified-items";
+import { getCharityCategoriesForCampaignReason } from "@/lib/utils/category-mapping";
 import { Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -33,14 +34,38 @@ const Cards = ({
       setLoading(true);
       setError(null);
       try {
-        // Fetch both campaigns and charities
-        const [campaignsResponse, charitiesResponse] = await Promise.all([
-          fetch(`/api/campaigns?limit=10&excludeId=${campaignId}`),
-          fetch(`/api/charities?limit=10&active=true&verified=true`),
-        ]);
+        // Get related charity categories if we have a campaign reason
+        const relatedCharityCategories = campaignReason 
+          ? getCharityCategoriesForCampaignReason(campaignReason)
+          : [];
 
+        // Fetch campaigns
+        const campaignsResponse = await fetch(`/api/campaigns?limit=20&excludeId=${campaignId}`);
         const campaignsResult = await campaignsResponse.json();
-        const charitiesResult = await charitiesResponse.json();
+
+        // Fetch charities - if we have related categories, fetch for each category
+        // Otherwise fetch a larger set to ensure we have matches
+        let charitiesResult: any = { charities: [] };
+        
+        if (relatedCharityCategories.length > 0) {
+          // Fetch charities for each related category
+          const charityPromises = relatedCharityCategories.map(category =>
+            fetch(`/api/charities?limit=10&active=true&verified=true&category=${encodeURIComponent(category)}`)
+              .then(res => res.json())
+          );
+          
+          const charityResults = await Promise.all(charityPromises);
+          // Combine all charities and remove duplicates
+          const allCharities = charityResults.flatMap(result => result.charities || []);
+          const uniqueCharities = Array.from(
+            new Map(allCharities.map((c: any) => [c.id, c])).values()
+          );
+          charitiesResult = { charities: uniqueCharities };
+        } else {
+          // No specific categories, fetch a larger set
+          const charitiesResponse = await fetch(`/api/charities?limit=50&active=true&verified=true`);
+          charitiesResult = await charitiesResponse.json();
+        }
 
         // Normalize both into unified items
         const allItems: UnifiedItem[] = [];

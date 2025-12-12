@@ -77,7 +77,6 @@ const DonateModal: React.FC<DonateModalProps> = ({
 
   useEffect(() => {
     if (campaign && open) {
-      // Check if this is a thank you modal from Paystack callback
       const showThankYouModal = sessionStorage.getItem('showThankYouModal');
       if (showThankYouModal === 'true') {
         setStep("thankyou");
@@ -85,17 +84,14 @@ const DonateModal: React.FC<DonateModalProps> = ({
         return;
       }
 
-      // Set initial currency to campaign currency
       setSelectedCurrency(campaign.currency || "₦");
       
       const currencyCode = getCurrencyCode(campaign.currency);
       const { primary, alternatives } = getIntelligentProviders(currencyCode);
       
-      // Set supported providers (primary first, then alternatives)
       const allProviders = primary ? [primary, ...alternatives] : alternatives;
       setSupportedProviders(allProviders);
       
-      // Set default payment provider to the intelligent choice
       if (primary) {
         setPaymentProvider(primary);
       } else if (alternatives.length > 0) {
@@ -107,15 +103,12 @@ const DonateModal: React.FC<DonateModalProps> = ({
   const handleCurrencyChange = (currency: string) => {
     setSelectedCurrency(currency);
     
-    // Update providers based on new currency
     const currencyCode = getCurrencyCode(currency);
     const { primary, alternatives } = getIntelligentProviders(currencyCode);
     
-    // Set supported providers (primary first, then alternatives)
     const allProviders = primary ? [primary, ...alternatives] : alternatives;
     setSupportedProviders(allProviders);
     
-    // Set default payment provider to the intelligent choice
     if (primary) {
       setPaymentProvider(primary);
     } else if (alternatives.length > 0) {
@@ -124,7 +117,16 @@ const DonateModal: React.FC<DonateModalProps> = ({
   };
 
   const handleDonate = () => {
-    // Track donation started
+    if (!email.trim()) {
+      toast.error("Email is required");
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
     if (campaign && amount) {
       trackDonation("donation_started", {
         campaign_id: campaign.id,
@@ -149,7 +151,66 @@ const DonateModal: React.FC<DonateModalProps> = ({
 
     try {
       const currencyCode = getCurrencyCode(selectedCurrency);
-      
+      const isRecurring = period !== 'one-time';
+
+      track("payment_initiated", {
+        campaign_id: campaign.id,
+        donation_amount: amountNum,
+        donation_currency: currencyCode,
+        payment_method: paymentProvider,
+        is_anonymous: anonymous,
+        period: period,
+      });
+
+      if (isRecurring) {
+        const response = await fetch('/api/auth/session');
+        const session = await response.json();
+        
+        if (!session || !session.user) {
+          toast.error("You must be logged in to set up recurring donations. Please sign in first.");
+          return;
+        }
+
+        const subscriptionResponse = await fetch('/api/payments/subscriptions/initialize', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            campaignId: campaign.id,
+            amount: amountNum,
+            currency: currencyCode,
+            paymentProvider,
+            period: period,
+            message: comments,
+            isAnonymous: anonymous,
+            chainerId: referralChainer?.id || null,
+          }),
+        });
+
+        const subscriptionResult = await subscriptionResponse.json();
+
+        if (subscriptionResult.success) {
+          if (subscriptionResult.provider === 'paystack' && subscriptionResult.authorizationUrl) {
+            window.location.href = subscriptionResult.authorizationUrl;
+          } else if (subscriptionResult.provider === 'stripe' && subscriptionResult.clientSecret) {
+            setStripePaymentData({
+              clientSecret: subscriptionResult.clientSecret,
+              donationId: subscriptionResult.subscriptionId,
+              amount: amountNum,
+              currency: selectedCurrency,
+            });
+            setStep("stripe-payment");
+          } else {
+            toast.success("Recurring donation subscription created successfully!");
+            setStep("thankyou");
+          }
+        } else {
+          toast.error(subscriptionResult.error || "Failed to create subscription. Please try again.");
+        }
+        return;
+      }
+
       const donationData = {
         campaignId: campaign.id,
         amount: amountNum,
@@ -160,24 +221,12 @@ const DonateModal: React.FC<DonateModalProps> = ({
         chainerId: referralChainer?.id || null,
       };
 
-      // Track payment initiated
-      track("payment_initiated", {
-        campaign_id: campaign.id,
-        donation_amount: amountNum,
-        donation_currency: currencyCode,
-        payment_method: paymentProvider,
-        is_anonymous: anonymous,
-      });
-
-      // Initialize donation and redirect to payment gateway
       const result = await initializeDonation(donationData, false);
 
       if (result && result.success) {
         if (result.provider === 'paystack' && result.authorization_url) {
-          // Redirect to Paystack payment page
           window.location.href = result.authorization_url;
         } else if (result.provider === 'stripe' && result.clientSecret && result.donationId) {
-          // Store Stripe payment data and show payment form
           setStripePaymentData({
             clientSecret: result.clientSecret,
             donationId: result.donationId,
@@ -187,7 +236,6 @@ const DonateModal: React.FC<DonateModalProps> = ({
           setStep("stripe-payment");
         }
       } else if (result && !result.success) {
-        // Track payment failure
         trackDonation("donation_failed", {
           campaign_id: campaign.id,
           amount: amountNum,
@@ -197,14 +245,12 @@ const DonateModal: React.FC<DonateModalProps> = ({
         toast.error(result.error || "Donation failed. Please try again.");
       }
     } catch (error) {
+      console.error('Payment error:', error);
       toast.error("An error occurred while processing your donation. Please try again.");
     }
   };
 
-
-
   const handleStripePaymentSuccess = () => {
-    // Track donation completion
     if (campaign && stripePaymentData) {
       trackDonation("donation_completed", {
         donation_id: stripePaymentData.donationId,
@@ -244,7 +290,6 @@ const DonateModal: React.FC<DonateModalProps> = ({
   };
 
   const handleViewDashboard = () => {
-    // Navigate to user's dashboard
     window.open('/dashboard', '_blank');
   };
 
@@ -261,7 +306,6 @@ const DonateModal: React.FC<DonateModalProps> = ({
       setTimeout(() => setLinkCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy link:', err);
-      // Fallback for older browsers
       const textArea = document.createElement('textarea');
       textArea.value = campaignUrl;
       document.body.appendChild(textArea);
@@ -289,13 +333,10 @@ const DonateModal: React.FC<DonateModalProps> = ({
       case 'facebook':
         return `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`;
       case 'twitter':
-        // Use new X.com endpoint
         return `https://x.com/intent/post?text=${encodedText}&url=${encodedUrl}`;
       case 'linkedin':
-        // Add summary parameter for encoded text
         return `https://www.linkedin.com/shareArticle?mini=true&url=${encodedUrl}&summary=${encodedText}`;
       case 'instagram':
-        // Instagram doesn't support direct URL sharing, so we'll copy the text
         return '#';
       default:
         return '#';
@@ -311,11 +352,9 @@ const DonateModal: React.FC<DonateModalProps> = ({
     
     const shareText = `I just donated ${selectedCurrency} ${amount} to "${campaign.title}"! Help support this cause: ${campaignUrl}`;
     
-    // Copy text for Instagram (since Instagram doesn't support direct URL sharing)
     navigator.clipboard.writeText(shareText).then(() => {
       alert('Share text copied! Paste it in your Instagram story or post.');
     }).catch(() => {
-      // Fallback
       const textArea = document.createElement('textarea');
       textArea.value = shareText;
       document.body.appendChild(textArea);
@@ -360,7 +399,6 @@ const DonateModal: React.FC<DonateModalProps> = ({
             <XCircle size={24} color="#5F8555" />
           </Button>
         </div>
-
         {/* Content */}
         <div className="p-6">
           {step === "donate" && (
@@ -382,7 +420,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
                         }
                         className={`p-5 text-[#5F8555] text-xl ${
                           period === option.toLowerCase().replace(" ", "-")
-                            ? "bg-whitesmoke rounded-lg border border-[#C0BFC4] hover:bg-whitesmoke hover:text-[#5F8555] shadow-none"
+                            ? "bg-[#104901] text-white rounded-lg border border-[#104901] hover:bg-[#104901] hover:text-white shadow-none"
                             : "border-none bg-transparent shadow-none hover:bg-transparent hover:text-[#5F8555]"
                         }`}
                         onClick={() =>
@@ -438,68 +476,18 @@ const DonateModal: React.FC<DonateModalProps> = ({
                 </div>
               </div>
 
-              {/* Contact Details */}
-              <div>
-                <h3 className="font-normal text-base text-[#5F8555]">
-                  Contact details
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label
-                      htmlFor="fullName"
-                      className="text-sm font-medium text-gray-700"
-                    >
-                      Full name
-                    </Label>
-                    <Input
-                      id="fullName"
-                      value={fullName}
-                      placeholder="Full name"
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="mt-2 h-11 bg-whitesmoke rounded-lg border border-[#C0BFC4] text-[#5F8555] placeholder:text-xl placeholder:text-[#5F8555] text-xl shadow-none"
-                    />
-                  </div>
-                  <div>
-                    <Label
-                      htmlFor="email"
-                      className="text-sm font-medium text-gray-700"
-                    >
-                      Email
-                    </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      placeholder="Email"
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="mt-2 h-11 bg-whitesmoke rounded-lg border border-[#C0BFC4] text-[#5F8555] placeholder:text-xl placeholder:text-[#5F8555] text-xl shadow-none"
-                    />
-                  </div>
-                  <div>
-                    <Label
-                      htmlFor="phone"
-                      className="text-sm font-medium text-gray-700"
-                    >
-                      Phone number
-                    </Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={phone}
-                      placeholder="Phone number"
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="mt-2 h-11 bg-whitesmoke rounded-lg border border-[#C0BFC4] text-[#5F8555] placeholder:text-xl placeholder:text-[#5F8555] text-xl shadow-none"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Anonymous Donation */}
+              {/* Anonymous Donation Checkbox */}
               <div className="flex items-start gap-3">
                 <Checkbox
                   id="anonymous"
                   checked={anonymous}
-                  onCheckedChange={(checked: boolean) => setAnonymous(checked)}
+                  onCheckedChange={(checked: boolean) => {
+                    setAnonymous(checked);
+                    if (checked) {
+                      setFullName("");
+                      setPhone("");
+                    }
+                  }}
                 />
                 <div className="">
                   <Label
@@ -515,43 +503,281 @@ const DonateModal: React.FC<DonateModalProps> = ({
                 </div>
               </div>
 
-              {/* Comments */}
+              {/* Contact Details */}
               <div>
-                <Label
-                  htmlFor="comments"
-                  className="text-base font-normal text-[#5F8555]"
+                <h3 
+                  className="font-plusjakarta block mb-3"
+                  style={{
+                    fontFamily: "Plus Jakarta Sans",
+                    fontWeight: 700,
+                    fontSize: "14px",
+                    lineHeight: "20px",
+                    color: "#1a1a1a"
+                  }}
                 >
-                  Comments
-                </Label>
-                <Textarea
+                  Contact Details
+                </h3>
+                {anonymous ? (
+                  // Anonymous: Only show email field
+                  <div className="space-y-3">
+                    <div>
+                      <label
+                        htmlFor="email"
+                        className="font-plusjakarta block mb-2"
+                        style={{
+                          fontFamily: "Plus Jakarta Sans",
+                          fontWeight: 700,
+                          fontSize: "14px",
+                          lineHeight: "20px",
+                          color: "#1a1a1a"
+                        }}
+                      >
+                        Email Address <span style={{ color: "#ef4444" }}>*</span>
+                      </label>
+                      <input
+                        id="email"
+                        type="email"
+                        value={email}
+                        placeholder="john@example.com"
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="font-plusjakarta w-full"
+                        style={{
+                          height: "48px",
+                          padding: "12px 16px",
+                          borderRadius: "12px",
+                          border: "1px solid #E5E7EB",
+                          backgroundColor: "#F9FAFB",
+                          fontFamily: "Plus Jakarta Sans",
+                          fontWeight: 400,
+                          fontSize: "16px",
+                          lineHeight: "24px",
+                          color: "#1a1a1a"
+                        }}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  // Not anonymous: Show full contact details
+                  <div className="space-y-3">
+                    <div>
+                      <label
+                        htmlFor="fullName"
+                        className="font-plusjakarta block mb-2"
+                        style={{
+                          fontFamily: "Plus Jakarta Sans",
+                          fontWeight: 700,
+                          fontSize: "14px",
+                          lineHeight: "20px",
+                          color: "#1a1a1a"
+                        }}
+                      >
+                        Your Name (Optional)
+                      </label>
+                      <input
+                        id="fullName"
+                        type="text"
+                        value={fullName}
+                        placeholder="John Doe"
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="font-plusjakarta w-full"
+                        style={{
+                          height: "48px",
+                          padding: "12px 16px",
+                          borderRadius: "12px",
+                          border: "1px solid #E5E7EB",
+                          backgroundColor: "#F9FAFB",
+                          fontFamily: "Plus Jakarta Sans",
+                          fontWeight: 400,
+                          fontSize: "16px",
+                          lineHeight: "24px",
+                          color: "#1a1a1a"
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="email"
+                        className="font-plusjakarta block mb-2"
+                        style={{
+                          fontFamily: "Plus Jakarta Sans",
+                          fontWeight: 700,
+                          fontSize: "14px",
+                          lineHeight: "20px",
+                          color: "#1a1a1a"
+                        }}
+                      >
+                        Email Address <span style={{ color: "#ef4444" }}>*</span>
+                      </label>
+                      <input
+                        id="email"
+                        type="email"
+                        value={email}
+                        placeholder="john@example.com"
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="font-plusjakarta w-full"
+                        style={{
+                          height: "48px",
+                          padding: "12px 16px",
+                          borderRadius: "12px",
+                          border: "1px solid #E5E7EB",
+                          backgroundColor: "#F9FAFB",
+                          fontFamily: "Plus Jakarta Sans",
+                          fontWeight: 400,
+                          fontSize: "16px",
+                          lineHeight: "24px",
+                          color: "#1a1a1a"
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="phone"
+                        className="font-plusjakarta block mb-2"
+                        style={{
+                          fontFamily: "Plus Jakarta Sans",
+                          fontWeight: 700,
+                          fontSize: "14px",
+                          lineHeight: "20px",
+                          color: "#1a1a1a"
+                        }}
+                      >
+                        Phone Number (Optional)
+                      </label>
+                      <input
+                        id="phone"
+                        type="tel"
+                        value={phone}
+                        placeholder="john@example.com"
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="font-plusjakarta w-full"
+                        style={{
+                          height: "48px",
+                          padding: "12px 16px",
+                          borderRadius: "12px",
+                          border: "1px solid #E5E7EB",
+                          backgroundColor: "#F9FAFB",
+                          fontFamily: "Plus Jakarta Sans",
+                          fontWeight: 400,
+                          fontSize: "16px",
+                          lineHeight: "24px",
+                          color: "#1a1a1a"
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Message */}
+              <div>
+                <label
+                  htmlFor="comments"
+                  className="font-plusjakarta block mb-2"
+                  style={{
+                    fontFamily: "Plus Jakarta Sans",
+                    fontWeight: 700,
+                    fontSize: "14px",
+                    lineHeight: "20px",
+                    color: "#1a1a1a"
+                  }}
+                >
+                  Message (Optional)
+                </label>
+                <textarea
                   id="comments"
                   value={comments}
                   onChange={(e) => setComments(e.target.value)}
-                  placeholder="Support the fundraiser with nice words."
-                  className="mt-2 min-h-[100px] bg-whitesmoke border border-[#C0BFC4] text-sm text-[#5F8555] placeholder:text-sm placeholder:text-[#5F8555]"
+                  placeholder="Leave a message of support..."
+                  className="font-plusjakarta w-full"
+                  style={{
+                    height: "120px",
+                    padding: "12px 16px",
+                    borderRadius: "12px",
+                    border: "1px solid #E5E7EB",
+                    backgroundColor: "#F9FAFB",
+                    fontFamily: "Plus Jakarta Sans",
+                    fontWeight: 400,
+                    fontSize: "16px",
+                    lineHeight: "24px",
+                    color: "#1a1a1a",
+                    resize: "none",
+                    overflow: "auto"
+                  }}
                 />
               </div>
 
               {/* Payment Instruction */}
-              <div className="">
-                <p className="text-xl font-medium text-[#104901]">
-                  Complete by payment by clicking below and paying through
-                  Stripe or Paystack. (Charges may apply)
+              <div>
+                <p 
+                  className="font-plusjakarta"
+                  style={{
+                    fontFamily: "Plus Jakarta Sans",
+                    fontWeight: 400,
+                    fontSize: "12px",
+                    lineHeight: "20px",
+                    color: "#666666"
+                  }}
+                >
+                  Complete your payment by clicking below and paying through Stripe or Paystack. (Charges may apply)
                 </p>
               </div>
 
-
-              {/* Donate Button */}
-              <Button
+              {/* Continue Button */}
+              <button
+                type="button"
                 onClick={handleDonate}
-                variant="default"
-                className="w-[220px] h-16 bg-[#104901] text-2xl text-white flex justify-between items-center "
+                className="font-plusjakarta flex items-center justify-center w-full"
+                style={{
+                  height: "56px",
+                  padding: "16px 0",
+                  gap: "8px",
+                  borderRadius: "12px",
+                  backgroundColor: "#104901",
+                  color: "#FFFFFF",
+                  border: "none",
+                  cursor: "pointer",
+                  boxShadow: "0px 4px 6px -4px rgba(6, 78, 59, 0.1), 0px 10px 15px -3px rgba(6, 78, 59, 0.1)",
+                  transition: "all 0.3s ease"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#0d3a00";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#104901";
+                }}
               >
-                Continue <ArrowRight size={24} />
-              </Button>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M5 12H19M19 12L12 5M19 12L12 19"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span
+                  className="font-plusjakarta"
+                  style={{
+                    fontFamily: "Plus Jakarta Sans",
+                    fontWeight: 700,
+                    fontSize: "16px",
+                    lineHeight: "24px",
+                    textAlign: "center"
+                  }}
+                >
+                  Continue
+                </span>
+              </button>
             </div>
           )}
-
           {step === "payment" && (
             <div className="space-y-6">
               {/* Donation Summary */}
@@ -736,7 +962,6 @@ const DonateModal: React.FC<DonateModalProps> = ({
                   </Link>
                 </div>
               </div>
-              
             </div>
           )}
         </div>

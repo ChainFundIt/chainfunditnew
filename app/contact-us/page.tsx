@@ -99,12 +99,12 @@ export default function ContactUsPage() {
       <Navbar />
 
       {/* Hero Section */}
-      <div 
+      <div
         className="relative bg-[#104901] text-white overflow-hidden w-full flex justify-center"
         style={{
           height: "400px",
           paddingBottom: "96px",
-          boxSizing: "border-box"
+          boxSizing: "border-box",
         }}
       >
         {/* Right Corner Blur Overlay */}
@@ -115,7 +115,7 @@ export default function ContactUsPage() {
             height: "400px",
             background: "radial-gradient(circle, #59AD4A 0%, transparent 70%)",
             filter: "blur(64px)",
-            opacity: 0.2
+            opacity: 0.2,
           }}
         ></div>
 
@@ -127,12 +127,12 @@ export default function ContactUsPage() {
             height: "400px",
             background: "radial-gradient(circle, #59AD4A 0%, transparent 70%)",
             filter: "blur(64px)",
-            opacity: 0.1
+            opacity: 0.1,
           }}
         ></div>
 
         {/* Center Content Container */}
-        <div 
+        <div
           className="relative mx-auto flex flex-col items-center justify-center font-plusjakarta"
           style={{
             width: "896px",
@@ -141,31 +141,31 @@ export default function ContactUsPage() {
             paddingLeft: "16px",
             paddingRight: "16px",
             paddingTop: "80.8px",
-            gap: "24px"
+            gap: "24px",
           }}
         >
           {/* Get In Touch Badge */}
-          <div 
+          <div
             className="inline-flex items-center gap-2 px-4 py-2 font-plusjakarta"
             style={{
               border: "1px solid #047857",
-              borderRadius: "24px"
+              borderRadius: "24px",
             }}
           >
-            <Image 
+            <Image
               src="/images/getintouch.png"
               alt="Get in touch"
               width={16}
               height={16}
             />
-            <span 
+            <span
               className="font-plusjakarta"
               style={{
                 fontWeight: 700,
                 fontSize: "12px",
                 lineHeight: "16px",
                 textTransform: "uppercase",
-                color: "#59AD4A"
+                color: "#59AD4A",
               }}
             >
               GET IN TOUCH
@@ -173,20 +173,20 @@ export default function ContactUsPage() {
           </div>
 
           {/* Main Heading */}
-          <div 
+          <div
             className="flex items-center justify-center font-plusjakarta"
             style={{
               width: "864px",
-              height: "60px"
+              height: "60px",
             }}
           >
-            <h1 
+            <h1
               className="font-plusjakarta text-center"
               style={{
                 fontWeight: 800,
                 fontSize: "60px",
                 lineHeight: "60px",
-                color: "#FFFFFF"
+                color: "#FFFFFF",
               }}
             >
               We're here to help
@@ -194,31 +194,32 @@ export default function ContactUsPage() {
           </div>
 
           {/* Subheading */}
-          <div 
+          <div
             className="flex items-center justify-center font-plusjakarta"
             style={{
               width: "672px",
               maxWidth: "672px",
-              height: "59px"
+              height: "59px",
             }}
           >
-            <p 
+            <p
               className="font-plusjakarta text-center"
               style={{
                 fontWeight: 400,
                 fontSize: "18px",
                 color: "#D1FAE5CC",
-                lineHeight: "1.5"
+                lineHeight: "1.5",
               }}
             >
-              Have questions about starting a campaign or supporting a cause? Our dedicated team is ready to assist you on your journey.
+              Have questions about starting a campaign or supporting a cause?
+              Our dedicated team is ready to assist you on your journey.
             </p>
           </div>
         </div>
       </div>
 
       {/* Contact Methods Container */}
-      <div 
+      <div
         className="flex flex-col font-plusjakarta"
         style={{
           width: "100%",
@@ -231,23 +232,23 @@ export default function ContactUsPage() {
           marginLeft: "auto",
           marginRight: "auto",
           paddingLeft: "20px",
-          paddingRight: "20px"
+          paddingRight: "20px",
         }}
       >
         {/* Cards Row */}
-        <div 
+        <div
           className="flex font-plusjakarta justify-center"
           style={{
             width: "100%",
             maxWidth: "1280px",
             height: "282px",
-            gap: "24px"
+            gap: "24px",
           }}
         >
           {contactMethods.map((method, index) => {
             const Icon = method.icon;
             return (
-              <div 
+              <div
                 key={index}
                 className="bg-white font-plusjakarta contact-method-container"
                 style={{
@@ -260,20 +261,20 @@ export default function ContactUsPage() {
                   alignItems: "center",
                   justifyContent: "flex-start",
                   flexGrow: 1,
-                  minWidth: "200px"
+                  minWidth: "200px",
                 }}
               >
-                <div 
+                <div
                   className="flex items-center justify-center mb-4 font-plusjakarta"
                   style={{
                     backgroundColor: "#ECFDF5",
                     width: "70px",
                     height: "64px",
-                    borderRadius: "16px"
+                    borderRadius: "16px",
                   }}
                 >
-                  <Image 
-                    src={`/images/${index === 0 ? 'emailicon.png' : index === 1 ? 'phonesupport.png' : 'whatsappicon.png'}`}
+                  <Image
+                    src={`/images/${index === 0 ? "emailicon.png" : index === 1 ? "phonesupport.png" : "whatsappicon.png"}`}
                     alt={method.title}
                     width={35}
                     height={32}
@@ -281,7 +282,7 @@ export default function ContactUsPage() {
                 </div>
 
                 <div className="text-center font-plusjakarta title-container">
-                  <h3 
+                  <h3
                     className="font-plusjakarta"
                     style={{
                       fontWeight: 700,
@@ -297,16 +298,16 @@ export default function ContactUsPage() {
                   </h3>
                 </div>
 
-                <div 
+                <div
                   className="text-center font-plusjakarta"
                   style={{
                     width: "346.9700012207031px",
                     height: "46px",
                     paddingRight: "5.98px",
-                    paddingLeft: "5.99px"
+                    paddingLeft: "5.99px",
                   }}
                 >
-                  <p 
+                  <p
                     className="font-plusjakarta text-center"
                     style={{
                       width: "335px",
@@ -315,7 +316,7 @@ export default function ContactUsPage() {
                       fontWeight: 400,
                       fontSize: "14px",
                       lineHeight: "22.75px",
-                      color: "#666666"
+                      color: "#666666",
                     }}
                   >
                     {method.description}
@@ -337,7 +338,7 @@ export default function ContactUsPage() {
         </div>
 
         {/* Main Content Section */}
-        <div 
+        <div
           className="relative font-plusjakarta mx-auto"
           style={{
             width: "100%",
@@ -347,7 +348,7 @@ export default function ContactUsPage() {
             borderRadius: "48px",
             padding: "48px",
             backgroundColor: "#FFFFFF",
-            boxSizing: "border-box"
+            boxSizing: "border-box",
           }}
         >
           {/* Yellow Blur Overlay - Top Right */}
@@ -356,37 +357,41 @@ export default function ContactUsPage() {
             style={{
               width: "400px",
               height: "400px",
-              background: "radial-gradient(circle, #FFCF55 0%, transparent 70%)",
+              background:
+                "radial-gradient(circle, #FFCF55 0%, transparent 70%)",
               filter: "blur(64px)",
               opacity: 0.5,
-              borderRadius: "48px"
+              borderRadius: "48px",
             }}
           ></div>
 
-          <div className="relative flex gap-12 font-plusjakarta" style={{ gap: "48px" }}>
+          <div
+            className="relative flex gap-12 font-plusjakarta"
+            style={{ gap: "48px" }}
+          >
             {/* Left Sidebar - Office Locations & Hours */}
-            <div 
+            <div
               className="font-plusjakarta"
               style={{
                 width: "377px",
                 height: "547px",
                 display: "flex",
                 flexDirection: "column",
-                gap: "32px"
+                gap: "32px",
               }}
             >
               {/* Send us a message Header */}
-              <div 
+              <div
                 className="font-plusjakarta"
                 style={{
                   width: "377px",
                   height: "104px",
                   gap: "15.4px",
                   display: "flex",
-                  flexDirection: "column"
+                  flexDirection: "column",
                 }}
               >
-                <h2 
+                <h2
                   className="font-plusjakarta"
                   style={{
                     width: "377px",
@@ -395,27 +400,28 @@ export default function ContactUsPage() {
                     fontWeight: 700,
                     fontSize: "30px",
                     lineHeight: "36px",
-                    color: "#1a1a1a"
+                    color: "#1a1a1a",
                   }}
                 >
                   Send us a message
                 </h2>
-                <p 
+                <p
                   className="font-plusjakarta"
                   style={{
                     fontFamily: "Plus Jakarta Sans",
                     fontWeight: 400,
                     fontSize: "16px",
                     lineHeight: "26px",
-                    color: "#666666"
+                    color: "#666666",
                   }}
                 >
-                  Fill out the form and our team will get back to you as soon as possible.
+                  Fill out the form and our team will get back to you as soon as
+                  possible.
                 </p>
               </div>
 
               {/* Office Locations Box */}
-              <div 
+              <div
                 className="bg-[#FCFAF5] font-plusjakarta"
                 style={{
                   width: "377px",
@@ -425,49 +431,49 @@ export default function ContactUsPage() {
                   border: "1px solid #E5E7EB",
                   padding: "23.8px",
                   display: "flex",
-                  flexDirection: "column"
+                  flexDirection: "column",
                 }}
               >
-                <div 
+                <div
                   className="flex items-center font-plusjakarta"
                   style={{
                     width: "328px",
                     height: "24px",
-                    gap: "8px"
+                    gap: "8px",
                   }}
                 >
-                  <Image 
+                  <Image
                     src="/images/officelocation.png"
                     alt="Office Location"
                     width={20}
                     height={20}
                   />
-                  <h3 
+                  <h3
                     className="font-plusjakarta"
                     style={{
                       fontFamily: "Plus Jakarta Sans",
                       fontWeight: 700,
                       fontSize: "16px",
                       lineHeight: "24px",
-                      color: "#1a1a1a"
+                      color: "#1a1a1a",
                     }}
                   >
                     Office Locations
                   </h3>
                 </div>
 
-                <div 
+                <div
                   className="font-plusjakarta"
                   style={{
                     width: "328px",
                     height: "144px",
                     gap: "24px",
                     display: "flex",
-                    flexDirection: "column"
+                    flexDirection: "column",
                   }}
                 >
                   <div className="font-plusjakarta">
-                    <p 
+                    <p
                       className="font-plusjakarta mb-1"
                       style={{
                         fontFamily: "Plus Jakarta Sans",
@@ -475,19 +481,19 @@ export default function ContactUsPage() {
                         fontSize: "12px",
                         lineHeight: "16px",
                         textTransform: "uppercase",
-                        color: "#1a1a1a"
+                        color: "#1a1a1a",
                       }}
                     >
                       UNITED KINGDOM
                     </p>
-                    <p 
+                    <p
                       className="font-plusjakarta"
                       style={{
                         fontFamily: "Plus Jakarta Sans",
                         fontWeight: 400,
                         fontSize: "14px",
                         lineHeight: "20px",
-                        color: "#666666"
+                        color: "#666666",
                       }}
                     >
                       71-75 Shelton Street, Covent Garden, London. WC2H 9JQ
@@ -495,7 +501,7 @@ export default function ContactUsPage() {
                   </div>
 
                   <div className="font-plusjakarta">
-                    <p 
+                    <p
                       className="font-plusjakarta mb-1"
                       style={{
                         fontFamily: "Plus Jakarta Sans",
@@ -503,19 +509,19 @@ export default function ContactUsPage() {
                         fontSize: "12px",
                         lineHeight: "16px",
                         textTransform: "uppercase",
-                        color: "#1a1a1a"
+                        color: "#1a1a1a",
                       }}
                     >
                       UNITED STATES
                     </p>
-                    <p 
+                    <p
                       className="font-plusjakarta"
                       style={{
                         fontFamily: "Plus Jakarta Sans",
                         fontWeight: 400,
                         fontSize: "14px",
                         lineHeight: "20px",
-                        color: "#666666"
+                        color: "#666666",
                       }}
                     >
                       16192 Coastal Highway, Lewes, Delaware. 19958
@@ -525,7 +531,7 @@ export default function ContactUsPage() {
               </div>
 
               {/* Office Hours Box */}
-              <div 
+              <div
                 className="font-plusjakarta"
                 style={{
                   width: "377px",
@@ -534,19 +540,20 @@ export default function ContactUsPage() {
                   borderRadius: "24px",
                   padding: "24px",
                   backgroundColor: "#104901",
-                  boxShadow: "0px 4px 6px -4px rgba(0, 0, 0, 0.1), 0px 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                  boxShadow:
+                    "0px 4px 6px -4px rgba(0, 0, 0, 0.1), 0px 10px 15px -3px rgba(0, 0, 0, 0.1)",
                   display: "flex",
-                  flexDirection: "column"
+                  flexDirection: "column",
                 }}
               >
                 <div className="flex items-center gap-2 font-plusjakarta">
-                  <Image 
+                  <Image
                     src="/images/timeicon.png"
                     alt="Time"
                     width={20}
                     height={20}
                   />
-                  <h3 
+                  <h3
                     className="font-plusjakarta"
                     style={{
                       width: "99px",
@@ -555,13 +562,13 @@ export default function ContactUsPage() {
                       fontWeight: 700,
                       fontSize: "16px",
                       lineHeight: "24px",
-                      color: "#FFFFFF"
+                      color: "#FFFFFF",
                     }}
                   >
                     Office Hours
                   </h3>
                 </div>
-                <p 
+                <p
                   className="font-plusjakarta"
                   style={{
                     width: "329px",
@@ -570,7 +577,7 @@ export default function ContactUsPage() {
                     fontWeight: 400,
                     fontSize: "14px",
                     lineHeight: "20px",
-                    color: "#D1FAE5"
+                    color: "#D1FAE5",
                   }}
                 >
                   <strong>Monday - Friday</strong>
@@ -581,7 +588,7 @@ export default function ContactUsPage() {
             </div>
 
             {/* Right Side - Contact Form */}
-            <div 
+            <div
               className="font-plusjakarta bg-white"
               style={{
                 width: "758px",
@@ -589,39 +596,39 @@ export default function ContactUsPage() {
                 borderRadius: "24px",
                 border: "1px solid #F3F4F6",
                 padding: "31.8px",
-                boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.05)"
+                boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.05)",
               }}
             >
-              <form 
-                onSubmit={handleSubmit} 
+              <form
+                onSubmit={handleSubmit}
                 className="font-plusjakarta"
                 style={{
                   width: "692px",
                   height: "481px",
                   gap: "24px",
                   display: "flex",
-                  flexDirection: "column"
+                  flexDirection: "column",
                 }}
               >
                 {/* Name and Email Row */}
-                <div 
+                <div
                   className="font-plusjakarta"
                   style={{
                     width: "692px",
                     height: "76px",
                     gap: "23.99px",
-                    display: "flex"
+                    display: "flex",
                   }}
                 >
                   {/* Name Field */}
-                  <div 
+                  <div
                     className="font-plusjakarta"
                     style={{
                       width: "334px",
                       height: "76px",
                       gap: "8px",
                       display: "flex",
-                      flexDirection: "column"
+                      flexDirection: "column",
                     }}
                   >
                     <label
@@ -634,7 +641,7 @@ export default function ContactUsPage() {
                         fontWeight: 700,
                         fontSize: "14px",
                         lineHeight: "20px",
-                        color: "#1a1a1a"
+                        color: "#1a1a1a",
                       }}
                     >
                       Name
@@ -656,21 +663,21 @@ export default function ContactUsPage() {
                         backgroundColor: "#F9FAFB",
                         fontFamily: "Plus Jakarta Sans",
                         fontSize: "16px",
-                        lineHeight: "24px"
+                        lineHeight: "24px",
                       }}
                       placeholder="John Doe"
                     />
                   </div>
 
                   {/* Email Field */}
-                  <div 
+                  <div
                     className="font-plusjakarta"
                     style={{
                       width: "334px",
                       height: "76px",
                       gap: "8px",
                       display: "flex",
-                      flexDirection: "column"
+                      flexDirection: "column",
                     }}
                   >
                     <label
@@ -683,7 +690,7 @@ export default function ContactUsPage() {
                         fontWeight: 700,
                         fontSize: "14px",
                         lineHeight: "20px",
-                        color: "#1a1a1a"
+                        color: "#1a1a1a",
                       }}
                     >
                       Email
@@ -705,7 +712,7 @@ export default function ContactUsPage() {
                         backgroundColor: "#F9FAFB",
                         fontFamily: "Plus Jakarta Sans",
                         fontSize: "16px",
-                        lineHeight: "24px"
+                        lineHeight: "24px",
                       }}
                       placeholder="john@example.com"
                     />
@@ -713,14 +720,14 @@ export default function ContactUsPage() {
                 </div>
 
                 {/* Subject Field */}
-                <div 
+                <div
                   className="font-plusjakarta"
                   style={{
                     width: "692px",
                     height: "76px",
                     gap: "8px",
                     display: "flex",
-                    flexDirection: "column"
+                    flexDirection: "column",
                   }}
                 >
                   <label
@@ -733,7 +740,7 @@ export default function ContactUsPage() {
                       fontWeight: 700,
                       fontSize: "14px",
                       lineHeight: "20px",
-                      color: "#1a1a1a"
+                      color: "#1a1a1a",
                     }}
                   >
                     Subject
@@ -756,7 +763,7 @@ export default function ContactUsPage() {
                       fontWeight: 400,
                       fontSize: "16px",
                       lineHeight: "24px",
-                      color: "#666666"
+                      color: "#666666",
                     }}
                   >
                     <option value="">Select a topic</option>
@@ -770,7 +777,7 @@ export default function ContactUsPage() {
                 </div>
 
                 {/* Message Field */}
-                <div 
+                <div
                   className="font-plusjakarta"
                   style={{
                     width: "692px",
@@ -778,7 +785,7 @@ export default function ContactUsPage() {
                     paddingBottom: "5.6px",
                     gap: "8px",
                     display: "flex",
-                    flexDirection: "column"
+                    flexDirection: "column",
                   }}
                 >
                   <label
@@ -791,7 +798,7 @@ export default function ContactUsPage() {
                       fontWeight: 700,
                       fontSize: "14px",
                       lineHeight: "20px",
-                      color: "#1a1a1a"
+                      color: "#1a1a1a",
                     }}
                   >
                     Message
@@ -815,7 +822,7 @@ export default function ContactUsPage() {
                       fontSize: "16px",
                       lineHeight: "24px",
                       resize: "none",
-                      overflow: "auto"
+                      overflow: "auto",
                     }}
                     placeholder="How can we help you?"
                   />
@@ -835,10 +842,11 @@ export default function ContactUsPage() {
                     color: "#FFFFFF",
                     border: "none",
                     cursor: "pointer",
-                    boxShadow: "0px 4px 6px -4px rgba(6, 78, 59, 0.1), 0px 10px 15px -3px rgba(6, 78, 59, 0.1)"
+                    boxShadow:
+                      "0px 4px 6px -4px rgba(6, 78, 59, 0.1), 0px 10px 15px -3px rgba(6, 78, 59, 0.1)",
                   }}
                 >
-                  <Image 
+                  <Image
                     src="/images/sendmessageicon.png"
                     alt="Send"
                     width={20}
@@ -853,7 +861,7 @@ export default function ContactUsPage() {
                       fontWeight: 700,
                       fontSize: "16px",
                       lineHeight: "24px",
-                      textAlign: "center"
+                      textAlign: "center",
                     }}
                   >
                     Send Message
