@@ -118,7 +118,7 @@ const Navbar = (props: Props) => {
               </Link>
             )}
             <div className="flex items-center justify-center gap-3"></div>
-            <Button className="w-full px-4 py-3 border-2 border-white text-base font-semibold rounded-none">
+            <Button className="w-full px-4 py-3 border-2 border-white text-base font-semibold rounded-none" onClick={handleCreateCampaign}>
               Start a Campaign
             </Button>
           </div>

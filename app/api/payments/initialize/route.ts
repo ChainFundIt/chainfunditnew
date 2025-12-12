@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get authenticated user or create guest user
+    // Get authenticated user or create/resolve guest user
     const userEmail = await getUserFromRequest(request);
     let user;
 
@@ -67,20 +67,52 @@ export async function POST(request: NextRequest) {
       }
       user = userResult[0];
     } else {
-      // Create guest user for anonymous donations
-      // Use the email provided by the donor, or generate a guest email if not provided
-      const donorEmail = email || `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}@chainfundit.com`;
-      const guestUser = await db
-        .insert(users)
-        .values({
-          email: donorEmail,
-          fullName: "Anonymous Donor",
-          isVerified: false,
-          hasCompletedProfile: false,
-        })
-        .returning();
+      /**
+       * Guest donations:
+       * - Mobile users are often not authenticated, but may enter an email that already exists.
+       * - `users.email` is unique, so blindly inserting will throw and bubble up as "Internal server error".
+       * Strategy: find-or-create by email (and tolerate race conditions).
+       */
+      const donorEmail =
+        (typeof email === "string" && email.trim())
+          ? email.trim().toLowerCase()
+          : `guest_${Date.now()}_${Math.random().toString(36).slice(2, 11)}@chainfundit.com`;
 
-      user = guestUser[0];
+      const existingUser = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, donorEmail))
+        .limit(1);
+
+      if (existingUser.length) {
+        user = existingUser[0];
+      } else {
+        try {
+          const guestUser = await db
+            .insert(users)
+            .values({
+              email: donorEmail,
+              fullName: "Anonymous Donor",
+              isVerified: false,
+              hasCompletedProfile: false,
+            })
+            .returning();
+
+          user = guestUser[0];
+        } catch (insertErr) {
+          // If another request created this email concurrently, re-fetch.
+          const refetch = await db
+            .select()
+            .from(users)
+            .where(eq(users.email, donorEmail))
+            .limit(1);
+
+          if (!refetch.length) {
+            throw insertErr;
+          }
+          user = refetch[0];
+        }
+      }
     }
 
     // Validate campaign can accept donations
@@ -205,12 +237,18 @@ export async function POST(request: NextRequest) {
           campaignSlug: campaign.slug,
         };
 
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
+        const callbackUrl = new URL(
+          "/api/payments/paystack/callback",
+          appUrl
+        ).toString();
+
         const paystackResponse = await initializePaystackPayment(
           user.email!,
           amount,
           currency,
           campaignMetadata,
-          `${process.env.NEXT_PUBLIC_APP_URL}api/payments/paystack/callback`
+          callbackUrl
         );
 
         paymentResult = {

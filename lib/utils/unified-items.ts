@@ -143,15 +143,10 @@ export function getCharityFallbackImage(category?: string): string {
  * Normalize a charity into a unified item
  */
 export function normalizeCharity(charity: any): UnifiedItem {
-  // Filter out clearbit.com URLs as they often return 403
-  const hasValidCoverImage = charity.coverImage && !charity.coverImage.includes('logo.clearbit.com');
-  const hasValidLogo = charity.logo && !charity.logo.includes('logo.clearbit.com');
-  
-  // Get image - prefer cover image, then logo, then fallback based on category
-  // Skip clearbit URLs as they're unreliable
-  const image = (hasValidCoverImage ? charity.coverImage : null) || 
-                (hasValidLogo ? charity.logo : null) || 
-                getCharityFallbackImage(charity.category);
+  // Get image - prefer cover image, then logo
+  // Don't use fallback - let the component handle showing heart icon placeholder
+  // Allow clearbit.com URLs to be passed through - component will handle errors
+  const image = charity.coverImage || charity.logo || null;
   const category = charity.category || 'Uncategorized';
 
   return {
