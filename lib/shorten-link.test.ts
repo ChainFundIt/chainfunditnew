@@ -8,6 +8,7 @@ describe('shortenLink', () => {
     jest.clearAllMocks();
     // Reset environment variable
     delete process.env.SHORT_IO_SECRET_KEY;
+    delete process.env.SHORT_IO_DOMAIN;
   });
 
   it('should return null when SHORT_IO_SECRET_KEY is not set', async () => {
@@ -16,33 +17,46 @@ describe('shortenLink', () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
+  it('should return null when SHORT_IO_DOMAIN is not set', async () => {
+    process.env.SHORT_IO_SECRET_KEY = 'test-api-key';
+    const result = await shortenLink('https://example.com/very-long-url');
+    expect(result).toBeNull();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it('should return null when API request fails', async () => {
-    process.env.SHORT_IO_SECRET_KEY = 'test-token';
+    process.env.SHORT_IO_SECRET_KEY = 'test-api-key';
+    process.env.SHORT_IO_DOMAIN = 'example.short.io';
     
     (fetch as jest.Mock).mockResolvedValueOnce({
       ok: false,
       status: 400,
+      statusText: 'Bad Request',
+      text: jest.fn().mockResolvedValue('{"error":"bad request"}'),
     });
 
     const result = await shortenLink('https://example.com/very-long-url');
     expect(result).toBeNull();
-    expect(fetch).toHaveBeenCalledWith('https://api.dub.co/links', {
+    expect(fetch).toHaveBeenCalledWith('https://api.short.io/links', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer test-token',
+        'Accept': 'application/json',
+        'Authorization': 'test-api-key',
       },
       body: JSON.stringify({
-        url: 'https://example.com/very-long-url',
+        originalURL: 'https://example.com/very-long-url',
+        domain: 'example.short.io',
       }),
     });
   });
 
   it('should return shortened URL when API request succeeds', async () => {
-    process.env.SHORT_IO_SECRET_KEY = 'test-token';
+    process.env.SHORT_IO_SECRET_KEY = 'test-api-key';
+    process.env.SHORT_IO_DOMAIN = 'example.short.io';
     
     const mockResponse = {
-      shortLink: 'https://dub.co/abc123',
+      shortURL: 'https://example.short.io/abc123',
     };
 
     (fetch as jest.Mock).mockResolvedValueOnce({
@@ -51,24 +65,27 @@ describe('shortenLink', () => {
     });
 
     const result = await shortenLink('https://example.com/very-long-url');
-    expect(result).toBe('https://dub.co/abc123');
-    expect(fetch).toHaveBeenCalledWith('https://api.dub.co/links', {
+    expect(result).toBe('https://example.short.io/abc123');
+    expect(fetch).toHaveBeenCalledWith('https://api.short.io/links', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer test-token',
+        'Accept': 'application/json',
+        'Authorization': 'test-api-key',
       },
       body: JSON.stringify({
-        url: 'https://example.com/very-long-url',
+        originalURL: 'https://example.com/very-long-url',
+        domain: 'example.short.io',
       }),
     });
   });
 
-  it('should return null when API response does not contain shortLink', async () => {
-    process.env.SHORT_IO_SECRET_KEY = 'test-token';
+  it('should return null when API response does not contain shortURL', async () => {
+    process.env.SHORT_IO_SECRET_KEY = 'test-api-key';
+    process.env.SHORT_IO_DOMAIN = 'example.short.io';
     
     const mockResponse = {
-      // No shortLink property
+      // No shortURL/secureShortURL property
     };
 
     (fetch as jest.Mock).mockResolvedValueOnce({
@@ -81,21 +98,25 @@ describe('shortenLink', () => {
   });
 
   it('should handle network errors gracefully', async () => {
-    process.env.SHORT_IO_SECRET_KEY = 'test-token';
+    process.env.SHORT_IO_SECRET_KEY = 'test-api-key';
+    process.env.SHORT_IO_DOMAIN = 'example.short.io';
     
     (fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
 
-    await expect(shortenLink('https://example.com/very-long-url')).rejects.toThrow('Network error');
+    const result = await shortenLink('https://example.com/very-long-url');
+    expect(result).toBeNull();
   });
 
   it('should handle JSON parsing errors gracefully', async () => {
-    process.env.SHORT_IO_SECRET_KEY = 'test-token';
+    process.env.SHORT_IO_SECRET_KEY = 'test-api-key';
+    process.env.SHORT_IO_DOMAIN = 'example.short.io';
     
     (fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: jest.fn().mockRejectedValue(new Error('Invalid JSON')),
     });
 
-    await expect(shortenLink('https://example.com/very-long-url')).rejects.toThrow('Invalid JSON');
+    const result = await shortenLink('https://example.com/very-long-url');
+    expect(result).toBeNull();
   });
 }); 

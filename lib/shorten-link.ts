@@ -1,31 +1,42 @@
 export async function shortenLink(longUrl: string): Promise<string | null> {
   const apiKey = process.env.SHORT_IO_SECRET_KEY;
-  if (!apiKey) {
-    console.warn('SHORT_IO_SECRET_KEY not configured, skipping link shortening');
+  const domain = process.env.SHORT_IO_DOMAIN;
+
+  if (!apiKey || !domain) {
+    console.warn(
+      "Short.io not configured (need SHORT_IO_SECRET_KEY + SHORT_IO_DOMAIN), skipping link shortening"
+    );
     return null;
   }
 
   try {
-    const res = await fetch("https://api.dub.co/links", {
+    const res = await fetch("https://api.short.io/links", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
+        Accept: "application/json",
+        // Short.io uses raw API key (not "Bearer <token>")
+        Authorization: apiKey,
       },
       body: JSON.stringify({
-        url: longUrl,
+        originalURL: longUrl,
+        domain,
       }),
     });
 
     if (!res.ok) {
-      console.error('Failed to shorten link:', res.status, res.statusText);
+      const errorBody = await res.text().catch(() => "");
+      console.error("Failed to shorten link:", res.status, res.statusText, errorBody);
       return null;
     }
-    
-    const data = await res.json();
-    return data.shortLink || null;
+
+    const data: unknown = await res.json();
+    if (!data || typeof data !== "object") return null;
+
+    const maybeShortURL = (data as any).secureShortURL ?? (data as any).shortURL;
+    return typeof maybeShortURL === "string" ? maybeShortURL : null;
   } catch (error) {
-    console.error('Error shortening link:', error);
+    console.error("Error shortening link:", error);
     return null;
   }
 }

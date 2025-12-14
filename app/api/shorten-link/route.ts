@@ -13,20 +13,12 @@ export async function POST(req: NextRequest) {
     }
 
     const shortUrl = await shortenLink(url);
-
-    if (!shortUrl) {
-      return NextResponse.json(
-        { error: "Failed to shorten link" },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ shortUrl });
+    // Never hard-fail the UX: if shortening fails (misconfig, 3rd-party error, etc),
+    // fall back to the original URL.
+    return NextResponse.json({ shortUrl: shortUrl ?? url, shortened: !!shortUrl });
   } catch (error) {
     console.error("Error shortening link:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    // Same fallback in case request parsing fails unexpectedly.
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 } 
