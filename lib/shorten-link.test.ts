@@ -9,6 +9,9 @@ describe('shortenLink', () => {
     // Reset environment variable
     delete process.env.SHORT_IO_SECRET_KEY;
     delete process.env.SHORT_IO_DOMAIN;
+    delete process.env.SHORT_IO_API_KEY;
+    delete process.env.SHORTIO_API_KEY;
+    delete process.env.SHORTIO_DOMAIN;
   });
 
   it('should return null when SHORT_IO_SECRET_KEY is not set', async () => {
@@ -17,11 +20,28 @@ describe('shortenLink', () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
-  it('should return null when SHORT_IO_DOMAIN is not set', async () => {
+  it('should attempt shortening even when SHORT_IO_DOMAIN is not set', async () => {
     process.env.SHORT_IO_SECRET_KEY = 'test-api-key';
+
+    const mockResponse = { shortURL: 'https://example.short.io/abc123' };
+    (fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValue(mockResponse),
+    });
+
     const result = await shortenLink('https://example.com/very-long-url');
-    expect(result).toBeNull();
-    expect(fetch).not.toHaveBeenCalled();
+    expect(result).toBe('https://example.short.io/abc123');
+    expect(fetch).toHaveBeenCalledWith('https://api.short.io/links', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'test-api-key',
+      },
+      body: JSON.stringify({
+        originalURL: 'https://example.com/very-long-url',
+      }),
+    });
   });
 
   it('should return null when API request fails', async () => {
