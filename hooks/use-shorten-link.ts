@@ -23,6 +23,12 @@ export function useShortenLink() {
         throw new Error(data.error || 'Failed to shorten link');
       }
 
+      // If backend fell back to the long URL, surface a useful message in state (but
+      // still return the fallback so the UI works).
+      if (data?.shortened === false && typeof data?.reason === 'string') {
+        setError(data.reason);
+      }
+
       return data.shortUrl;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to shorten link';

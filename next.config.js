@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const path = require("path");
+
 const nextConfig = {
   // Image optimization
   images: {
@@ -130,7 +132,8 @@ const nextConfig = {
 
   // Turbopack configuration (required for Next.js 16+)
   turbopack: {
-    // Empty config to silence the error - webpack config will be used when --webpack flag is set
+    // Force Turbopack root to this project to avoid monorepo lockfile inference
+    root: path.resolve(__dirname),
   },
 
   // Trailing slash
