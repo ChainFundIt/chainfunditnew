@@ -5,6 +5,7 @@ import { eq, and } from 'drizzle-orm';
 import { isSubscriptionDueForBilling } from '@/lib/utils/recurring-donations';
 import { processRecurringDonationPayment } from '@/lib/services/subscription-service';
 import { getCronDisabledResponse } from '@/lib/utils/cron-control';
+import { requireCronAuth } from '@/lib/utils/cron-auth';
 
 export const runtime = 'nodejs';
 
@@ -18,28 +19,16 @@ export const runtime = 'nodejs';
  * - External Cron Service: Schedule daily
  * - Schedule: "0 2 * * *" (Every day at 2:00 AM UTC)
  */
-export async function POST(request: NextRequest) {
+async function runRecurringDonationsCron(request: NextRequest) {
   const disabledResponse = getCronDisabledResponse('process-recurring-donations');
   if (disabledResponse) {
     return disabledResponse;
   }
 
+  const authError = requireCronAuth(request);
+  if (authError) return authError;
+
   try {
-    // Verify this is a legitimate cron request
-    const authHeader = request.headers.get('authorization');
-    const vercelSignature = request.headers.get('x-vercel-signature');
-    const netlifySignature = request.headers.get('x-netlify-signature');
-    const cronSecret = process.env.CRON_SECRET;
-
-    if (cronSecret) {
-      if (authHeader !== `Bearer ${cronSecret}` && !vercelSignature && !netlifySignature) {
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 401 }
-        );
-      }
-    }
-
     const results = {
       processed: 0,
       failed: 0,
@@ -114,21 +103,19 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function POST(request: NextRequest) {
+  return runRecurringDonationsCron(request);
+}
+
 /**
  * GET /api/cron/process-recurring-donations
- * Allow manual triggering for testing (only in development)
+ * Vercel Cron calls GET.
  */
 export async function GET(request: NextRequest) {
   const disabledResponse = getCronDisabledResponse('process-recurring-donations');
   if (disabledResponse) {
     return disabledResponse;
   }
-
-  if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json({ error: 'Not available in production' }, { status: 403 });
-  }
-
-  // Call POST handler
-  return POST(request);
+  return runRecurringDonationsCron(request);
 }
 

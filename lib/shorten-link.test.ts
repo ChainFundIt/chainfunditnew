@@ -7,17 +7,17 @@ describe('shortenLink', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // Reset environment variable
-    delete process.env.DUB_CO_TOKEN;
+    delete process.env.SHORT_IO_SECRET_KEY;
   });
 
-  it('should return null when DUB_CO_TOKEN is not set', async () => {
+  it('should return null when SHORT_IO_SECRET_KEY is not set', async () => {
     const result = await shortenLink('https://example.com/very-long-url');
     expect(result).toBeNull();
     expect(fetch).not.toHaveBeenCalled();
   });
 
   it('should return null when API request fails', async () => {
-    process.env.DUB_CO_TOKEN = 'test-token';
+    process.env.SHORT_IO_SECRET_KEY = 'test-token';
     
     (fetch as jest.Mock).mockResolvedValueOnce({
       ok: false,
@@ -39,7 +39,7 @@ describe('shortenLink', () => {
   });
 
   it('should return shortened URL when API request succeeds', async () => {
-    process.env.DUB_CO_TOKEN = 'test-token';
+    process.env.SHORT_IO_SECRET_KEY = 'test-token';
     
     const mockResponse = {
       shortLink: 'https://dub.co/abc123',
@@ -65,7 +65,7 @@ describe('shortenLink', () => {
   });
 
   it('should return null when API response does not contain shortLink', async () => {
-    process.env.DUB_CO_TOKEN = 'test-token';
+    process.env.SHORT_IO_SECRET_KEY = 'test-token';
     
     const mockResponse = {
       // No shortLink property
@@ -81,7 +81,7 @@ describe('shortenLink', () => {
   });
 
   it('should handle network errors gracefully', async () => {
-    process.env.DUB_CO_TOKEN = 'test-token';
+    process.env.SHORT_IO_SECRET_KEY = 'test-token';
     
     (fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
 
@@ -89,7 +89,7 @@ describe('shortenLink', () => {
   });
 
   it('should handle JSON parsing errors gracefully', async () => {
-    process.env.DUB_CO_TOKEN = 'test-token';
+    process.env.SHORT_IO_SECRET_KEY = 'test-token';
     
     (fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,

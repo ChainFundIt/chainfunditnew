@@ -1,30 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { closeEligibleCampaigns, getCampaignClosureStats } from '@/lib/utils/campaign-closure';
-import { toast } from 'sonner';
 import { getCronDisabledResponse } from '@/lib/utils/cron-control';
+import { requireCronAuth } from '@/lib/utils/cron-auth';
 
-/**
- * POST /api/cron/close-campaigns - Scheduled job to automatically close campaigns
- * This endpoint should be called by a cron job or scheduler
- */
-export async function POST(request: NextRequest) {
+async function runCloseCampaigns(request: NextRequest) {
   const disabledResponse = getCronDisabledResponse('close-campaigns');
   if (disabledResponse) {
     return disabledResponse;
   }
 
-  try {
-    // Verify this is a legitimate cron request
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
-    
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+  const authError = requireCronAuth(request);
+  if (authError) return authError;
 
+  try {
     const startTime = Date.now();
     const result = await closeEligibleCampaigns();
     const endTime = Date.now();
@@ -49,7 +37,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    toast.error('Campaign closure job failed: ' + error);
+    console.error('[cron] close-campaigns failed', error);
     return NextResponse.json(
       { 
         success: false, 
@@ -70,25 +58,33 @@ export async function GET(request: NextRequest) {
     return disabledResponse;
   }
 
-  try {
-    const stats = await getCampaignClosureStats();
-    
-    return NextResponse.json({
-      success: true,
-      message: 'Campaign closure job information',
-      data: {
-        stats,
-        description: 'This endpoint automatically closes campaigns that have reached their goal or expired',
-        schedule: 'Should be called every hour or daily depending on requirements',
-        lastRun: 'Not tracked - implement logging if needed'
-      }
-    });
+  const authError = requireCronAuth(request);
+  if (authError) return authError;
 
-  } catch (error) {
-    toast.error('Error getting campaign closure job info: ' + error);
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    );
+  const info = request.nextUrl.searchParams.get('info');
+  if (info === '1' || info === 'true') {
+    try {
+      const stats = await getCampaignClosureStats();
+      return NextResponse.json({
+        success: true,
+        message: 'Campaign closure job information',
+        data: {
+          stats,
+          description: 'This endpoint automatically closes campaigns that have reached their goal or expired',
+          schedule: 'Vercel Cron runs this via GET',
+          lastRun: 'Not tracked - implement logging if needed',
+        },
+      });
+    } catch (error) {
+      console.error('[cron] close-campaigns info failed', error);
+      return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
+    }
   }
+
+  // Default behavior: execute the job (Vercel Cron calls GET)
+  return runCloseCampaigns(request);
+}
+
+export async function POST(request: NextRequest) {
+  return runCloseCampaigns(request);
 }

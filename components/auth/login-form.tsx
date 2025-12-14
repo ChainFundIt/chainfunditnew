@@ -177,7 +177,7 @@ export function LoginForm({
             Log in to your Account.
           </h2>
           <p className="text-xs text-gray-600">
-            Welcome back! Select method to log in:
+            Welcome back! Select your preferred method to log in:
           </p>
         </div>
 

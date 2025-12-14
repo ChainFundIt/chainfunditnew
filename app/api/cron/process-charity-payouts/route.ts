@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { processBatchPayouts } from '@/lib/payments/charity-payouts';
-import { toast } from 'sonner';
 import { getCronDisabledResponse } from '@/lib/utils/cron-control';
+import { requireCronAuth } from '@/lib/utils/cron-auth';
+
+export const runtime = 'nodejs';
 
 /**
  * GET /api/cron/process-charity-payouts
@@ -11,7 +13,7 @@ import { getCronDisabledResponse } from '@/lib/utils/cron-control';
  * 
  * Setup in Vercel:
  * 1. Go to Project Settings > Cron Jobs
- * 2. Add a new cron job with schedule: "0 0 * * 1" (Every Monday at midnight)
+ * 2. Add a new cron job with schedule: "0 0 * * *" (Everyday at midnight)
  * 3. URL: /api/cron/process-charity-payouts
  */
 export async function GET(request: NextRequest) {
@@ -20,18 +22,10 @@ export async function GET(request: NextRequest) {
     return disabledResponse;
   }
 
+  const authError = requireCronAuth(request);
+  if (authError) return authError;
+
   try {
-    // Optional: Add authentication/authorization
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
-
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     // Minimum payout amount (default: $100)
     const minAmount = parseFloat(process.env.MIN_CHARITY_PAYOUT_AMOUNT || '100');
 
@@ -60,7 +54,7 @@ export async function GET(request: NextRequest) {
       summary,
     });
   } catch (error) {
-    toast.error('Error processing charity payouts: ' + error);
+    console.error('[cron] process-charity-payouts failed', error);
     return NextResponse.json(
       { 
         error: 'Failed to process charity payouts: ' + error,

@@ -6,6 +6,7 @@ import { users } from '@/lib/schema';
 import { or, eq, and } from 'drizzle-orm';
 import { sendUserDailySummary, sendAdminDailySummary } from '@/lib/notifications/summary-reports';
 import { getCronDisabledResponse } from '@/lib/utils/cron-control';
+import { requireCronAuth } from '@/lib/utils/cron-auth';
 
 export const runtime = 'nodejs';
 
@@ -19,35 +20,16 @@ export const runtime = 'nodejs';
  * - External Cron Service: Use EasyCron, Cron-job.org, etc.
  * - Schedule: "0 9 * * *" (Every day at 9:00 AM UTC)
  */
-export async function POST(request: NextRequest) {
+async function runDailySummaries(request: NextRequest) {
   const disabledResponse = getCronDisabledResponse('send-daily-summaries');
   if (disabledResponse) {
     return disabledResponse;
   }
 
+  const authError = requireCronAuth(request);
+  if (authError) return authError;
+
   try {
-    // Verify this is a legitimate cron request
-    const authHeader = request.headers.get('authorization');
-    const vercelSignature = request.headers.get('x-vercel-signature');
-    const netlifySignature = request.headers.get('x-netlify-signature');
-    const cronSecret = process.env.CRON_SECRET;
-    const isDevelopment = process.env.NODE_ENV !== 'production';
-
-    // In production, require authentication
-    // In development, allow without auth for easier testing
-    if (!isDevelopment && cronSecret) {
-      // Allow if:
-      // 1. Authorization header matches CRON_SECRET, OR
-      // 2. Vercel signature is present (Vercel Cron), OR
-      // 3. Netlify signature is present (Netlify Scheduled Functions)
-      if (authHeader !== `Bearer ${cronSecret}` && !vercelSignature && !netlifySignature) {
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 401 }
-        );
-      }
-    }
-
     const results = {
       users: { sent: 0, failed: 0, skipped: 0 },
       admins: { sent: 0, failed: 0, skipped: 0 },
@@ -140,21 +122,19 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function POST(request: NextRequest) {
+  return runDailySummaries(request);
+}
+
 /**
  * GET /api/cron/send-daily-summaries
- * Allow manual triggering for testing (only in development)
+ * Vercel Cron calls GET.
  */
 export async function GET(request: NextRequest) {
   const disabledResponse = getCronDisabledResponse('send-daily-summaries');
   if (disabledResponse) {
     return disabledResponse;
   }
-
-  if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json({ error: 'Not available in production' }, { status: 403 });
-  }
-
-  // Call POST handler (authentication is skipped in development)
-  return POST(request);
+  return runDailySummaries(request);
 }
 

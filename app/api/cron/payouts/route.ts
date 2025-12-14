@@ -1,39 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { retryFailedPayouts } from '@/lib/payments/payout-retry';
 import { processAutomatedCharityPayouts } from '@/lib/payments/automated-charity-payouts';
-import { toast } from 'sonner';
 import { getCronDisabledResponse } from '@/lib/utils/cron-control';
+import { requireCronAuth } from '@/lib/utils/cron-auth';
 
 export const runtime = 'nodejs';
 
 /**
- * POST /api/cron/payouts
- * Cron job endpoint for automated payout processing
- * Should be called by a cron service (e.g., Vercel Cron, GitHub Actions, etc.)
+ * GET/POST /api/cron/payouts
+ * Vercel Cron calls GET. We keep POST for manual/external schedulers.
  */
-export async function POST(request: NextRequest) {
+async function runPayoutCron(request: NextRequest) {
   const disabledResponse = getCronDisabledResponse('payouts');
-  if (disabledResponse) {
-    return disabledResponse;
-  }
+  if (disabledResponse) return disabledResponse;
+
+  const authError = requireCronAuth(request);
+  if (authError) return authError;
 
   try {
-    // Verify cron secret
-    // Vercel Cron sends x-vercel-signature header, but we'll use CRON_SECRET for flexibility
-    const authHeader = request.headers.get('authorization');
-    const vercelSignature = request.headers.get('x-vercel-signature');
-    const cronSecret = process.env.CRON_SECRET;
-
-    // Allow if:
-    // 1. CRON_SECRET is set and Authorization header matches, OR
-    // 2. CRON_SECRET is not set (for local dev/testing), OR
-    // 3. Vercel signature is present (Vercel Cron)
-    if (cronSecret) {
-      if (authHeader !== `Bearer ${cronSecret}` && !vercelSignature) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
-    }
-
     const results = {
       retry: null as any,
       charityPayouts: null as any,
@@ -46,18 +30,18 @@ export async function POST(request: NextRequest) {
         retryDelayMinutes: 60,
       });
     } catch (error) {
-      toast.error('Error retrying failed payouts: ' + error);
+      console.error('[cron] payouts: retryFailedPayouts failed', error);
       results.retry = {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error: ' + error,
       };
     }
 
-    // 2. Process automated charity payouts
+    // 2. Process automated charity payouts (create, don't auto-process)
     try {
-      results.charityPayouts = await processAutomatedCharityPayouts(100, false); // Don't auto-process, just create
+      results.charityPayouts = await processAutomatedCharityPayouts(100, false);
     } catch (error) {
-      toast.error('Error processing automated charity payouts: ' + error);
+      console.error('[cron] payouts: processAutomatedCharityPayouts failed', error);
       results.charityPayouts = {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error: ' + error,
@@ -70,7 +54,7 @@ export async function POST(request: NextRequest) {
       results,
     });
   } catch (error) {
-    toast.error('Error in cron payout endpoint: ' + error);
+    console.error('[cron] payouts endpoint failed', error);
     return NextResponse.json(
       {
         success: false,
@@ -81,20 +65,31 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function POST(request: NextRequest) {
+  return runPayoutCron(request);
+}
+
 /**
  * GET /api/cron/payouts
- * Health check endpoint
+ * Executes payout cron by default (Vercel Cron calls GET).
+ * Use `?health=1` for a lightweight health response.
  */
 export async function GET(request: NextRequest) {
   const disabledResponse = getCronDisabledResponse('payouts');
-  if (disabledResponse) {
-    return disabledResponse;
+  if (disabledResponse) return disabledResponse;
+
+  const authError = requireCronAuth(request);
+  if (authError) return authError;
+
+  const health = request.nextUrl.searchParams.get('health');
+  if (health === '1' || health === 'true') {
+    return NextResponse.json({
+      status: 'ok',
+      service: 'payout-cron',
+      timestamp: new Date().toISOString(),
+    });
   }
 
-  return NextResponse.json({
-    status: 'ok',
-    service: 'payout-cron',
-    timestamp: new Date().toISOString(),
-  });
+  return runPayoutCron(request);
 }
 

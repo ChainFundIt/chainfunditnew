@@ -4,7 +4,6 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { FaGoogle, FaDiscord } from "react-icons/fa";
 import { toast } from "sonner";
-import { authClient } from "@/lib/auth-client";
 
 interface OAuthButtonsProps {
   mode?: "signin" | "signup";
@@ -17,14 +16,10 @@ export function OAuthButtons({
 }: OAuthButtonsProps) {
   const handleOAuthSignIn = async (provider: "google" | "discord") => {
     try {
-      if (provider === "google") {
-        await authClient.signIn.social({ provider: "google" });
-        return;
-      }
-      
-      // Redirect to BetterAuth OAuth endpoint
-      const url = `/api/auth/betterauth?provider=${provider}`;
-      window.location.href = url;
+      // Use NextAuth OAuth routes (configured at `app/api/oauth/[...nextauth]/route.ts`).
+      // NextAuth will handle provider redirects and our NextAuth `redirect` callback
+      // will send the user to `/api/auth/oauth-callback` to convert the session to JWT cookies.
+      window.location.href = `/api/oauth/signin/${provider}`;
     } catch (error) {
       console.error(`${provider} sign-in error:`, error);
       toast.error(`Unable to sign in with ${provider}. Please try again or use email/phone instead.`);

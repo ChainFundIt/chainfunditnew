@@ -4,14 +4,17 @@ import { donations } from '@/lib/schema/donations';
 import { notifications } from '@/lib/schema/notifications';
 import { campaigns } from '@/lib/schema/campaigns';
 import { eq, and, lt } from 'drizzle-orm';
-import { toast } from 'sonner';
 import { getCronDisabledResponse } from '@/lib/utils/cron-control';
+import { requireCronAuth } from '@/lib/utils/cron-auth';
 
 export async function GET(request: NextRequest) {
   const disabledResponse = getCronDisabledResponse('cleanup-pending-donations');
   if (disabledResponse) {
     return disabledResponse;
   }
+
+  const authError = requireCronAuth(request);
+  if (authError) return authError;
 
   try {
     // Find pending donations older than 1 hour
@@ -88,7 +91,10 @@ export async function GET(request: NextRequest) {
 
         cleanedCount++;
       } catch (error) {
-        toast.error('Error updating donation: ' + error);
+        console.error('[cron] cleanup-pending-donations failed to update donation', {
+          donationId: donation.id,
+          error,
+        });
       }
     }
 
@@ -99,7 +105,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    toast.error('Cleanup failed: ' + error);
+    console.error('[cron] cleanup-pending-donations failed', error);
     return NextResponse.json(
       { success: false, error: 'Cleanup failed' },
       { status: 500 }

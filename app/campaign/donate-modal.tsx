@@ -62,6 +62,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [anonymous, setAnonymous] = useState(false);
+  const [emailError, setEmailError] = useState(""); 
   const [comments, setComments] = useState("");
   const [paymentProvider, setPaymentProvider] = useState<PaymentProvider>("stripe");
   const [supportedProviders, setSupportedProviders] = useState<PaymentProvider[]>([]);
@@ -118,6 +119,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
 
   const handleDonate = () => {
     if (!email.trim()) {
+      setEmailError("Email is required");
       toast.error("Email is required");
       return;
     }
@@ -557,6 +559,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
                           color: "#1a1a1a"
                         }}
                       />
+                      {emailError && <p className="text-red-500 text-sm mt-1">{emailError}</p>}
                     </div>
                   </div>
                 ) : (
@@ -632,6 +635,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
                           color: "#1a1a1a"
                         }}
                       />
+                      {emailError && <p className="text-red-500 text-sm mt-1">{emailError}</p>}
                     </div>
                     <div>
                       <label
