@@ -9,11 +9,15 @@ export interface ThemeFeature {
 export interface ThemeConfig {
   mainHeading: string;
   mainDescription: string;
+  carouselSlides?: Array<{
+    heading: string;
+    description: string;
+  }>;
   images: string[];
   features: ThemeFeature[];
 }
 
-export const themes: Record<string, ThemeConfig> = {
+const themeConfigs: Record<string, ThemeConfig> = {
   default: {
     mainHeading: "Maximise your fundraising efforts",
     mainDescription: "We'll handle the grueling campaign management, so you can do what matters most - getting donations",
@@ -43,9 +47,21 @@ export const themes: Record<string, ThemeConfig> = {
       },
     ],
   },
-  christmas: {
-    mainHeading: "Spread Christmas Joy Through Giving",
-    mainDescription: "This festive season, let's come together to support causes that matter. Every donation brings hope and joy to those in need",
+  Christmas: {
+    mainHeading: "Turn Holiday Cheer into Real Impact",
+    mainDescription: "Your generosity this Christmas can light up lives. Support campaigns promising to bring warmth, care, and hope to communities in dire need.",
+    carouselSlides: [
+      {
+        heading: "Turn Holiday Cheer into Real Impact",
+        description:
+          "Your generosity this Christmas can light up lives. Support campaigns promising to bring warmth, care, and hope to communities in dire need.",
+      },
+      {
+        heading: "Season of Giving, Season of Change",
+        description:
+          "Make the holiday meaningful by contributing toward causes that bring smiles, support families, and create lasting joy.",
+      },
+    ],
     images: [
       "/images/christmas-donation-1.jpg",
       "/images/christmas-donation-2.jpg",
@@ -72,9 +88,21 @@ export const themes: Record<string, ThemeConfig> = {
       },
     ],
   },
-  valentines: {
-    mainHeading: "Share Love, Support Causes",
-    mainDescription: "This Valentine's Day, show your love by supporting meaningful causes. Every donation is an act of love that creates lasting impact",
+  Valentine: {
+    mainHeading: "Love That Makes a Difference",
+    mainDescription: "The best way to celebrate the spirit of love is by uplifting someone else. Your gesture of support can make a huge impact in someone’s life.",
+    carouselSlides: [
+      {
+        heading: "Love That Makes a Difference",
+        description:
+          "The best way to celebrate the spirit of love is by uplifting someone else. Your gesture of support can make a huge impact in someone’s life.",
+      },
+      {
+        heading: "Turn Love into Impact",
+        description:
+          "This Valentine’s Day, let your love transcend words. Show your support for people, communities, and dreams that need care.",
+      },
+    ],
     images: [
       "/images/valentines-donation-1.jpg",
       "/images/valentines-donation-2.jpg",
@@ -101,9 +129,21 @@ export const themes: Record<string, ThemeConfig> = {
       },
     ],
   },
-  eid: {
-    mainHeading: "Eid Mubarak | Give with Generosity",
-    mainDescription: "Celebrate this blessed time by sharing your blessings with others. Your donations bring joy and support to communities during Eid",
+  Eid: {
+    mainHeading: "The Eid Joy Multiplies when Shared",
+    mainDescription: "The spirit of Eid can be multiplied by contributing to such campaigns that are aimed at providing care, education.",
+    carouselSlides: [
+      {
+        heading: "The Eid Joy Multiplies when Shared",
+        description:
+          "The spirit of Eid can be multiplied by contributing to such campaigns that are aimed at providing care, education.",
+      },
+      {
+        heading: "From Gratitude to Generosity This Eid",
+        description:
+          "The spirit of Eid should thus be honored by giving back to the communities that need the most assistance.",
+      },
+    ],
     images: [
       "/images/eid-donation-1.jpg",
       "/images/eid-donation-2.jpg",
@@ -130,9 +170,59 @@ export const themes: Record<string, ThemeConfig> = {
       },
     ],
   },
-  ramadan: {
-    mainHeading: "Ramadan Kareem | Give with Sincerity",
-    mainDescription: "During this blessed month of Ramadan, let's come together in charity and compassion. Your donations bring blessings and support to those in need",
+  Easter: {
+    mainHeading: "Easter Giving That Creates Change",
+    mainDescription:
+      "Make Easter meaningful by supporting projects that help create growth, compassion, and lasting impact.",
+    carouselSlides: [
+      {
+        heading: "Easter Giving That Creates Change",
+        description:
+          "Make Easter meaningful by supporting projects that help create growth, compassion, and lasting impact.",
+      },
+      {
+        heading: "Spread Hope This Easter Season",
+        description:
+          "Celebrate Easter by helping others rise toward brighter futures with impactful campaigns.",
+      },
+    ],
+    images: ["/images/easter-1.jpg", "/images/easter-2.jpg", "/images/currencies.png"],
+    features: [
+      {
+        title: "Give with compassion",
+        desc: "Support campaigns that provide care and essentials to communities in need.",
+        bgClass: "bg-brand-green-dark",
+        textColor: "text-white",
+      },
+      {
+        title: "Plant seeds of hope",
+        desc: "Help fund projects that build brighter futures through education and opportunity.",
+        bgClass: "bg-brand-green-light",
+        textColor: "text-white",
+      },
+      {
+        title: "Secure payments",
+        desc: "Industry-standard safety measures secure funds raised and your payouts",
+        bgClass: "bg-brand-green-light",
+        textColor: "text-white",
+      },
+    ],
+  },
+  Ramadan: {
+    mainHeading: "Amplify Your Impact This Ramadan",
+    mainDescription: "Ramadan stands to inspire compassion and reflection. Support campaigns that ease hardship and uplift life during the blessed month.",
+    carouselSlides: [
+      {
+        heading: "Amplify Your Impact This Ramadan",
+        description:
+          "Ramadan stands to inspire compassion and reflection. Support campaigns that ease hardship and uplift life during the blessed month.",
+      },
+      {
+        heading: "Compassion That Lasts Beyond Ramadan",
+        description:
+          "Your generosity today can create long-term change. Support meaningful causes while earning spiritual rewards.",
+      },
+    ],
     images: [
       "/images/ramadan-donation-1.jpg",
       "/images/ramadan-donation-2.jpg",
@@ -159,9 +249,21 @@ export const themes: Record<string, ThemeConfig> = {
       },
     ],
   },
-  newyear: {
-    mainHeading: "New Year, New Beginnings",
-    mainDescription: "Start the new year by making a difference. Your donations help create positive change and support causes that matter as we begin this new chapter",
+  NewYear: {
+    mainHeading: "New Year, New Opportunities to Give Back",
+    mainDescription: "Start the year strong by supporting ideas and initiatives that empower people and build better futures.",
+    carouselSlides: [
+      {
+        heading: "New Year, New Opportunities to Give Back",
+        description:
+          "Start the year strong by supporting ideas and initiatives that empower people and build better futures.",
+      },
+      {
+        heading: "Begin the Year with Purpose",
+        description:
+          "In your first giving of the year, make it matter. Invest in initiatives that ignite change, that inspire progress.",
+      },
+    ],
     images: [
       "/images/christmas-donation-1.jpg",
       "/images/christmas-donation-2.jpg",
@@ -188,9 +290,21 @@ export const themes: Record<string, ThemeConfig> = {
       },
     ],
   },
-  thanksgiving: {
-    mainHeading: "Give Thanks by Giving Back",
-    mainDescription: "This Thanksgiving, express gratitude by supporting causes that matter. Every donation is a way to give thanks and make a meaningful difference",
+  Thanksgiving: {
+    mainHeading: "Share the Spirit of Thanksgiving",
+    mainDescription: "Celebrate abundance by helping others to thrive. Every bit counts to make a society robust and full of empathy.",
+    carouselSlides: [
+      {
+        heading: "Share the Spirit of Thanksgiving",
+        description:
+          "Celebrate abundance by helping others to thrive. Every bit counts to make a society robust and full of empathy.",
+      },
+      {
+        heading: "Thankful for What We Have, Giving to Those Who Need",
+        description:
+          "This Thanksgiving, turn gratitude into generosity by supporting impactful community projects.",
+      },
+    ],
     images: [
       "/images/christmas-donation-1.jpg",
       "/images/christmas-donation-2.jpg",
@@ -217,6 +331,19 @@ export const themes: Record<string, ThemeConfig> = {
       },
     ],
   },
+};
+
+// Export both display-friendly keys (e.g. "Christmas") and normalized keys used by
+// `getCurrentTheme()` / env override (e.g. "christmas") so lookups never break.
+export const themes: Record<string, ThemeConfig> = {
+  ...themeConfigs,
+  christmas: themeConfigs.Christmas,
+  valentines: themeConfigs.Valentine,
+  eid: themeConfigs.Eid,
+  easter: themeConfigs.Easter,
+  ramadan: themeConfigs.Ramadan,
+  newyear: themeConfigs.NewYear,
+  thanksgiving: themeConfigs.Thanksgiving,
 };
 
 export type ThemeKey = keyof typeof themes;

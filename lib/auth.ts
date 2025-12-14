@@ -331,11 +331,6 @@ if (process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET) {
   });
 }
 
-// Debug: Log registered providers (only in development)
-if (process.env.NODE_ENV === "development") {
-  console.log("[BetterAuth] Registered providers:", providers.map(p => ({ type: p.type, id: (p as any).id })));
-}
-
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET || "your-secret-key-change-in-production",
   baseURL: process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",

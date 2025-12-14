@@ -33,19 +33,11 @@ const BenefitsCarousel = () => {
   const slides = useMemo(() => {
     return [
       {
-        key: "default",
-        badge: "Powering Next-Gen Fundraising",
-        heading: "Discover the Impact of Transparent Giving",
-        description:
-          "We've built a platform that removes the barriers to kindness. Connect directly with causes, track every dollar, and see the change you create in real-time.",
-        features: defaultFeatures.map((f) => ({ title: f.title })),
-        image: "/images/volunteersHelping.png",
-      },
-      {
         key: `${themeKey}-1`,
         badge: `Seasonal Spotlight • ${themeKey}`,
-        heading: themeConfig.mainHeading,
-        description: themeConfig.mainDescription,
+        heading: themeConfig.carouselSlides?.[0]?.heading ?? themeConfig.mainHeading,
+        description:
+          themeConfig.carouselSlides?.[0]?.description ?? themeConfig.mainDescription,
         features: (themeConfig.features ?? []).slice(0, 3).map((f) => ({
           title: f.title,
         })),
@@ -54,12 +46,22 @@ const BenefitsCarousel = () => {
       {
         key: `${themeKey}-2`,
         badge: `Seasonal Spotlight • ${themeKey}`,
-        heading: themeConfig.mainHeading,
-        description: themeConfig.mainDescription,
+        heading: themeConfig.carouselSlides?.[1]?.heading ?? themeConfig.mainHeading,
+        description:
+          themeConfig.carouselSlides?.[1]?.description ?? themeConfig.mainDescription,
         features: (themeConfig.features ?? []).slice(0, 3).map((f) => ({
           title: f.title,
         })),
         image: themeConfig.images?.[1] ?? themeConfig.images?.[0] ?? "/images/teamwork.png",
+      },
+      {
+        key: "default",
+        badge: "Powering Next-Gen Fundraising",
+        heading: "Discover the Impact of Transparent Giving",
+        description:
+          "We've built a platform that removes the barriers to kindness. Connect directly with causes, track every dollar, and see the change you create in real-time.",
+        features: defaultFeatures.map((f) => ({ title: f.title })),
+        image: "/images/donations.jpg",
       },
     ];
   }, [themeConfig, themeKey]);
@@ -104,7 +106,7 @@ const BenefitsCarousel = () => {
             className="px-4 py-2 rounded-full flex gap-2 bg-white/10 w-fit items-center"
           >
             <Zap color="#FDE047" size={16} />
-            <div className="font-bold text-sm leading-5 text-white">
+            <div className="font-bold text-sm leading-5 text-white capitalize">
               {activeSlide.badge}
             </div>
           </motion.div>
