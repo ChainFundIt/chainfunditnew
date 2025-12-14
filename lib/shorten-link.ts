@@ -1,7 +1,7 @@
 export async function shortenLink(longUrl: string): Promise<string | null> {
-  const apiKey = process.env.DUB_CO_TOKEN;
+  const apiKey = process.env.SHORT_IO_SECRET_KEY;
   if (!apiKey) {
-    console.warn('DUB_CO_TOKEN not configured, skipping link shortening');
+    console.warn('SHORT_IO_SECRET_KEY not configured, skipping link shortening');
     return null;
   }
 

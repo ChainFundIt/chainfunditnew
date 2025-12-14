@@ -112,6 +112,18 @@ export const nextAuthOptions: NextAuthOptions = {
       if (url.includes("/api/auth/error") || url.includes("/api/oauth/error")) {
         return `${baseUrl}/signin?error=oauth_failed`;
       }
+
+      // Allow OAuth provider authorization redirects.
+      // NextAuth may redirect the user to an external provider URL during sign-in;
+      // our previous logic blocked all external URLs, breaking Google/Discord OAuth.
+      const allowedExternalPrefixes = [
+        "https://accounts.google.com",
+        "https://discord.com",
+        "https://discordapp.com",
+      ];
+      if (allowedExternalPrefixes.some((prefix) => url.startsWith(prefix))) {
+        return url;
+      }
       
       // After OAuth sign-in, redirect to our callback endpoint to convert to JWT
       if (url.startsWith(baseUrl)) {

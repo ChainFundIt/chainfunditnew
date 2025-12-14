@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { autoCloseExpiredCampaigns, markExpiredCampaigns } from '@/lib/utils/campaign-validation';
 import { getCronDisabledResponse } from '@/lib/utils/cron-control';
-import { toast } from 'sonner';
+import { requireCronAuth } from '@/lib/utils/cron-auth';
 
 /**
  * Cron job endpoint to handle campaign auto-closing and expiration
@@ -9,24 +9,16 @@ import { toast } from 'sonner';
  * 1. Auto-close campaigns that reached goal 4 weeks ago
  * 2. Mark campaigns as expired if they passed their expiration date
  */
-export async function POST(request: NextRequest) {
+async function runCampaignCron(request: NextRequest) {
   const disabledResponse = getCronDisabledResponse('campaigns');
   if (disabledResponse) {
     return disabledResponse;
   }
 
-  try {
-    // Verify this is a legitimate cron request
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
-    
-    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+  const authError = requireCronAuth(request);
+  if (authError) return authError;
 
+  try {
     const startTime = Date.now();
 
     // Auto-close campaigns that reached goal 4 weeks ago
@@ -49,7 +41,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    toast.error('Error in campaign cron job: ' + error);
+    console.error('[cron] campaigns failed', error);
     return NextResponse.json(
       { 
         success: false, 
@@ -61,20 +53,16 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Allow GET requests for manual testing (remove in production)
+export async function POST(request: NextRequest) {
+  return runCampaignCron(request);
+}
+
+// Vercel Cron calls GET
 export async function GET(request: NextRequest) {
   const disabledResponse = getCronDisabledResponse('campaigns');
   if (disabledResponse) {
     return disabledResponse;
   }
 
-  // Only allow in development
-  if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json(
-      { success: false, error: 'GET method not allowed in production' },
-      { status: 405 }
-    );
-  }
-
-  return POST(request);
+  return runCampaignCron(request);
 }

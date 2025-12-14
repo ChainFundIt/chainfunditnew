@@ -1,16 +1,35 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  Search, 
-  TrendingUp, 
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Search,
+  TrendingUp,
   DollarSign,
   CheckCircle,
   XCircle,
@@ -22,13 +41,13 @@ import {
   Users,
   BarChart3,
   Heart,
-  Filter
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
-import { useGeolocationCurrency } from '@/hooks/use-geolocation-currency';
-import { formatCurrency } from '@/lib/utils/currency';
-import Link from 'next/link';
+  Filter,
+} from "lucide-react";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { useGeolocationCurrency } from "@/hooks/use-geolocation-currency";
+import { formatCurrency } from "@/lib/utils/currency";
+import Link from "next/link";
 
 interface Donation {
   id: string;
@@ -42,7 +61,7 @@ interface Donation {
   convertedAmount?: number | null;
   convertedCurrency?: string | null;
   exchangeRate?: number | null;
-  paymentStatus: 'pending' | 'completed' | 'failed';
+  paymentStatus: "pending" | "completed" | "failed";
   paymentMethod: string;
   chainerId?: string;
   chainerName?: string;
@@ -78,22 +97,24 @@ interface DonationStats {
   totalAmount: number;
   completedAmount: number;
   pendingAmount: number;
-  averageDonation: number;  
+  averageDonation: number;
   recentDonations: Donation[];
 }
 
 export default function DonationsPage() {
   const [donations, setDonations] = useState<Donation[]>([]);
-  const [charityDonations, setCharityDonations] = useState<CharityDonation[]>([]);
+  const [charityDonations, setCharityDonations] = useState<CharityDonation[]>(
+    []
+  );
   const [charities, setCharities] = useState<any[]>([]);
   const [stats, setStats] = useState<DonationStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [charityLoading, setCharityLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [charityStatusFilter, setCharityStatusFilter] = useState('all');
-  const [selectedCharity, setSelectedCharity] = useState('all');
-  const [currencyFilter, setCurrencyFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [charityStatusFilter, setCharityStatusFilter] = useState("all");
+  const [selectedCharity, setSelectedCharity] = useState("all");
+  const [currencyFilter, setCurrencyFilter] = useState("all");
   const router = useRouter();
   const { locationInfo } = useGeolocationCurrency();
   const currency = locationInfo?.currency?.code;
@@ -122,14 +143,14 @@ export default function DonationsPage() {
       });
 
       const response = await fetch(`/api/admin/donations?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch donations');
+      if (!response.ok) throw new Error("Failed to fetch donations");
 
       const data = await response.json();
       setDonations(data.donations || []);
       setTotalPages(data.totalPages || 1);
     } catch (error) {
-      console.error('Error fetching donations:', error);
-      toast.error('Failed to fetch donations');
+      console.error("Error fetching donations:", error);
+      toast.error("Failed to fetch donations");
     } finally {
       setLoading(false);
     }
@@ -142,18 +163,18 @@ export default function DonationsPage() {
       const params = new URLSearchParams({
         charityId: selectedCharity,
         status: charityStatusFilter,
-        limit: '1000',
+        limit: "1000",
       });
 
       const response = await fetch(`/api/admin/charities/donations?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch charity donations');
+      if (!response.ok) throw new Error("Failed to fetch charity donations");
 
       const data = await response.json();
       setCharityDonations(data.donations || []);
     } catch (error) {
-      console.error('Error fetching charity donations:', error);
+      console.error("Error fetching charity donations:", error);
       setCharityDonations([]);
-      toast.error('Failed to fetch charity donations');
+      toast.error("Failed to fetch charity donations");
     } finally {
       setCharityLoading(false);
     }
@@ -161,43 +182,43 @@ export default function DonationsPage() {
 
   const fetchCharities = async () => {
     try {
-      const response = await fetch('/api/charities?limit=100');
+      const response = await fetch("/api/charities?limit=100");
       const data = await response.json();
       setCharities(data.charities || []);
     } catch (error) {
-      console.error('Error fetching charities:', error);
+      console.error("Error fetching charities:", error);
     }
   };
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('/api/admin/donations/stats');
-      if (!response.ok) throw new Error('Failed to fetch stats');
+      const response = await fetch("/api/admin/donations/stats");
+      if (!response.ok) throw new Error("Failed to fetch stats");
 
       const data = await response.json();
       setStats(data || {});
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      console.error("Error fetching stats:", error);
     }
   };
 
   const handleBulkAction = async (action: string) => {
     if (selectedDonations.length === 0) {
-      toast.error('Please select donations to perform bulk action');
+      toast.error("Please select donations to perform bulk action");
       return;
     }
 
     try {
-      const response = await fetch('/api/admin/donations/bulk', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/admin/donations/bulk", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           donationIds: selectedDonations,
           action,
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to perform bulk action');
+      if (!response.ok) throw new Error("Failed to perform bulk action");
 
       const data = await response.json();
       toast.success(data.message);
@@ -205,14 +226,18 @@ export default function DonationsPage() {
       fetchDonations();
       fetchStats();
     } catch (error) {
-      console.error('Error performing bulk action:', error);
-      toast.error('Failed to perform bulk action');
+      console.error("Error performing bulk action:", error);
+      toast.error("Failed to perform bulk action");
     }
   };
 
-  const handleDonationAction = async (donationId: string, action: string, reason?: string) => {
+  const handleDonationAction = async (
+    donationId: string,
+    action: string,
+    reason?: string
+  ) => {
     // Handle "view" action separately - it doesn't require a PATCH request
-    if (action === 'view') {
+    if (action === "view") {
       handleViewDonation(donationId);
       return;
     }
@@ -220,14 +245,14 @@ export default function DonationsPage() {
     // Handle other actions that modify data
     try {
       const response = await fetch(`/api/admin/donations/${donationId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, reason }),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to perform action');
+        throw new Error(errorData.error || "Failed to perform action");
       }
 
       const data = await response.json();
@@ -235,20 +260,21 @@ export default function DonationsPage() {
       fetchDonations();
       fetchStats();
     } catch (error) {
-      console.error('Error performing action:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to perform action';
+      console.error("Error performing action:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to perform action";
       toast.error(errorMessage);
     }
   };
 
   const handleExportDonations = async () => {
     try {
-      toast.info('Exporting donations data...');
+      toast.info("Exporting donations data...");
       setTimeout(() => {
-        toast.success('Donations data exported successfully!');
+        toast.success("Donations data exported successfully!");
       }, 2000);
     } catch (error) {
-      toast.error('Failed to export donations data');
+      toast.error("Failed to export donations data");
     }
   };
 
@@ -258,9 +284,9 @@ export default function DonationsPage() {
 
   const getStatusBadge = (status: string) => {
     const variants = {
-      pending: 'secondary',
-      completed: 'default',
-      failed: 'destructive',
+      pending: "secondary",
+      completed: "default",
+      failed: "destructive",
     } as const;
 
     const icons = {
@@ -272,7 +298,7 @@ export default function DonationsPage() {
     const Icon = icons[status as keyof typeof icons];
 
     return (
-      <Badge variant={variants[status as keyof typeof variants] || 'default'}>
+      <Badge variant={variants[status as keyof typeof variants] || "default"}>
         <Icon className="h-3 w-3 mr-1" />
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </Badge>
@@ -281,11 +307,11 @@ export default function DonationsPage() {
 
   const getCharityStatusBadge = (status: string) => {
     switch (status) {
-      case 'completed':
+      case "completed":
         return <Badge className="bg-green-500">Completed</Badge>;
-      case 'pending':
+      case "pending":
         return <Badge variant="outline">Pending</Badge>;
-      case 'failed':
+      case "failed":
         return <Badge variant="destructive">Failed</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
@@ -294,19 +320,19 @@ export default function DonationsPage() {
 
   const formatCharityCurrency = (amount: string, currency: string) => {
     const num = parseFloat(amount);
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency || 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currency || "USD",
     }).format(num);
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(date).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -327,18 +353,30 @@ export default function DonationsPage() {
   };
 
   // Filter charity donations
-  const filteredCharityDonations = charityDonations.filter(d => {
-    if (selectedCharity !== 'all' && d.charityId !== selectedCharity) return false;
-    if (charityStatusFilter !== 'all' && d.paymentStatus !== charityStatusFilter) return false;
+  const filteredCharityDonations = charityDonations.filter((d) => {
+    if (selectedCharity !== "all" && d.charityId !== selectedCharity)
+      return false;
+    if (
+      charityStatusFilter !== "all" &&
+      d.paymentStatus !== charityStatusFilter
+    )
+      return false;
     return true;
   });
 
   // Calculate charity stats
   const charityStats = {
     total: filteredCharityDonations.length,
-    totalAmount: filteredCharityDonations.reduce((sum, d) => sum + parseFloat(d.amount), 0),
-    completed: filteredCharityDonations.filter(d => d.paymentStatus === 'completed').length,
-    pending: filteredCharityDonations.filter(d => d.paymentStatus === 'pending').length,
+    totalAmount: filteredCharityDonations.reduce(
+      (sum, d) => sum + parseFloat(d.amount),
+      0
+    ),
+    completed: filteredCharityDonations.filter(
+      (d) => d.paymentStatus === "completed"
+    ).length,
+    pending: filteredCharityDonations.filter(
+      (d) => d.paymentStatus === "pending"
+    ).length,
   };
 
   if (loading && charityLoading) {
@@ -359,7 +397,9 @@ export default function DonationsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Donations Management</h1>
-            <p className="text-gray-600">Track and manage all platform donations</p>
+            <p className="text-gray-600">
+              Track and manage all platform donations
+            </p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleExportDonations}>
@@ -371,8 +411,12 @@ export default function DonationsPage() {
 
         <Tabs defaultValue="campaign-donations" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="campaign-donations">Campaign Donations</TabsTrigger>
-            <TabsTrigger value="charity-donations">Charity Donations</TabsTrigger>
+            <TabsTrigger value="campaign-donations">
+              Campaign Donations
+            </TabsTrigger>
+            <TabsTrigger value="charity-donations">
+              Charity Donations
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="campaign-donations" className="space-y-6">
@@ -380,7 +424,9 @@ export default function DonationsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold">Campaign Donations</h2>
-                <p className="text-gray-600">Track and manage campaign donations</p>
+                <p className="text-gray-600">
+                  Track and manage campaign donations
+                </p>
               </div>
             </div>
 
@@ -389,37 +435,62 @@ export default function DonationsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Donations</CardTitle>
+                    <CardTitle className="text-sm font-medium">
+                      Total Donations
+                    </CardTitle>
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{stats.totalDonations}</div>
+                    <div className="text-2xl font-semibold text-brand-green-dark">
+                      {stats.completedDonations}
+                      <span className="text-xs text-muted-foreground ml-1">
+                        completed
+                      </span>
+                    </div>
                     <p className="text-xs text-muted-foreground">
-                      {stats.completedDonations} completed
+                      {stats.totalDonations}
+                      <span className="text-xs text-muted-foreground ml-1">
+                        total
+                      </span>
                     </p>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Amount</CardTitle>
+                    <CardTitle className="text-sm font-medium">
+                      Total Amount
+                    </CardTitle>
                     <TrendingUp className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{formatCurrency(stats?.totalAmount || 0, currency || 'USD')}</div>
-                    <p className="text-xs text-muted-foreground">
-                      {formatCurrency(stats?.completedAmount || 0, currency || 'USD')} completed
-                    </p>
+                    <div className="text-2xl font-semibold text-brand-green-dark">
+                      {formatCurrency(
+                        stats?.completedAmount || 0,
+                        currency || "USD"
+                      )}{" "}
+                      <span className="text-xs text-muted-foreground">
+                        {" "}
+                        completed
+                      </span>
+                    </div>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Average Donation</CardTitle>
+                    <CardTitle className="text-sm font-medium">
+                      Average Donation
+                    </CardTitle>
                     <BarChart3 className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{formatCurrency(stats?.averageDonation || 0, currency || 'USD')}</div>
+                    <div className="text-2xl font-semibold text-brand-green-dark">
+                      {formatCurrency(
+                        stats?.averageDonation || 0,
+                        currency || "USD"
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       Per donation
                     </p>
@@ -457,7 +528,10 @@ export default function DonationsPage() {
                       <SelectItem value="failed">Failed</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Select value={currencyFilter} onValueChange={setCurrencyFilter}>
+                  <Select
+                    value={currencyFilter}
+                    onValueChange={setCurrencyFilter}
+                  >
                     <SelectTrigger className="w-full sm:w-48">
                       <SelectValue placeholder="Currency" />
                     </SelectTrigger>
@@ -487,10 +561,16 @@ export default function DonationsPage() {
                       <TableHead className="w-12">
                         <input
                           type="checkbox"
-                          checked={selectedDonations.length === (donations || []).length && (donations || []).length > 0}
+                          checked={
+                            selectedDonations.length ===
+                              (donations || []).length &&
+                            (donations || []).length > 0
+                          }
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setSelectedDonations((donations || []).map(d => d.id));
+                              setSelectedDonations(
+                                (donations || []).map((d) => d.id)
+                              );
                             } else {
                               setSelectedDonations([]);
                             }
@@ -516,39 +596,63 @@ export default function DonationsPage() {
                             checked={selectedDonations.includes(donation.id)}
                             onChange={(e) => {
                               if (e.target.checked) {
-                                setSelectedDonations([...selectedDonations, donation.id]);
+                                setSelectedDonations([
+                                  ...selectedDonations,
+                                  donation.id,
+                                ]);
                               } else {
-                                setSelectedDonations(selectedDonations.filter(id => id !== donation.id));
+                                setSelectedDonations(
+                                  selectedDonations.filter(
+                                    (id) => id !== donation.id
+                                  )
+                                );
                               }
                             }}
                           />
                         </TableCell>
                         <TableCell>
                           <div>
-                            <div className="font-medium">{donation.donorName}</div>
-                            <div className="text-sm text-gray-500">{donation.donorEmail}</div>
+                            <div className="font-medium">
+                              {donation.donorName}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {donation.donorEmail}
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="font-medium">{donation.campaignTitle}</div>
+                          <div className="font-medium">
+                            {donation.campaignTitle}
+                          </div>
                         </TableCell>
                         <TableCell>
                           <div className="font-medium">
                             {formatCurrency(donation.amount, donation.currency)}
-                            {donation.convertedAmount && donation.convertedCurrency && (
-                              <div className="text-xs text-gray-500 mt-1">
-                                ≈ {formatCurrency(donation.convertedAmount, donation.convertedCurrency)}
-                                {donation.exchangeRate && (
-                                  <span className="ml-1">(Rate: {Number(donation.exchangeRate).toFixed(2)})</span>
-                                )}
-                              </div>
-                            )}
+                            {donation.convertedAmount &&
+                              donation.convertedCurrency && (
+                                <div className="text-xs text-gray-500 mt-1">
+                                  ≈{" "}
+                                  {formatCurrency(
+                                    donation.convertedAmount,
+                                    donation.convertedCurrency
+                                  )}
+                                  {donation.exchangeRate && (
+                                    <span className="ml-1">
+                                      (Rate:{" "}
+                                      {Number(donation.exchangeRate).toFixed(2)}
+                                      )
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <CreditCard className="h-4 w-4" />
-                            <span className="text-sm capitalize">{donation.paymentMethod}</span>
+                            <span className="text-sm capitalize">
+                              {donation.paymentMethod}
+                            </span>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -557,8 +661,12 @@ export default function DonationsPage() {
                         <TableCell>
                           {donation.chainerName ? (
                             <div>
-                              <div className="font-medium">{donation.chainerName}</div>
-                              <div className="text-sm text-gray-500">Referred</div>
+                              <div className="font-medium">
+                                {donation.chainerName}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                Referred
+                              </div>
                             </div>
                           ) : (
                             <span className="text-gray-400">Direct</span>
@@ -574,7 +682,9 @@ export default function DonationsPage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleDonationAction(donation.id, 'view')}
+                              onClick={() =>
+                                handleDonationAction(donation.id, "view")
+                              }
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
@@ -595,7 +705,9 @@ export default function DonationsPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                        onClick={() =>
+                          setCurrentPage(Math.max(1, currentPage - 1))
+                        }
                         disabled={currentPage === 1}
                       >
                         Previous
@@ -603,7 +715,9 @@ export default function DonationsPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                        onClick={() =>
+                          setCurrentPage(Math.min(totalPages, currentPage + 1))
+                        }
                         disabled={currentPage === totalPages}
                       >
                         Next
@@ -620,7 +734,9 @@ export default function DonationsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold">Charity Donations</h2>
-                <p className="text-gray-600">View and manage all charity donations</p>
+                <p className="text-gray-600">
+                  View and manage all charity donations
+                </p>
               </div>
             </div>
 
@@ -628,7 +744,9 @@ export default function DonationsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Donations</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Total Donations
+                  </CardTitle>
                   <Heart className="h-4 w-4 text-gray-500" />
                 </CardHeader>
                 <CardContent>
@@ -639,12 +757,17 @@ export default function DonationsPage() {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Amount</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Total Amount
+                  </CardTitle>
                   <DollarSign className="h-4 w-4 text-gray-500" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {formatCharityCurrency(charityStats.totalAmount.toString(), currency || 'USD')}
+                    {formatCharityCurrency(
+                      charityStats.totalAmount.toString(),
+                      currency || "USD"
+                    )}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">Combined value</p>
                 </CardContent>
@@ -652,12 +775,18 @@ export default function DonationsPage() {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Completed</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Completed
+                  </CardTitle>
                   <TrendingUp className="h-4 w-4 text-green-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">{charityStats.completed}</div>
-                  <p className="text-xs text-gray-500 mt-1">Successfully processed</p>
+                  <div className="text-2xl font-bold text-green-600">
+                    {charityStats.completed}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Successfully processed
+                  </p>
                 </CardContent>
               </Card>
 
@@ -667,7 +796,9 @@ export default function DonationsPage() {
                   <Users className="h-4 w-4 text-yellow-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-yellow-600">{charityStats.pending}</div>
+                  <div className="text-2xl font-bold text-yellow-600">
+                    {charityStats.pending}
+                  </div>
                   <p className="text-xs text-gray-500 mt-1">Awaiting payment</p>
                 </CardContent>
               </Card>
@@ -675,7 +806,10 @@ export default function DonationsPage() {
 
             {/* Charity Filters */}
             <div className="flex flex-col md:flex-row gap-4">
-              <Select value={selectedCharity} onValueChange={setSelectedCharity}>
+              <Select
+                value={selectedCharity}
+                onValueChange={setSelectedCharity}
+              >
                 <SelectTrigger className="w-full md:w-64">
                   <SelectValue placeholder="Filter by charity" />
                 </SelectTrigger>
@@ -689,7 +823,10 @@ export default function DonationsPage() {
                 </SelectContent>
               </Select>
 
-              <Select value={charityStatusFilter} onValueChange={setCharityStatusFilter}>
+              <Select
+                value={charityStatusFilter}
+                onValueChange={setCharityStatusFilter}
+              >
                 <SelectTrigger className="w-full md:w-48">
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
@@ -711,7 +848,9 @@ export default function DonationsPage() {
             {charityLoading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-                <p className="text-gray-500 mt-4">Loading charity donations...</p>
+                <p className="text-gray-500 mt-4">
+                  Loading charity donations...
+                </p>
               </div>
             ) : filteredCharityDonations.length === 0 ? (
               <Card>
@@ -751,7 +890,7 @@ export default function DonationsPage() {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex flex-col">
                               <div className="font-medium text-gray-900">
-                                {donation.charity?.name || 'Unknown Charity'}
+                                {donation.charity?.name || "Unknown Charity"}
                               </div>
                               <div className="text-sm text-gray-500">
                                 {donation.paymentMethod}
@@ -761,16 +900,23 @@ export default function DonationsPage() {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex flex-col">
                               <div className="text-sm text-gray-900">
-                                {donation.isAnonymous ? 'Anonymous' : donation.donorName}
+                                {donation.isAnonymous
+                                  ? "Anonymous"
+                                  : donation.donorName}
                               </div>
                               <div className="text-xs text-gray-500">
-                                {donation.isAnonymous ? 'Hidden' : donation.donorEmail}
+                                {donation.isAnonymous
+                                  ? "Hidden"
+                                  : donation.donorEmail}
                               </div>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="font-semibold text-gray-900">
-                              {formatCharityCurrency(donation.amount, donation.currency)}
+                              {formatCharityCurrency(
+                                donation.amount,
+                                donation.currency
+                              )}
                             </div>
                             <div className="text-xs text-gray-500">
                               {donation.currency}
@@ -786,12 +932,10 @@ export default function DonationsPage() {
                             {formatDate(donation.createdAt)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <Button
-                              asChild
-                              variant="ghost"
-                              size="sm"
-                            >
-                              <Link href={`/virtual-giving-mall/${donation.charity?.slug}`}>
+                            <Button asChild variant="ghost" size="sm">
+                              <Link
+                                href={`/virtual-giving-mall/${donation.charity?.slug}`}
+                              >
                                 <Eye className="h-4 w-4 mr-1" />
                                 View Charity
                               </Link>

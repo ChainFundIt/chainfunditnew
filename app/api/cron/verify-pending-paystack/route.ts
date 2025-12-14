@@ -11,6 +11,7 @@ import { notifications } from '@/lib/schema/notifications';
 import { users } from '@/lib/schema/users';
 import { shouldNotifyUserOfDonation, formatDonationNotificationMessage } from '@/lib/utils/donation-notification-utils';
 import { getCronDisabledResponse } from '@/lib/utils/cron-control';
+import { requireCronAuth } from '@/lib/utils/cron-auth';
 
 export const runtime = 'nodejs';
 
@@ -28,32 +29,15 @@ export const runtime = 'nodejs';
  * Should be scheduled to run every hour or more frequently:
  * - Schedule: "0 * * * *" (Every hour at minute 0)
   */
-export async function POST(request: NextRequest) {
+async function runVerifyPendingPaystack(request: NextRequest) {
   const disabledResponse = getCronDisabledResponse('verify-pending-paystack');
   if (disabledResponse) {
     return disabledResponse;
   }
 
   try {
-    // Verify this is a legitimate cron request
-    const authHeader = request.headers.get('authorization');
-    const vercelSignature = request.headers.get('x-vercel-signature');
-    const netlifySignature = request.headers.get('x-netlify-signature');
-    const cronSecret = process.env.CRON_SECRET;
-    const isDevelopment = process.env.NODE_ENV !== 'production';
-
-    if (!isDevelopment && cronSecret) {
-      // Allow if:
-      // 1. Authorization header matches CRON_SECRET, OR
-      // 2. Vercel signature is present (Vercel Cron), OR
-      // 3. Netlify signature is present (Netlify Scheduled Functions)
-      if (authHeader !== `Bearer ${cronSecret}` && !vercelSignature && !netlifySignature) {
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 401 }
-        );
-      }
-    }
+    const authError = requireCronAuth(request);
+    if (authError) return authError;
 
     // Only verify payments older than 5 minutes to avoid verifying payments that just started
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
@@ -297,6 +281,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function POST(request: NextRequest) {
+  return runVerifyPendingPaystack(request);
+}
+
 /**
  * GET /api/cron/verify-pending-paystack
  * Get summary of pending Paystack payments (for monitoring)
@@ -305,6 +293,15 @@ export async function GET(request: NextRequest) {
   const disabledResponse = getCronDisabledResponse('verify-pending-paystack');
   if (disabledResponse) {
     return disabledResponse;
+  }
+
+  const authError = requireCronAuth(request);
+  if (authError) return authError;
+
+  // Default (no query params): execute the cron (Vercel Cron calls GET)
+  const summaryMode = request.nextUrl.searchParams.get('summary');
+  if (!summaryMode || summaryMode === '0' || summaryMode === 'false') {
+    return runVerifyPendingPaystack(request);
   }
 
   try {
