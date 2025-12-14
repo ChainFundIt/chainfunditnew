@@ -309,7 +309,7 @@ const Main = () => {
                     {!card.image ? (
                       <div className="w-[382px] h-[224px] bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 flex items-center justify-center relative">
                         <div className="text-center p-4 relative z-10">
-                          <div className="relative inline-block">
+                          <div className="relative inline-block w-full">
                             <div className="absolute inset-0 bg-gradient-to-br from-green-400 to-blue-500 rounded-full blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
                             <div className="relative bg-gradient-to-br from-green-500 to-blue-600 p-4 rounded-full">
                               <Heart className="h-12 w-12 text-white" />
