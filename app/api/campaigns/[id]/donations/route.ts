@@ -41,7 +41,8 @@ export async function GET(
         isAnonymous: donations.isAnonymous,
         createdAt: donations.createdAt,
         processedAt: donations.processedAt,
-        donorName: users.fullName,
+        donorName: donations.donorName,
+        donorUserName: users.fullName,
         donorAvatar: users.avatar,
       })
       .from(donations)
@@ -82,7 +83,7 @@ export async function GET(
       processedAt: donation.processedAt || null,
       donorName: donation.isAnonymous 
         ? 'Anonymous' 
-        : (donation.donorName || 'Anonymous'),
+        : (donation.donorName || donation.donorUserName || 'Anonymous'),
       donorAvatar: donation.isAnonymous ? null : (donation.donorAvatar || null),
     }));
 

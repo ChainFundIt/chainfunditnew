@@ -37,6 +37,12 @@ export function FaqsAccordion() {
       answer:
         "Yes, you can edit your campaign at any time. Simply log in to your account, navigate to your campaign page, and make the necessary changes to keep your supporters updated.",
     },
+    {
+      value: "item-6",
+      question: "Can I get a refund for my donation?",
+      answer:
+        "Donations on ChainFundIt are generally non-refundable, as they are considered voluntary gifts. However, if there was an error (such as a duplicate charge or donation to the wrong campaign), please contact us at <a href='mailto:campaigns@chainfundit.com'>campaigns@chainfundit.com</a> within 48 hours, and we'll do our best to help.",
+    },
   ];
 
   return (
@@ -57,7 +63,7 @@ export function FaqsAccordion() {
           </AccordionTrigger>
           <AccordionContent>
             <div className="font-normal text-base leading-[26px]">
-              {item.answer}
+              {typeof item.answer === "string" ? item.answer : item.answer}
             </div>
           </AccordionContent>
         </AccordionItem>

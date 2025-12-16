@@ -18,6 +18,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://chainfundit.com";
 const logoUrl = `/images/logo.svg`;
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -28,27 +29,30 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "Chainfundit",
   description: "Raise funds, support dreams",
+  metadataBase: new URL(appUrl),
   openGraph: {
     title: "Chainfundit",
     description: "Raise funds, support dreams",
-    url: process.env.NEXT_PUBLIC_APP_URL || "https://chainfundit.com",
+    url: appUrl,
     siteName: "Chainfundit",
     images: [
       {
-        url: logoUrl,
-        width: 512,
-        height: 512,
-        alt: "Chainfundit Logo",
+        // NOTE: WhatsApp/Facebook generally do not render SVGs for link previews.
+        // Use a PNG OG image (1200x630) for reliable unfurls.
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Chainfundit — Raise funds, support dreams",
       },
     ],
     locale: "en_US",
     type: "website",
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Chainfundit",
     description: "Raise funds, support dreams",
-    images: [logoUrl],
+    images: ["/twitter-image"],
   },
   icons: {
     icon: "/images/logo.svg",
@@ -81,7 +85,11 @@ export default function RootLayout({
               if (consent) {
                 try {
                   const consentData = JSON.parse(consent);
-                  analyticsGranted = consentData.accepted === true;
+                  if (typeof consentData?.preferences?.analytics === 'boolean') {
+                    analyticsGranted = consentData.preferences.analytics === true;
+                  } else {
+                    analyticsGranted = consentData.accepted === true;
+                  }
                 } catch (e) {
                   analyticsGranted = false;
                 }

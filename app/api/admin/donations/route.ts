@@ -58,8 +58,11 @@ export async function GET(request: NextRequest) {
         createdAt: donations.createdAt,
         processedAt: donations.processedAt,
         paymentIntentId: donations.paymentIntentId,
-        donorName: users.fullName,
-        donorEmail: users.email,
+        isAnonymous: donations.isAnonymous,
+        donorName: donations.donorName,
+        donorEmail: donations.donorEmail,
+        donorUserName: users.fullName,
+        donorUserEmail: users.email,
         campaignTitle: campaigns.title,
       })
       .from(donations)
@@ -106,6 +109,8 @@ export async function GET(request: NextRequest) {
           amount: Number(donation.amount) || 0,
           convertedAmount: donation.convertedAmount ? Number(donation.convertedAmount) : null,
           exchangeRate: donation.exchangeRate ? Number(donation.exchangeRate) : null,
+          donorName: donation.isAnonymous ? 'Anonymous' : (donation.donorName || donation.donorUserName || 'Unknown'),
+          donorEmail: donation.isAnonymous ? null : (donation.donorEmail || donation.donorUserEmail || null),
           chainerName,
         };
       })

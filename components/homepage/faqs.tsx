@@ -21,7 +21,7 @@ const FAQs = () => {
 
           <Button
             onClick={() =>
-              (window.location.href = "mailto:support@chainfundit.com")
+              (window.location.href = "mailto:campaigns@chainfundit.com")
             }
             className="bg-[#104109] px-8 py-4 rounded-full h-auto font-bold text-lg leading-7 border-none w-fit"
           >

@@ -40,6 +40,9 @@ export function generateTestDonations(campaignId: string, donorIds: string[]): T
       lastStatusUpdate: oneDayAgo,
       providerStatus: 'success',
       providerError: null,
+      donorName: 'Test Donor 1',
+      donorEmail: 'test-donor-1@example.com',
+      donorPhone: '1234567890',
     },
     {
       id: 'test-donation-2',
@@ -64,6 +67,9 @@ export function generateTestDonations(campaignId: string, donorIds: string[]): T
       lastStatusUpdate: twoDaysAgo,
       providerStatus: 'success',
       providerError: null,
+      donorName: 'Test Donor 2',
+      donorEmail: 'test-donor-2@example.com',
+      donorPhone: '1234567890',
     },
     {
       id: 'test-donation-3',
@@ -88,6 +94,9 @@ export function generateTestDonations(campaignId: string, donorIds: string[]): T
       lastStatusUpdate: oneWeekAgo,
       providerStatus: 'success',
       providerError: null,
+      donorName: 'Test Donor 3',
+      donorEmail: 'test-donor-3@example.com',
+      donorPhone: '1234567890',
     },
     
     // Pending donations
@@ -114,6 +123,9 @@ export function generateTestDonations(campaignId: string, donorIds: string[]): T
       lastStatusUpdate: new Date(),
       providerStatus: 'pending',
       providerError: null,
+      donorName: 'Test Donor 4',
+      donorEmail: 'test-donor-4@example.com',
+      donorPhone: '1234567890',
     },
     {
       id: 'test-donation-5',
@@ -138,6 +150,9 @@ export function generateTestDonations(campaignId: string, donorIds: string[]): T
       lastStatusUpdate: new Date(),
       providerStatus: 'pending',
       providerError: null,
+      donorName: 'Test Donor 5',
+      donorEmail: 'test-donor-5@example.com',
+      donorPhone: '1234567890',
     },
     
     // Failed donations
@@ -164,6 +179,9 @@ export function generateTestDonations(campaignId: string, donorIds: string[]): T
       lastStatusUpdate: oneDayAgo,
       providerStatus: 'failed',
       providerError: 'Card declined',
+      donorName: 'Test Donor 6',
+      donorEmail: 'test-donor-6@example.com',
+      donorPhone: '1234567890',
     },
     {
       id: 'test-donation-7',
@@ -188,6 +206,9 @@ export function generateTestDonations(campaignId: string, donorIds: string[]): T
       lastStatusUpdate: twoDaysAgo,
       providerStatus: 'failed',
       providerError: 'Insufficient funds',
+      donorName: 'Test Donor 7',
+      donorEmail: 'test-donor-7@example.com',
+      donorPhone: '1234567890',
     },
   ];
 }

@@ -29,8 +29,11 @@ export async function GET(
         createdAt: donations.createdAt,
         processedAt: donations.processedAt,
         paymentIntentId: donations.paymentIntentId,
-        donorName: users.fullName,
-        donorEmail: users.email,
+        isAnonymous: donations.isAnonymous,
+        donorName: donations.donorName,
+        donorEmail: donations.donorEmail,
+        donorUserName: users.fullName,
+        donorUserEmail: users.email,
         campaignTitle: campaigns.title,
       })
       .from(donations)
@@ -136,6 +139,8 @@ export async function GET(
 
     const donationDetails = {
       ...donation[0],
+      donorName: donation[0].isAnonymous ? 'Anonymous' : (donation[0].donorName || donation[0].donorUserName || 'Unknown'),
+      donorEmail: donation[0].isAnonymous ? null : (donation[0].donorEmail || donation[0].donorUserEmail || null),
       chainerInfo,
       fraudScore: Math.min(100, fraudScore),
       suspiciousActivity,

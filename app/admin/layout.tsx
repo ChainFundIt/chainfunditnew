@@ -29,6 +29,7 @@ import {
   X,
   LogOut,
   Shield,
+  User,
 } from "lucide-react";
 import { MoneyTick } from "iconsax-reactjs";
 import Image from "next/image";
@@ -292,9 +293,13 @@ export default function AdminLayout({
                 width={32}
                 height={32}
               />
-              <div>
-                <span className="text-xl font-bold text-gray-900">Admin</span>
-                <p className="text-xs text-gray-500">ChainFundIt</p>
+              <div onClick={() => router.push("/")} className="cursor-pointer">
+                <span className="text-xl font-bold text-gray-900 cursor-pointer">
+                  Admin
+                </span>
+                <p className="text-xs text-gray-500 cursor-pointer">
+                  ChainFundIt
+                </p>
               </div>
             </div>
           </div>
@@ -359,7 +364,6 @@ export default function AdminLayout({
               </Button>
             </div>
           </div>
-
         </div>
       </div>
 
@@ -379,6 +383,16 @@ export default function AdminLayout({
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex flex-1"></div>
             <div className="flex items-center gap-x-4 lg:gap-x-6">
+              <div className="flex gap-3 items-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.push("/dashboard")}
+                >
+                  Switch to user mode
+                  <User className="h-5 w-5" />
+                </Button>
+              </div>
               {/* Notifications */}
               <NotificationPanel />
 
@@ -420,7 +434,7 @@ export default function AdminLayout({
               Confirm Logout
             </DialogTitle>
             <DialogDescription>
-              Are you sure you want to log out of your dashboard? 
+              Are you sure you want to log out of your dashboard?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex gap-2 sm:justify-end">

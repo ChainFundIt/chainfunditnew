@@ -252,7 +252,7 @@ export default function AdminDashboardOverview() {
               <p>${stats.totalDonations.toLocaleString()}</p>
             </div>
             <div class="metric">
-              <h3>Total Revenue</h3>
+              <h3>Total Donations</h3>
               <p>${formatCurrency(stats.totalRevenue, currency)}</p>
             </div>
           </div>

@@ -1,0 +1,1 @@
+ALTER TABLE "campaigns" ADD COLUMN "creation_request_id" varchar(64);

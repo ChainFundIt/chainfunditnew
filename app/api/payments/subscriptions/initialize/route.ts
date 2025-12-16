@@ -20,6 +20,8 @@ export async function POST(request: NextRequest) {
       period,
       message,
       isAnonymous,
+      donorName,
+      donorPhone,
       authorizationCode, // For Paystack initial authorization
     } = body;
 
@@ -47,6 +49,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const normalizedDonorName =
+      (typeof donorName === "string" && donorName.trim()) ? donorName.trim() : undefined;
 
     // Get authenticated user or create guest user
     const userEmail = await getUserFromRequest(request);
@@ -107,7 +112,7 @@ export async function POST(request: NextRequest) {
       period,
       paymentMethod: paymentProvider,
       donorEmail: user.email!,
-      donorName: user.fullName || undefined,
+      donorName: (isAnonymous ? undefined : (normalizedDonorName || user.fullName || undefined)),
       message,
       isAnonymous: isAnonymous || false,
       authorizationCode,

@@ -9,6 +9,8 @@ export interface DonationData {
   message?: string;
   isAnonymous?: boolean;
   email?: string;
+  donorName?: string;
+  donorPhone?: string;
 }
 
 export interface DonationResult {

@@ -6,15 +6,19 @@ import Link from "next/link";
 import React, { useState } from "react";
 import SessionStatusIndicator from "@/components/dashboard/SessionStatusIndicator";
 import { useAuth } from "@/hooks/use-auth";
+import { useUserProfile } from "@/hooks/use-user-profile";
 import DashboardIcon from "@/public/icons/DashboardIcon";
-import { HamburgerIcon, Menu } from "lucide-react";
+import { HamburgerIcon, Menu, Shield } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 type Props = {};
 
 const Navbar = (props: Props) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const { user, loading } = useAuth();
-
+  const router = useRouter();
+  const { profile, loading: profileLoading } = useUserProfile();
+  const isAdmin = profile?.role === "admin" || profile?.role === "super_admin";
   const handleCreateCampaign = () => {
     window.location.href = "/dashboard/campaigns/create-campaign";
   };
@@ -78,6 +82,13 @@ const Navbar = (props: Props) => {
               <DashboardIcon color="#57534E" width="16" height="16" />
               Dashboard
             </Link>
+          )}
+
+          {user && isAdmin && (
+            <Button variant="ghost" size="sm" className="font-jakarta font-medium text-[14px] leading-[20px] text-[#57534E] hover:text-[#065f46]" onClick={() => router.push("/admin")}>
+              <Shield className="h-5 w-5" />
+              Admin Dashboard
+            </Button>
           )}
 
           <Button

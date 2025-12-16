@@ -68,8 +68,10 @@ export async function GET(
         createdAt: donations.createdAt,
         processedAt: donations.processedAt,
         donorId: donations.donorId,
-        donorName: users.fullName,
-        donorEmail: users.email,
+        donorName: donations.donorName,
+        donorEmail: donations.donorEmail,
+        donorUserName: users.fullName,
+        donorUserEmail: users.email,
         chainerId: donations.chainerId,
       })
       .from(donations)
@@ -98,8 +100,8 @@ export async function GET(
           amount: Number(donation.amount) || 0,
           convertedAmount: donation.convertedAmount ? Number(donation.convertedAmount) : null,
           exchangeRate: donation.exchangeRate ? Number(donation.exchangeRate) : null,
-          donorName: donation.isAnonymous ? 'Anonymous' : (donation.donorName || 'Unknown'),
-          donorEmail: donation.isAnonymous ? null : (donation.donorEmail || null),
+          donorName: donation.isAnonymous ? 'Anonymous' : (donation.donorName || donation.donorUserName || 'Unknown'),
+          donorEmail: donation.isAnonymous ? null : (donation.donorEmail || donation.donorUserEmail || null),
           chainerName,
         };
       })

@@ -86,8 +86,10 @@ export async function GET(request: NextRequest) {
         transactionId: donations.paymentIntentId,
         message: donations.message,
         isAnonymous: donations.isAnonymous,
-        donorName: users.fullName,
-        donorEmail: users.email,
+        donorName: donations.donorName,
+        donorEmail: donations.donorEmail,
+        donorUserName: users.fullName,
+        donorUserEmail: users.email,
         donorAvatar: users.avatar,
         createdAt: donations.createdAt,
         processedAt: donations.processedAt,
@@ -115,7 +117,10 @@ export async function GET(request: NextRequest) {
     const donationsWithStats = receivedDonations.map(donation => ({
       ...donation,
       amount: Number(donation.amount),
-      isSuccessful: donation.paymentStatus === 'completed'
+      isSuccessful: donation.paymentStatus === 'completed',
+      donorName: donation.isAnonymous ? 'Anonymous' : (donation.donorName || donation.donorUserName || 'Unknown'),
+      donorEmail: donation.isAnonymous ? null : (donation.donorEmail || donation.donorUserEmail || null),
+      donorAvatar: donation.isAnonymous ? null : (donation.donorAvatar || null),
     }));
 
 

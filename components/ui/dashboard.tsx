@@ -470,7 +470,7 @@ export const ModernDashboard = ({
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
-          title="Total Revenue"
+          title="Total Donations"
           value={formatCurrency(stats.totalRevenue)}
           change="+12.5%"
           subtitle="Trending up this month"

@@ -15,6 +15,9 @@ function hasCookieConsent(): boolean {
   if (!consent) return false;
   try {
     const consentData = JSON.parse(consent);
+    if (typeof consentData?.preferences?.analytics === "boolean") {
+      return consentData.preferences.analytics === true;
+    }
     return consentData.accepted === true;
   } catch {
     return false;

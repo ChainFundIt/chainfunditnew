@@ -93,8 +93,8 @@ const BenefitsCarousel = () => {
   const activeSlide = slides[selectedIndex] ?? slides[0];
 
   return (
-    <div className="font-jakarta bg-[#59AD4A] py-24 px-4 flex justify-center items-center">
-      <div className="flex flex-col md:flex-row gap-16 items-center w-full max-w-6xl justify-between">
+    <div className="font-jakarta bg-[#59AD4A] py-12 px-2 flex justify-center items-center">
+      <div className="flex flex-col md:flex-row gap-12 items-center w-full max-w-[80rem] justify-between">
         {/* Left Text Content */}
         <div className="w-full md:w-[36rem] flex flex-col gap-6">
           {/* Badge */}

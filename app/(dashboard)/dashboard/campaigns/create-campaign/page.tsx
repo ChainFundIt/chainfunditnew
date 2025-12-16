@@ -135,6 +135,14 @@ export default function CreateCampaignPage() {
   const [createdCampaign, setCreatedCampaign] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("S");
   const [isLoading, setIsLoading] = useState(false);
+  const [creationRequestId] = useState(() => {
+    try {
+      if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") return crypto.randomUUID();
+    } catch (error) {
+      console.error("Error generating creationRequestId:", error);
+    }
+    return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  });
 
   const router = useRouter();
 
@@ -253,11 +261,13 @@ export default function CreateCampaignPage() {
   };
 
   const handleSubmit = async () => {
+    if (isLoading) return;
     setIsLoading(true);
 
     try {
       const payload = new FormData();
 
+      payload.append("creationRequestId", creationRequestId);
       payload.append("title", formData.title);
       payload.append("subtitle", formData.subtitle || "");
       payload.append("description", formData.story);

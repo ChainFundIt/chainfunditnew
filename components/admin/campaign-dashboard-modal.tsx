@@ -36,6 +36,8 @@ interface Campaign {
   status: string;
   createdAt: string;
   coverImageUrl?: string;
+  isChained: boolean;
+  chainerCommissionRate: number;
 }
 
 interface Donation {
@@ -67,6 +69,8 @@ interface CampaignStats {
   totalAmount: number;
   uniqueDonors: number;
   averageDonation: number;
+  isChained: boolean;
+  chainerCommissionRate: number;
 }
 
 interface CampaignDashboardModalProps {
@@ -226,6 +230,7 @@ export function CampaignDashboardModal({
                         <p className="text-xs text-muted-foreground">
                           of {formatCurrency(campaign.goalAmount, campaignCurrency)} goal
                         </p>
+                        
                       </CardContent>
                     </Card>
 
@@ -302,6 +307,18 @@ export function CampaignDashboardModal({
                         <p className="text-sm text-muted-foreground">Current Amount</p>
                         <p className="text-sm font-medium mt-1">
                           {formatCurrency(campaign.currentAmount, campaignCurrency)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Allowed Chaining</p>
+                        <p className="text-sm font-medium mt-1">
+                          {campaign.isChained ? 'Yes' : 'No'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Chainer Commission Rate</p>
+                        <p className="text-sm font-medium mt-1">
+                          {formatCurrency(campaign.chainerCommissionRate, campaignCurrency)}
                         </p>
                       </div>
                     </div>

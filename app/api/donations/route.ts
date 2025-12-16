@@ -68,6 +68,9 @@ export async function POST(request: NextRequest) {
       paymentMethod,
       message,
       isAnonymous,
+      donorName,
+      donorEmail,
+      donorPhone,
     } = body;
 
     // Validate required fields
@@ -154,6 +157,9 @@ export async function POST(request: NextRequest) {
       paymentStatus: 'pending',
       message,
       isAnonymous: isAnonymous || false,
+      donorName: (isAnonymous ? null : (typeof donorName === 'string' ? donorName.trim() : null)),
+      donorEmail: (typeof donorEmail === 'string' ? donorEmail.trim().toLowerCase() : null),
+      donorPhone: (typeof donorPhone === 'string' ? donorPhone.trim() : null),
     }).returning();
 
     return NextResponse.json({
