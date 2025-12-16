@@ -10,6 +10,14 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -76,6 +84,13 @@ interface AnalyticsData {
     revenueGrowth: Array<{ month: string; amount: number }>;
   };
   performance: {
+    campaignRevenue: Array<{
+      id: string;
+      title: string;
+      donations: number;
+      raised: number;
+      platformRevenue: number;
+    }>;
     topCampaigns: Array<{
       id: string;
       title: string;
@@ -139,6 +154,7 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState("30d");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [showAllCampaignRevenue, setShowAllCampaignRevenue] = useState(false);
   const router = useRouter();
   const { locationInfo } = useGeolocationCurrency();
   const currency = locationInfo?.currency?.code || 'USD';
@@ -153,12 +169,13 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     fetchAnalytics();
-  }, [timeRange, refreshKey]);
+  }, [timeRange, refreshKey, currency]);
 
   const fetchAnalytics = async () => {
     try {
       const params = new URLSearchParams({
         range: timeRange,
+        currency,
       });
 
       const response = await fetch(`/api/admin/analytics?${params}`);
@@ -268,7 +285,7 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {formatCurrency(analytics.overview.totalAmount, currency)}
+                {formatCurrency(analytics.overview.platformRevenue, currency)}
               </div>
               <p className="text-xs text-muted-foreground">
                 +8% from last month
@@ -296,13 +313,13 @@ export default function AnalyticsPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Platform Revenue
+                Total Raised
               </CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {formatCurrency(analytics.overview.platformRevenue, currency)}
+                {formatCurrency(analytics.overview.totalAmount, currency)}
               </div>
               <p className="text-xs text-muted-foreground">
                 +15% from last month
@@ -519,6 +536,74 @@ export default function AnalyticsPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Revenue by Campaign */}
+        <Card>
+          <CardHeader className="flex flex-row items-start justify-between gap-4">
+            <div className="space-y-2">
+              <CardTitle>Revenue by Campaign</CardTitle>
+              <CardDescription>
+                Platform revenue generated per campaign (fees accrued on completed donations)
+              </CardDescription>
+            </div>
+            {analytics.performance.campaignRevenue.length > 10 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAllCampaignRevenue((v) => !v)}
+              >
+                {showAllCampaignRevenue ? "Show top 10" : "View all"}
+              </Button>
+            )}
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Campaign</TableHead>
+                    <TableHead className="text-right">Donations</TableHead>
+                    <TableHead className="text-right">Total Raised</TableHead>
+                    <TableHead className="text-right">Platform Revenue</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(showAllCampaignRevenue
+                    ? analytics.performance.campaignRevenue
+                    : analytics.performance.campaignRevenue.slice(0, 10)
+                  ).map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell className="font-medium">{row.title}</TableCell>
+                      <TableCell className="text-right">{row.donations}</TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(row.raised, currency)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(row.platformRevenue, currency)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {analytics.performance.campaignRevenue.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-sm text-gray-500">
+                        No completed donations in this time range.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+            {analytics.performance.campaignRevenue.length > 10 && (
+              <p className="mt-3 text-xs text-gray-500">
+                Showing{" "}
+                {showAllCampaignRevenue
+                  ? analytics.performance.campaignRevenue.length
+                  : Math.min(10, analytics.performance.campaignRevenue.length)}{" "}
+                of {analytics.performance.campaignRevenue.length} campaigns
+              </p>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Conversion Metrics */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

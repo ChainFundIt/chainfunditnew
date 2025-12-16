@@ -234,7 +234,7 @@ export default function DashboardPage() {
     <>
       {/* Welcome Modal */}
       <Dialog open={showWelcome} onOpenChange={setShowWelcome}>
-        <DialogContent className='w-[80%] max-w-md md:max-w-xl bg-[url("/images/heart.jpg")] bg-cover h-[400px] md:h-[600px] px-4 md:px-10 bg-no-repeat rounded-none outline-none font-source'>
+        <DialogContent className='w-[80%] max-w-md md:max-w-xl bg-[url("/images/welcome.jpg")] bg-cover h-[400px] md:h-[600px] px-4 md:px-10 bg-no-repeat rounded-none outline-none font-source'>
           <DialogHeader>
             <div className="h-[3px] w-full bg-[#2C2C2C] rounded-none overflow-hidden mb-4">
               <div

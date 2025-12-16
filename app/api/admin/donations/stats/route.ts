@@ -66,7 +66,9 @@ export async function GET(request: NextRequest) {
         currency: donations.currency,
         paymentStatus: donations.paymentStatus,
         createdAt: donations.createdAt,
-        donorName: users.fullName,
+        isAnonymous: donations.isAnonymous,
+        donorName: donations.donorName,
+        donorUserName: users.fullName,
         campaignTitle: campaigns.title,
       })
       .from(donations)
@@ -86,7 +88,10 @@ export async function GET(request: NextRequest) {
       pendingAmount: Number(pendingAmount?.total) || 0,
       refundedAmount: Number(refundedAmount?.total) || 0,
       averageDonation: Number(averageDonation?.average) || 0,
-      recentDonations: recentDonations || [],
+      recentDonations: (recentDonations || []).map((d) => ({
+        ...d,
+        donorName: d.isAnonymous ? 'Anonymous' : (d.donorName || d.donorUserName || 'Unknown'),
+      })),
       donationGrowth: [],
       statusDistribution: [],
       currencyDistribution: [],

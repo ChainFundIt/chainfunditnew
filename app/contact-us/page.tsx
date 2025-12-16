@@ -24,7 +24,7 @@ const contactMethods = [
     icon: Mail,
     title: "Email Us",
     description: "Send us an email and we'll get back to you within 24 hours",
-    contact: "support@chainfundit.com",
+    contact: "campaigns@chainfundit.com",
     link: "mailto:support@chainfundit.com",
   },
   {

@@ -4,6 +4,8 @@ import { relations } from 'drizzle-orm';
 export const campaigns = pgTable('campaigns', {
   id: uuid('id').primaryKey().defaultRandom(),
   creatorId: uuid('creator_id').notNull(),
+  // Client-provided idempotency key for campaign creation (prevents duplicate creation on retries/double-submits)
+  creationRequestId: varchar('creation_request_id', { length: 64 }),
   title: varchar('title', { length: 255 }).notNull(),
   slug: varchar('slug', { length: 255 }).notNull().unique(),
   subtitle: varchar('subtitle', { length: 255 }),

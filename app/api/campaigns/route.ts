@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { campaigns, users, donations } from '@/lib/schema';
-import { eq, and, or, inArray, count, sum, desc, ne } from 'drizzle-orm';
+import { eq, and, or, inArray, count, sum, desc, ne, like } from 'drizzle-orm';
 import { parse } from 'cookie';
 import { verifyUserJWT } from '@/lib/auth';
 import { generateSlug, generateUniqueSlug } from '@/lib/utils/slug';
@@ -197,6 +197,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     
     // Extract campaign data
+    const creationRequestId = (formData.get('creationRequestId') as string) || null;
     const title = formData.get('title') as string;
     const subtitle = formData.get('subtitle') as string;
     const description = formData.get('description') as string;
@@ -233,6 +234,23 @@ export async function POST(request: NextRequest) {
     // Validate isChained field
     const isChainedBool = isChained === 'true';
 
+    // Idempotency: if this exact creation request was already processed for this user,
+    // return the existing campaign instead of creating a duplicate.
+    if (creationRequestId) {
+      const existingByRequestId = await db
+        .select()
+        .from(campaigns)
+        .where(and(eq(campaigns.creatorId, userId), eq(campaigns.creationRequestId, creationRequestId)))
+        .limit(1);
+
+      if (existingByRequestId.length) {
+        return NextResponse.json(
+          { success: true, data: existingByRequestId[0], idempotent: true },
+          { status: 200 }
+        );
+      }
+    }
+
     // Validate numeric fields
     const goalAmountNum = parseFloat(goalAmount);
     const minimumDonationNum = parseFloat(minimumDonation);
@@ -265,59 +283,89 @@ export async function POST(request: NextRequest) {
     // Generate unique slug for the campaign
     const baseSlug = generateSlug(title);
     
-    // Check for existing slugs to ensure uniqueness
-    const existingSlugs = await db
-      .select({ slug: campaigns.slug })
-      .from(campaigns)
-      .where(eq(campaigns.slug, baseSlug));
-    
-    const uniqueSlug = existingSlugs.length > 0 
-      ? generateUniqueSlug(baseSlug, existingSlugs.map(c => c.slug))
-      : baseSlug;
+    const isUniqueViolation = (err: unknown) => {
+      const e = err as any;
+      return e?.code === '23505' || (typeof e?.message === 'string' && e.message.includes('duplicate key value violates unique constraint'));
+    };
 
-    // Create campaign
-    const newCampaign = await db.insert(campaigns).values({
-      creatorId: userId,
-      title,
-      slug: uniqueSlug,
-      subtitle: subtitle || null,
-      description,
-      reason: reason || null,
-      fundraisingFor: fundraisingFor || null,
-      duration: duration || null,
-      videoUrl: videoUrl || null,
-      coverImageUrl: coverImageUrl || null,
-      galleryImages: galleryImages || null,
-      documents: documents || null,
-      goalAmount: goalAmountNum.toString(),
-      currency,
-      minimumDonation: minimumDonationNum.toString(),
-      chainerCommissionRate: isChainedBool ? commissionRateNum.toString() : '0',
-      isChained: isChainedBool,
-      currentAmount: '0',
-      status: 'active',
-      visibility: visibility || 'public',
-      isActive: true,
-      complianceStatus: 'approved',
-      complianceSummary: null,
-      complianceFlags: null,
-      riskScore: '0',
-      reviewRequired: false,
-      lastScreenedAt: null,
-      blockedAt: null,
-    }).returning();
+    let newCampaign: any[] = [];
+    // Create campaign (retry on slug collisions; handle idempotency-key collisions)
+    for (let attempt = 0; attempt < 3; attempt++) {
+      // Check for existing slugs to ensure uniqueness (include baseSlug-# variants)
+      const existingSlugs = await db
+        .select({ slug: campaigns.slug })
+        .from(campaigns)
+        .where(like(campaigns.slug, `${baseSlug}%`));
+
+      const uniqueSlug = generateUniqueSlug(baseSlug, existingSlugs.map(c => c.slug));
+
+      try {
+        newCampaign = await db.insert(campaigns).values({
+          creatorId: userId,
+          creationRequestId,
+          title,
+          slug: uniqueSlug,
+          subtitle: subtitle || null,
+          description,
+          reason: reason || null,
+          fundraisingFor: fundraisingFor || null,
+          duration: duration || null,
+          videoUrl: videoUrl || null,
+          coverImageUrl: coverImageUrl || null,
+          galleryImages: galleryImages || null,
+          documents: documents || null,
+          goalAmount: goalAmountNum.toString(),
+          currency,
+          minimumDonation: minimumDonationNum.toString(),
+          chainerCommissionRate: isChainedBool ? commissionRateNum.toString() : '0',
+          isChained: isChainedBool,
+          currentAmount: '0',
+          status: 'active',
+          visibility: visibility || 'public',
+          isActive: true,
+          complianceStatus: 'approved',
+          complianceSummary: null,
+          complianceFlags: null,
+          riskScore: '0',
+          reviewRequired: false,
+          lastScreenedAt: null,
+          blockedAt: null,
+        }).returning();
+        break;
+      } catch (err) {
+        // If the idempotency key already exists (race), return the previously created campaign.
+        if (creationRequestId && isUniqueViolation(err)) {
+          const existingByRequestId = await db
+            .select()
+            .from(campaigns)
+            .where(and(eq(campaigns.creatorId, userId), eq(campaigns.creationRequestId, creationRequestId)))
+            .limit(1);
+
+          if (existingByRequestId.length) {
+            return NextResponse.json(
+              { success: true, data: existingByRequestId[0], idempotent: true },
+              { status: 200 }
+            );
+          }
+        }
+
+        // Otherwise: likely a slug collision, retry a couple times.
+        if (attempt === 2 || !isUniqueViolation(err)) throw err;
+      }
+    }
 
     // Send confirmation email to user (non-blocking - don't fail campaign creation if email fails)
     try {
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
                       (request.headers.get('origin') || 'https://chainfundit.com');
-      const campaignUrl = `${baseUrl}/campaign/${uniqueSlug}`;
+      const campaignSlug = newCampaign[0]?.slug;
+      const campaignUrl = `${baseUrl}/campaign/${campaignSlug}`;
       
       await sendCampaignCreationEmail({
         userEmail: userEmail,
         userName: user[0].fullName || user[0].email?.split('@')[0] || 'there',
         campaignTitle: title,
-        campaignSlug: uniqueSlug,
+        campaignSlug: campaignSlug,
         goalAmount: goalAmountNum.toString(),
         currency,
         campaignUrl,

@@ -14,18 +14,27 @@ import BulbIcon from "@/public/icons/BulbIcon";
 import AboutUsImpact from "@/public/icons/AboutUsImpact";
 import OurJourney from "@/public/icons/OurJourney";
 import { useIsMobile } from "@/hooks/use-mobile";
-
-const stats = [
-  { label: "Campaigns Funded", value: "50+", icon: Target },
-  { label: "Successful Donotions", value: "521+", icon: Users },
-  { label: "Amount Raised", value: "£20,250+", icon: TrendingUp },
-  { label: "Countries Reached", value: "2+", icon: Globe },
-];
+import { useImpactMetrics } from "@/hooks/use-impact-metrics";
+import { useGeolocation } from "@/hooks/use-geolocation";
+import { formatCurrency } from "@/lib/utils/currency";
 
 export default function AboutPage() {
   const isMobile = useIsMobile();
   const router = useRouter();
   const journeyRef = useRef<HTMLDivElement | null>(null);
+  const { geolocation } = useGeolocation();
+  const { data } = useImpactMetrics(geolocation?.currency);
+
+  const stats = [
+    { label: "Campaigns Funded", value: data ? `${data.campaignsPublicActive.toLocaleString()}+` : "—", icon: Target },
+    { label: "Successful Donations", value: data ? `${data.donationsCompleted.toLocaleString()}+` : "—", icon: Users },
+    {
+      label: "Amount Raised",
+      value: data ? `${formatCurrency(data.amountRaised.amount, data.amountRaised.currency)}+` : "—",
+      icon: TrendingUp,
+    },
+    { label: "Countries Reached", value: "2+", icon: Globe },
+  ];
   return (
     <>
       <Navbar />

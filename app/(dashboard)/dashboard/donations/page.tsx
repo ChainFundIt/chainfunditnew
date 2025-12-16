@@ -14,12 +14,21 @@ import {
 import { formatCurrency } from "@/lib/utils/currency";
 import { Button } from "@/components/ui/button";
 import { Loader } from "@/components/ui/Loader";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useDashboard, useDonations } from "@/hooks/use-dashboard";
 import {
   getNextRetryTime,
   getStatusMessage,
   isRetryable,
 } from "@/lib/utils/donation-status";
+import { toast } from "sonner";
 
 const tabs = ["Received", "Pending", "Failed"];
 
@@ -70,11 +79,11 @@ const DonationsPage = () => {
         await refreshDonations();
       } else {
         console.error("Retry failed:", result.error);
-        // TODO: Show error toast
+        toast.error(result.error);
       }
     } catch (error) {
       console.error("Retry error:", error);
-      // TODO: Show error toast
+      toast.error("An error occurred while retrying the payment");
     } finally {
       setRetryingDonation(null);
     }
@@ -182,8 +191,8 @@ const DonationsPage = () => {
             <ActionButton />
           </div>
           {/* Table */}
-          <div className="overflow-x-auto overflow-y-hidden w-full">
-            <div className="flex flex-col border border-[#f3f4f6] rounded-bl-[21px] rounded-br-[21px] md:w-full min-w-max">
+          <div className="overflow-y-hidden w-full">
+            <div className="flex flex-col border border-[#f3f4f6] rounded-bl-[21px] rounded-br-[21px] md:w-full">
               {loading && !error && (
                 <div className="flex pt-8 justify-center items-center gap-4 overflow-hidden">
                   <Loader color="#104109" />
@@ -223,144 +232,166 @@ const DonationsPage = () => {
 
               {!loading && !error && donations.length > 0 && (
                 <>
-                  {/* Table Header */}
-                  <div className="bg-[#Fcfdfd] flex py-3 px-5 text-[#6b7280] text-[11px] leading-[14px] font-bold md:justify-between gap-2 border-t">
-                    <div className="w-[15rem]">DONOR</div>
-                    <div className="w-[15rem]">AMOUNT</div>
-                    <div className="w-[15rem]">CAMPAIGN</div>
-                    <div className="w-[15rem]">DATE</div>
-                    <div className="w-[10rem]">STATUS</div>
-                    {(activeTab == "Failed" || activeTab == "Pending") && (
-                      <div className="w-[10rem]">ACTIONS</div>
-                    )}
-                  </div>
-                  {/* Table Data */}
-                  {donations.map((data, index) => {
-                    const canRetry = isRetryable(data as any);
-                    const nextRetryTime = getNextRetryTime(data as any);
-                    return (
-                      <div
-                        className="flex py-3 px-5 bg-white items-center md:justify-between gap-5 border-t"
-                        key={index}
-                      >
-                        {/* Donor */}
-                        <div className="flex gap-4 items-center w-[15rem] truncate">
-                          {data.donorAvatar ? (
-                            <Image
-                              src={data.donorAvatar}
-                              alt={
-                                data.isAnonymous
-                                  ? "Anonymous"
-                                  : data.donorName || "Donor"
-                              }
-                              width={35}
-                              height={35}
-                              style={{
-                                border: "1px solid #f3f4f6",
-                                borderRadius: "999px",
-                              }}
-                            />
-                          ) : (
-                            <div className="w-10 h-10 bg-gradient-to-br from-[#104109] to-[#59ad4a] rounded-full flex items-center justify-center text-white font-semibold">
-                              {data.isAnonymous
-                                ? "A"
-                                : (data.donorName?.[0] || "D").toUpperCase()}
-                            </div>
+                  <div className="bg-white">
+                    <Table className="min-w-max overflow-auto">
+                      <TableHeader className="bg-[#Fcfdfd]">
+                        <TableRow className="border-t">
+                          <TableHead className="py-3 px-5 text-[#6b7280] text-[11px] leading-[14px] font-bold w-[10rem]">
+                            DONOR
+                          </TableHead>
+                          <TableHead className="py-3 px-5 text-[#6b7280] text-[11px] leading-[14px] font-bold w-[10rem]">
+                            AMOUNT
+                          </TableHead>
+                          <TableHead className="py-3 px-5 text-[#6b7280] text-[11px] leading-[14px] font-bold w-[10rem]">
+                            CAMPAIGN
+                          </TableHead>
+                            <TableHead className="py-3 px-5 text-[#6b7280] text-[11px] leading-[14px] font-bold w-[10rem]">
+                            DATE
+                          </TableHead>
+                          <TableHead className="py-3 px-5 text-[#6b7280] text-[11px] leading-[14px] font-bold w-[10rem]">
+                            STATUS
+                          </TableHead>
+                          {(activeTab == "Failed" || activeTab == "Pending") && (
+                            <TableHead className="py-3 px-5 text-[#6b7280] text-[11px] leading-[14px] font-bold w-[10rem]">
+                              ACTIONS
+                            </TableHead>
                           )}
-                          <div className="flex flex-col">
-                            <div className="text-[16px] font-bold leading-[30px] text-[#111827]">
-                              {data.isAnonymous
-                                ? "Anonymous Donation"
-                                : data.donorName || "Donor"}
-                            </div>
-                            <div className="text-[11px] leading-[14px] text-[#6b7280] ">
-                              Via{" "}
-                              <span className="capitalize">
-                                {data.paymentProvider}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        {/* Amount */}
-                        <div className="font-bold text-[#104109] text-[16px] leading-[25px] w-[15rem] truncate">
-                          {formatCurrency(data.amount, data.currency)}
-                        </div>
-                        {/* Campaign */}
-                        <div className="font-medium text-[12px] leading-[18px] text-[#4b5563] w-[15rem] truncate">
-                          {data.campaignTitle}
-                        </div>
-                        {/* Date */}
-                        <div className="text-[12px] leading-[18px] text-[#6b7280] w-[15rem] truncate">
-                          {new Date(data.createdAt).toLocaleDateString()}
-                        </div>
-                        {/* Status */}
-                        <div className=" w-[10rem]">
-                          {activeTab == "Received" && (
-                            <div className="bg-[#f0fdf4] border border-[#DCFCE7]  flex gap-2 items-center rounded-full px-5  py-1 w-fit ">
-                              <CircleCheckBig color="#15803d" size={12} />
-                              <div className="font-bold text-[11px] leading-[14px] text-[#15803d] capitalize">
-                                {data.paymentStatus}
-                              </div>
-                            </div>
-                          )}
-                          {activeTab == "Pending" && (
-                            <div className="flex flex-col gap-1">
-                              <div className="bg-yellow-100 border border-yellow-800  flex gap-2 items-center rounded-full px-5  py-1 w-fit ">
-                                <Clock color="#854d0e" size={12} />
-                                <div className="font-bold text-[11px] leading-[14px] text-yellow-800 capitalize">
-                                  {data.paymentStatus}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {donations.map((data, index) => {
+                          const canRetry = isRetryable(data as any);
+                          const nextRetryTime = getNextRetryTime(data as any);
+                          return (
+                            <TableRow key={index} className="border-t bg-white">
+                              {/* Donor */}
+                              <TableCell className="py-3 px-5 w-[10rem]">
+                                <div className="flex gap-4 items-center truncate">
+                                  {data.donorAvatar ? (
+                                    <Image
+                                      src={data.donorAvatar}
+                                      alt={
+                                        data.isAnonymous
+                                          ? "Anonymous"
+                                          : data.donorName || "Donor"
+                                      }
+                                      width={35}
+                                      height={35}
+                                      style={{
+                                        border: "1px solid #f3f4f6",
+                                        borderRadius: "999px",
+                                      }}
+                                    />
+                                  ) : (
+                                    <div className="w-10 h-10 bg-gradient-to-br from-[#104109] to-[#59ad4a] rounded-full flex items-center justify-center text-white font-semibold shrink-0">
+                                      {data.isAnonymous
+                                        ? "A"
+                                        : (
+                                            data.donorName?.[0] || "D"
+                                          ).toUpperCase()}
+                                    </div>
+                                  )}
+                                  <div className="flex flex-col min-w-0">
+                                    <div className="text-[16px] font-bold leading-[30px] text-[#111827] truncate">
+                                      {data.isAnonymous
+                                        ? "Anonymous Donation"
+                                        : data.donorName || "Donor"}
+                                    </div>
+                                    <div className="text-[11px] leading-[14px] text-[#6b7280]">
+                                      Via{" "}
+                                      <span className="capitalize">
+                                        {data.paymentProvider}
+                                      </span>
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
-                              <div className="text-[10px] leading-[14px] text-[#6b7280] ">
-                                {getStatusMessage(data as any)}
-                              </div>
-                            </div>
-                          )}
-                          {activeTab == "Failed" && (
-                            <div className="bg-destructive border border-transparent  flex gap-2 items-center rounded-full px-5  py-1 w-fit ">
-                              <XCircle color="white" size={12} />
-                              <div className="font-bold text-[11px] leading-[14px] text-destructive-foreground capitalize">
-                                {data.paymentStatus}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        {/* ACTIONS IN FAILED */}
-                        {activeTab == "Failed" && (
-                          <div className="text-[12px] leading-[18px] text-[#6b7280] w-[10rem] ">
-                            {canRetry ? (
-                              <Button
-                                onClick={() => handleRetryPayment(data.id)}
-                                disabled={retryingDonation === data.id}
-                                className="flex items-center gap-2 rounded-[10.5px] justify-center py-3  md:w-fit w-full text-[#104109] bg-white border-[#104109] "
-                              >
-                                <RotateCcw className="h-3 w-3 mr-1" />
-                                {retryingDonation === data.id
-                                  ? "Retrying..."
-                                  : "Retry Payment"}
-                              </Button>
-                            ) : nextRetryTime ? (
-                              <p className="text-xs text-orange-600 mt-2">
-                                Can retry after{" "}
-                                {nextRetryTime.toLocaleDateString()}
-                              </p>
-                            ) : (
-                              <p className="text-xs text-gray-500 mt-2">
-                                Cannot retry
-                              </p>
-                            )}
-                          </div>
-                        )}
-                        {activeTab === "Pending" && (
-                          <p className="text-xs text-orange-600 mt-1 w-[10rem]">
-                            {data.retryAttempts && data.retryAttempts > 0
-                              ? `Retry attempt ${data.retryAttempts} of 3`
-                              : "No Actions Yet"}
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
+                              </TableCell>
+                              {/* Amount */}
+                              <TableCell className="py-3 px-5 font-bold text-[#104109] text-[16px] leading-[25px] w-[10rem] truncate">
+                                {formatCurrency(data.amount, data.currency)}
+                              </TableCell>
+                              {/* Campaign */}
+                              <TableCell className="py-3 px-5 font-medium text-[12px] leading-[18px] text-[#4b5563] w-[10rem] truncate">
+                                {data.campaignTitle}
+                              </TableCell>
+                              {/* Date */}
+                              <TableCell className="py-3 px-5 text-[12px] leading-[18px] text-[#6b7280] w-[10rem] truncate">
+                                {new Date(data.createdAt).toLocaleDateString()}
+                              </TableCell>
+                              {/* Status */}
+                              <TableCell className="py-3 px-5 w-[10rem]">
+                                {activeTab == "Received" && (
+                                  <div className="bg-[#f0fdf4] border border-[#DCFCE7] flex gap-2 items-center rounded-full px-5 py-1 w-fit">
+                                    <CircleCheckBig color="#15803d" size={12} />
+                                    <div className="font-bold text-[11px] leading-[14px] text-[#15803d] capitalize">
+                                      {data.paymentStatus}
+                                    </div>
+                                  </div>
+                                )}
+                                {activeTab == "Pending" && (
+                                  <div className="flex flex-col gap-1">
+                                    <div className="bg-yellow-100 border border-yellow-800 flex gap-2 items-center rounded-full px-5 py-1 w-fit">
+                                      <Clock color="#854d0e" size={12} />
+                                      <div className="font-bold text-[11px] leading-[14px] text-yellow-800 capitalize">
+                                        {data.paymentStatus}
+                                      </div>
+                                    </div>
+                                    <div className="text-[10px] leading-[14px] text-[#6b7280]">
+                                      {getStatusMessage(data as any)}
+                                    </div>
+                                  </div>
+                                )}
+                                {activeTab == "Failed" && (
+                                  <div className="bg-destructive border border-transparent flex gap-2 items-center rounded-full px-5 py-1 w-fit">
+                                    <XCircle color="white" size={12} />
+                                    <div className="font-bold text-[11px] leading-[14px] text-destructive-foreground capitalize">
+                                      {data.paymentStatus}
+                                    </div>
+                                  </div>
+                                )}
+                              </TableCell>
+                              {/* Actions */}
+                              {activeTab == "Failed" && (
+                                <TableCell className="py-3 px-5 w-[10rem] text-[12px] leading-[18px] text-[#6b7280]">
+                                  {canRetry ? (
+                                    <Button
+                                      onClick={() => handleRetryPayment(data.id)}
+                                      disabled={retryingDonation === data.id}
+                                      className="flex items-center gap-2 rounded-[10.5px] text-xs justify-center py-3 md:w-fit w-full text-[#104109] bg-white border-[#104109]"
+                                    >
+                                      <RotateCcw className="h-3 w-3 mr-1" />
+                                      {retryingDonation === data.id
+                                        ? "Retrying..."
+                                        : "Retry Payment"}
+                                    </Button>
+                                  ) : nextRetryTime ? (
+                                    <p className="text-xs text-orange-600 mt-2">
+                                      Can retry after{" "}
+                                      {nextRetryTime.toLocaleDateString()}
+                                    </p>
+                                  ) : (
+                                    <p className="text-xs text-gray-500 mt-2">
+                                      Cannot retry
+                                    </p>
+                                  )}
+                                </TableCell>
+                              )}
+                              {activeTab === "Pending" && (
+                                <TableCell className="py-3 px-5 w-[10rem]">
+                                  <p className="text-xs text-orange-600 mt-1">
+                                    {data.retryAttempts &&
+                                    data.retryAttempts > 0
+                                      ? `Retry attempt ${data.retryAttempts} of 3`
+                                      : "No Actions Yet"}
+                                  </p>
+                                </TableCell>
+                              )}
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </>
               )}
             </div>

@@ -24,6 +24,8 @@ export async function POST(request: NextRequest) {
       message,
       isAnonymous,
       email,
+      donorName,
+      donorPhone,
       simulate = false, // For testing purposes
     } = body;
 
@@ -46,6 +48,13 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const normalizedEmail =
+      (typeof email === "string" && email.trim()) ? email.trim().toLowerCase() : undefined;
+    const normalizedDonorName =
+      (typeof donorName === "string" && donorName.trim()) ? donorName.trim() : undefined;
+    const normalizedDonorPhone =
+      (typeof donorPhone === "string" && donorPhone.trim()) ? donorPhone.trim() : undefined;
 
     // Get authenticated user or create/resolve guest user
     const userEmail = await getUserFromRequest(request);
@@ -74,8 +83,8 @@ export async function POST(request: NextRequest) {
        * Strategy: find-or-create by email (and tolerate race conditions).
        */
       const donorEmail =
-        (typeof email === "string" && email.trim())
-          ? email.trim().toLowerCase()
+        normalizedEmail
+          ? normalizedEmail
           : `guest_${Date.now()}_${Math.random().toString(36).slice(2, 11)}@chainfundit.com`;
 
       const existingUser = await db
@@ -88,11 +97,15 @@ export async function POST(request: NextRequest) {
         user = existingUser[0];
       } else {
         try {
+          const guestDisplayName =
+            isAnonymous
+              ? "Anonymous Donor"
+              : (normalizedDonorName || "Guest Donor");
           const guestUser = await db
             .insert(users)
             .values({
               email: donorEmail,
-              fullName: "Anonymous Donor",
+              fullName: guestDisplayName,
               isVerified: false,
               hasCompletedProfile: false,
             })
@@ -144,6 +157,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const donationDonorName = isAnonymous
+      ? null
+      : (normalizedDonorName || user.fullName || "Guest Donor");
+    const donationDonorEmail = normalizedEmail || user.email || null;
+
     // Create donation record
     const newDonation = await db
       .insert(donations)
@@ -156,6 +174,9 @@ export async function POST(request: NextRequest) {
         paymentStatus: "pending",
         message,
         isAnonymous: isAnonymous || false,
+        donorName: donationDonorName,
+        donorEmail: donationDonorEmail,
+        donorPhone: normalizedDonorPhone || null,
       })
       .returning();
 
@@ -183,8 +204,8 @@ export async function POST(request: NextRequest) {
           {
             donationId,
             campaignId,
-            donorEmail: user.email!,
-            donorName: user.fullName || "",
+            donorEmail: (donationDonorEmail || user.email || "") as string,
+            donorName: donationDonorName || "",
             campaignTitle: campaign.title,
           }
         );
@@ -231,8 +252,8 @@ export async function POST(request: NextRequest) {
         const campaignMetadata = {
           donationId,
           campaignId,
-          donorName: user.fullName || "",
-          donorEmail: user.email!,
+          donorName: donationDonorName || "",
+          donorEmail: donationDonorEmail || user.email!,
           campaignTitle: campaign.title,
           campaignSlug: campaign.slug,
         };

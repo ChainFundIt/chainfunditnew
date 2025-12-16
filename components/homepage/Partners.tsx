@@ -1,32 +1,43 @@
 "use client";
 
 import React from "react";
+import { useImpactMetrics } from "@/hooks/use-impact-metrics";
+import { useGeolocation } from "@/hooks/use-geolocation";
+import { formatCurrency } from "@/lib/utils/currency";
 
 const Partners = () => {
+  const { geolocation } = useGeolocation();
+  const { data } = useImpactMetrics(geolocation?.currency);
+
+  const donationsDisplay = data ? `${data.donationsCompleted.toLocaleString()}+` : "—";
+  const campaignsDisplay = data ? `${data.campaignsPublicActive.toLocaleString()}+` : "—";
+  const countriesDisplay = data ? `${data.countriesReached.toLocaleString()}+` : "—";
+  const amountRaisedDisplay = data ? `${formatCurrency(data.amountRaised.amount, data.amountRaised.currency)}+` : "—";
+
   const metrics = [
     {
-      number: "5k+",
-      label: "Beneficiaries",
-      description: "Lives impacted directly",
+      number: donationsDisplay,
+      label: "Donations",
+      description: "Donations made to campaigns",
       bgColor: "bg-[#FFCF55]",
       textColor: "text-black",
     },
     {
-      number: "12M+",
-      label: "Total Raised",
+      number: amountRaisedDisplay,
+      label: "Amount Raised",
       description: "Donated by global community",
       bgColor: "bg-[#59AD4A]",
       textColor: "text-white",
     },
     {
-      number: "250+",
+      number: campaignsDisplay,
       label: "Campaigns",
       description: "Successful fundraisers",
       bgColor: "bg-[#EDECE0]",
       textColor: "text-black",
     },
     {
-      number: "14+",
+      number: "2+",
       label: "Countries",
       description: "Global reach and support",
       bgColor: "bg-[#104109]",
@@ -47,12 +58,12 @@ const Partners = () => {
           </div>
           {/* Title */}
           <div className="font-bold text-4xl leading-10 text-[#1C1917]">
-            Programs that change lives
+            Campaigns that change lives
           </div>
           {/* Description */}
           <div className="font-normal text-base leading-6 text-[#78716C]">
             Together, we make real impact in communities around the world. Help
-            us bring hope and support.
+            us bring hope and support through donations.
           </div>
         </div>
 
@@ -63,7 +74,7 @@ const Partners = () => {
               key={index}
               className={`${metric.bgColor} ${metric.textColor} rounded-3xl p-8 gap-2 flex flex-col md:w-[18rem] w-full`}
             >
-              <div className="font-extrabold text-5xl leading-[48px]">
+              <div className="font-extrabold text-3xl leading-[48px]">
                 {metric.number}
               </div>
               <div className="font-bold text-lg leading-7">{metric.label}</div>

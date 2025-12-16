@@ -28,6 +28,8 @@ import { toast } from "sonner";
 import StripePaymentForm from "@/components/payments/StripePaymentForm";
 import Image from "next/image";
 import { trackDonation, track } from "@/lib/analytics";
+import { useShortenLink } from "@/hooks/use-shorten-link";
+import { getFullCampaignUrl } from "@/lib/utils/campaign-url";
 
 interface Campaign {
   id: string;
@@ -67,6 +69,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
   const [paymentProvider, setPaymentProvider] = useState<PaymentProvider>("stripe");
   const [supportedProviders, setSupportedProviders] = useState<PaymentProvider[]>([]);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [campaignShareUrl, setCampaignShareUrl] = useState("");
   const [stripePaymentData, setStripePaymentData] = useState<{
     clientSecret: string;
     donationId: string;
@@ -75,6 +78,31 @@ const DonateModal: React.FC<DonateModalProps> = ({
   } | null>(null);
   
   const { loading: donationLoading, error: donationError, initializeDonation } = useDonations();
+  const { shortenLink, isLoading: isShorteningLink } = useShortenLink();
+
+  const normalizeMaybeUrl = (value?: string): string | null => {
+    if (!value) return null;
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
+    // Common case: domain/path without scheme (e.g. "chainfund.it/abc")
+    if (trimmed.includes(".")) return `https://${trimmed}`;
+    return null;
+  };
+
+  const getBestCampaignShareUrl = async (): Promise<string | null> => {
+    if (!campaign) return null;
+    const existingShort = normalizeMaybeUrl(campaign.shortUrl);
+    if (existingShort) return existingShort;
+
+    const longUrl = getFullCampaignUrl(campaign);
+    const shortUrl = await shortenLink(longUrl).catch(() => null);
+    if (shortUrl) {
+      setCampaignShareUrl(shortUrl);
+      return shortUrl;
+    }
+    return longUrl;
+  };
 
   useEffect(() => {
     if (campaign && open) {
@@ -100,6 +128,27 @@ const DonateModal: React.FC<DonateModalProps> = ({
       }
     }
   }, [campaign, open]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (campaign && open) {
+      const existingShort = normalizeMaybeUrl(campaign.shortUrl);
+      if (existingShort) {
+        setCampaignShareUrl(existingShort);
+      } else {
+        const longUrl = getFullCampaignUrl(campaign);
+        setCampaignShareUrl(longUrl);
+        shortenLink(longUrl).then((shortUrl) => {
+          if (!cancelled && shortUrl) setCampaignShareUrl(shortUrl);
+        });
+      }
+    } else if (!open) {
+      setCampaignShareUrl("");
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [campaign, open, shortenLink]);
 
   const handleCurrencyChange = (currency: string) => {
     setSelectedCurrency(currency);
@@ -187,6 +236,8 @@ const DonateModal: React.FC<DonateModalProps> = ({
             message: comments,
             isAnonymous: anonymous,
             email: email || undefined,
+            donorName: !anonymous ? (fullName || undefined) : undefined,
+            donorPhone: !anonymous ? (phone || undefined) : undefined,
             chainerId: referralChainer?.id || null,
           }),
         });
@@ -222,6 +273,8 @@ const DonateModal: React.FC<DonateModalProps> = ({
         message: comments,
         isAnonymous: anonymous,
         email: email || undefined,
+        donorName: !anonymous ? (fullName || undefined) : undefined,
+        donorPhone: !anonymous ? (phone || undefined) : undefined,
         chainerId: referralChainer?.id || null,
       };
 
@@ -299,19 +352,17 @@ const DonateModal: React.FC<DonateModalProps> = ({
 
   const handleCopyLink = async () => {
     if (!campaign) return;
-    
-    const campaignUrl = campaign.shortUrl 
-      ? `https://chainfundit.com/c/${campaign.shortUrl}`
-      : `https://chainfundit.com/campaign/${campaign.slug}`;
+    const urlToCopy = (await getBestCampaignShareUrl()) || "";
+    if (!urlToCopy) return;
     
     try {
-      await navigator.clipboard.writeText(campaignUrl);
+      await navigator.clipboard.writeText(urlToCopy);
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy link:', err);
       const textArea = document.createElement('textarea');
-      textArea.value = campaignUrl;
+      textArea.value = urlToCopy;
       document.body.appendChild(textArea);
       textArea.select();
       document.execCommand('copy');
@@ -323,14 +374,11 @@ const DonateModal: React.FC<DonateModalProps> = ({
 
   const generateShareUrl = (platform: string) => {
     if (!campaign) return '#';
-    
-    const campaignUrl = campaign.shortUrl 
-      ? `https://chainfundit.com/c/${campaign.shortUrl}`
-      : `https://chainfundit.com/campaign/${campaign.slug}`;
+    const urlToShare = campaignShareUrl || getFullCampaignUrl(campaign);
     
     const shareText = `I just donated ${selectedCurrency} ${amount} to "${campaign.title}"! Help support this cause: `;
     
-    const encodedUrl = encodeURIComponent(campaignUrl);
+    const encodedUrl = encodeURIComponent(urlToShare);
     const encodedText = encodeURIComponent(shareText);
     
     switch (platform) {
@@ -349,14 +397,11 @@ const DonateModal: React.FC<DonateModalProps> = ({
 
   const handleInstagramShare = () => {
     if (!campaign) return;
-    
-    const campaignUrl = campaign.shortUrl 
-      ? `https://chainfundit.com/c/${campaign.shortUrl}`
-      : `https://chainfundit.com/campaign/${campaign.slug}`;
-    
-    const shareText = `I just donated ${selectedCurrency} ${amount} to "${campaign.title}"! Help support this cause: ${campaignUrl}`;
-    
-    navigator.clipboard.writeText(shareText).then(() => {
+    getBestCampaignShareUrl().then((bestUrl) => {
+      const urlToShare = bestUrl || campaignShareUrl || getFullCampaignUrl(campaign);
+      const shareText = `I just donated ${selectedCurrency} ${amount} to "${campaign.title}"! Help support this cause: ${urlToShare}`;
+
+      navigator.clipboard.writeText(shareText).then(() => {
       alert('Share text copied! Paste it in your Instagram story or post.');
     }).catch(() => {
       const textArea = document.createElement('textarea');
@@ -366,6 +411,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
       document.execCommand('copy');
       document.body.removeChild(textArea);
       alert('Share text copied! Paste it in your Instagram story or post.');
+    });
     });
   };
 
@@ -577,7 +623,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
                           color: "#1a1a1a"
                         }}
                       >
-                        Your Name (Optional)
+                        Your Name
                       </label>
                       <input
                         id="fullName"
@@ -917,12 +963,18 @@ const DonateModal: React.FC<DonateModalProps> = ({
                 </span>
                 <Button 
                   onClick={handleCopyLink}
+                  disabled={isShorteningLink}
                   className="w-[185px] h-16 flex justify-between items-center font-medium text-2xl bg-[#5F8555] text-white hover:bg-[#4a6b42] hover:text-white"
                 >
                   {linkCopied ? (
                     <>
                       <Check className="mr-2" size={16} />
                       Copied!
+                    </>
+                  ) : isShorteningLink ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                      Generating...
                     </>
                   ) : (
                     <>

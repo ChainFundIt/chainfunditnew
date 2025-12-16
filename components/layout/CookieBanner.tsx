@@ -2,20 +2,87 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { CookieIcon, X } from "lucide-react";
+import { CookieIcon } from "lucide-react";
 import Link from "next/link";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 const COOKIE_CONSENT_KEY = "chainfundit_cookie_consent";
 const COOKIE_CONSENT_EXPIRY_DAYS = 365;
 
+type CookieConsentData = {
+  version?: number;
+  accepted?: boolean; // legacy + mirrors analytics preference
+  timestamp?: string;
+  preferences?: {
+    analytics?: boolean;
+  };
+};
+
+function readConsentData(): CookieConsentData | null {
+  if (typeof window === "undefined") return null;
+  const raw = localStorage.getItem(COOKIE_CONSENT_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as CookieConsentData;
+  } catch {
+    return null;
+  }
+}
+
+function getAnalyticsPreference(consent: CookieConsentData | null): boolean | null {
+  if (!consent) return null;
+  if (typeof consent.preferences?.analytics === "boolean") return consent.preferences.analytics;
+  if (typeof consent.accepted === "boolean") return consent.accepted;
+  return null;
+}
+
+function persistConsent(analytics: boolean) {
+  const consentData: CookieConsentData = {
+    version: 1,
+    accepted: analytics,
+    timestamp: new Date().toISOString(),
+    preferences: { analytics },
+  };
+  localStorage.setItem(COOKIE_CONSENT_KEY, JSON.stringify(consentData));
+}
+
+function applyAnalyticsConsent(analytics: boolean) {
+  if (typeof window === "undefined" || !window.gtag) return;
+
+  window.gtag("consent", "update", {
+    analytics_storage: analytics ? "granted" : "denied",
+  });
+
+  if (analytics) {
+    // Initialize tracking now that consent is granted
+    window.gtag("config", "G-7VNFF33E8Z", {
+      page_path: window.location.pathname,
+    });
+  }
+}
+
 export function CookieBanner() {
   const [showBanner, setShowBanner] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
+  const [analyticsEnabled, setAnalyticsEnabled] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     // Check if user has already given consent
-    const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
+    const consent = readConsentData();
+    const analyticsPref = getAnalyticsPreference(consent);
+    if (typeof analyticsPref === "boolean") setAnalyticsEnabled(analyticsPref);
+
     if (!consent) {
       // Small delay to ensure smooth page load
       setTimeout(() => {
@@ -25,39 +92,24 @@ export function CookieBanner() {
   }, []);
 
   const handleAccept = () => {
-    const consentData = {
-      accepted: true,
-      timestamp: new Date().toISOString(),
-    };
-    localStorage.setItem(COOKIE_CONSENT_KEY, JSON.stringify(consentData));
+    persistConsent(true);
     setShowBanner(false);
-    
-    // Enable Google Analytics if user accepts
-    if (typeof window !== "undefined" && window.gtag) {
-      window.gtag("consent", "update", {
-        analytics_storage: "granted",
-      });
-      // Initialize tracking now that consent is granted
-      window.gtag("config", "G-7VNFF33E8Z", {
-        page_path: window.location.pathname,
-      });
-    }
+
+    applyAnalyticsConsent(true);
   };
 
   const handleReject = () => {
-    const consentData = {
-      accepted: false,
-      timestamp: new Date().toISOString(),
-    };
-    localStorage.setItem(COOKIE_CONSENT_KEY, JSON.stringify(consentData));
+    persistConsent(false);
     setShowBanner(false);
-    
-    // Disable Google Analytics if user rejects
-    if (typeof window !== "undefined" && window.gtag) {
-      window.gtag("consent", "update", {
-        analytics_storage: "denied",
-      });
-    }
+
+    applyAnalyticsConsent(false);
+  };
+
+  const handleSavePreferences = () => {
+    persistConsent(analyticsEnabled);
+    applyAnalyticsConsent(analyticsEnabled);
+    setPreferencesOpen(false);
+    setShowBanner(false);
   };
 
   if (!mounted || !showBanner) {
@@ -101,6 +153,14 @@ export function CookieBanner() {
                 Reject
               </Button>
               <Button
+                onClick={() => setPreferencesOpen(true)}
+                variant="outline"
+                size="sm"
+                className="w-full sm:w-auto"
+              >
+                Manage Preferences
+              </Button>
+              <Button
                 onClick={handleAccept}
                 variant="default"
                 size="sm"
@@ -112,6 +172,60 @@ export function CookieBanner() {
           </div>
         </div>
       </div>
+
+      <Dialog open={preferencesOpen} onOpenChange={setPreferencesOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cookie Preferences</DialogTitle>
+            <DialogDescription>
+              Choose which cookies you want to allow. Necessary cookies are always on.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-4 rounded-md border p-3">
+              <div className="space-y-1">
+                <Label>Necessary</Label>
+                <p className="text-sm text-muted-foreground">
+                  Required for the website to function.
+                </p>
+              </div>
+              <Switch checked disabled aria-label="Necessary cookies enabled" />
+            </div>
+
+            <div className="flex items-center justify-between gap-4 rounded-md border p-3">
+              <div className="space-y-1">
+                <Label htmlFor="analytics-cookies">Analytics</Label>
+                <p className="text-sm text-muted-foreground">
+                  Helps us understand site usage and improve the product.
+                </p>
+              </div>
+              <Switch
+                id="analytics-cookies"
+                checked={analyticsEnabled}
+                onCheckedChange={setAnalyticsEnabled}
+                aria-label="Toggle analytics cookies"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setPreferencesOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setPreferencesOpen(false);
+                handleReject();
+              }}
+            >
+              Reject All
+            </Button>
+            <Button onClick={handleSavePreferences}>Save Preferences</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -119,13 +233,8 @@ export function CookieBanner() {
 // Helper function to check if user has consented to cookies
 export function hasCookieConsent(): boolean {
   if (typeof window === "undefined") return false;
-  const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
-  if (!consent) return false;
-  try {
-    const consentData = JSON.parse(consent);
-    return consentData.accepted === true;
-  } catch {
-    return false;
-  }
+  const consentData = readConsentData();
+  const analytics = getAnalyticsPreference(consentData);
+  return analytics === true;
 }
 

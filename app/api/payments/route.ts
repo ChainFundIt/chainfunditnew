@@ -81,8 +81,10 @@ export async function GET(request: NextRequest) {
         transactionId: donations.paymentIntentId,
         message: donations.message,
         isAnonymous: donations.isAnonymous,
-        donorName: users.fullName,
-        donorEmail: users.email,
+        donorName: donations.donorName,
+        donorEmail: donations.donorEmail,
+        donorUserName: users.fullName,
+        donorUserEmail: users.email,
         donorAvatar: users.avatar,
         createdAt: donations.createdAt,
         processedAt: donations.processedAt,
@@ -150,10 +152,17 @@ export async function GET(request: NextRequest) {
       }
     });
 
+    const donationsWithAnonMasking = userDonations.map((d) => ({
+      ...d,
+      donorName: d.isAnonymous ? 'Anonymous' : (d.donorName || d.donorUserName || 'Unknown'),
+      donorEmail: d.isAnonymous ? null : (d.donorEmail || d.donorUserEmail || null),
+      donorAvatar: d.isAnonymous ? null : (d.donorAvatar || null),
+    }));
+
     return NextResponse.json({
       success: true,
       data: {
-        donations: userDonations,
+        donations: donationsWithAnonMasking,
         summary,
         pagination: {
           page,

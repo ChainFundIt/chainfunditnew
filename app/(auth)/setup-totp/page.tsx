@@ -170,11 +170,11 @@ function SetupTotpPageInner() {
     }
   };
 
-  const skipSetup = async () => {
-    // Allow users to skip TOTP setup for now
-    toast.info('You can set up two-factor authentication later in your settings');
-    router.push('/dashboard');
-  };
+  // const skipSetup = async () => {
+  //   // Allow users to skip TOTP setup for now
+  //   toast.info('You can set up two-factor authentication later in your settings');
+  //   router.push('/dashboard');
+  // };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -235,9 +235,9 @@ function SetupTotpPageInner() {
                     {isLoading ? 'Generating...' : 'Start Setup'}
                   </Button>
                   
-                  <Button variant="outline" onClick={skipSetup} className="w-full">
+                  {/* <Button variant="outline" onClick={skipSetup} className="w-full">
                     Skip for now
-                  </Button>
+                  </Button> */}
                 </div>
                 
                 {error && (

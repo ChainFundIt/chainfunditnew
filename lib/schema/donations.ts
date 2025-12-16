@@ -6,6 +6,10 @@ export const donations = pgTable('donations', {
   campaignId: uuid('campaign_id').notNull(),
   donorId: uuid('donor_id').notNull(),
   chainerId: uuid('chainer_id'), // nullable - only if referred by chainer
+  // Donor details captured at time of donation (do not rely on users table for display)
+  donorName: varchar('donor_name', { length: 255 }),
+  donorEmail: varchar('donor_email', { length: 255 }),
+  donorPhone: varchar('donor_phone', { length: 50 }),
   amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
   currency: varchar('currency', { length: 3 }).notNull(), // USD, GBP, NGN
   // Currency conversion fields
