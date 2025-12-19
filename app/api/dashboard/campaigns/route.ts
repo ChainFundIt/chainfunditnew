@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db, normalizeEmail } from '@/lib/db';
 import { users, campaigns, donations } from '@/lib/schema';
 import { eq, and, sql, desc, count, sum } from 'drizzle-orm';
 import { parse } from 'cookie';
@@ -16,20 +16,61 @@ async function getUserFromRequest(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  let userId: string | undefined;
   try {
     const email = await getUserFromRequest(request);
     if (!email) {
       return NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
     }
 
-    // Get user
-    const user = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    // Get user with case-insensitive email lookup
+    const normalizedEmail = normalizeEmail(email);
+    const user = await db
+      .select()
+      .from(users)
+      .where(sql`LOWER(${users.email}) = LOWER(${normalizedEmail})`)
+      .limit(1);
     if (!user.length) {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
     }
 
-    const userId = user[0].id;
-    console.log(userId)
+    userId = user[0].id;
+    console.log('[Dashboard Campaigns API] User ID:', userId);
+
+    // Debug: Check if any campaigns exist for this user (simple query without joins)
+    const debugCampaigns = await db
+      .select({
+        id: campaigns.id,
+        title: campaigns.title,
+        status: campaigns.status,
+        isActive: campaigns.isActive,
+        creatorId: campaigns.creatorId,
+      })
+      .from(campaigns)
+      .where(eq(campaigns.creatorId, userId));
+    
+    console.log('[Dashboard Campaigns API] Debug - Simple query count:', debugCampaigns.length);
+    if (debugCampaigns.length > 0) {
+      console.log('[Dashboard Campaigns API] Debug - Found campaigns:', debugCampaigns.map(c => ({
+        id: c.id,
+        title: c.title,
+        status: c.status,
+        isActive: c.isActive,
+        creatorId: c.creatorId
+      })));
+    } else {
+      console.log('[Dashboard Campaigns API] Debug - No campaigns found for user ID:', userId);
+      // Check if campaigns exist with different creatorId (maybe data issue)
+      const allUserCampaigns = await db
+        .select({
+          id: campaigns.id,
+          title: campaigns.title,
+          creatorId: campaigns.creatorId,
+        })
+        .from(campaigns)
+        .limit(5);
+      console.log('[Dashboard Campaigns API] Debug - Sample campaigns in DB (first 5):', allUserCampaigns);
+    }
 
     // Get user's campaigns with donation stats
     const userCampaigns = await db
@@ -73,6 +114,7 @@ export async function GET(request: NextRequest) {
       .where(eq(campaigns.creatorId, userId))
       .groupBy(
         campaigns.id,
+        campaigns.slug,
         campaigns.title,
         campaigns.subtitle,
         campaigns.description,
@@ -84,8 +126,10 @@ export async function GET(request: NextRequest) {
         campaigns.currency,
         campaigns.minimumDonation,
         campaigns.chainerCommissionRate,
+        campaigns.isChained,
         campaigns.currentAmount,
         campaigns.status,
+        campaigns.visibility,
         campaigns.isActive,
         campaigns.coverImageUrl,
         campaigns.galleryImages,
@@ -98,6 +142,17 @@ export async function GET(request: NextRequest) {
         users.avatar
       )
       .orderBy(desc(campaigns.createdAt));
+
+    console.log('[Dashboard Campaigns API] Raw campaigns count:', userCampaigns.length);
+    if (userCampaigns.length > 0) {
+      console.log('[Dashboard Campaigns API] Sample campaign:', {
+        id: userCampaigns[0].id,
+        title: userCampaigns[0].title,
+        status: userCampaigns[0].status,
+        isActive: userCampaigns[0].isActive,
+        creatorId: userCampaigns[0].creatorId
+      });
+    }
 
     const campaignsWithStats = userCampaigns.map(campaign => ({
       ...campaign,
@@ -114,9 +169,17 @@ export async function GET(request: NextRequest) {
       }
     }));
 
+    console.log('[Dashboard Campaigns API] Returning campaigns count:', campaignsWithStats.length);
     return NextResponse.json({ success: true, campaigns: campaignsWithStats });
   } catch (error) {
     console.error('User campaigns error:', error);
-    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error('Error details:', { errorMessage, errorStack, userId });
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Internal server error',
+      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+    }, { status: 500 });
   }
 } 

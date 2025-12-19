@@ -21,7 +21,7 @@ export interface TwoFactorVerification {
 export async function generateTwoFactorSetup(userEmail: string): Promise<TwoFactorSetup> {
   // Generate a new secret
   const secret = speakeasy.generateSecret({
-    name: `ChainFundIt Admin (${userEmail})`,
+    name: `ChainFundIt (${userEmail})`,
     issuer: 'ChainFundIt',
     length: 32,
   });

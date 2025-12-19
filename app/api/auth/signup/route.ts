@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
-import { db } from "@/lib/db";
+import { db, normalizeEmail } from "@/lib/db";
 import { emailOtps } from "@/lib/schema/email-otps";
 import { users } from "@/lib/schema/users";
-import { eq, and, desc, gt, lt } from "drizzle-orm";
+import { eq, and, desc, gt, lt, sql } from "drizzle-orm";
 import { generateTokenPair } from "@/lib/auth";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -46,8 +46,11 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Rate limiting
-      if (!checkRateLimit(`signup_${email}`)) {
+      // Normalize email to lowercase for consistent storage
+      const normalizedEmail = normalizeEmail(email);
+
+      // Rate limiting (use normalized email)
+      if (!checkRateLimit(`signup_${normalizedEmail}`)) {
         return NextResponse.json(
           { success: false, error: "Too many requests. Please wait a minute before trying again." },
           { status: 429 }
@@ -60,8 +63,8 @@ export async function POST(request: NextRequest) {
       // Clean up expired OTPs first
       await db.delete(emailOtps).where(lt(emailOtps.expiresAt, new Date()));
       
-      // Insert new OTP
-      await db.insert(emailOtps).values({ email, otp: generatedOtp, expiresAt });
+      // Insert new OTP with normalized email
+      await db.insert(emailOtps).values({ email: normalizedEmail, otp: generatedOtp, expiresAt });
 
       // Check if Resend is properly configured
       if (!process.env.RESEND_API_KEY) {
@@ -116,8 +119,11 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Rate limiting for verification
-      if (!checkRateLimit(`verify_${email}`, 5, 300000)) { // 5 attempts per 5 minutes
+      // Normalize email to lowercase for consistent storage and lookup
+      const normalizedEmail = normalizeEmail(email);
+
+      // Rate limiting for verification (use normalized email)
+      if (!checkRateLimit(`verify_${normalizedEmail}`, 5, 300000)) { // 5 attempts per 5 minutes
         return NextResponse.json(
           { success: false, error: "Too many verification attempts. Please wait 5 minutes before trying again." },
           { status: 429 }
@@ -126,12 +132,12 @@ export async function POST(request: NextRequest) {
 
       const now = new Date();
       
-      // Find and delete OTP in one operation
+      // Find and delete OTP in one operation with case-insensitive email lookup
       const [record] = await db
         .delete(emailOtps)
         .where(
           and(
-            eq(emailOtps.email, email),
+            sql`LOWER(${emailOtps.email}) = LOWER(${normalizedEmail})`,
             eq(emailOtps.otp, otp),
             gt(emailOtps.expiresAt, now)
           )
@@ -148,11 +154,11 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Check if user exists
+      // Check if user exists with case-insensitive email lookup
       const [existingUser] = await db
         .select()
         .from(users)
-        .where(eq(users.email, email))
+        .where(sql`LOWER(${users.email}) = LOWER(${normalizedEmail})`)
         .limit(1);
 
       if (existingUser) {
@@ -162,12 +168,12 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Create user
-      const name = fullName || email.split("@")[0];
+      // Create user with normalized email (always store lowercase)
+      const name = fullName || normalizedEmail.split("@")[0];
       const [newUser] = await db
         .insert(users)
         .values({ 
-          email, 
+          email: normalizedEmail, // Store normalized email
           fullName: name, 
           hasCompletedProfile: false,
           role: 'user' // Default role for new signups

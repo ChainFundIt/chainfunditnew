@@ -401,7 +401,20 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     )}
+                    {!loading && campaigns.length === 0 && (
+                      <div className="md:w-[720px] w-full h-[400px] flex items-center justify-center">
+                        <div className="flex flex-col items-center gap-4 text-center">
+                          <div className="text-[#6B7280] text-[16px] font-medium">
+                            No campaigns yet
+                          </div>
+                          <div className="text-[#9CA3AF] text-[14px]">
+                            Start your first campaign to begin fundraising
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     {!loading &&
+                      campaigns.length > 0 &&
                       campaigns.slice(0, 2).map((data) => {
                         return (
                           <div key={data.id}>
