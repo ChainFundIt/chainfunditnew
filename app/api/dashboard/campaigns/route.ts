@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
         creatorName: users.fullName,
         creatorAvatar: users.avatar,
         donationCount: count(donations.id),
-        totalRaised: sum(donations.amount)
+        totalRaised: sum(sql`COALESCE(${donations.convertedAmount}, ${donations.amount})`)
       })
       .from(campaigns)
       .leftJoin(users, eq(campaigns.creatorId, users.id))
@@ -123,20 +123,27 @@ export async function GET(request: NextRequest) {
       )
       .orderBy(desc(campaigns.createdAt));
 
-    const campaignsWithStats = userCampaigns.map(campaign => ({
-      ...campaign,
-      goalAmount: Number(campaign.goalAmount),
-      currentAmount: Number(campaign.totalRaised || 0), // Use totalRaised instead of currentAmount
-      donationCount: Number(campaign.donationCount),
-      totalRaised: Number(campaign.totalRaised || 0),
-      progressPercentage: Math.min(100, Math.round((Number(campaign.totalRaised || 0) / Number(campaign.goalAmount)) * 100)),
-      stats: {
-        totalDonations: Number(campaign.donationCount),
-        totalAmount: Number(campaign.totalRaised || 0),
-        uniqueDonors: Number(campaign.donationCount), // This might need to be calculated differently
-        progressPercentage: Math.min(100, Math.round((Number(campaign.totalRaised || 0) / Number(campaign.goalAmount)) * 100))
-      }
-    }));
+    const campaignsWithStats = userCampaigns.map(campaign => {
+      // Use currentAmount from database (source of truth) which is calculated using convertedAmount
+      // totalRaised is kept for reference but currentAmount is the authoritative value
+      const currentAmount = Number(campaign.currentAmount || 0);
+      const goalAmount = Number(campaign.goalAmount);
+      
+      return {
+        ...campaign,
+        goalAmount,
+        currentAmount,
+        donationCount: Number(campaign.donationCount),
+        totalRaised: Number(campaign.totalRaised || 0), // Calculated using convertedAmount for reference
+        progressPercentage: Math.min(100, Math.round((currentAmount / goalAmount) * 100)),
+        stats: {
+          totalDonations: Number(campaign.donationCount),
+          totalAmount: currentAmount,
+          uniqueDonors: Number(campaign.donationCount), // This might need to be calculated differently
+          progressPercentage: Math.min(100, Math.round((currentAmount / goalAmount) * 100))
+        }
+      };
+    });
 
     return NextResponse.json({ success: true, campaigns: campaignsWithStats });
   } catch (error) {
