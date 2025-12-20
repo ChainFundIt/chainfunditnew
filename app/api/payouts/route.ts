@@ -571,7 +571,7 @@ export async function POST(request: NextRequest) {
           userId: user.id,
           campaignId,
           requestedAmount: requestedAmount.toString(),
-          grossAmount: requestedAmount.toString(),
+          grossAmount: totalRaised.toString(), // Total amount raised for the campaign
           fees: fees.toString(),
           netAmount: netAmount.toString(),
           currency: getCurrencyCode(currency),
