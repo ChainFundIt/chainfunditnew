@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 export function useShortenLink() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const shortenLink = async (longUrl: string): Promise<string | null> => {
+  const shortenLink = useCallback(async (longUrl: string): Promise<string | null> => {
     setIsLoading(true);
     setError(null);
 
@@ -38,7 +38,7 @@ export function useShortenLink() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   return {
     shortenLink,

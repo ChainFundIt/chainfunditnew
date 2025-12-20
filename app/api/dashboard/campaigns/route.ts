@@ -35,7 +35,6 @@ export async function GET(request: NextRequest) {
     }
 
     userId = user[0].id;
-    console.log('[Dashboard Campaigns API] User ID:', userId);
 
     // Debug: Check if any campaigns exist for this user (simple query without joins)
     const debugCampaigns = await db
@@ -49,27 +48,8 @@ export async function GET(request: NextRequest) {
       .from(campaigns)
       .where(eq(campaigns.creatorId, userId));
     
-    console.log('[Dashboard Campaigns API] Debug - Simple query count:', debugCampaigns.length);
     if (debugCampaigns.length > 0) {
-      console.log('[Dashboard Campaigns API] Debug - Found campaigns:', debugCampaigns.map(c => ({
-        id: c.id,
-        title: c.title,
-        status: c.status,
-        isActive: c.isActive,
-        creatorId: c.creatorId
-      })));
     } else {
-      console.log('[Dashboard Campaigns API] Debug - No campaigns found for user ID:', userId);
-      // Check if campaigns exist with different creatorId (maybe data issue)
-      const allUserCampaigns = await db
-        .select({
-          id: campaigns.id,
-          title: campaigns.title,
-          creatorId: campaigns.creatorId,
-        })
-        .from(campaigns)
-        .limit(5);
-      console.log('[Dashboard Campaigns API] Debug - Sample campaigns in DB (first 5):', allUserCampaigns);
     }
 
     // Get user's campaigns with donation stats
@@ -143,17 +123,6 @@ export async function GET(request: NextRequest) {
       )
       .orderBy(desc(campaigns.createdAt));
 
-    console.log('[Dashboard Campaigns API] Raw campaigns count:', userCampaigns.length);
-    if (userCampaigns.length > 0) {
-      console.log('[Dashboard Campaigns API] Sample campaign:', {
-        id: userCampaigns[0].id,
-        title: userCampaigns[0].title,
-        status: userCampaigns[0].status,
-        isActive: userCampaigns[0].isActive,
-        creatorId: userCampaigns[0].creatorId
-      });
-    }
-
     const campaignsWithStats = userCampaigns.map(campaign => ({
       ...campaign,
       goalAmount: Number(campaign.goalAmount),
@@ -169,13 +138,10 @@ export async function GET(request: NextRequest) {
       }
     }));
 
-    console.log('[Dashboard Campaigns API] Returning campaigns count:', campaignsWithStats.length);
     return NextResponse.json({ success: true, campaigns: campaignsWithStats });
   } catch (error) {
-    console.error('User campaigns error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     const errorStack = error instanceof Error ? error.stack : undefined;
-    console.error('Error details:', { errorMessage, errorStack, userId });
     return NextResponse.json({ 
       success: false, 
       error: 'Internal server error',

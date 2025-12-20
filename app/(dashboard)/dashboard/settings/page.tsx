@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Bell, CreditCard, Lock, User } from "lucide-react";
 import Account from "./account";
 import Security from "./security";
@@ -14,8 +15,22 @@ const tabs = [
   { label: "Payments", Icon: CreditCard },
 ];
 
-const SettingsPage = () => {
+const SettingsPageContent = () => {
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState(tabs[0].label);
+
+  // Read tab from URL query parameter on mount
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam) {
+      const tabLabel = tabs.find(
+        (tab) => tab.label.toLowerCase() === tabParam.toLowerCase()
+      )?.label;
+      if (tabLabel) {
+        setActiveTab(tabLabel);
+      }
+    }
+  }, [searchParams]);
 
   return (
     <div className="bg-[#F0F7Ef] p-6 font-jakarta min-h-[calc(100vh-122px)] ">
@@ -68,4 +83,11 @@ const SettingsPage = () => {
   );
 };
 
-export default SettingsPage;
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<div className="bg-[#F0F7Ef] p-6 font-jakarta min-h-[calc(100vh-122px)]">Loading...</div>}>
+      <SettingsPageContent />
+    </Suspense>
+  );
+};
+
