@@ -92,19 +92,35 @@ export async function GET(request: NextRequest) {
         const donationsForCampaign = await db
           .select({
             amount: donations.amount,
+            convertedAmount: donations.convertedAmount,
+            convertedCurrency: donations.convertedCurrency,
             currency: donations.currency,
             paymentStatus: donations.paymentStatus,
           })
           .from(donations)
-          .where(eq(donations.campaignId, campaign.id));
+          .where(
+            and(
+              eq(donations.campaignId, campaign.id),
+              eq(donations.paymentStatus, "completed")
+            )
+          );
 
         const currencyCode = getCurrencyCode(campaign.currency);
         let totalRaised = 0;
         let totalRaisedInNGN = 0;
 
         donationsForCampaign.forEach((donation) => {
-          const amount = parseFloat(donation.amount || "0");
-          const donationCurrency = getCurrencyCode(donation.currency || "USD");
+          // Use convertedAmount if available (already in campaign currency), otherwise use amount
+          const amount = parseFloat(
+            donation.convertedAmount && donation.convertedCurrency === campaign.currency
+              ? donation.convertedAmount
+              : donation.amount || "0"
+          );
+          const donationCurrency = getCurrencyCode(
+            donation.convertedCurrency && donation.convertedCurrency === campaign.currency
+              ? donation.convertedCurrency
+              : donation.currency || "USD"
+          );
           const amountInNGN = convertToNaira(amount, donationCurrency);
           totalRaisedInNGN += amountInNGN;
 
@@ -366,6 +382,8 @@ export async function POST(request: NextRequest) {
     const donationsForCampaign = await db
       .select({
         amount: donations.amount,
+        convertedAmount: donations.convertedAmount,
+        convertedCurrency: donations.convertedCurrency,
         currency: donations.currency,
         paymentStatus: donations.paymentStatus,
       })
@@ -382,8 +400,17 @@ export async function POST(request: NextRequest) {
     let totalRaisedInNGN = 0;
 
     donationsForCampaign.forEach((donation) => {
-      const donationAmount = parseFloat(donation.amount || "0");
-      const donationCurrency = getCurrencyCode(donation.currency || "USD");
+      // Use convertedAmount if available (already in campaign currency), otherwise use amount
+      const donationAmount = parseFloat(
+        donation.convertedAmount && donation.convertedCurrency === currency
+          ? donation.convertedAmount
+          : donation.amount || "0"
+      );
+      const donationCurrency = getCurrencyCode(
+        donation.convertedCurrency && donation.convertedCurrency === currency
+          ? donation.convertedCurrency
+          : donation.currency || "USD"
+      );
       const amountInNGN = convertToNaira(donationAmount, donationCurrency);
       totalRaisedInNGN += amountInNGN;
 
