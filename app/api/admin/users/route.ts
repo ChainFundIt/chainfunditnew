@@ -19,8 +19,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || '';
     const status = searchParams.get('status') || 'all';
     const role = searchParams.get('role') || 'all';
-
-    const offset = (page - 1) * limit;
+    const userType = searchParams.get('userType') || 'all';
 
     // Build where conditions
     const whereConditions = [];
@@ -43,7 +42,7 @@ export async function GET(request: NextRequest) {
       whereConditions.push(eq(users.role, role as any));
     }
 
-    // Get users with pagination
+    // Base query for users
     const baseQuery = db
       .select({
         id: users.id,
@@ -58,22 +57,19 @@ export async function GET(request: NextRequest) {
       })
       .from(users);
 
+    // If userType filter is applied, we need to fetch a larger batch to filter properly
+    // Otherwise, use normal pagination
+    const fetchLimit = userType !== 'all' ? 1000 : limit;
+    const fetchOffset = userType !== 'all' ? 0 : (page - 1) * limit;
+
     const usersList = await baseQuery
       .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
       .orderBy(desc(users.createdAt))
-      .limit(limit)
-      .offset(offset);
-
-    // Get total count for pagination
-    const countQuery = db
-      .select({ count: count() })
-      .from(users);
-
-    const [totalCount] = await countQuery
-      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined);
+      .limit(fetchLimit)
+      .offset(fetchOffset);
 
     // Get user stats for each user
-    const usersWithStats = await Promise.all(
+    let usersWithStats = await Promise.all(
       usersList.map(async (user) => {
         // Get donation stats
         const [donationStats] = await db
@@ -87,7 +83,18 @@ export async function GET(request: NextRequest) {
             eq(donations.paymentStatus, 'completed')
           ));
 
-        // Get campaign stats
+        // Get campaign stats and titles
+        const campaignList = await db
+          .select({
+            id: campaigns.id,
+            title: campaigns.title,
+            status: campaigns.status,
+            isActive: campaigns.isActive,
+          })
+          .from(campaigns)
+          .where(eq(campaigns.creatorId, user.id))
+          .orderBy(desc(campaigns.createdAt));
+
         const [campaignStats] = await db
           .select({ count: count() })
           .from(campaigns)
@@ -99,27 +106,74 @@ export async function GET(request: NextRequest) {
           .from(chainers)
           .where(eq(chainers.userId, user.id));
 
+        const totalDonationsCount = Number(donationStats?.totalDonations || 0);
+        const totalCampaignsCount = Number(campaignStats?.count || 0);
+        const totalDonatedAmount = Number(donationStats?.totalAmount || 0);
+
         return {
           ...user,
           status: user.accountLocked ? 'suspended' : 'active',
           stats: {
-            totalDonations: donationStats?.totalDonations || 0,
-            totalDonated: donationStats?.totalAmount || 0,
+            totalDonations: totalDonationsCount,
+            totalDonated: totalDonatedAmount,
             totalRaised: 0, // This would need to be calculated from campaigns
-            totalCampaigns: campaignStats?.count || 0,
-            totalChains: chainerStats?.count || 0,
+            totalCampaigns: totalCampaignsCount,
+            totalChains: Number(chainerStats?.count || 0),
           },
+          campaigns: campaignList.map(c => ({
+            id: c.id,
+            title: c.title,
+            status: c.status,
+            isActive: c.isActive,
+          })),
         };
       })
     );
 
-    const totalPages = Math.ceil(totalCount.count / limit);
+    // Filter by userType if specified
+    if (userType !== 'all') {
+      usersWithStats = usersWithStats.filter((user) => {
+        const hasDonations = user.stats.totalDonations > 0 || user.stats.totalDonated > 0;
+        const hasCampaigns = user.stats.totalCampaigns > 0;
+
+        switch (userType) {
+          case 'donors':
+            return hasDonations && !hasCampaigns;
+          case 'creators':
+            return hasCampaigns && !hasDonations;
+          case 'both':
+            return hasDonations && hasCampaigns;
+          case 'inactive':
+            return !hasDonations && !hasCampaigns;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Apply pagination after filtering (if userType filter was applied)
+    const offset = (page - 1) * limit;
+    const paginatedUsers = userType !== 'all' 
+      ? usersWithStats.slice(offset, offset + limit)
+      : usersWithStats;
+
+    // Get total count for pagination
+    const countQuery = db
+      .select({ count: count() })
+      .from(users);
+
+    const [totalCount] = await countQuery
+      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined);
+
+    // Calculate total pages based on filtered results
+    const filteredCount = userType !== 'all' ? usersWithStats.length : totalCount.count;
+    const totalPages = Math.ceil(filteredCount / limit);
 
     return NextResponse.json({
-      users: usersWithStats,
+      users: paginatedUsers,
       totalPages,
       currentPage: page,
-      totalCount: totalCount.count,
+      totalCount: filteredCount,
     });
 
   } catch (error) {
