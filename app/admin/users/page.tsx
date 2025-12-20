@@ -68,6 +68,12 @@ interface User {
     totalCampaigns: number;
     totalChains: number;
   };
+  campaigns?: {
+    id: string;
+    title: string;
+    status: string;
+    isActive: boolean;
+  }[];
 }
 
 interface UserStats {
@@ -88,6 +94,7 @@ export default function AdminUsersPage() {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [roleFilter, setRoleFilter] = useState('all');
+  const [userTypeFilter, setUserTypeFilter] = useState('all');
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -107,9 +114,13 @@ export default function AdminUsersPage() {
   }, [searchTerm]);
 
   useEffect(() => {
+    setCurrentPage(1); // Reset to first page when filters change
+  }, [debouncedSearchTerm, statusFilter, roleFilter, userTypeFilter]);
+
+  useEffect(() => {
     fetchUsers();
     fetchStats();
-  }, [debouncedSearchTerm, statusFilter, roleFilter, currentPage]);
+  }, [debouncedSearchTerm, statusFilter, roleFilter, userTypeFilter, currentPage]);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -120,6 +131,7 @@ export default function AdminUsersPage() {
         search: debouncedSearchTerm,
         status: statusFilter,
         role: roleFilter,
+        userType: userTypeFilter,
       });
 
       const response = await fetch(`/api/admin/users?${params.toString()}`);
@@ -222,6 +234,41 @@ export default function AdminUsersPage() {
         {role.replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
       </Badge>
     );
+  };
+
+  const getUserTypeBadges = (user: User) => {
+    const hasDonations = (user.stats?.totalDonations || 0) > 0 || (user.stats?.totalDonated || 0) > 0;
+    const hasCampaigns = (user.stats?.totalCampaigns || 0) > 0;
+    
+    const badges = [];
+    
+    if (hasDonations && hasCampaigns) {
+      badges.push(
+        <Badge key="both" variant="default" className="bg-purple-600 text-white">
+          Donor & Creator
+        </Badge>
+      );
+    } else if (hasDonations) {
+      badges.push(
+        <Badge key="donor" variant="default" className="bg-green-600 text-white">
+          Donor
+        </Badge>
+      );
+    } else if (hasCampaigns) {
+      badges.push(
+        <Badge key="creator" variant="default" className="bg-blue-600 text-white">
+          Creator
+        </Badge>
+      );
+    } else {
+      badges.push(
+        <Badge key="no-activity" variant="secondary">
+          No Activity
+        </Badge>
+      );
+    }
+    
+    return badges;
   };
 
   const formatDate = (dateString: string) => {
@@ -412,6 +459,18 @@ export default function AdminUsersPage() {
                     <SelectItem value="super_admin">Super Admin</SelectItem>
                   </SelectContent>
                 </Select>
+                <Select value={userTypeFilter} onValueChange={setUserTypeFilter}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="User Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Users</SelectItem>
+                    <SelectItem value="donors">Donors Only</SelectItem>
+                    <SelectItem value="creators">Creators Only</SelectItem>
+                    <SelectItem value="both">Both</SelectItem>
+                    <SelectItem value="inactive">No Activity</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </CardContent>
@@ -485,6 +544,7 @@ export default function AdminUsersPage() {
                     <TableHead>User</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Role</TableHead>
+                    <TableHead>Type</TableHead>
                     <TableHead>Stats</TableHead>
                     <TableHead>Joined</TableHead>
                     <TableHead className="w-12">Actions</TableHead>
@@ -537,7 +597,11 @@ export default function AdminUsersPage() {
                         </div>
                       </TableCell>
                       <TableCell>{getRoleBadge(user.role)}</TableCell>
-                      
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {getUserTypeBadges(user)}
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <div className="text-sm space-y-1">
                           <div className="flex items-center">
@@ -649,11 +713,16 @@ export default function AdminUsersPage() {
       {selectedUser && (
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-3">
+            <DialogTitle className="flex items-center gap-3 flex-wrap">
               <span>{selectedUser.fullName}</span>
               {getRoleBadge(selectedUser.role)}
             </DialogTitle>
-            <DialogDescription>{selectedUser.email}</DialogDescription>
+            <DialogDescription className="flex items-center gap-2 flex-wrap mt-2">
+              <span>{selectedUser.email}</span>
+              <div className="flex gap-1">
+                {getUserTypeBadges(selectedUser)}
+              </div>
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -710,6 +779,35 @@ export default function AdminUsersPage() {
                 </p>
               </div>
             </div>
+
+            {selectedUser.campaigns && selectedUser.campaigns.length > 0 && (
+              <div className="rounded-lg border p-4">
+                <p className="text-xs uppercase text-gray-500 mb-3">Campaign Titles</p>
+                <div className="space-y-2">
+                  {selectedUser.campaigns.map((campaign) => (
+                    <div
+                      key={campaign.id}
+                      className="flex items-center justify-between p-2 bg-gray-50 rounded-md"
+                    >
+                      <span className="text-sm text-gray-900 font-medium flex-1">
+                        {campaign.title}
+                      </span>
+                      <div className="flex items-center gap-2 ml-2">
+                        <Badge
+                          variant={campaign.isActive ? 'default' : 'secondary'}
+                          className={campaign.isActive ? 'bg-green-600 text-white' : ''}
+                        >
+                          {campaign.isActive ? 'Active' : 'Inactive'}
+                        </Badge>
+                        {/* <Badge variant="outline" className="text-xs">
+                          {campaign.status}
+                        </Badge> */}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </DialogContent>
       )}
