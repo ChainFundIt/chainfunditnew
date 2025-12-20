@@ -3,7 +3,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { twoFactor } from "better-auth/plugins";
 import { db } from "@/lib/db";
 import { users, accounts, sessions, verificationTokens, refreshTokens } from "@/lib/schema";
-import { eq, and, gt, isNull } from "drizzle-orm";
+import { eq, and, gt, isNull, sql } from "drizzle-orm";
 import jwt from "jsonwebtoken";
 import { NextRequest } from "next/server";
 import { parse } from "cookie";
@@ -271,8 +271,13 @@ export async function getUserFromRequest(request: NextRequest) {
       return userPayload.email;
     }
     
-    // Cache miss - verify user exists in database
-    const user = await db.select({ id: users.id }).from(users).where(eq(users.email, userPayload.email)).limit(1);
+    // Cache miss - verify user exists in database with case-insensitive email lookup
+    const normalizedEmail = userPayload.email.toLowerCase().trim();
+    const user = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(sql`LOWER(${users.email}) = LOWER(${normalizedEmail})`)
+      .limit(1);
     
     if (user.length > 0) {
       // Cache the result

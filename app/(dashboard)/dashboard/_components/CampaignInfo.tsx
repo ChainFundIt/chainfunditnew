@@ -104,28 +104,27 @@ export const CampaignInfo = ({
               ></div>
             </div>
           </div>
+          
 
           <div className="flex flex-col gap-2">
-            {showEdit && (
-              <Button
-                onClick={() => {
-                  router.push(`/dashboard/campaigns/edit/${id}`);
-                }}
-                className="border border-[#104109] rounded-[11px] bg-white flex items-center justify-center gap-2 font-semibold leading-[18px] text-[12px] text-[#104109] hover:text-white hover:bg-[#104109]"
-              >
-                Edit
-              </Button>
-            )}
             <Button
               onClick={() => {
                 router.push(`/campaign/${id}`);
               }}
-              className="border  rounded-[11px] flex items-center justify-center gap-2"
+              className="border rounded-[11px] flex items-center justify-center gap-2"
             >
-              <div className="font-semibold leading-[18px] text-[12px] ">
+              <div className="font-semibold leading-[18px] text-[12px]">
                 View Details
               </div>
               <TrendingUp className="text-[#104109]" />
+            </Button>
+            <Button
+              onClick={() => {
+                router.push(`/dashboard/campaigns/edit/${id}`);
+              }}
+              className="border border-[#104109] rounded-[11px] bg-white flex items-center justify-center gap-2 font-semibold leading-[18px] text-[12px] text-[#104109] hover:text-white hover:bg-[#104109]"
+            >
+              Edit Campaign
             </Button>
           </div>
         </div>
@@ -133,5 +132,3 @@ export const CampaignInfo = ({
     </div>
   );
 };
-
-

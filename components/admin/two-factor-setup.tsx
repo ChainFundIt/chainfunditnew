@@ -90,7 +90,7 @@ export function TwoFactorSetup({ onComplete, onCancel }: TwoFactorSetupProps) {
   const downloadBackupCodes = () => {
     if (!setupData) return;
     
-    const content = `ChainFundIt Admin - 2FA Backup Codes\n\n${setupData.backupCodes.join('\n')}\n\nKeep these codes safe! Each can only be used once.`;
+    const content = `ChainFundIt - 2FA Backup Codes\n\n${setupData.backupCodes.join('\n')}\n\nKeep these codes safe! Each can only be used once.`;
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

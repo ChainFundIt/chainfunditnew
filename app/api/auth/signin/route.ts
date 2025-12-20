@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import twilio from 'twilio';
-import { db, withRetry, findUserByEmail, findUserByPhone } from '@/lib/db';
+import { db, withRetry, findUserByEmail, findUserByPhone, normalizeEmail } from '@/lib/db';
 import { emailOtps } from '@/lib/schema/email-otps';
-import { eq, and, desc, gt, lt } from 'drizzle-orm';
+import { eq, and, desc, gt, lt, sql } from 'drizzle-orm';
 import { users } from '@/lib/schema/users';
 import { generateTokenPair } from '@/lib/auth';
 
@@ -46,16 +46,19 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: false, error: 'Please enter your email address to continue.' }, { status: 400 });
       }
 
-      // Rate limiting
-      if (!checkRateLimit(`signin_email_${email}`)) {
+      // Normalize email to lowercase for consistent lookup
+      const normalizedEmail = normalizeEmail(email);
+
+      // Rate limiting (use normalized email)
+      if (!checkRateLimit(`signin_email_${normalizedEmail}`)) {
         return NextResponse.json(
           { success: false, error: 'Too many requests. Please wait a minute before trying again.' },
           { status: 429 }
         );
       }
 
-      // Check if user exists with optimized query
-      const existingUser = await findUserByEmail(email);
+      // Check if user exists with optimized query (case-insensitive)
+      const existingUser = await findUserByEmail(normalizedEmail);
       if (!existingUser.length) {
         return NextResponse.json({ success: false, error: 'No account found with this email. Please sign up first or check your email address.' }, { status: 404 });
       }
@@ -68,9 +71,9 @@ export async function POST(request: NextRequest) {
         await db.delete(emailOtps).where(lt(emailOtps.expiresAt, new Date()));
       });
       
-      // Insert new OTP (with retry logic)
+      // Insert new OTP with normalized email (with retry logic)
       await withRetry(async () => {
-        await db.insert(emailOtps).values({ email, otp: generatedOtp, expiresAt });
+        await db.insert(emailOtps).values({ email: normalizedEmail, otp: generatedOtp, expiresAt });
       });
 
       // Check if Resend is properly configured
@@ -90,11 +93,11 @@ export async function POST(request: NextRequest) {
         }, { status: 503 });
       }
 
-      // Send email asynchronously
+      // Send email asynchronously (use original email for sending, but normalized for storage)
       try {
         const emailResult = await resend.emails.send({
           from: process.env.RESEND_FROM_EMAIL,
-          to: email,
+          to: email, // Use original email for sending
           subject: 'Sign in OTP - ChainFundIt',
           html: `
             <h2>Your Sign in OTP</h2>
@@ -200,8 +203,11 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: false, error: 'Please enter the 6-digit verification code.' }, { status: 400 });
       }
 
-      // Rate limiting for verification
-      if (!checkRateLimit(`verify_email_${email}`, 5, 300000)) {
+      // Normalize email to lowercase for consistent lookup
+      const normalizedEmail = normalizeEmail(email);
+
+      // Rate limiting for verification (use normalized email)
+      if (!checkRateLimit(`verify_email_${normalizedEmail}`, 5, 300000)) {
         return NextResponse.json(
           { success: false, error: 'Too many verification attempts. Please wait 5 minutes before trying again.' },
           { status: 429 }
@@ -210,11 +216,15 @@ export async function POST(request: NextRequest) {
 
       const now = new Date();
       
-      // Find and delete OTP in one operation (with retry logic)
+      // Find and delete OTP in one operation with case-insensitive email lookup (with retry logic)
       const [record] = await withRetry(async () => {
         return await db
           .delete(emailOtps)
-          .where(and(eq(emailOtps.email, email), eq(emailOtps.otp, otp), gt(emailOtps.expiresAt, now)))
+          .where(and(
+            sql`LOWER(${emailOtps.email}) = LOWER(${normalizedEmail})`,
+            eq(emailOtps.otp, otp),
+            gt(emailOtps.expiresAt, now)
+          ))
           .returning();
       });
 
@@ -224,12 +234,12 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: false, error: 'Verification code has expired or is invalid. Please request a new code.' }, { status: 400 });
       }
 
-      // Get user details and create JWT token (with retry logic)
+      // Get user details and create JWT token with case-insensitive email lookup (with retry logic)
       const [user] = await withRetry(async () => {
         return await db
           .select({ id: users.id, email: users.email, fullName: users.fullName, role: users.role })
           .from(users)
-          .where(eq(users.email, email))
+          .where(sql`LOWER(${users.email}) = LOWER(${normalizedEmail})`)
           .limit(1);
       });
 
@@ -294,17 +304,20 @@ export async function POST(request: NextRequest) {
       }
       otpStore.delete(phone);
       
-      // Update user's phone in the database (with retry logic)
+      // Normalize email for case-insensitive lookup
+      const normalizedEmail = normalizeEmail(email);
+      
+      // Update user's phone in the database with case-insensitive email lookup (with retry logic)
       await withRetry(async () => {
-        await db.update(users).set({ phone }).where(eq(users.email, email));
+        await db.update(users).set({ phone }).where(sql`LOWER(${users.email}) = LOWER(${normalizedEmail})`);
       });
       
-      // Get user details and create JWT token (with retry logic)
+      // Get user details and create JWT token with case-insensitive email lookup (with retry logic)
       const [user] = await withRetry(async () => {
         return await db
           .select({ id: users.id, email: users.email, fullName: users.fullName, role: users.role })
           .from(users)
-          .where(eq(users.email, email))
+          .where(sql`LOWER(${users.email}) = LOWER(${normalizedEmail})`)
           .limit(1);
       });
 
