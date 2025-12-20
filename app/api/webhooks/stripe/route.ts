@@ -93,9 +93,20 @@ export async function POST(request: NextRequest) {
 
       // Transfer events (payouts)
       case 'transfer.created':
-      case 'transfer.reversed': {
+      case 'transfer.reversed':
+      case 'transfer.paid':
+      case 'transfer.failed': {
         const transfer = event.data.object as Stripe.Transfer;
         await handleTransfer(event.type, transfer);
+        break;
+      }
+      
+      // Payout events (for external account payouts)
+      case 'payout.paid':
+      case 'payout.failed':
+      case 'payout.canceled': {
+        const payout = event.data.object as Stripe.Payout;
+        await handlePayout(event.type, payout);
         break;
       }
 
@@ -616,14 +627,15 @@ async function handleTransfer(eventType: string, transfer: Stripe.Transfer) {
 
     switch (eventType) {
       case 'transfer.created':
-        // Transfer created - check if it's reversed, otherwise mark as completed
-        if (transfer.reversed) {
-          status = 'failed';
-          failureReason = 'Transfer reversed';
-        } else {
-          status = 'completed';
-          processedAt = new Date();
-        }
+        status = 'processing';
+        break;
+      case 'transfer.paid':
+        status = 'completed';
+        processedAt = new Date();
+        break;
+      case 'transfer.failed':
+        status = 'failed';
+        failureReason = transfer.failure_message || 'Transfer failed';
         break;
       case 'transfer.reversed':
         status = 'failed';
@@ -634,16 +646,83 @@ async function handleTransfer(eventType: string, transfer: Stripe.Transfer) {
     }
 
     if (payoutType === 'campaign') {
-      await db
-        .update(campaignPayouts)
-        .set({
-          status,
-          transactionId: transfer.id,
-          processedAt,
-          failureReason,
-          updatedAt: new Date(),
-        })
-        .where(eq(campaignPayouts.id, payoutId));
+      const { logPayoutStatusChange } = await import('@/lib/payments/payout-audit');
+      const { sendPayoutCompletionEmail, sendPayoutFailureEmail } = await import('@/lib/payments/payout-email');
+      
+      const payout = await db.query.campaignPayouts.findFirst({
+        where: eq(campaignPayouts.id, payoutId),
+        with: { user: true, campaign: true },
+      });
+
+      if (payout) {
+        const oldStatus = payout.status;
+        
+        await db
+          .update(campaignPayouts)
+          .set({
+            status,
+            transactionId: transfer.id,
+            processedAt,
+            failureReason,
+            updatedAt: new Date(),
+          })
+          .where(eq(campaignPayouts.id, payoutId));
+
+        // Log audit trail
+        await logPayoutStatusChange({
+          payoutId,
+          oldStatus,
+          newStatus: status,
+          changedBy: 'stripe_webhook',
+          reason: failureReason || `Transfer ${eventType}`,
+        });
+
+        // Send email notifications
+        if (status === 'completed' && payout.user) {
+          try {
+            await sendPayoutCompletionEmail({
+              userEmail: payout.user.email!,
+              userName: payout.user.fullName || payout.user.email!,
+              campaignTitle: payout.campaign.title,
+              payoutAmount: parseFloat(payout.requestedAmount),
+              currency: payout.currency,
+              netAmount: parseFloat(payout.netAmount),
+              fees: parseFloat(payout.fees),
+              payoutProvider: payout.payoutProvider,
+              processingTime: '1-3 business days',
+              payoutId,
+              bankDetails: payout.accountName ? {
+                accountName: payout.accountName,
+                accountNumber: payout.accountNumber || '',
+                bankName: payout.bankName || '',
+              } : undefined,
+              completionDate: new Date().toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              }),
+            });
+          } catch (emailError) {
+            console.error('Failed to send completion email:', emailError);
+          }
+        } else if (status === 'failed' && payout.user) {
+          try {
+            await sendPayoutFailureEmail({
+              userEmail: payout.user.email!,
+              userName: payout.user.fullName || payout.user.email!,
+              campaignTitle: payout.campaign.title,
+              payoutAmount: parseFloat(payout.requestedAmount),
+              currency: payout.currency,
+              failureReason: failureReason || 'Transfer failed',
+              payoutId,
+            });
+          } catch (emailError) {
+            console.error('Failed to send failure email:', emailError);
+          }
+        }
+      }
 
       console.log(`✅ Campaign payout ${payoutId} ${status}`);
     } else if (payoutType === 'commission') {

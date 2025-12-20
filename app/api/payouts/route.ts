@@ -20,6 +20,7 @@ import {
   convertFromNaira,
 } from "@/lib/utils/currency-conversion";
 import { notifyPayoutRequest } from "@/lib/notifications/payout-request-alerts";
+import { sendPayoutConfirmationEmail } from "@/lib/payments/payout-email";
 // import { ensurePayoutKyc } from "@/lib/kyc/service";
 
 const normalizeAmount = (value: number) =>
@@ -116,7 +117,7 @@ export async function GET(request: NextRequest) {
 
         const completedPayouts = await db
           .select({
-            grossAmount: campaignPayouts.grossAmount,
+            requestedAmount: campaignPayouts.requestedAmount,
             currency: campaignPayouts.currency,
           })
           .from(campaignPayouts)
@@ -131,7 +132,7 @@ export async function GET(request: NextRequest) {
         let totalPaidOutInNGN = 0;
 
         completedPayouts.forEach((payout) => {
-          const payoutAmount = parseFloat(payout.grossAmount || "0");
+          const payoutAmount = parseFloat(payout.requestedAmount || "0");
           if (!Number.isFinite(payoutAmount) || payoutAmount <= 0) {
             return;
           }
@@ -395,7 +396,7 @@ export async function POST(request: NextRequest) {
 
     const completedPayouts = await db
       .select({
-        grossAmount: campaignPayouts.grossAmount,
+        requestedAmount: campaignPayouts.requestedAmount,
         currency: campaignPayouts.currency,
       })
       .from(campaignPayouts)
@@ -410,7 +411,7 @@ export async function POST(request: NextRequest) {
     let totalPaidOutInNGN = 0;
 
     completedPayouts.forEach((payout) => {
-      const payoutAmount = parseFloat(payout.grossAmount || "0");
+      const payoutAmount = parseFloat(payout.requestedAmount || "0");
       if (!Number.isFinite(payoutAmount) || payoutAmount <= 0) {
         return;
       }
@@ -551,17 +552,48 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Calculate payout fees
-    const feeRate =
-      payoutProvider === "stripe"
-        ? 0.025
-        : payoutProvider === "paystack"
-        ? 0.015
-        : 0.02;
-    const fixedFee = payoutProvider === "stripe" ? 0.3 : 0;
-    const fees = normalizeAmount(requestedAmount * feeRate + fixedFee);
+    // Calculate payout fees (matching frontend calculation)
+    // ChainFundIt fee: 5% of requested amount
+    const chainfunditFeePercentage = 0.05; // 5%
+    const chainfunditFee = requestedAmount * chainfunditFeePercentage;
+    
+    // Provider fees
+    let providerFee = 0;
+    let fixedFee = 0;
+    
+    if (payoutProvider === "stripe") {
+      providerFee = chainfunditFee * 0.025; // 2.5% of ChainFundIt fee
+      fixedFee = 0.3; // $0.30
+    } else if (payoutProvider === "paystack") {
+      providerFee = chainfunditFee * 0.01; // 1% of ChainFundIt fee (simplified from frontend)
+      fixedFee = 0;
+    } else {
+      // Default fallback
+      providerFee = chainfunditFee * 0.02; // 2% of ChainFundIt fee
+      fixedFee = 0;
+    }
+    
+    const netChainfunditFee = chainfunditFee - providerFee;
+    const fees = normalizeAmount(netChainfunditFee + fixedFee);
+    
+    // Validate fees don't exceed requested amount
+    if (fees >= requestedAmount) {
+      return NextResponse.json(
+        { error: "Fees exceed or equal the requested amount. Please request a larger amount." },
+        { status: 400 }
+      );
+    }
+    
     const netAmountRaw = requestedAmount - fees;
     const netAmount = netAmountRaw > 0 ? normalizeAmount(netAmountRaw) : 0;
+    
+    // Validate netAmount is positive
+    if (netAmount <= 0) {
+      return NextResponse.json(
+        { error: "Net amount after fees must be greater than zero. Please request a larger amount." },
+        { status: 400 }
+      );
+    }
 
     const insertStart = Date.now();
     const [saved] = await withRetry(() =>
@@ -631,6 +663,34 @@ export async function POST(request: NextRequest) {
     }).catch((notificationError) => {
       console.error("Error sending admin notifications:", notificationError);
       // Don't fail the request if notifications fail
+    });
+
+    // Send confirmation email to user (fire and forget - don't block response)
+    sendPayoutConfirmationEmail({
+      userEmail: user.email || "",
+      userName: user.fullName || user.email || "Unknown User",
+      campaignTitle: campaign.title || "Unknown Campaign",
+      payoutAmount: requestedAmount,
+      currency: getCurrencyCode(currency),
+      netAmount,
+      fees,
+      payoutProvider,
+      processingTime: payoutProvider === "stripe" ? "2-7 business days" : "1-3 business days",
+      payoutId: String(saved.id),
+      bankDetails: {
+        accountName: isForeignCurrency 
+          ? (user.internationalAccountName || "") 
+          : (user.accountName || ""),
+        accountNumber: isForeignCurrency 
+          ? (user.internationalBankAccountNumber || "") 
+          : (user.accountNumber || ""),
+        bankName: isForeignCurrency 
+          ? (user.internationalBankName || "") 
+          : (user.bankName || ""),
+      },
+    }).catch((emailError) => {
+      console.error("Error sending confirmation email:", emailError);
+      // Don't fail the request if email fails
     });
 
     return NextResponse.json(responseData, { status: 200 });

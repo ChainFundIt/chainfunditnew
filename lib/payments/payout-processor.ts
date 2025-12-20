@@ -78,6 +78,9 @@ export async function processCampaignCreatorPayout(
       };
     }
 
+    // Get old status for audit log
+    const oldStatus = payout.status;
+
     // Update payout with result
     await db
       .update(campaignPayouts)
@@ -90,7 +93,16 @@ export async function processCampaignCreatorPayout(
       })
       .where(eq(campaignPayouts.id, payoutId));
 
-    // Send completion email if successful
+    // Log audit trail
+    await logPayoutStatusChange({
+      payoutId,
+      oldStatus,
+      newStatus: result.status,
+      changedBy: 'payout_processor',
+      reason: result.error || 'Payout processed',
+    });
+
+    // Send email notifications
     if (result.success && result.status === 'completed') {
       try {
         await sendPayoutCompletionEmail({
@@ -119,6 +131,21 @@ export async function processCampaignCreatorPayout(
         });
       } catch (emailError) {
         console.error('Failed to send completion email:', emailError);
+        // Don't fail the payout for email errors
+      }
+    } else if (!result.success && result.status === 'failed') {
+      try {
+        await sendPayoutFailureEmail({
+          userEmail: payout.user.email!,
+          userName: payout.user.fullName || payout.user.email!,
+          campaignTitle: payout.campaign.title,
+          payoutAmount: parseFloat(payout.requestedAmount),
+          currency: payout.currency,
+          failureReason: result.error || 'Payout processing failed',
+          payoutId: payout.id,
+        });
+      } catch (emailError) {
+        console.error('Failed to send failure email:', emailError);
         // Don't fail the payout for email errors
       }
     }
@@ -318,6 +345,8 @@ async function processStripePayout(
           {
             payoutId: payout.id,
             type: 'campaign',
+            reference: payout.reference || payout.id,
+            campaignId: payout.campaignId,
           }
         );
 
@@ -354,6 +383,8 @@ async function processStripePayout(
           {
             payoutId: payout.id,
             type,
+            reference: payout.reference || payout.id,
+            campaignId: type === 'campaign' ? payout.campaignId : undefined,
           }
         );
 

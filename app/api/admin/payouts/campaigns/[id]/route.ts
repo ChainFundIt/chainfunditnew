@@ -4,6 +4,8 @@ import { campaignPayouts, users } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 import { getAdminUser } from '@/lib/admin-auth';
 import { sendPayoutApprovalNotification, processCampaignCreatorPayout } from '@/lib/payments/payout-processor';
+import { logPayoutStatusChange } from '@/lib/payments/payout-audit';
+import { sendPayoutConfirmationEmail, sendPayoutFailureEmail } from '@/lib/payments/payout-email';
 
 /**
  * GET /api/admin/payouts/campaigns/[id]
@@ -74,6 +76,7 @@ export async function PATCH(
       );
     }
 
+    const oldStatus = existingPayout.status;
     let updatedPayout;
 
     switch (action) {
@@ -89,6 +92,15 @@ export async function PATCH(
           })
           .where(eq(campaignPayouts.id, id))
           .returning();
+        
+        // Log audit trail
+        await logPayoutStatusChange({
+          payoutId: id,
+          oldStatus,
+          newStatus: 'approved',
+          changedBy: adminUser.id,
+          reason: notes || 'Payout approved by admin',
+        });
         
         // Send approval notification email
         try {
@@ -112,6 +124,15 @@ export async function PATCH(
               updatedAt: new Date(),
             })
             .where(eq(campaignPayouts.id, id));
+          
+          // Log audit trail for failure
+          await logPayoutStatusChange({
+            payoutId: id,
+            oldStatus: 'approved',
+            newStatus: 'failed',
+            changedBy: 'system',
+            reason: processError instanceof Error ? processError.message : 'Processing failed',
+          });
         }
         break;
 
@@ -132,6 +153,36 @@ export async function PATCH(
           })
           .where(eq(campaignPayouts.id, id))
           .returning();
+        
+        // Log audit trail
+        await logPayoutStatusChange({
+          payoutId: id,
+          oldStatus,
+          newStatus: 'rejected',
+          changedBy: adminUser.id,
+          reason: rejectionReason,
+        });
+        
+        // Send rejection email notification
+        try {
+          const payout = await db.query.campaignPayouts.findFirst({
+            where: eq(campaignPayouts.id, id),
+            with: { user: true, campaign: true },
+          });
+          if (payout && payout.user) {
+            await sendPayoutFailureEmail({
+              userEmail: payout.user.email!,
+              userName: payout.user.fullName || payout.user.email!,
+              campaignTitle: payout.campaign.title,
+              payoutAmount: parseFloat(payout.requestedAmount),
+              currency: payout.currency,
+              failureReason: rejectionReason,
+              payoutId: id,
+            });
+          }
+        } catch (emailError) {
+          console.error('Failed to send rejection email:', emailError);
+        }
         break;
 
       case 'process':
@@ -170,6 +221,56 @@ export async function PATCH(
           })
           .where(eq(campaignPayouts.id, id))
           .returning();
+        break;
+
+      case 'cancel':
+        // Only allow cancellation of pending payouts
+        if (existingPayout.status !== 'pending') {
+          return NextResponse.json(
+            { error: `Cannot cancel payout with status: ${existingPayout.status}. Only pending payouts can be cancelled.` },
+            { status: 400 }
+          );
+        }
+        updatedPayout = await db
+          .update(campaignPayouts)
+          .set({ 
+            status: 'rejected',
+            rejectionReason: rejectionReason || 'Cancelled by admin',
+            notes: notes || null,
+            updatedAt: new Date(),
+          })
+          .where(eq(campaignPayouts.id, id))
+          .returning();
+        
+        // Log audit trail
+        await logPayoutStatusChange({
+          payoutId: id,
+          oldStatus,
+          newStatus: 'rejected',
+          changedBy: adminUser.id,
+          reason: rejectionReason || 'Cancelled by admin',
+        });
+        
+        // Send cancellation email notification
+        try {
+          const payout = await db.query.campaignPayouts.findFirst({
+            where: eq(campaignPayouts.id, id),
+            with: { user: true, campaign: true },
+          });
+          if (payout && payout.user) {
+            await sendPayoutFailureEmail({
+              userEmail: payout.user.email!,
+              userName: payout.user.fullName || payout.user.email!,
+              campaignTitle: payout.campaign.title,
+              payoutAmount: parseFloat(payout.requestedAmount),
+              currency: payout.currency,
+              failureReason: rejectionReason || 'Payout cancelled',
+              payoutId: id,
+            });
+          }
+        } catch (emailError) {
+          console.error('Failed to send cancellation email:', emailError);
+        }
         break;
 
       case 'add_notes':
