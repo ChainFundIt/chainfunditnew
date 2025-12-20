@@ -291,17 +291,42 @@ async function sendAccountChangeRequestEmailToAdmin(
  */
 export async function createAdminNotificationForAccountChange(requestData: AccountChangeRequestData) {
   try {
-    const adminConfigs = await db.query.adminSettings.findMany({
-      where: eq(adminSettings.notifyOnAccountChangeRequest, true),
+    // Get all admin users
+    const adminUsers = await db.query.users.findMany({
+      where: or(
+        eq(users.role, 'admin'),
+        eq(users.role, 'super_admin')
+      ),
     });
 
-    if (adminConfigs.length === 0) return;
+    if (adminUsers.length === 0) {
+      console.log('⚠️ No admin users found, skipping in-app notification');
+      return;
+    }
+
+    // Get all admin settings to check preferences
+    const allAdminConfigs = await db.query.adminSettings.findMany();
+    const settingsMap = new Map(
+      allAdminConfigs.map((config) => [config.userId, config])
+    );
 
     const { notifications } = await import('@/lib/schema/notifications');
 
-    for (const config of adminConfigs) {
+    let notificationsCreated = 0;
+
+    for (const adminUser of adminUsers) {
+      const config = settingsMap.get(adminUser.id);
+      
+      // Default to true if no config exists
+      const shouldNotify = config ? config.notifyOnAccountChangeRequest : true;
+      
+      if (!shouldNotify) {
+        console.log(`⏭️ Skipping in-app notification for admin ${adminUser.id}: notifyOnAccountChangeRequest=false`);
+        continue;
+      }
+
       await db.insert(notifications).values({
-        userId: config.userId,
+        userId: adminUser.id,
         type: 'account_change_request',
         title: `Account change request from ${requestData.userName}`,
         message: `${requestData.userName} (${requestData.userEmail}) has requested to change their bank account details.`,
@@ -313,8 +338,15 @@ export async function createAdminNotificationForAccountChange(requestData: Accou
           requestDate: requestData.requestDate.toISOString(),
         }),
       });
+      
+      notificationsCreated++;
     }
 
+    if (notificationsCreated > 0) {
+      console.log(`✅ In-app notifications created for ${notificationsCreated} admin(s)`);
+    } else {
+      console.log('⚠️ No in-app notifications created (all admins have account change notifications disabled)');
+    }
   } catch (error) {
     console.error('Error creating admin notification:', error);
   }

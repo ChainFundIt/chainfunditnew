@@ -30,32 +30,31 @@ export async function notifyAdminOfPayoutRequest(
   payoutData: PayoutRequestData
 ) {
   try {
-
     const adminUsers = await db.query.users.findMany({
       where: or(eq(users.role, "admin"), eq(users.role, "super_admin")),
     });
 
-
     if (adminUsers.length === 0) {
+      console.log("⚠️ No admin users found, skipping email notifications");
       return;
     }
 
-    const adminConfigs = await db.query.adminSettings.findMany({
-      where: eq(adminSettings.notifyOnPayoutRequest, true),
-    });
-
+    // Get all admin settings to check preferences for each admin
+    const allAdminConfigs = await db.query.adminSettings.findMany();
     const settingsMap = new Map(
-      adminConfigs.map((config) => [config.userId, config])
+      allAdminConfigs.map((config) => [config.userId, config])
     );
 
     const emailTasks = adminUsers
       .map((adminUser) => {
         const config = settingsMap.get(adminUser.id);
 
+        // Default to true if no config exists
         const shouldNotify = config ? config.notifyOnPayoutRequest : true;
         const emailEnabled = config ? config.emailNotificationsEnabled : true;
 
         if (!shouldNotify || !emailEnabled) {
+          console.log(`⏭️ Skipping email for admin ${adminUser.id}: shouldNotify=${shouldNotify}, emailEnabled=${emailEnabled}`);
           return null;
         }
 
@@ -63,11 +62,13 @@ export async function notifyAdminOfPayoutRequest(
           config?.notificationEmail || process.env.ADMIN_EMAIL;
 
         if (!recipientEmail) {
+          console.log(`⚠️ No recipient email found for admin ${adminUser.id}`);
           return null;
         }
 
         return sendPayoutRequestEmailToAdmin(recipientEmail, payoutData)
           .then(() => {
+            console.log(`✅ Payout request email sent to ${recipientEmail}`);
             return { success: true, email: recipientEmail };
           })
           .catch((emailError) => {
@@ -84,15 +85,38 @@ export async function notifyAdminOfPayoutRequest(
       error?: any;
     }>[];
 
+    if (emailTasks.length === 0) {
+      console.log("⚠️ No email tasks to send (all admins have notifications disabled or no email addresses)");
+      return;
+    }
+
     const results = await Promise.allSettled(emailTasks);
     const notificationsSent = results.filter(
       (result) => result.status === "fulfilled" && result.value.success
     ).length;
 
     if (notificationsSent === 0) {
-    } 
+      console.error("❌ Failed to send any payout request emails");
+      // Log failed results for debugging
+      results.forEach((result, index) => {
+        if (result.status === "rejected") {
+          console.error(`Email task ${index} was rejected:`, result.reason);
+        } else if (result.status === "fulfilled" && !result.value.success) {
+          console.error(`Email task ${index} failed:`, result.value.error);
+        }
+      });
+    } else {
+      console.log(`✅ Successfully sent ${notificationsSent} payout request email(s)`);
+    }
   } catch (error) {
     console.error("❌ Error notifying admin of payout request:", error);
+    if (error instanceof Error) {
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack,
+      });
+    }
+    // Don't throw - notification failure shouldn't break the payout request
   }
 }
 
@@ -283,22 +307,36 @@ export async function createAdminNotificationForPayoutRequest(
   payoutData: PayoutRequestData
 ) {
   try {
-
     const adminUsers = await db.query.users.findMany({
       where: or(eq(users.role, "admin"), eq(users.role, "super_admin")),
     });
 
     if (adminUsers.length === 0) {
+      console.log("⚠️ No admin users found, skipping notification");
       return;
     }
 
-    const adminConfigs = await db.query.adminSettings.findMany({
-      where: eq(adminSettings.notifyOnPayoutRequest, true),
-    });
+    // Get all admin settings (not just those with notifyOnPayoutRequest: true)
+    // We need to check each admin's preferences individually
+    const allAdminConfigs = await db.query.adminSettings.findMany();
+    const settingsMap = new Map(
+      allAdminConfigs.map((config) => [config.userId, config])
+    );
 
-    const shouldNotify = adminConfigs.length > 0 || adminUsers.length > 0;
+    // Check if at least one admin wants to be notified
+    // Default to true if no settings exist for an admin
+    let shouldNotify = false;
+    for (const adminUser of adminUsers) {
+      const config = settingsMap.get(adminUser.id);
+      const wantsNotification = config ? config.notifyOnPayoutRequest : true; // Default to true if no config
+      if (wantsNotification) {
+        shouldNotify = true;
+        break;
+      }
+    }
 
     if (!shouldNotify) {
+      console.log("⚠️ No admins have payout request notifications enabled, skipping notification");
       return;
     }
 
@@ -337,6 +375,8 @@ export async function createAdminNotificationForPayoutRequest(
       },
     });
 
+    console.log("✅ Admin notification created for payout request:", payoutData.payoutId);
+
   } catch (error) {
     console.error("❌ Error creating admin notification:", error);
     if (error instanceof Error) {
@@ -345,6 +385,8 @@ export async function createAdminNotificationForPayoutRequest(
         stack: error.stack,
       });
     }
+    // Re-throw to ensure the error is visible
+    throw error;
   }
 }
 

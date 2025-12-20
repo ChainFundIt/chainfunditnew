@@ -232,22 +232,47 @@ export async function sendAdminPushNotification(donationData: CharityDonationDat
  */
 export async function createAdminNotification(donationData: CharityDonationData) {
   try {
-    // Get admin user IDs (you might have a specific admin role or user table)
-    // For now, we'll create notifications for all admins with settings
-    const adminConfigs = await db.query.adminSettings.findMany();
+    // Get all admin users
+    const adminUsers = await db.query.users.findMany({
+      where: or(
+        eq(users.role, 'admin'),
+        eq(users.role, 'super_admin')
+      ),
+    });
+
+    if (adminUsers.length === 0) {
+      console.log('⚠️ No admin users found, skipping in-app notification');
+      return;
+    }
+
+    // Get all admin settings to check preferences
+    const allAdminConfigs = await db.query.adminSettings.findMany();
+    const settingsMap = new Map(
+      allAdminConfigs.map((config) => [config.userId, config])
+    );
 
     const { notifications } = await import('@/lib/schema/notifications');
 
-    for (const config of adminConfigs) {
-      if (!config.notifyOnCharityDonation) continue;
+    const currencySymbol = 
+      donationData.currency === 'NGN' ? '₦' :
+      donationData.currency === 'GBP' ? '£' :
+      donationData.currency === 'EUR' ? '€' : '$';
 
-      const currencySymbol = 
-        donationData.currency === 'NGN' ? '₦' :
-        donationData.currency === 'GBP' ? '£' :
-        donationData.currency === 'EUR' ? '€' : '$';
+    let notificationsCreated = 0;
+
+    for (const adminUser of adminUsers) {
+      const config = settingsMap.get(adminUser.id);
+      
+      // Default to true if no config exists
+      const shouldNotify = config ? config.notifyOnCharityDonation : true;
+      
+      if (!shouldNotify) {
+        console.log(`⏭️ Skipping in-app notification for admin ${adminUser.id}: notifyOnCharityDonation=false`);
+        continue;
+      }
 
       await db.insert(notifications).values({
-        userId: config.userId,
+        userId: adminUser.id,
         type: 'charity_donation_received',
         title: `New donation to ${donationData.charityName}`,
         message: `${donationData.isAnonymous ? 'Anonymous' : donationData.donorName} donated ${currencySymbol}${donationData.amount} ${donationData.currency}`,
@@ -259,9 +284,15 @@ export async function createAdminNotification(donationData: CharityDonationData)
           currency: donationData.currency,
         }),
       });
+      
+      notificationsCreated++;
     }
 
-    console.log('✅ In-app notifications created for admins');
+    if (notificationsCreated > 0) {
+      console.log(`✅ In-app notifications created for ${notificationsCreated} admin(s)`);
+    } else {
+      console.log('⚠️ No in-app notifications created (all admins have charity donation notifications disabled)');
+    }
   } catch (error) {
     console.error('Error creating admin notification:', error);
   }
