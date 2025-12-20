@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/neon-http';
 import { neon } from '@neondatabase/serverless';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import * as schema from './schema';
 import { users } from './schema/users';
 
@@ -9,14 +9,14 @@ if (!process.env.DATABASE_URL) {
 }
 
 // Configure Neon with optimized settings for better reliability
-const sql = neon(process.env.DATABASE_URL, {
+const neonSql = neon(process.env.DATABASE_URL, {
   // Disable array mode for better compatibility
   arrayMode: false,
   // Optimize for single queries
   fullResults: false,
 });
 
-export const db = drizzle(sql, { schema });
+export const db = drizzle(neonSql, { schema });
 
 // Database query wrapper with retry logic and exponential backoff
 export async function withRetry<T>(
@@ -64,10 +64,31 @@ export async function withRetry<T>(
   throw lastError!;
 }
 
-// Optimized query helper for common patterns
+/**
+ * Normalize email to lowercase for consistent storage and lookup
+ * Email addresses are case-insensitive per RFC 5321
+ */
+export function normalizeEmail(email: string): string {
+  return email.toLowerCase().trim();
+}
+
+/**
+ * Case-insensitive email comparison using SQL LOWER() function
+ * This ensures emails like "User@Example.com" and "user@example.com" match
+ */
+export function emailEquals(email1: string, email2: string) {
+  return sql`LOWER(${users.email}) = LOWER(${email2})`;
+}
+
+// Optimized query helper for common patterns with case-insensitive email lookup
 export async function findUserByEmail(email: string) {
+  const normalizedEmail = normalizeEmail(email);
   return withRetry(async () => {
-    return await db.select({ id: users.id }).from(users).where(eq(users.email, email)).limit(1);
+    return await db
+      .select({ id: users.id })
+      .from(users)
+      .where(sql`LOWER(${users.email}) = LOWER(${normalizedEmail})`)
+      .limit(1);
   });
 }
 

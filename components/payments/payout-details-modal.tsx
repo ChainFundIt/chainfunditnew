@@ -487,7 +487,7 @@ export function PayoutDetailsModal({
                         size="sm"
                         onClick={() => {
                           onClose();
-                          router.push("/dashboard/settings");
+                          router.push("/dashboard/settings?tab=payments");
                         }}
                         className="rounded-xl p-4 text-sm"
                       >
