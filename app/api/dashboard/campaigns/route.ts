@@ -4,6 +4,7 @@ import { users, campaigns, donations } from '@/lib/schema';
 import { eq, and, sql, desc, count, sum } from 'drizzle-orm';
 import { parse } from 'cookie';
 import { verifyUserJWT } from '@/lib/auth';
+import { updateCampaignAmount } from '@/lib/utils/campaign-amount';
 
 async function getUserFromRequest(request: NextRequest) {
   const cookie = request.headers.get('cookie') || '';
@@ -123,18 +124,40 @@ export async function GET(request: NextRequest) {
       )
       .orderBy(desc(campaigns.createdAt));
 
-    const campaignsWithStats = userCampaigns.map(campaign => {
+    const campaignsWithStats = await Promise.all(userCampaigns.map(async (campaign) => {
       // Use currentAmount from database (source of truth) which is calculated using convertedAmount
       // totalRaised is kept for reference but currentAmount is the authoritative value
-      const currentAmount = Number(campaign.currentAmount || 0);
+      const dbCurrentAmount = Number(campaign.currentAmount || 0);
+      const calculatedTotalRaised = Number(campaign.totalRaised || 0);
       const goalAmount = Number(campaign.goalAmount);
+      
+      // If there's a significant discrepancy (> 1% or > 100), recalculate the campaign amount
+      // This ensures data consistency if the database value got out of sync
+      const discrepancy = Math.abs(dbCurrentAmount - calculatedTotalRaised);
+      const hasSignificantDiscrepancy = discrepancy > 100 && (discrepancy / Math.max(dbCurrentAmount, calculatedTotalRaised, 1)) > 0.01;
+      
+      let currentAmount = dbCurrentAmount;
+      
+      if (hasSignificantDiscrepancy) {
+        // Recalculate and update the campaign amount in the database
+        try {
+          const recalculatedAmount = await updateCampaignAmount(campaign.id, { checkGoalReached: false });
+          if (recalculatedAmount !== null) {
+            currentAmount = recalculatedAmount;
+            console.log(`Fixed campaign ${campaign.id} amount: ${dbCurrentAmount} -> ${recalculatedAmount}`);
+          }
+        } catch (error) {
+          console.error(`Error recalculating amount for campaign ${campaign.id}:`, error);
+          // Fall back to database value if recalculation fails
+        }
+      }
       
       return {
         ...campaign,
         goalAmount,
         currentAmount,
         donationCount: Number(campaign.donationCount),
-        totalRaised: Number(campaign.totalRaised || 0), // Calculated using convertedAmount for reference
+        totalRaised: calculatedTotalRaised, // Calculated using convertedAmount for reference
         progressPercentage: Math.min(100, Math.round((currentAmount / goalAmount) * 100)),
         stats: {
           totalDonations: Number(campaign.donationCount),
@@ -143,7 +166,7 @@ export async function GET(request: NextRequest) {
           progressPercentage: Math.min(100, Math.round((currentAmount / goalAmount) * 100))
         }
       };
-    });
+    }));
 
     return NextResponse.json({ success: true, campaigns: campaignsWithStats });
   } catch (error) {
