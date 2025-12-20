@@ -19,7 +19,6 @@ const SettingsPageContent = () => {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState(tabs[0].label);
 
-  // Read tab from URL query parameter on mount
   useEffect(() => {
     const tabParam = searchParams.get("tab");
     if (tabParam) {
