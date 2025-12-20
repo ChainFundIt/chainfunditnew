@@ -4,7 +4,8 @@ import { eq } from 'drizzle-orm';
 import { createStripePayout, isStripeAccountReadyForPayouts } from './stripe';
 import { initiatePaystackTransfer, createPaystackRecipient, verifyPaystackTransfer } from './paystack';
 import { getPayoutProvider } from './payout-config';
-import { sendPayoutApprovalEmail, sendPayoutCompletionEmail } from './payout-email';
+import { sendPayoutApprovalEmail, sendPayoutCompletionEmail, sendPayoutFailureEmail } from './payout-email';
+import { logPayoutStatusChange } from './payout-audit';
 
 export interface PayoutProcessingResult {
   success: boolean;

@@ -102,12 +102,13 @@ export async function retryFailedPayouts(options: RetryOptions = {}) {
     }
 
     // Retry commission payouts
+    // Note: commissionPayouts don't have a retryAttempts field, so we track retries via notes
     for (const payout of failedCommissionPayouts) {
       try {
         results.commission.attempted++;
         
-        // Use retryAttempts field if available, otherwise default to 0
-        const retryCount = parseInt(payout.retryAttempts?.toString() || '0');
+        // Count retry attempts from notes (since commissionPayouts don't have retryAttempts field)
+        const retryCount = (payout.notes?.match(/Retry attempt/g) || []).length;
         
         if (retryCount >= maxRetries) {
           continue;
@@ -118,7 +119,6 @@ export async function retryFailedPayouts(options: RetryOptions = {}) {
           .update(commissionPayouts)
           .set({
             status: 'processing',
-            retryAttempts: (retryCount + 1).toString(),
             notes: `${payout.notes || ''}\nRetry attempt ${retryCount + 1} at ${new Date().toISOString()}`,
           })
           .where(eq(commissionPayouts.id, payout.id));
@@ -133,7 +133,6 @@ export async function retryFailedPayouts(options: RetryOptions = {}) {
           await db
             .update(commissionPayouts)
             .set({
-              retryAttempts: (retryCount + 1).toString(),
               status: 'failed',
             })
             .where(eq(commissionPayouts.id, payout.id));
