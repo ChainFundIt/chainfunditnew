@@ -282,20 +282,21 @@ const PayoutsPage = () => {
 
         if (result.existingPayout) {
           const existing = result.existingPayout;
-          errorMessage =
-            `${result.error}\n\n` +
-            `Existing Request Details:\n` +
-            `- Status: ${existing.status}\n` +
-            `- Amount: ${formatCurrency(
-              parseFloat(existing.requestedAmount),
-              currency
-            )}\n` +
-            `- Requested: ${new Date(existing.createdAt).toLocaleDateString()}`;
+          const statusLabel = existing.status === 'pending' ? 'Pending Review' 
+            : existing.status === 'approved' ? 'Approved - Processing'
+            : existing.status === 'processing' ? 'Processing'
+            : existing.status;
+          
+          errorMessage = `You already have a payout request for this campaign.\n\n` +
+            `Status: ${statusLabel}\n` +
+            `Amount: ${formatCurrency(parseFloat(existing.requestedAmount), currency)}\n` +
+            `Requested: ${new Date(existing.createdAt).toLocaleDateString()}\n\n` +
+            `Please wait for this payout to complete before requesting another.`;
         }
 
         setShowSuccessModal(false);
         setPayoutSuccessData(null);
-        toast.error(errorMessage);
+        toast.error(errorMessage, { duration: 6000 });
       }
     } catch (err) {
       const errorMessage =
@@ -382,32 +383,47 @@ const PayoutsPage = () => {
 
     if (status === "approved") {
       return (
-        <div className="flex items-center gap-2 text-green-600 my-2">
-          <CheckCircle className="h-5 w-5" />
-          <span className="text-sm font-medium">
-            Payout approved! Your funds are on the way.
-          </span>
+        <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg p-3 my-2">
+          <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+          <div className="flex-1">
+            <span className="text-sm font-medium text-green-900 block">
+              Payout Approved
+            </span>
+            <span className="text-xs text-green-700">
+              Your funds are being processed and will arrive soon.
+            </span>
+          </div>
         </div>
       );
     }
 
     if (status === "processing") {
       return (
-        <div className="flex items-center gap-2 text-green-600 my-2">
-          <Send className="h-5 w-5" />
-          <span className="text-sm">
-            Payout is being processed. We&apos;ll notify you once it lands.
-          </span>
+        <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg p-3 my-2">
+          <Send className="h-5 w-5 text-blue-600 flex-shrink-0" />
+          <div className="flex-1">
+            <span className="text-sm font-medium text-blue-900 block">
+              Processing Payout
+            </span>
+            <span className="text-xs text-blue-700">
+              We&apos;ll notify you once the transfer is complete.
+            </span>
+          </div>
         </div>
       );
     }
 
     return (
-      <div className="flex items-center gap-2 text-gray-500 my-2">
-        <Clock className="h-5 w-5" />
-        <span className="text-sm">
-          Payout request submitted. Awaiting approval.
-        </span>
+      <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg p-3 my-2">
+        <Clock className="h-5 w-5 text-amber-600 flex-shrink-0" />
+        <div className="flex-1">
+          <span className="text-sm font-medium text-amber-900 block">
+            Payout Request Pending
+          </span>
+          <span className="text-xs text-amber-700">
+            Your request is being reviewed. You&apos;ll be notified once approved.
+          </span>
+        </div>
       </div>
     );
   };

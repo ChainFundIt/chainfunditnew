@@ -290,64 +290,60 @@ export function PayoutDetailsModal({
             </CardContent>
           </Card>
 
-          {/* Fee Breakdown */}
-          <Card>
+          {/* Simplified Payout Summary */}
+          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
             <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <AlertCircle className="h-5 w-5" />
-                Fee Breakdown
+              <CardTitle className="text-lg flex items-center gap-2 text-[#104109]">
+                <DollarSign className="h-5 w-5" />
+                Payout Summary
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Gross Amount:</span>
-                <span className="font-medium">
+            <CardContent className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-700">Available Amount:</span>
+                <span className="font-semibold text-lg">
                   {formatCurrency(fees.baseAmount, campaign.currencyCode)}
                 </span>
               </div>
               
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">ChainFundIt Fee (5%):</span>
-                <span className="text-red-600">
-                  -{formatCurrency(fees.chainfunditFee, campaign.currencyCode)}
-                </span>
+              <div className="bg-white/60 rounded-lg p-3 space-y-1.5">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Fees & Deductions:</span>
+                  <span className="text-red-600 font-medium">
+                    -{formatCurrency(fees.totalFees, campaign.currencyCode)}
+                  </span>
+                </div>
+                {fees.chainerCommissions > 0 && (
+                  <div className="flex justify-between text-xs text-gray-500 pl-2">
+                    <span>• Platform fee (5%)</span>
+                    <span>-{formatCurrency(fees.chainfunditFee, campaign.currencyCode)}</span>
+                  </div>
+                )}
+                {fees.chainerCommissions > 0 && (
+                  <div className="flex justify-between text-xs text-gray-500 pl-2">
+                    <span>• Ambassador commissions</span>
+                    <span>-{formatCurrency(fees.chainerCommissions, campaign.currencyCode)}</span>
+                  </div>
+                )}
+                {(fees.providerFee > 0 || fees.fixedFee > 0) && (
+                  <div className="flex justify-between text-xs text-gray-500 pl-2">
+                    <span>• Payment processing</span>
+                    <span>-{formatCurrency((fees.providerFee || 0) + (fees.fixedFee || 0), campaign.currencyCode)}</span>
+                  </div>
+                )}
               </div>
-
-              {fees.providerFee > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Provider Fee:</span>
-                  <span className="text-red-600">
-                    -{formatCurrency(fees.providerFee, campaign.currencyCode)}
-                  </span>
-                </div>
-              )}
-
-              {fees.fixedFee > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Fixed Fee:</span>
-                  <span className="text-red-600">
-                    -{formatCurrency(fees.fixedFee, campaign.currencyCode)}
-                  </span>
-                </div>
-              )}
-
-              {fees.chainerCommissions > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Ambassador Commissions:</span>
-                  <span className="text-blue-600">
-                    -{formatCurrency(fees.chainerCommissions, campaign.currencyCode)}
-                  </span>
-                </div>
-              )}
 
               <Separator className="my-2" />
               
-              <div className="flex justify-between">
-                <span className="font-semibold text-lg">Net Amount:</span>
-                <span className="font-bold text-lg text-green-600">
+              <div className="flex justify-between items-center pt-2">
+                <span className="font-bold text-xl text-[#104109]">You'll Receive:</span>
+                <span className="font-bold text-2xl text-green-600">
                   {formatCurrency(fees.netAmount, campaign.currencyCode)}
                 </span>
               </div>
+              <p className="text-xs text-gray-500 text-center mt-1">
+                Funds will arrive in {campaign.payoutConfig?.processingTime || "1-3 business days"}
+              </p>
             </CardContent>
           </Card>
 
@@ -371,59 +367,53 @@ export function PayoutDetailsModal({
                     // Show international bank account details
                     return (
                       <div className="space-y-3">
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-600">Account Name:</span>
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium">{userProfile?.internationalAccountName || "N/A"}</span>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => copyToClipboard(userProfile?.internationalAccountName || "", "Account name")}
-                            >
-                              <Copy className="h-3 w-3" />
-                            </Button>
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <Badge variant="default" className="bg-green-100 text-green-800">
+                              Account Verified
+                            </Badge>
                           </div>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-600">Account Number:</span>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono font-medium">
-                              {userProfile?.internationalBankAccountNumber || "N/A"}
-                            </span>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => copyToClipboard(userProfile?.internationalBankAccountNumber || "", "Account number")}
-                            >
-                              <Copy className="h-3 w-3" />
-                            </Button>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <span className="text-xs text-gray-500">Account Name</span>
+                            <div className="flex items-center gap-1 mt-1">
+                              <span className="font-medium text-sm">{userProfile?.internationalAccountName || "N/A"}</span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-5 w-5 p-0"
+                                onClick={() => copyToClipboard(userProfile?.internationalAccountName || "", "Account name")}
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                        {userProfile?.internationalBankRoutingNumber && (
-                          <div className="flex justify-between items-center">
-                            <span className="text-gray-600">Routing Number:</span>
-                            <span className="font-mono font-medium">{userProfile.internationalBankRoutingNumber}</span>
+                          <div>
+                            <span className="text-xs text-gray-500">Account Number</span>
+                            <div className="flex items-center gap-1 mt-1">
+                              <span className="font-mono font-medium text-sm">
+                                {userProfile?.internationalBankAccountNumber || "N/A"}
+                              </span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-5 w-5 p-0"
+                                onClick={() => copyToClipboard(userProfile?.internationalBankAccountNumber || "", "Account number")}
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
                           </div>
-                        )}
-                        {userProfile?.internationalBankSwiftBic && (
-                          <div className="flex justify-between items-center">
-                            <span className="text-gray-600">SWIFT/BIC:</span>
-                            <span className="font-mono font-medium">{userProfile.internationalBankSwiftBic}</span>
+                          <div>
+                            <span className="text-xs text-gray-500">Bank</span>
+                            <p className="font-medium text-sm mt-1">{userProfile?.internationalBankName || "N/A"}</p>
                           </div>
-                        )}
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-600">Bank:</span>
-                          <span className="font-medium">{userProfile?.internationalBankName || "N/A"}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-600">Country:</span>
-                          <span className="font-medium">{userProfile?.internationalBankCountry || "N/A"}</span>
-                        </div>
-                        <div className="flex items-center gap-2 mt-2">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                          <Badge variant="default" className="bg-green-100 text-green-800">
-                            Verified
-                          </Badge>
+                          <div>
+                            <span className="text-xs text-gray-500">Country</span>
+                            <p className="font-medium text-sm mt-1">{userProfile?.internationalBankCountry || "N/A"}</p>
+                          </div>
                         </div>
                       </div>
                     );
@@ -431,43 +421,49 @@ export function PayoutDetailsModal({
                     // Show Nigerian bank account details
                     return (
                       <div className="space-y-3">
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-600">Account Name:</span>
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium">{userProfile?.accountName || "N/A"}</span>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => copyToClipboard(userProfile?.accountName || "", "Account name")}
-                            >
-                              <Copy className="h-3 w-3" />
-                            </Button>
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <Badge variant="default" className="bg-green-100 text-green-800">
+                              Account Verified
+                            </Badge>
                           </div>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-600">Account Number:</span>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono font-medium">
-                              {userProfile?.accountNumber || "N/A"}
-                            </span>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => copyToClipboard(userProfile?.accountNumber || "", "Account number")}
-                            >
-                              <Copy className="h-3 w-3" />
-                            </Button>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <span className="text-xs text-gray-500">Account Name</span>
+                            <div className="flex items-center gap-1 mt-1">
+                              <span className="font-medium text-sm">{userProfile?.accountName || "N/A"}</span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-5 w-5 p-0"
+                                onClick={() => copyToClipboard(userProfile?.accountName || "", "Account name")}
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-600">Bank:</span>
-                          <span className="font-medium">{getBankName()}</span>
-                        </div>
-                        <div className="flex items-center gap-2 mt-2">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                          <Badge variant="default" className="bg-green-100 text-green-800">
-                            Verified
-                          </Badge>
+                          <div>
+                            <span className="text-xs text-gray-500">Account Number</span>
+                            <div className="flex items-center gap-1 mt-1">
+                              <span className="font-mono font-medium text-sm">
+                                {userProfile?.accountNumber || "N/A"}
+                              </span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-5 w-5 p-0"
+                                onClick={() => copyToClipboard(userProfile?.accountNumber || "", "Account number")}
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="col-span-2">
+                            <span className="text-xs text-gray-500">Bank</span>
+                            <p className="font-medium text-sm mt-1">{getBankName()}</p>
+                          </div>
                         </div>
                       </div>
                     );
@@ -475,24 +471,25 @@ export function PayoutDetailsModal({
                 } else {
                   // Not verified - show message to add bank account
                   return (
-                    <div className="text-center py-4">
-                      <AlertCircle className="h-8 w-8 text-amber-500 mx-auto mb-2" />
-                      <p className="text-sm text-gray-600 mb-3">
+                    <div className="text-center py-6">
+                      <AlertCircle className="h-10 w-10 text-amber-500 mx-auto mb-3" />
+                      <p className="font-medium text-gray-900 mb-1">
+                        {isForeignCurrency ? 'International Bank Account Required' : 'Bank Account Required'}
+                      </p>
+                      <p className="text-sm text-gray-600 mb-4">
                         {isForeignCurrency 
-                          ? 'International bank account not verified. Please add your bank account details in settings.'
-                          : 'Bank account not verified. Please complete your profile setup.'}
+                          ? 'Add and verify your international bank account to receive payouts in ' + campaign.currencyCode
+                          : 'Complete your bank account setup to receive payouts.'}
                       </p>
                       <Button
-                        variant="outline"
-                        size="sm"
                         onClick={() => {
                           onClose();
                           router.push("/dashboard/settings?tab=payments");
                         }}
-                        className="rounded-xl p-4 text-sm"
+                        className="bg-[#104109] text-white"
                       >
                         <ExternalLink className="h-4 w-4 mr-2" />
-                        {isForeignCurrency ? 'Add Bank Account' : 'Complete Profile'}
+                        {isForeignCurrency ? 'Add Bank Account' : 'Set Up Bank Account'}
                       </Button>
                     </div>
                   );
@@ -501,27 +498,6 @@ export function PayoutDetailsModal({
             </CardContent>
           </Card>
 
-          {/* Processing Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Processing
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Processing Time:</span>
-                <span>
-                  {campaign.payoutConfig?.processingTime || "1-3 business days"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Email:</span>
-                <span className="text-sm">{userProfile?.email || "N/A"}</span>
-              </div>
-            </CardContent>
-          </Card>
 
           {/* Action Buttons */}
           <div className="flex gap-3 pt-2">
@@ -622,31 +598,23 @@ export function PayoutDetailsModal({
           {userProfile?.accountChangeRequested && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <Clock className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
                 <div className="flex-1">
-                  <p className="font-medium text-blue-900 mb-1">Account Change Request Pending</p>
-                  <p className="text-sm text-blue-800 mb-2">
-                    You have a pending request to change your bank account details. Please wait for admin approval before requesting payouts.
+                  <p className="font-medium text-blue-900 mb-1">Bank Account Change Pending Review</p>
+                  <p className="text-sm text-blue-800 mb-3">
+                    Your request to change bank account details is being reviewed. You'll be able to request payouts once it's approved.
                   </p>
-                  {userProfile.accountChangeReason && (
-                    <div className="bg-white bg-opacity-50 rounded p-2 mt-2">
-                      <p className="text-xs font-medium text-blue-900 mb-1">Your Request Reason:</p>
-                      <p className="text-xs text-blue-700 whitespace-pre-wrap">
-                        {userProfile.accountChangeReason}
-                      </p>
-                    </div>
-                  )}
                   <Button
                     variant="outline"
                     size="sm"
-                    className="mt-2"
                     onClick={() => {
                       onClose();
-                      router.push("/dashboard/settings/payments");
+                      router.push("/dashboard/settings?tab=payments");
                     }}
+                    className="border-blue-600 text-blue-700 hover:bg-blue-100"
                   >
                     <ExternalLink className="h-4 w-4 mr-2" />
-                    View Request Status
+                    Check Status
                   </Button>
                 </div>
               </div>
@@ -658,9 +626,23 @@ export function PayoutDetailsModal({
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
               <div className="flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                <div className="text-sm text-amber-800">
-                  <p className="font-medium">Verification Required</p>
-                  <p>Please verify your bank account in settings before requesting a payout.</p>
+                <div className="flex-1">
+                  <p className="font-medium text-amber-900 mb-1">Bank Account Verification Required</p>
+                  <p className="text-sm text-amber-800 mb-3">
+                    Please verify your bank account in settings before requesting a payout.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      onClose();
+                      router.push("/dashboard/settings?tab=payments");
+                    }}
+                    className="bg-amber-600 hover:bg-amber-700 text-white border-amber-600"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Verify Bank Account
+                  </Button>
                 </div>
               </div>
             </div>

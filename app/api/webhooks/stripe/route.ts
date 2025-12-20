@@ -94,8 +94,7 @@ export async function POST(request: NextRequest) {
       // Transfer events (payouts)
       case 'transfer.created':
       case 'transfer.reversed':
-      case 'transfer.paid':
-      case 'transfer.failed': {
+      case 'transfer.updated': {
         const transfer = event.data.object as Stripe.Transfer;
         await handleTransfer(event.type, transfer);
         break;
@@ -629,13 +628,16 @@ async function handleTransfer(eventType: string, transfer: Stripe.Transfer) {
       case 'transfer.created':
         status = 'processing';
         break;
-      case 'transfer.paid':
-        status = 'completed';
-        processedAt = new Date();
-        break;
-      case 'transfer.failed':
-        status = 'failed';
-        failureReason = transfer.failure_message || 'Transfer failed';
+      case 'transfer.updated':
+        // Check if transfer has been reversed
+        if (transfer.reversed) {
+          status = 'failed';
+          failureReason = 'Transfer reversed';
+        } else {
+          // Transfer updated but not reversed - assume it's processing or completed
+          // In practice, you may want to check the transfer object for additional status indicators
+          status = 'processing';
+        }
         break;
       case 'transfer.reversed':
         status = 'failed';
@@ -739,6 +741,214 @@ async function handleTransfer(eventType: string, transfer: Stripe.Transfer) {
     }
   } catch (error) {
     console.error('💥 Error handling transfer webhook:', error);
+  }
+}
+
+/**
+ * Handle payout events (for external bank account payouts)
+ */
+async function handlePayout(eventType: string, payout: Stripe.Payout) {
+  try {
+    // Try to find the payout by transaction ID
+    const payoutId = payout.metadata?.payoutId;
+    const payoutType = payout.metadata?.type; // 'campaign' | 'commission'
+
+    if (!payoutId) {
+      // If no metadata, try to find by transaction ID
+      const campaignPayout = await db.query.campaignPayouts.findFirst({
+        where: eq(campaignPayouts.transactionId, payout.id),
+      });
+
+      if (campaignPayout) {
+        await updatePayoutStatus(campaignPayout.id, eventType, payout, 'campaign');
+        return;
+      }
+
+      const commissionPayout = await db.query.commissionPayouts.findFirst({
+        where: eq(commissionPayouts.transactionId, payout.id),
+      });
+
+      if (commissionPayout) {
+        await updatePayoutStatus(commissionPayout.id, eventType, payout, 'commission');
+        return;
+      }
+
+      console.log(`⚠️ Payout ${payout.id} not found in database`);
+      return;
+    }
+
+    let status: string;
+    let processedAt: Date | null = null;
+    let failureReason: string | null = null;
+
+    switch (eventType) {
+      case 'payout.paid':
+        status = 'completed';
+        processedAt = new Date();
+        break;
+      case 'payout.failed':
+        status = 'failed';
+        failureReason = payout.failure_code || 'Payout failed';
+        break;
+      case 'payout.canceled':
+        status = 'failed';
+        failureReason = 'Payout canceled';
+        break;
+      default:
+        status = 'processing';
+    }
+
+    if (payoutType === 'campaign') {
+      const { logPayoutStatusChange } = await import('@/lib/payments/payout-audit');
+      const { sendPayoutCompletionEmail, sendPayoutFailureEmail } = await import('@/lib/payments/payout-email');
+      
+      const campaignPayout = await db.query.campaignPayouts.findFirst({
+        where: eq(campaignPayouts.id, payoutId),
+        with: { user: true, campaign: true },
+      });
+
+      if (campaignPayout) {
+        const oldStatus = campaignPayout.status;
+        
+        await db
+          .update(campaignPayouts)
+          .set({
+            status,
+            transactionId: payout.id,
+            processedAt,
+            failureReason,
+            updatedAt: new Date(),
+          })
+          .where(eq(campaignPayouts.id, payoutId));
+
+        // Log audit trail
+        await logPayoutStatusChange({
+          payoutId,
+          oldStatus,
+          newStatus: status,
+          changedBy: 'stripe_webhook',
+          reason: failureReason || `Payout ${eventType}`,
+        });
+
+        // Send email notifications
+        if (status === 'completed' && campaignPayout.user) {
+          try {
+            await sendPayoutCompletionEmail({
+              userEmail: campaignPayout.user.email!,
+              userName: campaignPayout.user.fullName || campaignPayout.user.email!,
+              campaignTitle: campaignPayout.campaign.title,
+              payoutAmount: parseFloat(campaignPayout.requestedAmount),
+              currency: campaignPayout.currency,
+              netAmount: parseFloat(campaignPayout.netAmount),
+              fees: parseFloat(campaignPayout.fees),
+              payoutProvider: campaignPayout.payoutProvider,
+              processingTime: '1-3 business days',
+              payoutId,
+              bankDetails: campaignPayout.accountName ? {
+                accountName: campaignPayout.accountName,
+                accountNumber: campaignPayout.accountNumber || '',
+                bankName: campaignPayout.bankName || '',
+              } : undefined,
+              completionDate: new Date().toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              }),
+            });
+          } catch (emailError) {
+            console.error('Failed to send completion email:', emailError);
+          }
+        } else if (status === 'failed' && campaignPayout.user) {
+          try {
+            await sendPayoutFailureEmail({
+              userEmail: campaignPayout.user.email!,
+              userName: campaignPayout.user.fullName || campaignPayout.user.email!,
+              campaignTitle: campaignPayout.campaign.title,
+              payoutAmount: parseFloat(campaignPayout.requestedAmount),
+              currency: campaignPayout.currency,
+              failureReason: failureReason || 'Payout failed',
+              payoutId,
+            });
+          } catch (emailError) {
+            console.error('Failed to send failure email:', emailError);
+          }
+        }
+      }
+
+      console.log(`✅ Campaign payout ${payoutId} ${status}`);
+    } else if (payoutType === 'commission') {
+      await db
+        .update(commissionPayouts)
+        .set({
+          status,
+          transactionId: payout.id,
+          processedAt,
+        })
+        .where(eq(commissionPayouts.id, payoutId));
+
+      console.log(`✅ Commission payout ${payoutId} ${status}`);
+    }
+  } catch (error) {
+    console.error('💥 Error handling payout webhook:', error);
+  }
+}
+
+/**
+ * Update payout status by transaction ID (fallback when metadata is missing)
+ */
+async function updatePayoutStatus(
+  payoutId: string,
+  eventType: string,
+  payout: Stripe.Payout,
+  type: 'campaign' | 'commission'
+) {
+  try {
+    let status: string;
+    let processedAt: Date | null = null;
+    let failureReason: string | null = null;
+
+    switch (eventType) {
+      case 'payout.paid':
+        status = 'completed';
+        processedAt = new Date();
+        break;
+      case 'payout.failed':
+        status = 'failed';
+        failureReason = payout.failure_code || 'Payout failed';
+        break;
+      case 'payout.canceled':
+        status = 'failed';
+        failureReason = 'Payout canceled';
+        break;
+      default:
+        status = 'processing';
+    }
+
+    if (type === 'campaign') {
+      await db
+        .update(campaignPayouts)
+        .set({
+          status,
+          transactionId: payout.id,
+          processedAt,
+          failureReason,
+          updatedAt: new Date(),
+        })
+        .where(eq(campaignPayouts.id, payoutId));
+    } else {
+      await db
+        .update(commissionPayouts)
+        .set({
+          status,
+          transactionId: payout.id,
+          processedAt,
+        })
+        .where(eq(commissionPayouts.id, payoutId));
+    }
+  } catch (error) {
+    console.error('💥 Error updating payout status:', error);
   }
 }
 
