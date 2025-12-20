@@ -1,10 +1,78 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Airplay, ArrowRight, Key, Send, Zap, Shield, Sparkles } from "lucide-react";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { formatCurrency, getCurrencySymbol } from "@/lib/utils/currency";
+import { useGeolocation } from "@/hooks/use-geolocation";
 
 type Props = {};
 
+type ImpactMetrics = {
+  donationsCompleted: number;
+  campaignsPublicActive: number;
+  countriesReached: number;
+  distinctDonors: number;
+  amountRaised: {
+    currency: string;
+    amount: number;
+    originalCurrency: "GBP";
+    originalAmount: number;
+  };
+  updatedAt: string;
+};
+
 const CTA = (props: Props) => {
+  const [stats, setStats] = useState<ImpactMetrics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { geolocation } = useGeolocation();
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch(`/api/public/impact-metrics?currency=${geolocation?.currency}`);
+        if (response.ok) {
+          const data = await response.json();
+          setStats(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch impact metrics:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  const formatNumber = (num: number): string => {
+    if (num >= 1000000) {
+      const millions = num / 1000000;
+      return `${millions >= 10 ? Math.floor(millions) : millions.toFixed(1)}M+`;
+    } else if (num >= 1000) {
+      const thousands = num / 1000;
+      return `${thousands >= 10 ? Math.floor(thousands) : thousands.toFixed(1)}K+`;
+    }
+    return `${num}+`;
+  };
+
+  const formatCurrencyAmount = (amount: number, currency: string): string => {
+    if (amount >= 1000000) {
+      const millions = amount / 1000000;
+      const formatted = millions >= 10 
+        ? Math.floor(millions).toLocaleString()
+        : millions.toFixed(1);
+      const symbol = getCurrencySymbol(currency);
+      return `${symbol}${formatted}M+`;
+    } else if (amount >= 1000) {
+      const thousands = amount / 1000;
+      const formatted = thousands >= 10 
+        ? Math.floor(thousands).toLocaleString()
+        : thousands.toFixed(1);
+      const symbol = getCurrencySymbol(currency);
+      return `${symbol}${formatted}K+`;
+    }
+    return formatCurrency(amount, currency);
+  };
   return (
     <div className="w-full py-16 md:py-12 flex items-center justify-center flex-col">
       {/* Main CTA Card */}
@@ -95,15 +163,27 @@ const CTA = (props: Props) => {
         <div className="bg-white border-t border-gray-200">
           <div className="grid grid-cols-3 divide-x divide-gray-200">
             <div className="px-6 py-4 text-center">
-              <p className="text-2xl md:text-3xl font-bold text-emerald-600">$10M+</p>
+              {stats && (
+                <p className="text-2xl md:text-3xl font-bold text-emerald-600">
+                  {formatCurrencyAmount(stats?.amountRaised?.amount || 0, geolocation?.currency as string)}+
+                </p>
+              )}
               <p className="text-xs md:text-sm text-gray-600 mt-1">Total Raised</p>
             </div>
             <div className="px-6 py-4 text-center">
-              <p className="text-2xl md:text-3xl font-bold text-emerald-600">50K+</p>
+              {stats && (
+                <p className="text-2xl md:text-3xl font-bold text-emerald-600">
+                  {formatNumber(stats?.campaignsPublicActive || 0)}
+                </p>
+              )}
               <p className="text-xs md:text-sm text-gray-600 mt-1">Active Campaigns</p>
             </div>
             <div className="px-6 py-4 text-center">
-              <p className="text-2xl md:text-3xl font-bold text-emerald-600">100K+</p>
+              {stats && (
+                <p className="text-2xl md:text-3xl font-bold text-emerald-600">
+                  {formatNumber(stats?.distinctDonors || 0)}
+                </p>
+              )}
               <p className="text-xs md:text-sm text-gray-600 mt-1">Happy Donors</p>
             </div>
           </div>
