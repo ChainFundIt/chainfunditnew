@@ -59,10 +59,10 @@ export async function notifyAdminOfPayoutRequest(
         }
 
         const recipientEmail =
-          config?.notificationEmail || process.env.ADMIN_EMAIL;
+          config?.notificationEmail || adminUser.email;
 
         if (!recipientEmail) {
-          console.log(`⚠️ No recipient email found for admin ${adminUser.id}`);
+          console.log(`⚠️ No recipient email found for admin ${adminUser.id} (no notificationEmail in settings and no email in user record)`);
           return null;
         }
 
@@ -279,6 +279,16 @@ async function sendPayoutRequestEmailToAdmin(
       subject,
       html,
     });
+
+    // Verify the email was sent successfully
+    if (!result || !result.data || !result.data.id) {
+      throw new Error(
+        `Failed to send email: ${JSON.stringify(result)}`
+      );
+    }
+
+    console.log(`✅ Payout request email sent successfully to ${recipientEmail}, email ID: ${result.data.id}`);
+    return result;
 
   } catch (error) {
     console.error(

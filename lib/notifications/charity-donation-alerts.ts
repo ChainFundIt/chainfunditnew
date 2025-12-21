@@ -56,7 +56,7 @@ export async function notifyAdminOfCharityDonation(donationData: CharityDonation
       
       if (!shouldNotifyCharity || !emailEnabled) continue;
 
-      const recipientEmail = config?.notificationEmail || process.env.ADMIN_EMAIL;
+      const recipientEmail = config?.notificationEmail || adminUser.email;
       if (!recipientEmail) continue;
 
       // Check if this is a large donation for this admin
