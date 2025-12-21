@@ -120,6 +120,13 @@
       "when": 1765899695033,
       "tag": "0016_common_famine",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1766356907105,
+      "tag": "0017_elite_caretaker",
+      "breakpoints": true
     }
   ]
 }

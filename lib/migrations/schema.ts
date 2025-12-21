@@ -209,7 +209,7 @@ export const userPreferences = pgTable("user_preferences", {
 	userId: uuid("user_id").notNull(),
 	emailNotificationsEnabled: boolean("email_notifications_enabled").default(true).notNull(),
 	notificationEmail: varchar("notification_email", { length: 255 }),
-	notifyOnCharityDonation: boolean("notify_on_charity_donation").default(false).notNull(),
+	notifyOnCharityDonation: boolean("notify_on_charity_donation").default(true).notNull(),
 	notifyOnCampaignDonation: boolean("notify_on_campaign_donation").default(true).notNull(),
 	notifyOnPayoutRequest: boolean("notify_on_payout_request").default(true).notNull(),
 	notifyOnLargeDonation: boolean("notify_on_large_donation").default(true).notNull(),

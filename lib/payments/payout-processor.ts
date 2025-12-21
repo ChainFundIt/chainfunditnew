@@ -424,7 +424,25 @@ export async function processPaystackPayout(
     if (!payout.accountNumber || !payout.bankCode) {
       return {
         success: false,
-        error: 'Bank details required for Paystack payout',
+        error: 'Bank details required for Paystack payout. Please ensure account number and bank code are provided.',
+        status: 'failed',
+      };
+    }
+
+    // Validate bank code format (should be numeric string)
+    if (isNaN(Number(payout.bankCode))) {
+      return {
+        success: false,
+        error: 'Invalid bank code format. Bank code must be a valid numeric code.',
+        status: 'failed',
+      };
+    }
+
+    // Validate account number
+    if (!/^\d{10,}$/.test(payout.accountNumber)) {
+      return {
+        success: false,
+        error: 'Invalid account number format. Account number must be at least 10 digits.',
         status: 'failed',
       };
     }
@@ -432,23 +450,69 @@ export async function processPaystackPayout(
     // Create recipient if not exists
     let recipientCode = payout.recipientCode;
     if (!recipientCode) {
-      const recipient = await createPaystackRecipient(
-        payout.accountName || payout.user?.fullName || 'User',
-        payout.accountNumber,
-        payout.bankCode,
-        payout.currency
-      );
-      recipientCode = recipient.data.recipient_code;
+      try {
+        const recipient = await createPaystackRecipient(
+          payout.accountName || payout.user?.fullName || 'User',
+          payout.accountNumber,
+          payout.bankCode,
+          payout.currency
+        );
+        recipientCode = recipient.data.recipient_code;
+        
+        // Save recipient code to payout for future use (if possible)
+        // This would require updating the payout record, but we'll do it after successful transfer
+      } catch (recipientError: any) {
+        // If recipient already exists, try to get it
+        if (recipientError.message?.includes('already exists')) {
+          // Try to find existing recipient by account details
+          // For now, we'll just throw the error with a helpful message
+          return {
+            success: false,
+            error: 'Recipient already exists but recipient code not found. Please contact support or try again.',
+            status: 'failed',
+          };
+        }
+        // Re-throw other errors
+        throw recipientError;
+      }
+    }
+
+    // Validate amount
+    const amount = parseFloat(payout.netAmount || payout.amount);
+    if (isNaN(amount) || amount <= 0) {
+      return {
+        success: false,
+        error: 'Invalid payout amount. Amount must be greater than zero.',
+        status: 'failed',
+      };
+    }
+
+    // Check minimum amount (Paystack minimum is usually 100 kobo = 1 NGN)
+    if (amount < 1) {
+      return {
+        success: false,
+        error: 'Payout amount is too small. Minimum amount is 1 NGN.',
+        status: 'failed',
+      };
     }
 
     // Initiate transfer
     const transfer = await initiatePaystackTransfer(
-      parseFloat(payout.netAmount || payout.amount),
+      amount,
       recipientCode,
       `Payout for ${type} - ${payout.campaign?.title || 'Commission'}`,
       payout.currency,
       payout.reference || payout.id
     );
+
+    // Verify transfer was initiated successfully
+    if (!transfer.data || !transfer.data.reference) {
+      return {
+        success: false,
+        error: 'Transfer initiated but no reference returned from Paystack',
+        status: 'failed',
+      };
+    }
 
     return {
       success: true,
@@ -457,9 +521,10 @@ export async function processPaystackPayout(
     };
   } catch (error) {
     console.error('Error processing Paystack payout:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Paystack payout failed';
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Paystack payout failed',
+      error: errorMessage,
       status: 'failed',
     };
   }

@@ -38,11 +38,32 @@ import {
   Download,
   RefreshCw,
   Heart,
+  Building2,
+  User,
+  FileText,
+  Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils/currency";
 import { useGeolocationCurrency } from "@/hooks/use-geolocation-currency";
 import Link from "next/link";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Payout {
   id: string;
@@ -186,6 +207,15 @@ export default function PayoutsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [campaignCreatorTotalPages, setCampaignCreatorTotalPages] = useState(1);
   const [processing, setProcessing] = useState<string | null>(null);
+  const [selectedPayoutDetails, setSelectedPayoutDetails] =
+    useState<CampaignCreatorPayout | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [selectedPayoutForAction, setSelectedPayoutForAction] =
+    useState<CampaignCreatorPayout | null>(null);
+  const [approvalNotes, setApprovalNotes] = useState("");
+  const [rejectionReason, setRejectionReason] = useState("");
   const { locationInfo } = useGeolocationCurrency();
   const currency = locationInfo?.currency?.code || "USD";
 
@@ -395,12 +425,54 @@ export default function PayoutsPage() {
       toast.success(data.message);
       fetchCampaignCreatorPayouts();
       fetchCampaignCreatorStats(); // Refresh campaign creator stats after action
+      
+      // Close modals and reset state
+      setShowApproveModal(false);
+      setShowRejectModal(false);
+      setSelectedPayoutForAction(null);
+      setApprovalNotes("");
+      setRejectionReason("");
     } catch (error) {
       console.error("Error performing campaign creator payout action:", error);
       toast.error("Failed to perform action");
     } finally {
       setProcessing(null);
     }
+  };
+
+  const handleApproveClick = (payout: CampaignCreatorPayout) => {
+    setSelectedPayoutForAction(payout);
+    setApprovalNotes("");
+    setShowApproveModal(true);
+  };
+
+  const handleRejectClick = (payout: CampaignCreatorPayout) => {
+    setSelectedPayoutForAction(payout);
+    setRejectionReason("");
+    setShowRejectModal(true);
+  };
+
+  const handleConfirmApprove = () => {
+    if (!selectedPayoutForAction) return;
+    handleCampaignCreatorPayoutAction(
+      selectedPayoutForAction.id,
+      "approve",
+      undefined,
+      approvalNotes.trim() || undefined
+    );
+  };
+
+  const handleConfirmReject = () => {
+    if (!selectedPayoutForAction) return;
+    if (rejectionReason.trim().length < 10) {
+      toast.error("Rejection reason must be at least 10 characters");
+      return;
+    }
+    handleCampaignCreatorPayoutAction(
+      selectedPayoutForAction.id,
+      "reject",
+      rejectionReason.trim()
+    );
   };
 
   const handlePayoutAction = async (
@@ -545,8 +617,9 @@ export default function PayoutsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <TooltipProvider>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -808,53 +881,51 @@ export default function PayoutsPage() {
                             </TableCell>
                             <TableCell>
                               <div className="flex gap-1">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() =>
-                                    window.open(
-                                      `/campaign/${payout.campaignSlug}`,
-                                      "_blank"
-                                    )
-                                  }
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                                {payout.status === "pending" && (
-                                  <>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
                                     <Button
                                       size="sm"
-                                      variant="default"
-                                      onClick={() =>
-                                        handleCampaignCreatorPayoutAction(
-                                          payout.id,
-                                          "approve"
-                                        )
-                                      }
-                                      disabled={processing === payout.id}
-                                    >
-                                      <CheckCircle className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="destructive"
+                                      variant="outline"
                                       onClick={() => {
-                                        const reason = prompt(
-                                          "Enter rejection reason:"
-                                        );
-                                        if (reason) {
-                                          handleCampaignCreatorPayoutAction(
-                                            payout.id,
-                                            "reject",
-                                            reason
-                                          );
-                                        }
+                                        setSelectedPayoutDetails(payout);
+                                        setIsDetailsModalOpen(true);
                                       }}
-                                      disabled={processing === payout.id}
                                     >
-                                      <XCircle className="h-4 w-4" />
+                                      <Eye className="h-4 w-4" />
                                     </Button>
-                                  </>
+                                  </TooltipTrigger>
+                                  <TooltipContent>View payout details</TooltipContent>
+                                </Tooltip>
+                                {payout.status === "pending" && (
+                                  <div className="flex gap-2">
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          size="sm"
+                                          variant="default"
+                                          className="bg-green-600 hover:bg-green-700 hover:border-green-700 hover:text-white rounded-md"
+                                          onClick={() => handleApproveClick(payout)}
+                                          disabled={processing === payout.id}
+                                        >
+                                          <CheckCircle className="h-4 w-4" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>Approve payout</TooltipContent>
+                                    </Tooltip>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          size="sm"
+                                          variant="destructive"
+                                          onClick={() => handleRejectClick(payout)}
+                                          disabled={processing === payout.id}
+                                        >
+                                          <XCircle className="h-4 w-4" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>Reject payout</TooltipContent>
+                                    </Tooltip>
+                                  </div>
                                 )}
                                 {payout.status === "processing" && (
                                   <Badge
@@ -1151,35 +1222,50 @@ export default function PayoutsPage() {
                             </TableCell>
                             <TableCell>
                               <div className="flex gap-1">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() =>
-                                    handlePayoutAction(payout.id, "view")
-                                  }
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() =>
+                                        handlePayoutAction(payout.id, "view")
+                                      }
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>View payout details</TooltipContent>
+                                </Tooltip>
                                 {payout.status === "pending" && (
                                   <>
-                                    <Button
-                                      size="sm"
-                                      variant="default"
-                                      onClick={() =>
-                                        handlePayoutAction(payout.id, "approve")
-                                      }
-                                    >
-                                      <CheckCircle className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="destructive"
-                                      onClick={() =>
-                                        handlePayoutAction(payout.id, "reject")
-                                      }
-                                    >
-                                      <XCircle className="h-4 w-4" />
-                                    </Button>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          size="sm"
+                                          variant="default"
+                                          onClick={() =>
+                                            handlePayoutAction(payout.id, "approve")
+                                          }
+                                        >
+                                          <CheckCircle className="h-4 w-4" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>Approve payout</TooltipContent>
+                                    </Tooltip>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          size="sm"
+                                          variant="destructive"
+                                          onClick={() =>
+                                            handlePayoutAction(payout.id, "reject")
+                                          }
+                                        >
+                                          <XCircle className="h-4 w-4" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>Reject payout</TooltipContent>
+                                    </Tooltip>
                                   </>
                                 )}
                                 {payout.status === "processing" && (
@@ -1457,6 +1543,488 @@ export default function PayoutsPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+
+      {/* Payout Details Modal */}
+      <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          {selectedPayoutDetails && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold">
+                  Payout Details
+                </DialogTitle>
+                <DialogDescription>
+                  Complete information for payout request #{selectedPayoutDetails.reference}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-6 mt-4">
+                {/* Status Badge */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600">Status:</span>
+                    {getStatusBadge(selectedPayoutDetails.status)}
+                  </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          window.open(
+                            `/campaign/${selectedPayoutDetails.campaignSlug}`,
+                            "_blank"
+                          )
+                        }
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        View Campaign
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Open campaign page in new tab</TooltipContent>
+                  </Tooltip>
+                </div>
+
+                <Separator />
+
+                {/* Creator Information */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <User className="h-5 w-5" />
+                      Creator Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-500">Name</p>
+                        <p className="font-medium">{selectedPayoutDetails.userName}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Email</p>
+                        <p className="font-medium">{selectedPayoutDetails.userEmail}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Campaign Information */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Heart className="h-5 w-5" />
+                      Campaign Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-500">Campaign Title</p>
+                      <p className="font-medium">{selectedPayoutDetails.campaignTitle}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Reference</p>
+                      <p className="font-mono text-sm">{selectedPayoutDetails.reference}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Payout Amount Details */}
+                <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <DollarSign className="h-5 w-5" />
+                      Payout Amount Details
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-600">Requested Amount</p>
+                        <p className="font-semibold text-lg">
+                          {formatCurrency(
+                            parseFloat(selectedPayoutDetails.requestedAmount),
+                            selectedPayoutDetails.currency
+                          )}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Gross Amount</p>
+                        <p className="font-semibold text-lg">
+                          {formatCurrency(
+                            parseFloat(selectedPayoutDetails.grossAmount),
+                            selectedPayoutDetails.currency
+                          )}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-red-600">Fees</p>
+                        <p className="font-semibold text-lg text-red-600">
+                          -{formatCurrency(
+                            parseFloat(selectedPayoutDetails.fees),
+                            selectedPayoutDetails.currency
+                          )}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Net Amount</p>
+                        <p className="font-semibold text-xl text-green-600">
+                          {formatCurrency(
+                            parseFloat(selectedPayoutDetails.netAmount),
+                            selectedPayoutDetails.currency
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Payment Provider & Bank Details */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Building2 className="h-5 w-5" />
+                      Payment & Bank Details
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <p className="text-sm text-gray-500">Payment Provider</p>
+                      <p className="font-medium capitalize">
+                        {selectedPayoutDetails.payoutProvider}
+                      </p>
+                    </div>
+                    <Separator />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-500">Account Name</p>
+                        <p className="font-medium">
+                          {selectedPayoutDetails.accountName || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Bank Name</p>
+                        <p className="font-medium">
+                          {selectedPayoutDetails.bankName || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Account Number</p>
+                        <p className="font-mono font-medium">
+                          {selectedPayoutDetails.accountNumber
+                            ? `****${selectedPayoutDetails.accountNumber.slice(-4)}`
+                            : "N/A"}
+                        </p>
+                      </div>
+                      {selectedPayoutDetails.bankCode && (
+                        <div>
+                          <p className="text-sm text-gray-500">Bank Code</p>
+                          <p className="font-medium">
+                            {selectedPayoutDetails.bankCode}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Timeline & Status Information */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Calendar className="h-5 w-5" />
+                      Timeline & Status
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-500">Request Date</p>
+                        <p className="font-medium">
+                          {formatDate(selectedPayoutDetails.createdAt)}
+                        </p>
+                      </div>
+                      {selectedPayoutDetails.approvedAt && (
+                        <div>
+                          <p className="text-sm text-gray-500">Approved Date</p>
+                          <p className="font-medium">
+                            {formatDate(selectedPayoutDetails.approvedAt)}
+                          </p>
+                        </div>
+                      )}
+                      {selectedPayoutDetails.processedAt && (
+                        <div>
+                          <p className="text-sm text-gray-500">Processed Date</p>
+                          <p className="font-medium">
+                            {formatDate(selectedPayoutDetails.processedAt)}
+                          </p>
+                        </div>
+                      )}
+                      {selectedPayoutDetails.approvedBy && (
+                        <div>
+                          <p className="text-sm text-gray-500">Approved By</p>
+                          <p className="font-medium">
+                            {selectedPayoutDetails.approvedBy}
+                          </p>
+                        </div>
+                      )}
+                      {selectedPayoutDetails.transactionId && (
+                        <div>
+                          <p className="text-sm text-gray-500">Transaction ID</p>
+                          <p className="font-mono text-sm">
+                            {selectedPayoutDetails.transactionId}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Notes & Additional Information */}
+                {(selectedPayoutDetails.notes ||
+                  selectedPayoutDetails.rejectionReason ||
+                  selectedPayoutDetails.failureReason) && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <FileText className="h-5 w-5" />
+                        Additional Information
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {selectedPayoutDetails.notes && (
+                        <div>
+                          <p className="text-sm text-gray-500">Notes</p>
+                          <p className="text-sm bg-gray-50 p-3 rounded-md">
+                            {selectedPayoutDetails.notes}
+                          </p>
+                        </div>
+                      )}
+                      {selectedPayoutDetails.rejectionReason && (
+                        <div>
+                          <p className="text-sm text-red-600 font-medium">
+                            Rejection Reason
+                          </p>
+                          <p className="text-sm bg-red-50 p-3 rounded-md text-red-800">
+                            {selectedPayoutDetails.rejectionReason}
+                          </p>
+                        </div>
+                      )}
+                      {selectedPayoutDetails.failureReason && (
+                        <div>
+                          <p className="text-sm text-red-600 font-medium">
+                            Failure Reason
+                          </p>
+                          <p className="text-sm bg-red-50 p-3 rounded-md text-red-800">
+                            {selectedPayoutDetails.failureReason}
+                          </p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Approve Payout Confirmation Modal */}
+      <Dialog open={showApproveModal} onOpenChange={setShowApproveModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              Approve Payout
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to approve this payout? This action will
+              initiate the transfer process.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedPayoutForAction && (
+            <div className="space-y-4">
+              <div className="rounded-lg border p-3 bg-gray-50">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Creator:</span>
+                    <span className="font-medium">
+                      {selectedPayoutForAction.userName}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Campaign:</span>
+                    <span className="font-medium">
+                      {selectedPayoutForAction.campaignTitle}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Net Amount:</span>
+                    <span className="font-semibold text-green-600">
+                      {formatCurrency(
+                        parseFloat(selectedPayoutForAction.netAmount),
+                        selectedPayoutForAction.currency
+                      )}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="approval-notes">Notes (Optional)</Label>
+                <Textarea
+                  id="approval-notes"
+                  placeholder="Add any notes about this approval..."
+                  value={approvalNotes}
+                  onChange={(e) => setApprovalNotes(e.target.value)}
+                  rows={3}
+                  maxLength={500}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  {approvalNotes.length}/500 characters
+                </p>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="flex gap-2 sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowApproveModal(false);
+                setApprovalNotes("");
+                setSelectedPayoutForAction(null);
+              }}
+              className="flex-1 sm:flex-none"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="default"
+              onClick={handleConfirmApprove}
+              disabled={
+                processing === selectedPayoutForAction?.id ||
+                !selectedPayoutForAction
+              }
+              className="flex-1 sm:flex-none"
+            >
+              {processing === selectedPayoutForAction?.id ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Approving...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Approve Payout
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject Payout Confirmation Modal */}
+      <Dialog open={showRejectModal} onOpenChange={setShowRejectModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <XCircle className="h-5 w-5 text-red-600" />
+              Reject Payout
+            </DialogTitle>
+            <DialogDescription>
+              Please provide a clear reason for rejection. This will be sent to
+              the creator via email.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedPayoutForAction && (
+            <div className="space-y-4">
+              <div className="rounded-lg border p-3 bg-gray-50">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Creator:</span>
+                    <span className="font-medium">
+                      {selectedPayoutForAction.userName}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Campaign:</span>
+                    <span className="font-medium">
+                      {selectedPayoutForAction.campaignTitle}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Requested Amount:</span>
+                    <span className="font-medium">
+                      {formatCurrency(
+                        parseFloat(selectedPayoutForAction.requestedAmount),
+                        selectedPayoutForAction.currency
+                      )}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="rejection-reason">
+                  Rejection Reason <span className="text-red-500">*</span>
+                </Label>
+                <Textarea
+                  id="rejection-reason"
+                  placeholder="Explain why this payout cannot be approved (minimum 10 characters)..."
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  rows={5}
+                  minLength={10}
+                  maxLength={500}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  {rejectionReason.length}/500 characters (minimum 10 required)
+                </p>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="flex gap-2 sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowRejectModal(false);
+                setRejectionReason("");
+                setSelectedPayoutForAction(null);
+              }}
+              className="flex-1 sm:flex-none"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmReject}
+              disabled={
+                processing === selectedPayoutForAction?.id ||
+                !selectedPayoutForAction ||
+                rejectionReason.trim().length < 10
+              }
+              className="flex-1 sm:flex-none"
+            >
+              {processing === selectedPayoutForAction?.id ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Rejecting...
+                </>
+              ) : (
+                <>
+                  <XCircle className="h-4 w-4 mr-2" />
+                  Reject Payout
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      </div>
+    </TooltipProvider>
   );
 }

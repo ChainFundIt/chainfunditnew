@@ -112,15 +112,42 @@ export async function PATCH(
         
         // Automatically process the payout
         try {
-          await processCampaignCreatorPayout(id);
+          const processResult = await processCampaignCreatorPayout(id);
+          
+          // Check if processing failed
+          if (!processResult.success) {
+            const errorMessage = processResult.error || 'Processing failed';
+            console.error('Failed to process payout:', errorMessage);
+            
+            // Update status to failed if processing fails
+            await db
+              .update(campaignPayouts)
+              .set({ 
+                status: 'failed',
+                failureReason: errorMessage,
+                updatedAt: new Date(),
+              })
+              .where(eq(campaignPayouts.id, id));
+            
+            // Log audit trail for failure
+            await logPayoutStatusChange({
+              payoutId: id,
+              oldStatus: 'approved',
+              newStatus: 'failed',
+              changedBy: 'system',
+              reason: errorMessage,
+            });
+          }
         } catch (processError) {
           console.error('Failed to process payout:', processError);
+          const errorMessage = processError instanceof Error ? processError.message : 'Processing failed';
+          
           // Update status to failed if processing fails
           await db
             .update(campaignPayouts)
             .set({ 
               status: 'failed',
-              failureReason: processError instanceof Error ? processError.message : 'Processing failed',
+              failureReason: errorMessage,
               updatedAt: new Date(),
             })
             .where(eq(campaignPayouts.id, id));
@@ -131,7 +158,7 @@ export async function PATCH(
             oldStatus: 'approved',
             newStatus: 'failed',
             changedBy: 'system',
-            reason: processError instanceof Error ? processError.message : 'Processing failed',
+            reason: errorMessage,
           });
         }
         break;

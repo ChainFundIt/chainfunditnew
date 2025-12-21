@@ -151,6 +151,8 @@ export async function createPaystackRecipient(
   bankCode: string,
   currency: string = 'NGN'
 ) {
+  validatePaystackKey();
+  
   try {
     const response = await axios.post(
       `${PAYSTACK_BASE_URL}/transferrecipient`,
@@ -171,8 +173,33 @@ export async function createPaystackRecipient(
 
     return response.data;
   } catch (error: any) {
-    console.error('Error creating Paystack recipient:', error.response?.data || error.message);
-    throw error;
+    const errorData = error.response?.data || {};
+    const errorMessage = errorData.message || error.message || 'Unknown error';
+    
+    console.error('Error creating Paystack recipient:', {
+      status: error.response?.status,
+      message: errorMessage,
+      data: errorData,
+    });
+    
+    // Provide more helpful error messages
+    if (error.response?.status === 400) {
+      // Common 400 errors from Paystack
+      if (errorMessage.includes('account') || errorMessage.includes('bank')) {
+        throw new Error(`Invalid bank account details: ${errorMessage}. Please verify the account number and bank code.`);
+      }
+      if (errorMessage.includes('recipient') && errorMessage.includes('exists')) {
+        // Recipient already exists, this is actually okay - we'll use the existing one
+        throw new Error('Recipient already exists');
+      }
+      throw new Error(`Paystack validation error: ${errorMessage}`);
+    }
+    
+    if (error.response?.status === 401) {
+      throw new Error(`Paystack authentication failed: ${errorMessage}. Please check that your PAYSTACK_SECRET_KEY is correct and valid.`);
+    }
+    
+    throw new Error(`Failed to create Paystack recipient: ${errorMessage}`);
   }
 }
 
@@ -186,6 +213,8 @@ export async function initiatePaystackTransfer(
   currency: string = 'NGN',
   reference?: string
 ) {
+  validatePaystackKey();
+  
   try {
     const response = await axios.post(
       `${PAYSTACK_BASE_URL}/transfer`,
@@ -207,8 +236,39 @@ export async function initiatePaystackTransfer(
 
     return response.data;
   } catch (error: any) {
-    console.error('Error initiating Paystack transfer:', error.response?.data || error.message);
-    throw error;
+    const errorData = error.response?.data || {};
+    const errorMessage = errorData.message || error.message || 'Unknown error';
+    
+    console.error('Error initiating Paystack transfer:', {
+      status: error.response?.status,
+      message: errorMessage,
+      data: errorData,
+    });
+    
+    // Provide more helpful error messages
+    if (error.response?.status === 400) {
+      // Common 400 errors from Paystack
+      if (errorMessage.includes('balance') || errorMessage.includes('insufficient')) {
+        throw new Error(`Insufficient Paystack balance: ${errorMessage}. Please top up your Paystack account.`);
+      }
+      if (errorMessage.includes('recipient') || errorMessage.includes('invalid')) {
+        throw new Error(`Invalid recipient or transfer details: ${errorMessage}. Please verify the recipient code and transfer amount.`);
+      }
+      if (errorMessage.includes('amount') || errorMessage.includes('minimum')) {
+        throw new Error(`Invalid transfer amount: ${errorMessage}. Please check the minimum transfer amount requirements.`);
+      }
+      throw new Error(`Paystack transfer validation error: ${errorMessage}`);
+    }
+    
+    if (error.response?.status === 401) {
+      throw new Error(`Paystack authentication failed: ${errorMessage}. Please check that your PAYSTACK_SECRET_KEY is correct and valid.`);
+    }
+    
+    if (error.response?.status === 403) {
+      throw new Error(`Paystack transfer not allowed: ${errorMessage}. Please check your Paystack account permissions.`);
+    }
+    
+    throw new Error(`Failed to initiate Paystack transfer: ${errorMessage}`);
   }
 }
 

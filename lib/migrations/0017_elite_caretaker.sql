@@ -1,0 +1,1 @@
+ALTER TABLE "user_preferences" ALTER COLUMN "notify_on_charity_donation" SET DEFAULT true;
