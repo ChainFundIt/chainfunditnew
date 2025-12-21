@@ -569,7 +569,7 @@ export function PayoutDetailsModal({
           )}
 
           {/* International Bank Account Required for Foreign Currencies */}
-          {/* {campaign.payoutProvider === 'stripe' && campaign.currencyCode !== 'NGN' && !userProfile?.internationalAccountVerified && (
+          {campaign.payoutProvider === 'stripe' && campaign.currencyCode !== 'NGN' && !userProfile?.internationalAccountVerified && (
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
               <div className="flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
@@ -592,7 +592,7 @@ export function PayoutDetailsModal({
                 </div>
               </div>
             </div>
-          )} */}
+          )}
 
           {/* Account Change Request Pending Warning */}
           {userProfile?.accountChangeRequested && (
