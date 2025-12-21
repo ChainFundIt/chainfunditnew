@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
         .values({
           userId: user.id,
           emailNotificationsEnabled: true,
-          notifyOnCharityDonation: false, // Users get notified about their donations
+          notifyOnCharityDonation: true, // Users get notified about their donations
           notifyOnCampaignDonation: true, // Users get notified when their campaign receives donations
           notifyOnPayoutRequest: true,
           notifyOnLargeDonation: true,

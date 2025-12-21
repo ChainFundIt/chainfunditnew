@@ -9,7 +9,7 @@ export const userPreferences = pgTable('user_preferences', {
   notificationEmail: varchar('notification_email', { length: 255 }), // Override default user email
   
   // Notification Preferences
-  notifyOnCharityDonation: boolean('notify_on_charity_donation').default(false).notNull(), // When they donate to charity
+  notifyOnCharityDonation: boolean('notify_on_charity_donation').default(true).notNull(), // When they donate to charity
   notifyOnCampaignDonation: boolean('notify_on_campaign_donation').default(true).notNull(), // When their campaign receives a donation
   notifyOnPayoutRequest: boolean('notify_on_payout_request').default(true).notNull(), // When payout is ready
   notifyOnLargeDonation: boolean('notify_on_large_donation').default(true).notNull(), // When receiving large donations
