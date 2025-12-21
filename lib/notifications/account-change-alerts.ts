@@ -54,7 +54,7 @@ export async function notifyAdminsOfAccountChangeRequest(requestData: AccountCha
       
       if (!shouldNotify || !emailEnabled) continue;
 
-      const recipientEmail = config?.notificationEmail || process.env.ADMIN_EMAIL;
+      const recipientEmail = config?.notificationEmail || adminUser.email;
       if (!recipientEmail) continue;
 
       await sendAccountChangeRequestEmailToAdmin(recipientEmail, requestData);

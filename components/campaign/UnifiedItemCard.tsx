@@ -339,7 +339,7 @@ export function UnifiedItemCard({
             <div className="flex items-center gap-2 mb-2">
               <p className="font-jakarta font-regular text-xs text-[#999999] uppercase tracking-wider">
                 Organized by{" "}
-                <b className="text-black">{item.category || "Campaign"}</b>
+                <b className="text-black">{item.creatorName || "Campaign"}</b>
               </p>
               {item.isVerified && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-[#104901] border border-[#104901]/20">
