@@ -251,6 +251,11 @@ const DonationsPage = () => {
                           <TableHead className="py-3 px-5 text-[#6b7280] text-[11px] leading-[14px] font-bold w-[10rem]">
                             STATUS
                           </TableHead>
+                          {activeTab == "Failed" && (
+                            <TableHead className="py-3 px-5 text-[#6b7280] text-[11px] leading-[14px] font-bold w-[10rem]">
+                              REASON
+                            </TableHead>
+                          )}
                           {(activeTab == "Failed" || activeTab == "Pending") && (
                             <TableHead className="py-3 px-5 text-[#6b7280] text-[11px] leading-[14px] font-bold w-[10rem]">
                               ACTIONS
@@ -350,6 +355,32 @@ const DonationsPage = () => {
                                   </div>
                                 )}
                               </TableCell>
+                              {/* Failure Reason */}
+                              {activeTab == "Failed" && (
+                                <TableCell className="py-3 px-5 w-[10rem]">
+                                  <div className="flex flex-col gap-1">
+                                    {data.failureReason ? (
+                                      <div className="text-[11px] leading-[14px] text-[#dc2626] font-medium">
+                                        {data.failureReason}
+                                      </div>
+                                    ) : data.providerError ? (
+                                      <div className="text-[11px] leading-[14px] text-[#dc2626] font-medium">
+                                        {data.providerError.length > 50 
+                                          ? `${data.providerError.substring(0, 50)}...` 
+                                          : data.providerError}
+                                      </div>
+                                    ) : data.providerStatus ? (
+                                      <div className="text-[11px] leading-[14px] text-[#dc2626] font-medium">
+                                        {data.providerStatus}
+                                      </div>
+                                    ) : (
+                                      <div className="text-[11px] leading-[14px] text-[#6b7280] italic">
+                                        No reason provided
+                                      </div>
+                                    )}
+                                  </div>
+                                </TableCell>
+                              )}
                               {/* Actions */}
                               {activeTab == "Failed" && (
                                 <TableCell className="py-3 px-5 w-[10rem] text-[12px] leading-[18px] text-[#6b7280]">

@@ -936,6 +936,34 @@ export default function PayoutsPage() {
                                     Processing...
                                   </Badge>
                                 )}
+                                {(payout.status === "failed" || 
+                                  (payout.status === "completed" && !payout.transactionId)) && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200"
+                                        onClick={() => {
+                                          handleCampaignCreatorPayoutAction(
+                                            payout.id,
+                                            "retry",
+                                            undefined,
+                                            "Retrying payout transfer"
+                                          );
+                                        }}
+                                        disabled={processing === payout.id}
+                                      >
+                                        <RefreshCw className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      {payout.status === "failed" 
+                                        ? "Retry failed payout" 
+                                        : "Retry payout - transfer was never initiated"}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                )}
                               </div>
                             </TableCell>
                           </TableRow>

@@ -82,14 +82,24 @@ export async function processCampaignCreatorPayout(
     // Get old status for audit log
     const oldStatus = payout.status;
 
-    // Update payout with result
+    // Validate that if status is completed or processing, we have a transactionId
+    if ((result.status === 'completed' || result.status === 'processing') && !result.transactionId) {
+      console.error(`Payout ${payoutId} marked as ${result.status} but no transactionId provided`);
+      // Mark as failed if we don't have a transaction ID
+      result.status = 'failed';
+      result.success = false;
+      result.error = result.error || 'Transfer initiated but no transaction ID returned';
+    }
+
+    // Only mark processedAt if status is completed (not processing)
+    // Processing payouts should have processedAt set when webhook confirms completion
     await db
       .update(campaignPayouts)
       .set({
         status: result.status,
-        transactionId: result.transactionId,
+        transactionId: result.transactionId || null,
         failureReason: result.error || null,
-        processedAt: result.success ? new Date() : null,
+        processedAt: (result.success && result.status === 'completed') ? new Date() : null,
         updatedAt: new Date(),
       })
       .where(eq(campaignPayouts.id, payoutId));
@@ -104,7 +114,9 @@ export async function processCampaignCreatorPayout(
     });
 
     // Send email notifications
-    if (result.success && result.status === 'completed') {
+    // Only send completion email if status is actually completed (not processing)
+    // Processing payouts will get completion email when webhook confirms success
+    if (result.success && result.status === 'completed' && result.transactionId) {
       try {
         await sendPayoutCompletionEmail({
           userEmail: payout.user.email!,
@@ -222,13 +234,23 @@ export async function processAmbassadorPayout(
       };
     }
 
-    // Update payout with result
+    // Validate that if status is completed or processing, we have a transactionId
+    if ((result.status === 'completed' || result.status === 'processing') && !result.transactionId) {
+      console.error(`Ambassador payout ${payoutId} marked as ${result.status} but no transactionId provided`);
+      // Mark as failed if we don't have a transaction ID
+      result.status = 'failed';
+      result.success = false;
+      result.error = result.error || 'Transfer initiated but no transaction ID returned';
+    }
+
+    // Only mark processedAt if status is completed (not processing)
+    // Processing payouts should have processedAt set when webhook confirms completion
     await db
       .update(commissionPayouts)
       .set({
         status: result.status,
-        transactionId: result.transactionId,
-        processedAt: result.success ? new Date() : null,
+        transactionId: result.transactionId || null,
+        processedAt: (result.success && result.status === 'completed') ? new Date() : null,
       })
       .where(eq(commissionPayouts.id, payoutId));
 
@@ -351,10 +373,32 @@ async function processStripePayout(
           }
         );
 
+        // Validate that payout was created and has an ID
+        if (!stripePayout || !stripePayout.id) {
+          return {
+            success: false,
+            error: 'Stripe payout created but no payout ID returned',
+            status: 'failed',
+          };
+        }
+
+        // Stripe payouts are asynchronous - they start as 'pending' and can fail later
+        // Mark as 'processing' and let webhook mark as 'completed' when it actually succeeds
+        // Check if payout status indicates it will succeed
+        const payoutStatus = stripePayout.status; // 'pending', 'in_transit', 'paid', 'failed', 'canceled'
+        
+        if (payoutStatus === 'failed' || payoutStatus === 'canceled') {
+          return {
+            success: false,
+            error: `Stripe payout ${payoutStatus}: ${stripePayout.failure_message || 'Payout failed'}`,
+            status: 'failed',
+          };
+        }
+
         return {
           success: true,
           transactionId: stripePayout.id,
-          status: 'completed',
+          status: 'processing', // Changed from 'completed' - webhook will mark as completed when transfer succeeds
         };
       } else {
         // For NGN, fall back to old Stripe Connect flow (though this shouldn't happen as NGN uses Paystack)
@@ -389,10 +433,20 @@ async function processStripePayout(
           }
         );
 
+        // Validate that transfer was created and has an ID
+        if (!transfer || !transfer.id) {
+          return {
+            success: false,
+            error: 'Stripe transfer created but no transfer ID returned',
+            status: 'failed',
+          };
+        }
+
+        // Stripe transfers are asynchronous - mark as 'processing' and let webhook mark as 'completed'
         return {
           success: true,
           transactionId: transfer.id,
-          status: 'completed',
+          status: 'processing', // Changed from 'completed' - webhook will mark as completed when transfer succeeds
         };
       }
     } else {
@@ -420,7 +474,6 @@ export async function processPaystackPayout(
   type: 'campaign' | 'ambassador'
 ): Promise<PayoutProcessingResult> {
   try {
-    // Check if there are bank details for Paystack
     if (!payout.accountNumber || !payout.bankCode) {
       return {
         success: false,
@@ -429,7 +482,6 @@ export async function processPaystackPayout(
       };
     }
 
-    // Validate bank code format (should be numeric string)
     if (isNaN(Number(payout.bankCode))) {
       return {
         success: false,
@@ -438,7 +490,6 @@ export async function processPaystackPayout(
       };
     }
 
-    // Validate account number
     if (!/^\d{10,}$/.test(payout.accountNumber)) {
       return {
         success: false,
@@ -447,7 +498,6 @@ export async function processPaystackPayout(
       };
     }
 
-    // Create recipient if not exists
     let recipientCode = payout.recipientCode;
     if (!recipientCode) {
       try {
@@ -459,20 +509,14 @@ export async function processPaystackPayout(
         );
         recipientCode = recipient.data.recipient_code;
         
-        // Save recipient code to payout for future use (if possible)
-        // This would require updating the payout record, but we'll do it after successful transfer
       } catch (recipientError: any) {
-        // If recipient already exists, try to get it
         if (recipientError.message?.includes('already exists')) {
-          // Try to find existing recipient by account details
-          // For now, we'll just throw the error with a helpful message
           return {
             success: false,
             error: 'Recipient already exists but recipient code not found. Please contact support or try again.',
             status: 'failed',
           };
         }
-        // Re-throw other errors
         throw recipientError;
       }
     }
@@ -505,19 +549,38 @@ export async function processPaystackPayout(
       payout.reference || payout.id
     );
 
-    // Verify transfer was initiated successfully
-    if (!transfer.data || !transfer.data.reference) {
+    if (!transfer.data || !transfer.data.transfer_code) {
       return {
         success: false,
-        error: 'Transfer initiated but no reference returned from Paystack',
+        error: 'Transfer initiated but no transfer code returned from Paystack',
         status: 'failed',
+      };
+    }
+
+    const transferStatus = transfer.data.status;
+    
+    if (transferStatus === 'failed' || transferStatus === 'reversed') {
+      return {
+        success: false,
+        error: `Paystack transfer ${transferStatus}: ${transfer.data.message || 'Transfer failed'}`,
+        status: 'failed',
+      };
+    }
+
+    
+    const transferCode = transfer.data.transfer_code;
+    if (transferStatus === 'success' && transferCode) {
+      return {
+        success: true,
+        transactionId: transferCode,
+        status: 'processing',
       };
     }
 
     return {
       success: true,
-      transactionId: transfer.data.reference,
-      status: 'completed',
+      transactionId: transferCode,
+      status: 'processing',
     };
   } catch (error) {
     console.error('Error processing Paystack payout:', error);

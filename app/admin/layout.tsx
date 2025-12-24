@@ -228,24 +228,26 @@ export default function AdminLayout({
           onClick={() => setSidebarOpen(false)}
         />
         <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white">
-          <div className="flex h-16 items-center justify-between px-4">
-            <div className="flex items-center space-x-3">
-              <Image
-                src="/images/logo.svg"
-                alt="ChainFundIt"
-                width={32}
-                height={32}
-              />
-              <span className="text-xl font-bold text-gray-900">Admin</span>
+          <Link href="/">
+            <div className="flex h-16 items-center justify-between px-4">
+              <div className="flex items-center space-x-3">
+                <Image
+                  src="/images/logo.svg"
+                  alt="ChainFundIt"
+                  width={32}
+                  height={32}
+                />
+                <span className="text-xl font-bold text-gray-900">Admin</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSidebarOpen(false)}
+              >
+                <X className="h-5 w-5" />
+              </Button>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
+          </Link>
           <nav className="flex-1 px-4 py-4 space-y-1">
             {navigation
               .filter((item) => {

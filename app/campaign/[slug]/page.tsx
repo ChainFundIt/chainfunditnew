@@ -40,12 +40,12 @@ export async function generateMetadata({
 
   const campaignData = campaign[0];
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://chainfundit.com";
-  const logoUrl = `/images/logo.svg`;
+  const logoUrl = `${baseUrl}/images/logo.svg`;
 
   // Get the campaign URL
   const campaignUrl = `${baseUrl}/campaign/${slug}`;
 
-  // Get cover image URL - ensure it's absolute
+  // Get cover image URL - ensure it's absolute and use proxy for R2 images
   let coverImageUrl = campaignData.coverImageUrl;
   if (coverImageUrl && !coverImageUrl.startsWith("http")) {
     // If it's a relative URL, make it absolute
@@ -54,11 +54,23 @@ export async function generateMetadata({
       : `${baseUrl}/${coverImageUrl}`;
   }
 
-  // Prepare images array - use cover image if available, otherwise fallback to logo
-  const images = coverImageUrl
+  const getProxiedImageUrl = (url: string | null | undefined): string | null => {
+    if (!url) return null;
+    
+    if (url.includes('r2.dev') || url.includes('pub-')) {
+      const encodedUrl = encodeURIComponent(url);
+      return `${baseUrl}/api/images?url=${encodedUrl}`;
+    }
+    
+    return url;
+  };
+
+  const proxiedCoverImageUrl = getProxiedImageUrl(coverImageUrl);
+
+  const images = proxiedCoverImageUrl
     ? [
         {
-          url: coverImageUrl,
+          url: proxiedCoverImageUrl,
           width: 1200,
           height: 630,
           alt: campaignData.title,
@@ -100,10 +112,10 @@ export async function generateMetadata({
       type: "website",
     },
     twitter: {
-      card: coverImageUrl ? "summary_large_image" : "summary",
+      card: proxiedCoverImageUrl ? "summary_large_image" : "summary",
       title: campaignData.title,
       description: description,
-      images: coverImageUrl ? [coverImageUrl] : [logoUrl],
+      images: proxiedCoverImageUrl ? [proxiedCoverImageUrl] : [logoUrl],
     },
     alternates: {
       canonical: campaignUrl,

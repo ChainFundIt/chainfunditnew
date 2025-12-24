@@ -1,5 +1,12 @@
 #!/usr/bin/env tsx
 
+// Load environment variables FIRST, before any other imports
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+
+dotenv.config({ path: path.join(process.cwd(), '.env.local') });
+dotenv.config(); // Fallback to .env
+
 import { db } from '@/lib/db';
 import { charities, type NewCharity } from '@/lib/schema/charities';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
@@ -104,17 +111,31 @@ async function uploadToR2(params: { key: string; body: Buffer; contentType: stri
 }
 
 async function cacheCharityLogoToR2(charity: NewCharity): Promise<string | undefined> {
-  const existingLogo = charity.logo ?? undefined;
-  if (!canUploadToR2()) return existingLogo;
-  if (!charity.slug) return existingLogo;
-  if (!existingLogo) return undefined;
-
-  // Don’t touch local/static assets
-  if (existingLogo.startsWith('/')) return existingLogo;
+  const existingLogo = charity.logo?.trim();
+  
+  // If no logo exists or it's an empty string, return undefined
+  if (!existingLogo || existingLogo === '') return undefined;
+  
+  // Don't touch local/static assets - always preserve them
+  if (existingLogo.startsWith('/')) {
+    console.log(`✅ Preserving local logo for ${charity.name}: ${existingLogo}`);
+    return existingLogo;
+  }
+  
+  // If R2 is not configured, return the original logo
+  if (!canUploadToR2()) {
+    console.log(`⚠️  R2 not configured, using original logo for ${charity.name}: ${existingLogo}`);
+    return existingLogo;
+  }
+  
+  if (!charity.slug) {
+    console.log(`⚠️  No slug for ${charity.name}, using original logo: ${existingLogo}`);
+    return existingLogo;
+  }
 
   const candidates: string[] = [];
 
-  // Prefer the provided logo if it’s not Clearbit.
+  // Prefer the provided logo if it's not Clearbit.
   if (!isClearbitLogo(existingLogo)) {
     candidates.push(existingLogo);
   }
@@ -130,25 +151,38 @@ async function cacheCharityLogoToR2(charity: NewCharity): Promise<string | undef
     candidates.push(existingLogo);
   }
 
-  for (const url of candidates) {
-    const fetched = await fetchImage(url);
-    if (!fetched) continue;
+  console.log(`🔄 Attempting to cache logo for ${charity.name} (${candidates.length} candidates)...`);
 
-    const key = `charities/logos/${charity.slug}-${Date.now()}.${fetched.extension}`;
+  for (const url of candidates) {
     try {
-      const uploadedUrl = await uploadToR2({
-        key,
-        body: fetched.bytes,
-        contentType: fetched.contentType,
-      });
-      return uploadedUrl;
-    } catch {
-      // Try next candidate
+      const fetched = await fetchImage(url);
+      if (!fetched) {
+        console.log(`  ❌ Failed to fetch: ${url}`);
+        continue;
+      }
+
+      const key = `charities/logos/${charity.slug}-${Date.now()}.${fetched.extension}`;
+      try {
+        const uploadedUrl = await uploadToR2({
+          key,
+          body: fetched.bytes,
+          contentType: fetched.contentType,
+        });
+        console.log(`  ✅ Successfully uploaded to R2: ${uploadedUrl}`);
+        return uploadedUrl;
+      } catch (uploadError) {
+        console.log(`  ❌ Failed to upload to R2: ${uploadError}`);
+        // Try next candidate
+        continue;
+      }
+    } catch (error) {
+      console.log(`  ❌ Error processing ${url}: ${error}`);
       continue;
     }
   }
 
   // If nothing worked, keep existing value (may still be clearbit, but UI layer avoids it).
+  console.log(`⚠️  All candidates failed for ${charity.name}, keeping original: ${existingLogo}`);
   return existingLogo;
 }
 
@@ -624,13 +658,16 @@ const sampleCharities: NewCharity[] = [
 
 async function seedCharities() {
   try {
+    console.log('🌱 Seeding charities...\n');
+    console.log(`R2 configured: ${canUploadToR2() ? '✅ Yes' : '❌ No'}\n`);
 
     for (const charity of sampleCharities) {
       try {
         const cachedLogo = await cacheCharityLogoToR2(charity);
+        const finalLogo = cachedLogo?.trim() || charity.logo?.trim() || undefined;
         const values: NewCharity = {
           ...charity,
-          logo: cachedLogo,
+          logo: finalLogo || undefined, // Ensure we never set empty strings
         };
 
         await db.insert(charities).values(values).onConflictDoUpdate({
@@ -640,11 +677,13 @@ async function seedCharities() {
             updatedAt: new Date(),
           },
         });
+        console.log(`✅ Added/Updated: ${charity.name}${cachedLogo ? ` (logo: ${cachedLogo.substring(0, 50)}...)` : ' (no logo)'}\n`);
       } catch (error) {
         console.error(`❌ Error adding ${charity.name}:`, error);
       }
     }
 
+    console.log(`\n✨ Successfully seeded ${sampleCharities.length} charities!`);
   } catch (error) {
     console.error('Error seeding charities:', error);
     process.exit(1);

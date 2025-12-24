@@ -498,6 +498,9 @@ const Main = ({ campaignSlug }: MainProps) => {
   const raised = campaignData.currentAmount;
   const goal = campaignData.goalAmount;
   const percent = Math.min(100, Math.round((raised / goal) * 100));
+  const isGoalReached = raised >= goal;
+  const isCampaignInactive = !campaignData.isActive;
+  const shouldDisableButtons = isGoalReached || isCampaignInactive;
 
   const parseJsonArray = (data: any): any[] => {
     if (!data) return [];
@@ -579,19 +582,27 @@ const Main = ({ campaignSlug }: MainProps) => {
 
               {/* Verified Badge Overlay */}
               <div className="absolute top-4 left-4">
-                <div className="bg-white/95 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-lg">
-                  <svg
-                    className="w-4 h-4"
-                    style={{ color: "#104901" }}
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M12 0c6.627 0 12 5.373 12 12s-5.373 12-12 12-12-5.373-12-12 5.373-12 12-12zm-1.959 17l-4.5-4.319 1.339-1.437 3.161 3.026 6.956-7.538 1.529 1.273-8.485 9.695z" />
-                  </svg>
-                  <span className="text-sm font-medium text-gray-900">
-                    VERIFIED
-                  </span>
-                </div>
+                {campaignData.isActive && (
+                  <div className="bg-white/95 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-lg">
+                    <span className="text-sm font-medium text-gray-900">
+                      ACTIVE
+                    </span>
+                  </div>
+                )} 
+                {!campaignData.isActive && (
+                  <div className="bg-white/95 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-lg">
+                    <span className="text-sm font-medium text-gray-900">
+                      INACTIVE
+                    </span>
+                  </div>
+                )}
+                {isGoalReached && (
+                  <div className="bg-white/95 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-lg">
+                    <span className="text-sm font-medium text-gray-900">
+                      GOAL REACHED
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -976,30 +987,61 @@ const Main = ({ campaignSlug }: MainProps) => {
               <div className="flex flex-col gap-2 mb-6">
                 <Button
                   onClick={() => setDonateModalOpen(true)}
-                  className="rounded-3xl h-auto py-3"
+                  disabled={shouldDisableButtons}
+                  className="rounded-3xl h-auto py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "#0d3a00";
+                    if (!shouldDisableButtons) {
+                      e.currentTarget.style.backgroundColor = "#0d3a00";
+                    }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "#104901";
+                    if (!shouldDisableButtons) {
+                      e.currentTarget.style.backgroundColor = "#104901";
+                    }
                   }}
+                  title={
+                    shouldDisableButtons
+                      ? isGoalReached
+                        ? "Campaign goal has been reached"
+                        : "Campaign is no longer active"
+                      : undefined
+                  }
                 >
                   <ArrowRight />
                   <span>Donate Now</span>
                 </Button>
                 <Button
                   onClick={() => setShareModalOpen(true)}
-                  className="rounded-3xl h-auto py-3"
+                  disabled={shouldDisableButtons}
+                  className="rounded-3xl h-auto py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "#F0F9EC";
+                    if (!shouldDisableButtons) {
+                      e.currentTarget.style.backgroundColor = "#F0F9EC";
+                    }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "transparent";
+                    if (!shouldDisableButtons) {
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }
                   }}
+                  title={
+                    shouldDisableButtons
+                      ? isGoalReached
+                        ? "Campaign goal has been reached"
+                        : "Campaign is no longer active"
+                      : undefined
+                  }
                 >
                   <Share2 />
                   <span>Share Campaign</span>
                 </Button>
+                {shouldDisableButtons && (
+                  <p className="text-xs text-gray-500 mt-1 text-center">
+                    {isGoalReached
+                      ? "Campaign goal has been reached"
+                      : "Campaign is no longer active"}
+                  </p>
+                )}
               </div>
 
               {/* Organizer Info */}
