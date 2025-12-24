@@ -106,6 +106,19 @@ export async function POST(request: NextRequest) {
             <p>If you didn't request this code, please ignore this email.</p>
           `,
         });
+
+        // Check if Resend returned an error in the response
+        // Resend returns { data: {...}, error: null } on success or { data: null, error: {...} } on failure
+        if (!emailResult || emailResult.error || !emailResult.data) {
+          console.error('Resend API error:', emailResult?.error || 'Unknown error', { email });
+          return NextResponse.json({ 
+            success: false, 
+            error: 'Failed to send verification email. Please try again or contact support.' 
+          }, { status: 500 });
+        }
+
+        // Log successful send for debugging
+        console.log('OTP email sent successfully:', { email, id: emailResult.data?.id });
       } catch (error) {
         console.error('Failed to send OTP email:', error);
         return NextResponse.json({ 

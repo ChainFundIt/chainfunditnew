@@ -508,6 +508,31 @@ const PayoutsPage = () => {
   };
 
   const PayoutDataCard = ({ campaign }: { campaign: CampaignPayout }) => {
+    const baseAmount = Math.max(campaign.availableAmount || 0, 0);
+    const chainerDonations = payoutData?.chainerDonations?.filter(
+      (donation) => donation.campaignId === campaign.id
+    ) || [];
+    const rawChainerCommissions = chainerDonations.reduce((sum, d) => {
+      const commissionEarned = (d as any).chainerCommissionEarned;
+      if (commissionEarned && parseFloat(commissionEarned) > 0) {
+        return sum + parseFloat(commissionEarned);
+      }
+      return sum;
+    }, 0);
+    const chainerCommissions = Math.min(rawChainerCommissions, baseAmount);
+    const chainfunditFee = baseAmount * 0.05;
+    const providerFee = campaign.payoutProvider === "stripe" 
+      ? chainfunditFee * 0.025 
+      : campaign.payoutProvider === "paystack" 
+      ? chainfunditFee * 0.01 
+      : 0;
+    const fixedFee = campaign.payoutProvider === "stripe" ? 0.3 : 0;
+    const totalFees = (chainfunditFee - providerFee) + fixedFee;
+    const netAmount = Math.max(baseAmount - totalFees - chainerCommissions, 0);
+    const baseAmountInNGN = campaign.availableAmountInNGN || 0;
+    const ratio = baseAmount > 0 ? baseAmountInNGN / baseAmount : 0;
+    const netAmountInNGN = Math.max(netAmount * ratio, 0);
+    
     return (
       <div
         key={campaign.id}
@@ -587,11 +612,11 @@ const PayoutsPage = () => {
                     <span className="text-sm font-medium">
                       Payout Available:{" "}
                       <CurrencyDisplay
-                        amount={campaign.availableAmount || 0}
+                        amount={netAmount}
                         currency={campaign.currencyCode}
                       />{" "}
                       (₦
-                      {(campaign.availableAmountInNGN ?? 0).toLocaleString()})
+                      {netAmountInNGN.toLocaleString()})
                     </span>
                   </div>
                 )}

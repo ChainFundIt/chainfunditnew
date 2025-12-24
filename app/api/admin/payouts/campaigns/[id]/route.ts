@@ -225,6 +225,24 @@ export async function PATCH(
         break;
 
       case 'complete':
+        // Validate that payout has a transactionId before marking as completed
+        // This prevents marking as completed if transfer was never initiated
+        if (!existingPayout.transactionId) {
+          return NextResponse.json(
+            { error: 'Cannot mark payout as completed without a transaction ID. The transfer must be initiated first. Use the "approve" action to automatically process the payout, or ensure a transaction ID exists.' },
+            { status: 400 }
+          );
+        }
+
+        // Log audit trail for manual completion
+        await logPayoutStatusChange({
+          payoutId: id,
+          oldStatus,
+          newStatus: 'completed',
+          changedBy: adminUser.id,
+          reason: notes || 'Manually marked as completed by admin',
+        });
+
         updatedPayout = await db
           .update(campaignPayouts)
           .set({ 
@@ -298,6 +316,101 @@ export async function PATCH(
         } catch (emailError) {
           console.error('Failed to send cancellation email:', emailError);
         }
+        break;
+
+      case 'retry':
+        // Allow retrying payouts that are:
+        // 1. Failed, OR
+        // 2. Completed but have no transactionId (never actually processed)
+        const canRetry = existingPayout.status === 'failed' || 
+                        (existingPayout.status === 'completed' && !existingPayout.transactionId);
+        
+        if (!canRetry) {
+          return NextResponse.json(
+            { error: `Cannot retry payout with status: ${existingPayout.status}. Only failed payouts or completed payouts without a transaction ID can be retried.` },
+            { status: 400 }
+          );
+        }
+
+        // Reset status to approved and clear any failure reasons
+        await db
+          .update(campaignPayouts)
+          .set({ 
+            status: 'approved',
+            failureReason: null,
+            transactionId: null, // Clear old transaction ID if it exists
+            processedAt: null,
+            notes: notes ? `${existingPayout.notes || ''}\nRetry initiated by admin: ${notes}` : existingPayout.notes,
+            updatedAt: new Date(),
+          })
+          .where(eq(campaignPayouts.id, id));
+
+        // Log audit trail
+        await logPayoutStatusChange({
+          payoutId: id,
+          oldStatus,
+          newStatus: 'approved',
+          changedBy: adminUser.id,
+          reason: notes || 'Retry initiated by admin - resetting to approved status',
+        });
+
+        // Process the payout
+        try {
+          const processResult = await processCampaignCreatorPayout(id);
+          
+          if (!processResult.success) {
+            const errorMessage = processResult.error || 'Processing failed';
+            console.error('Failed to process payout on retry:', errorMessage);
+            
+            // Update status to failed if processing fails
+            await db
+              .update(campaignPayouts)
+              .set({ 
+                status: 'failed',
+                failureReason: errorMessage,
+                updatedAt: new Date(),
+              })
+              .where(eq(campaignPayouts.id, id));
+            
+            // Log audit trail for failure
+            await logPayoutStatusChange({
+              payoutId: id,
+              oldStatus: 'approved',
+              newStatus: 'failed',
+              changedBy: 'system',
+              reason: errorMessage,
+            });
+          }
+        } catch (processError) {
+          console.error('Failed to process payout on retry:', processError);
+          const errorMessage = processError instanceof Error ? processError.message : 'Processing failed';
+          
+          // Update status to failed if processing fails
+          await db
+            .update(campaignPayouts)
+            .set({ 
+              status: 'failed',
+              failureReason: errorMessage,
+              updatedAt: new Date(),
+            })
+            .where(eq(campaignPayouts.id, id));
+          
+          // Log audit trail for failure
+          await logPayoutStatusChange({
+            payoutId: id,
+            oldStatus: 'approved',
+            newStatus: 'failed',
+            changedBy: 'system',
+            reason: errorMessage,
+          });
+        }
+
+        // Fetch updated payout
+        updatedPayout = await db
+          .select()
+          .from(campaignPayouts)
+          .where(eq(campaignPayouts.id, id))
+          .limit(1);
         break;
 
       case 'add_notes':

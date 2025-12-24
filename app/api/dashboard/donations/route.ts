@@ -97,6 +97,11 @@ export async function GET(request: NextRequest) {
         campaignTitle: campaigns.title,
         campaignCurrency: campaigns.currency,
         campaignCoverImage: campaigns.coverImageUrl,
+        failureReason: donations.failureReason,
+        providerError: donations.providerError,
+        providerStatus: donations.providerStatus,
+        retryAttempts: donations.retryAttempts,
+        lastStatusUpdate: donations.lastStatusUpdate,
       })
       .from(donations)
       .leftJoin(campaigns, eq(donations.campaignId, campaigns.id))
