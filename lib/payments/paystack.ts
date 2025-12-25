@@ -205,6 +205,20 @@ export async function createPaystackRecipient(
 
 /**
  * Initiate a transfer (payout)
+ * 
+ * NOTE: For automated transfers (no OTP required):
+ * - Go to Paystack Dashboard → Settings → Preferences → Transfer section
+ * - Uncheck "Confirm transfers before sending"
+ * - This allows transfers to process automatically when initiated
+ * 
+ * When OTP is disabled:
+ * - Transfers will process immediately (status: 'success')
+ * - Webhook will fire automatically when transfer completes
+ * - No manual intervention needed in Paystack dashboard
+ * 
+ * When OTP is enabled (default):
+ * - Transfers will be in 'otp' status until approved in Paystack dashboard
+ * - Admin must enter OTP in Paystack to complete the transfer
  */
 export async function initiatePaystackTransfer(
   amount: number,

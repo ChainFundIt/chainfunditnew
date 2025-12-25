@@ -557,6 +557,13 @@ export async function processPaystackPayout(
       };
     }
 
+    // Check transfer status from Paystack response
+    // Possible statuses:
+    // - 'otp': Transfer requires OTP approval in Paystack dashboard (when "Confirm transfers before sending" is enabled)
+    // - 'pending': Transfer is queued for processing
+    // - 'success': Transfer processed successfully (when OTP is disabled, this happens immediately)
+    // - 'failed': Transfer failed
+    // - 'reversed': Transfer was reversed
     const transferStatus = transfer.data.status;
     
     if (transferStatus === 'failed' || transferStatus === 'reversed') {
@@ -567,20 +574,27 @@ export async function processPaystackPayout(
       };
     }
 
-    
     const transferCode = transfer.data.transfer_code;
+    
+    // If status is 'success', transfer completed immediately (OTP disabled in Paystack)
+    // If status is 'otp' or 'pending', transfer is waiting for approval/processing
+    // In both cases, we mark as 'processing' and wait for webhook to confirm final status
     if (transferStatus === 'success' && transferCode) {
+      // Transfer completed immediately (automated mode)
+      // Still mark as processing - webhook will confirm and mark as completed
       return {
         success: true,
         transactionId: transferCode,
-        status: 'processing',
+        status: 'processing', // Webhook will update to 'completed' when transfer finalizes
       };
     }
 
+    // Transfer is pending or requires OTP
+    // Mark as processing - webhook will update when transfer completes
     return {
       success: true,
       transactionId: transferCode,
-      status: 'processing',
+      status: 'processing', // Webhook will update to 'completed' when transfer succeeds
     };
   } catch (error) {
     console.error('Error processing Paystack payout:', error);

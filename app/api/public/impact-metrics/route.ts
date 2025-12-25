@@ -14,6 +14,7 @@ type ImpactMetricsResponse = {
   campaignsPublicActive: number;
   countriesReached: number;
   distinctDonors: number;
+  totalUsers: number;
   amountRaised: {
     currency: string;
     amount: number;
@@ -36,6 +37,7 @@ export async function GET(request: Request) {
       donationSumsByCurrency,
       countriesRows,
       distinctDonorsRows,
+      totalUsersRows,
     ] = await withRetry(async () =>
       Promise.all([
         db
@@ -63,6 +65,9 @@ export async function GET(request: Request) {
           .select({ count: sql<number>`count(distinct ${donations.donorId})` })
           .from(donations)
           .where(eq(donations.paymentStatus, "completed")),
+        db
+          .select({ count: sql<number>`count(*)` })
+          .from(users),
       ])
     );
 
@@ -70,6 +75,7 @@ export async function GET(request: Request) {
     const campaignsPublicActive = Number(campaignCountRows?.[0]?.count || 0);
     const countriesReached = Number(countriesRows?.[0]?.count || 0);
     const distinctDonors = Number(distinctDonorsRows?.[0]?.count || 0);
+    const totalUsers = Number(totalUsersRows?.[0]?.count || 0);
 
     // Compute total raised in GBP, using donation currency (what donors actually paid).
     // Conversion uses existing approximate rates as a fallback; this avoids slow external FX calls.
@@ -97,6 +103,7 @@ export async function GET(request: Request) {
       campaignsPublicActive,
       countriesReached,
       distinctDonors,
+      totalUsers,
       amountRaised: {
         currency: targetCurrency,
         amount: Math.round(amount),
