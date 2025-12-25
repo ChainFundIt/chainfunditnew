@@ -413,7 +413,8 @@ async function handleChargePending(data: any) {
  */
 async function handleTransferSuccess(data: any) {
   try {
-    const reference = data.reference;
+    const reference = data.reference; // Our payout reference
+    const transferCode = data.transfer_code; // Paystack transfer code (the actual transfer ID)
     const payoutId = data.metadata?.payoutId;
     const payoutType = data.metadata?.type; // 'campaign' | 'commission'
 
@@ -421,31 +422,36 @@ async function handleTransferSuccess(data: any) {
       return;
     }
 
+    // Use transfer_code (the actual Paystack transfer ID) instead of reference
+    // transfer_code is what we need to verify the transfer later
+    // reference is just the reference we sent to Paystack (our payout reference)
+    const transactionId = transferCode || reference;
+
     if (payoutType === 'campaign') {
       // Update campaign payout
       await db
         .update(campaignPayouts)
         .set({
           status: 'completed',
-          transactionId: reference,
+          transactionId: transactionId, // Use transfer_code, not reference!
           processedAt: new Date(),
           updatedAt: new Date(),
         })
         .where(eq(campaignPayouts.reference, reference));
 
-      console.log(`✅ Campaign payout ${payoutId} completed`);
+      console.log(`✅ Campaign payout ${payoutId} completed with transfer code: ${transferCode || reference}`);
     } else if (payoutType === 'commission') {
       // Update commission payout
       await db
         .update(commissionPayouts)
         .set({
           status: 'completed',
-          transactionId: reference,
+          transactionId: transactionId, // Use transfer_code, not reference!
           processedAt: new Date(),
         })
         .where(eq(commissionPayouts.id, payoutId));
 
-      console.log(`✅ Commission payout ${payoutId} completed`);
+      console.log(`✅ Commission payout ${payoutId} completed with transfer code: ${transferCode || reference}`);
     }
   } catch (error) {
     console.error('💥 Error handling Paystack transfer success:', error);
@@ -457,7 +463,8 @@ async function handleTransferSuccess(data: any) {
  */
 async function handleTransferFailed(data: any) {
   try {
-    const reference = data.reference;
+    const reference = data.reference; // Our payout reference
+    const transferCode = data.transfer_code; // Paystack transfer code (the actual transfer ID)
     const payoutId = data.metadata?.payoutId;
     const payoutType = data.metadata?.type;
     const failureReason = data.failure_reason || data.reason || 'Transfer failed';
@@ -466,12 +473,15 @@ async function handleTransferFailed(data: any) {
       return;
     }
 
+    // Use transfer_code (the actual Paystack transfer ID) instead of reference
+    const transactionId = transferCode || reference;
+
     if (payoutType === 'campaign') {
       await db
         .update(campaignPayouts)
         .set({
           status: 'failed',
-          transactionId: reference,
+          transactionId: transactionId, // Use transfer_code, not reference!
           failureReason,
           updatedAt: new Date(),
         })
@@ -483,7 +493,7 @@ async function handleTransferFailed(data: any) {
         .update(commissionPayouts)
         .set({
           status: 'failed',
-          transactionId: reference,
+          transactionId: transactionId, // Use transfer_code, not reference!
         })
         .where(eq(commissionPayouts.id, payoutId));
 
@@ -501,7 +511,8 @@ async function handleTransferFailed(data: any) {
  */
 async function handleTransferReversed(data: any) {
   try {
-    const reference = data.reference;
+    const reference = data.reference; // Our payout reference
+    const transferCode = data.transfer_code; // Paystack transfer code (the actual transfer ID)
     const payoutId = data.metadata?.payoutId;
     const payoutType = data.metadata?.type;
 
@@ -509,12 +520,15 @@ async function handleTransferReversed(data: any) {
       return;
     }
 
+    // Use transfer_code (the actual Paystack transfer ID) instead of reference
+    const transactionId = transferCode || reference;
+
     if (payoutType === 'campaign') {
       await db
         .update(campaignPayouts)
         .set({
           status: 'failed',
-          transactionId: reference,
+          transactionId: transactionId, // Use transfer_code, not reference!
           failureReason: 'Transfer reversed',
           updatedAt: new Date(),
         })
@@ -526,7 +540,7 @@ async function handleTransferReversed(data: any) {
         .update(commissionPayouts)
         .set({
           status: 'failed',
-          transactionId: reference,
+          transactionId: transactionId, // Use transfer_code, not reference!
         })
         .where(eq(commissionPayouts.id, payoutId));
 

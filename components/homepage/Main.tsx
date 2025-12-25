@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { R2Image } from "@/components/ui/r2-image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -83,6 +83,8 @@ const Main = () => {
   const router = useRouter();
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [totalUsers, setTotalUsers] = useState<number | null>(null);
+  const [loadingUsers, setLoadingUsers] = useState<boolean>(true);
 
   const {
     charities,
@@ -93,6 +95,38 @@ const Main = () => {
     active: true,
     limit: 12,
   });
+
+  // Fetch total users count
+  useEffect(() => {
+    const fetchUserCount = async () => {
+      try {
+        setLoadingUsers(true);
+        const response = await fetch("/api/public/impact-metrics");
+        if (response.ok) {
+          const data = await response.json();
+          setTotalUsers(data.totalUsers || 0);
+        }
+      } catch (error) {
+        console.error("Failed to fetch user count:", error);
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+
+    fetchUserCount();
+  }, []);
+
+  // Format user count for display (e.g., "1k+", "2.5k+", "10k+")
+  const formatUserCount = (count: number | null): string => {
+    if (count === null || count === 0) return "1k+";
+    if (count < 1000) return `${count}+`;
+    if (count < 10000) {
+      const thousands = (count / 1000).toFixed(1);
+      return `${thousands.replace(/\.0$/, "")}k+`;
+    }
+    const thousands = Math.floor(count / 1000);
+    return `${thousands}k+`;
+  };
 
   const filteredCharities = charities.filter((charity) => {
     const category = charity.category?.toLowerCase() ?? "";
@@ -503,7 +537,9 @@ const Main = () => {
                 className="w-10 h-10 rounded-full border-2 border-white z-40"
               />
               <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center z-0">
-                <span className="font-bold text-xs leading-4">1k+</span>
+                <span className="font-bold text-xs leading-4">
+                  {loadingUsers ? "..." : formatUserCount(totalUsers)}
+                </span>
               </div>
             </div>
 

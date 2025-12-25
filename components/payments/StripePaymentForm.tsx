@@ -12,13 +12,10 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { HandCoins, CheckCircle, XCircle } from 'lucide-react';
 import { track } from '@/lib/analytics';
+import StripeApplePayButton from './StripeApplePayButton';
 
-// Initialize Stripe
-// Note: NEXT_PUBLIC_ variables are embedded at build time
-// If this is undefined in production, the env var was not set during build
 const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
-// Only initialize Stripe if we have a valid key
 const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
 
 interface StripePaymentFormProps {
@@ -236,6 +233,25 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
         <div className="space-y-1">
           <p className="text-[#5F8555]">Amount: <span className="font-semibold">{currency} {amount}</span></p>
           <p className="text-[#5F8555]">Payment Method: <span className="font-semibold">Credit/Debit Card</span></p>
+        </div>
+      </div>
+
+      {/* Apple Pay Button */}
+      <div>
+        <StripeApplePayButton
+          amount={amount}
+          currency={currency}
+          donationId={donationId}
+          onSuccess={onSuccess}
+          onError={onError}
+        />
+        <div className="relative my-4">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-gray-500">Or continue with card</span>
+          </div>
         </div>
       </div>
 
