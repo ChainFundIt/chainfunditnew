@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import "@/components/layout/animations.css";
 
@@ -60,15 +61,32 @@ const Hero = () => {
               onClick={() => router.push("/campaigns")}
               className="bg-[#104109] px-8 py-4 rounded-full h-auto font-bold text-lg leading-7 border-none"
             >
-              Donate Now <ArrowRight size={20} />
+              Donate Now <ArrowRight size={20} className="cursor-pointer" />
             </Button>
-            <Button
-              onClick={() => router.push("/campaigns")}
-              className="bg-white px-8 py-4 rounded-full h-auto font-bold text-lg leading-7 text-[#104109]"
-            >
-              <CirclePlay color="#104109" size={20} />
-              Watch Story
-            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="bg-white px-8 py-4 rounded-full h-auto font-bold text-lg leading-7 text-[#104109] cursor-pointer">
+                  <CirclePlay
+                    color="#104109"
+                    size={20}
+                    className="cursor-pointer"
+                  />
+                  Watch Story
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="md:max-w-2xl max-w-md sm:max-w-2xl p-0 overflow-hidden bg-white flex items-center justify-center">
+                <video
+                  className="w-[80%] h-auto rounded-lg"
+                  controls
+                  autoPlay
+                  playsInline
+                  preload="metadata"
+                >
+                  <source src="/video/story.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              </DialogContent>
+            </Dialog>
           </div>
           {/* Features */}
           <div className="flex gap-8 text-[#78716C] font-medium text-sm leading-5 mt-6">

@@ -8,12 +8,16 @@ import { StarIcon } from "lucide-react";
 type Props = {};
 
 const CustomerStories = (props: Props) => {
-  const trustpilotTemplateId =
-    process.env.NEXT_PUBLIC_TRUSTPILOT_TEMPLATE_ID ?? "";
-  const trustpilotBusinessUnitId =
-    process.env.NEXT_PUBLIC_TRUSTPILOT_BUSINESS_UNIT_ID ?? "";
-  const trustpilotReviewUrl = process.env.NEXT_PUBLIC_TRUSTPILOT_REVIEW_URL ?? "";
-  const trustpilotLocale = process.env.NEXT_PUBLIC_TRUSTPILOT_LOCALE ?? "en-US";
+  /**
+   * REVIEWS.io widgets are configured in the REVIEWS.io dashboard (Publishing -> Widget Library).
+   * Copy the "Get Installation Code" output and store it in env vars below.
+   *
+   * Note: scripts injected via `dangerouslySetInnerHTML` won't reliably execute in React,
+   * so we load the widget script URL separately via `next/script`.
+   */
+  const reviewsioWidgetScriptSrc =
+    process.env.NEXT_PUBLIC_REVIEWSIO_WIDGET_SCRIPT_SRC ?? "";
+  const reviewsioWidgetHtml = process.env.NEXT_PUBLIC_REVIEWSIO_WIDGET_HTML ?? "";
 
   return (
     <div className="font-jakarta flex items-center justify-center bg-white py-20 px-4">
@@ -45,40 +49,24 @@ const CustomerStories = (props: Props) => {
           viewport={{ once: true }}
           className="w-full"
         >
-          <Script
-            src="https://widget.trustpilot.com/bootstrap/v5/tp.widget.bootstrap.min.js"
-            strategy="afterInteractive"
-          />
+          {reviewsioWidgetScriptSrc ? (
+            <Script src={reviewsioWidgetScriptSrc} strategy="afterInteractive" />
+          ) : null}
 
-          {trustpilotTemplateId && trustpilotBusinessUnitId ? (
+          {reviewsioWidgetScriptSrc && reviewsioWidgetHtml ? (
             <div
-              className="trustpilot-widget"
-              data-locale={trustpilotLocale}
-              data-template-id={trustpilotTemplateId}
-              data-businessunit-id={trustpilotBusinessUnitId}
-              data-style-height="240px"
-              data-style-width="100%"
-              data-theme="light"
-            >
-              <a
-                href={trustpilotReviewUrl || "https://www.trustpilot.com/"}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Trustpilot
-              </a>
-            </div>
+              className="w-full"
+              dangerouslySetInnerHTML={{ __html: reviewsioWidgetHtml }}
+            />
           ) : (
             <div className="rounded-[32px] bg-[#FDFBF7] p-8 text-center text-sm text-[#A8A29E]">
-              Trustpilot widget is not configured. Set{" "}
+              REVIEWS.io widget is not configured. Set{" "}
               <span className="font-mono">
-                NEXT_PUBLIC_TRUSTPILOT_TEMPLATE_ID
+                NEXT_PUBLIC_REVIEWSIO_WIDGET_SCRIPT_SRC
               </span>{" "}
               and{" "}
-              <span className="font-mono">
-                NEXT_PUBLIC_TRUSTPILOT_BUSINESS_UNIT_ID
-              </span>
-              .
+              <span className="font-mono">NEXT_PUBLIC_REVIEWSIO_WIDGET_HTML</span>
+              {" "}from the widget&apos;s &quot;Get Installation Code&quot;.
             </div>
           )}
         </motion.div>

@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Shield, AlertTriangle } from 'lucide-react';
+import { Shield, AlertTriangle, HelpCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { TwoFactorRecovery } from './two-factor-recovery';
 
 interface TwoFactorVerificationProps {
   userEmail: string;
@@ -20,6 +21,20 @@ export function TwoFactorVerification({ userEmail, onSuccess, onCancel }: TwoFac
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showBackupCode, setShowBackupCode] = useState(false);
+  const [showRecovery, setShowRecovery] = useState(false);
+  const [userRole, setUserRole] = useState<'admin' | 'super_admin'>('admin');
+
+  useEffect(() => {
+    // Fetch user role
+    fetch('/api/admin/auth/me')
+      .then(res => res.json())
+      .then(data => {
+        if (data.user) {
+          setUserRole(data.user.role || 'admin');
+        }
+      })
+      .catch(err => console.error('Failed to fetch user role:', err));
+  }, []);
 
   const verifyCode = async () => {
     if (!code.trim()) return;
@@ -64,6 +79,22 @@ export function TwoFactorVerification({ userEmail, onSuccess, onCancel }: TwoFac
       verifyCode();
     }
   };
+
+  if (showRecovery) {
+    return (
+      <TwoFactorRecovery
+        userEmail={userEmail}
+        userRole={userRole}
+        onSuccess={() => {
+          // After recovery, redirect to signin or refresh
+          window.location.href = '/signin';
+        }}
+        onCancel={() => {
+          setShowRecovery(false);
+        }}
+      />
+    );
+  }
 
   return (
     <Card className="w-full max-w-md mx-auto">
@@ -120,6 +151,18 @@ export function TwoFactorVerification({ userEmail, onSuccess, onCancel }: TwoFac
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
+
+        <div className="pt-2 border-t">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowRecovery(true)}
+            className="w-full text-muted-foreground"
+          >
+            <HelpCircle className="h-4 w-4 mr-2" />
+            Lost access to your authenticator app?
+          </Button>
+        </div>
         
         <div className="text-center">
           <Button variant="ghost" onClick={onCancel}>

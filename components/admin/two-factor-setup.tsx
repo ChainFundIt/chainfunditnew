@@ -242,10 +242,15 @@ export function TwoFactorSetup({ onComplete, onCancel }: TwoFactorSetupProps) {
         <CardContent className="space-y-4">
           {setupData && (
             <>
-              <Alert>
+              <Alert variant="destructive">
                 <AlertDescription>
-                  <strong>Important:</strong> Save these backup codes in a safe place. 
-                  Each code can only be used once if you lose access to your authenticator app.
+                  <strong>⚠️ CRITICAL:</strong> Save these backup codes immediately! 
+                  <br /><br />
+                  If you lose access to your authenticator app, these codes are your ONLY way to recover access.
+                  <br /><br />
+                  <strong>Each code can only be used once.</strong> Download them now and store them securely.
+                  <br /><br />
+                  <strong>Super admins:</strong> You can also use email recovery if you lose all codes.
                 </AlertDescription>
               </Alert>
               

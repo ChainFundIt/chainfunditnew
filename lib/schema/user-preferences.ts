@@ -20,7 +20,7 @@ export const userPreferences = pgTable('user_preferences', {
   pushSubscription: jsonb('push_subscription'), // Web Push subscription data
   
   // Daily/Weekly Summaries
-  dailySummaryEnabled: boolean('daily_summary_enabled').default(false).notNull(),
+  dailySummaryEnabled: boolean('daily_summary_enabled').default(true).notNull(),
   weeklySummaryEnabled: boolean('weekly_summary_enabled').default(true).notNull(),
   summaryTime: varchar('summary_time', { length: 10 }).default('09:00'), // HH:MM format
   
