@@ -36,25 +36,69 @@ export async function GET(request: NextRequest) {
       .select({ total: sum(donations.amount) })
       .from(donations);
 
+    const totalAmountByCurrency = await db
+      .select({
+        currency: donations.currency,
+        total: sum(donations.amount),
+      })
+      .from(donations)
+      .groupBy(donations.currency);
+
     const [completedAmount] = await db
       .select({ total: sum(donations.amount) })
       .from(donations)
       .where(eq(donations.paymentStatus, 'completed'));
+
+    const completedAmountByCurrency = await db
+      .select({
+        currency: donations.currency,
+        total: sum(donations.amount),
+      })
+      .from(donations)
+      .where(eq(donations.paymentStatus, 'completed'))
+      .groupBy(donations.currency);
 
     const [pendingAmount] = await db
       .select({ total: sum(donations.amount) })
       .from(donations)
       .where(eq(donations.paymentStatus, 'pending'));
 
+    const pendingAmountByCurrency = await db
+      .select({
+        currency: donations.currency,
+        total: sum(donations.amount),
+      })
+      .from(donations)
+      .where(eq(donations.paymentStatus, 'pending'))
+      .groupBy(donations.currency);
+
     const [refundedAmount] = await db
       .select({ total: sum(donations.amount) })
       .from(donations)
       .where(eq(donations.paymentStatus, 'refunded'));
 
+    const refundedAmountByCurrency = await db
+      .select({
+        currency: donations.currency,
+        total: sum(donations.amount),
+      })
+      .from(donations)
+      .where(eq(donations.paymentStatus, 'refunded'))
+      .groupBy(donations.currency);
+
     const [averageDonation] = await db
       .select({ average: sql<number>`AVG(${donations.amount})` })
       .from(donations)
       .where(eq(donations.paymentStatus, 'completed'));
+
+    const averageDonationByCurrency = await db
+      .select({
+        currency: donations.currency,
+        average: sql<number>`AVG(${donations.amount})`,
+      })
+      .from(donations)
+      .where(eq(donations.paymentStatus, 'completed'))
+      .groupBy(donations.currency);
 
    
     const recentDonations = await db
@@ -88,6 +132,26 @@ export async function GET(request: NextRequest) {
       pendingAmount: Number(pendingAmount?.total) || 0,
       refundedAmount: Number(refundedAmount?.total) || 0,
       averageDonation: Number(averageDonation?.average) || 0,
+      totalAmountByCurrency: (totalAmountByCurrency || []).map((row) => ({
+        currency: row.currency || 'USD',
+        amount: Number(row.total || 0),
+      })),
+      completedAmountByCurrency: (completedAmountByCurrency || []).map((row) => ({
+        currency: row.currency || 'USD',
+        amount: Number(row.total || 0),
+      })),
+      pendingAmountByCurrency: (pendingAmountByCurrency || []).map((row) => ({
+        currency: row.currency || 'USD',
+        amount: Number(row.total || 0),
+      })),
+      refundedAmountByCurrency: (refundedAmountByCurrency || []).map((row) => ({
+        currency: row.currency || 'USD',
+        amount: Number(row.total || 0),
+      })),
+      averageDonationByCurrency: (averageDonationByCurrency || []).map((row) => ({
+        currency: row.currency || 'USD',
+        amount: Number(row.average || 0),
+      })),
       recentDonations: (recentDonations || []).map((d) => ({
         ...d,
         donorName: d.isAnonymous ? 'Anonymous' : (d.donorName || d.donorUserName || 'Unknown'),

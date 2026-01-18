@@ -6,6 +6,7 @@ import { parse } from 'cookie';
 import { verifyUserJWT } from '@/lib/auth';
 import { generateSlug, generateUniqueSlug } from '@/lib/utils/slug';
 import { sendCampaignCreationEmail } from '@/lib/notifications/campaign-creation-email';
+import { notifyAdminsOfCampaignCreated } from '@/lib/notifications/campaign-created-alerts';
 
 async function getUserFromRequest(request: NextRequest) {
   const cookie = request.headers.get('cookie') || '';
@@ -375,6 +376,28 @@ export async function POST(request: NextRequest) {
     } catch (emailError) {
       // Log error but don't fail the request
       console.error('Failed to send campaign creation email:', emailError);
+    }
+
+    // Notify admins about new campaign creation (non-blocking)
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
+                      (request.headers.get('origin') || 'https://chainfundit.com');
+      const campaignSlug = newCampaign[0]?.slug;
+      const campaignUrl = `${baseUrl}/campaign/${campaignSlug}`;
+
+      await notifyAdminsOfCampaignCreated({
+        campaignTitle: title,
+        campaignSlug: campaignSlug,
+        goalAmount: goalAmountNum.toString(),
+        currency,
+        campaignUrl,
+        visibility: visibility || 'public',
+        isChained: isChainedBool,
+        creatorName: user[0].fullName || user[0].email?.split('@')[0] || 'Unknown',
+        creatorEmail: user[0].email || 'Unknown',
+      });
+    } catch (adminEmailError) {
+      console.error('Failed to notify admins of campaign creation:', adminEmailError);
     }
 
     return NextResponse.json({

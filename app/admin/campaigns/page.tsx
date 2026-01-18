@@ -50,7 +50,7 @@ import {
 import { BsFillStopFill } from "react-icons/bs";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { useGeolocationCurrency } from "@/hooks/use-geolocation-currency";
+import { CurrencyBreakdown } from "@/components/admin/currency-breakdown";
 import { R2Image } from "@/components/ui/r2-image";
 import {
   Tooltip,
@@ -92,6 +92,7 @@ interface CampaignStats {
   reportedCampaigns: number;
   totalRaised: number;
   totalDonations: number;
+  totalRaisedByCurrency?: Array<{ currency: string; amount: number }>;
   averageGoal: number;
   successRate: number;
 }
@@ -109,8 +110,6 @@ export default function AdminCampaignsPage() {
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const router = useRouter();
-  const { locationInfo } = useGeolocationCurrency();
-  const currency = locationInfo?.currency?.code;
 
   useEffect(() => {
     fetchCampaigns();
@@ -330,7 +329,7 @@ export default function AdminCampaignsPage() {
   };
 
   const formatCurrency = (amount: number, currencyCode?: string) => {
-    const currencyToUse = currencyCode || currency || "USD";
+    const currencyToUse = currencyCode || "USD";
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: currencyToUse,
@@ -416,9 +415,10 @@ export default function AdminCampaignsPage() {
                   <DollarSign className="h-4 w-4 text-brand-green-light" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-brand-green-dark">
-                    {formatCurrency(stats.totalRaised, currency)}
-                  </div>
+                  <CurrencyBreakdown
+                    amounts={stats.totalRaisedByCurrency}
+                    emptyLabel="No totals yet"
+                  />
                   <p className="text-xs text-gray-500 mt-1">
                     From {stats.totalDonations} donations
                   </p>
@@ -778,7 +778,6 @@ export default function AdminCampaignsPage() {
         campaignId={selectedCampaignId}
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
-        currency={currency}
       />
     </TooltipProvider>
   );

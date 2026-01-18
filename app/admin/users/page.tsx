@@ -49,7 +49,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { useGeolocationCurrency } from '@/hooks/use-geolocation-currency';
+import { CurrencyBreakdown } from "@/components/admin/currency-breakdown";
 
 interface User {
   id: string;
@@ -64,6 +64,7 @@ interface User {
   stats?: {
     totalDonations: number;
     totalDonated: number;
+    totalDonatedByCurrency?: Array<{ currency: string; amount: number }>;
     totalRaised: number;
     totalCampaigns: number;
     totalChains: number;
@@ -84,6 +85,7 @@ interface UserStats {
   verifiedUsers: number;
   totalDonations: number;
   totalRevenue: number;
+  totalRevenueByCurrency?: Array<{ currency: string; amount: number }>;
 }
 
 export default function AdminUsersPage() {
@@ -101,8 +103,6 @@ export default function AdminUsersPage() {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const router = useRouter();
-  const { locationInfo } = useGeolocationCurrency();
-  const currency = locationInfo?.currency?.code;
 
   // Debounce search term
   useEffect(() => {
@@ -279,12 +279,6 @@ export default function AdminUsersPage() {
     });
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency || 'USD',
-    }).format(amount);
-  };
 
   // Button handlers
   const handleExportUsers = async () => {
@@ -392,7 +386,7 @@ export default function AdminUsersPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            {/* <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Verified Users</CardTitle>
                 <Shield className="h-4 w-4 text-[#5F8555]" />
@@ -403,7 +397,7 @@ export default function AdminUsersPage() {
                   {Math.round((stats.verifiedUsers / stats.totalUsers) * 100)}% verified
                 </p>
               </CardContent>
-            </Card>
+            </Card> */}
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -411,7 +405,10 @@ export default function AdminUsersPage() {
                 <DollarSign className="h-4 w-4 text-gray-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
+                <CurrencyBreakdown
+                  amounts={stats.totalRevenueByCurrency}
+                  emptyLabel="No totals yet"
+                />
                 <p className="text-xs text-gray-500 mt-1">
                   From {stats.totalDonations} donations
                 </p>
@@ -604,9 +601,13 @@ export default function AdminUsersPage() {
                       </TableCell>
                       <TableCell>
                         <div className="text-sm space-y-1">
-                          <div className="flex items-center">
+                          <div className="flex items-start">
                             <DollarSign className="h-3 w-3 mr-1 text-green-600" />
-                            {formatCurrency(user.stats?.totalDonated || 0)}
+                            <CurrencyBreakdown
+                              amounts={user.stats?.totalDonatedByCurrency}
+                              emptyLabel="No donations"
+                              className="text-xs"
+                            />
                           </div>
                           <div className="flex items-center">
                             <TrendingUp className="h-3 w-3 mr-1 text-blue-600" />
@@ -762,9 +763,12 @@ export default function AdminUsersPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="rounded-lg border p-3">
                 <p className="text-xs uppercase text-gray-500">Total Donated</p>
-                <p className="mt-1 text-base font-semibold">
-                  {formatCurrency(selectedUser.stats?.totalDonated || 0)}
-                </p>
+                <div className="mt-1 text-base font-semibold">
+                  <CurrencyBreakdown
+                    amounts={selectedUser.stats?.totalDonatedByCurrency}
+                    emptyLabel="No donations"
+                  />
+                </div>
               </div>
               <div className="rounded-lg border p-3">
                 <p className="text-xs uppercase text-gray-500">Campaigns</p>

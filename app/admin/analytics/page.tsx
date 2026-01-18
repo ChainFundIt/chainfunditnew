@@ -50,9 +50,8 @@ import {
   CartesianGrid,
 } from "recharts";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { useGeolocationCurrency } from '@/hooks/use-geolocation-currency';
 import { formatCurrency } from '@/lib/utils/currency';
+import { CurrencyBreakdown } from "@/components/admin/currency-breakdown";
 
 // Chart configuration
 const chartConfig = {
@@ -76,6 +75,9 @@ interface AnalyticsData {
     totalPayouts: number;
     platformRevenue: number;
     averageDonation: number;
+    totalAmountByCurrency?: Array<{ currency: string; amount: number }>;
+    platformRevenueByCurrency?: Array<{ currency: string; amount: number }>;
+    averageDonationByCurrency?: Array<{ currency: string; amount: number }>;
   };
   growth: {
     userGrowth: Array<{ month: string; count: number }>;
@@ -90,6 +92,7 @@ interface AnalyticsData {
       donations: number;
       raised: number;
       platformRevenue: number;
+      currency: string;
     }>;
     topCampaigns: Array<{
       id: string;
@@ -97,6 +100,7 @@ interface AnalyticsData {
       amount: number;
       donations: number;
       chainers: number;
+      currency?: string;
     }>;
     topChainers: Array<{
       id: string;
@@ -104,12 +108,14 @@ interface AnalyticsData {
       referrals: number;
       raised: number;
       commission: number;
+      currency?: string;
     }>;
     topDonors: Array<{
       id: string;
       name: string;
       totalDonated: number;
       donationCount: number;
+      currency?: string;
     }>;
   };
   metrics: {
@@ -155,9 +161,6 @@ export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState("30d");
   const [refreshKey, setRefreshKey] = useState(0);
   const [showAllCampaignRevenue, setShowAllCampaignRevenue] = useState(false);
-  const router = useRouter();
-  const { locationInfo } = useGeolocationCurrency();
-  const currency = locationInfo?.currency?.code || 'USD';
 
   // Helper function to format chart data
   const formatChartData = (data: Array<{ month: string; count?: number; amount?: number }>) => {
@@ -169,13 +172,12 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     fetchAnalytics();
-  }, [timeRange, refreshKey, currency]);
+  }, [timeRange, refreshKey]);
 
   const fetchAnalytics = async () => {
     try {
       const params = new URLSearchParams({
         range: timeRange,
-        currency,
       });
 
       const response = await fetch(`/api/admin/analytics?${params}`);
@@ -225,6 +227,84 @@ export default function AnalyticsPage() {
     );
   }
 
+  const campaignRevenueTotals = analytics.performance.campaignRevenue.reduce(
+    (acc, campaign) => {
+      const key = (campaign.currency || "USD").toUpperCase();
+      acc[key] = (acc[key] || 0) + campaign.platformRevenue;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+
+  const campaignDonationTotals = analytics.performance.campaignRevenue.reduce(
+    (acc, campaign) => {
+      const key = (campaign.currency || "USD").toUpperCase();
+      acc[key] = (acc[key] || 0) + campaign.raised;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+
+  const campaignDonationCounts = analytics.performance.campaignRevenue.reduce(
+    (acc, campaign) => {
+      const key = (campaign.currency || "USD").toUpperCase();
+      acc[key] = (acc[key] || 0) + campaign.donations;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+
+  const campaignRevenueTotalsList = Object.entries(campaignRevenueTotals)
+    .map(([currencyCode, amount]) => ({
+      currency: currencyCode,
+      amount,
+    }))
+    .sort((a, b) => b.amount - a.amount);
+
+  const campaignDonationTotalsList = Object.entries(campaignDonationTotals)
+    .map(([currencyCode, amount]) => ({
+      currency: currencyCode,
+      amount,
+    }))
+    .sort((a, b) => b.amount - a.amount);
+
+  const averageDonationByCurrency = Object.entries(campaignDonationTotals)
+    .map(([currencyCode, amount]) => {
+      const donationCount = campaignDonationCounts[currencyCode] || 0;
+      return {
+        currency: currencyCode,
+        amount: donationCount > 0 ? amount / donationCount : 0,
+      };
+    })
+    .sort((a, b) => b.amount - a.amount);
+
+  const totalCampaignDonations = Object.values(campaignDonationCounts).reduce(
+    (sum, count) => sum + count,
+    0
+  );
+
+  const totalCampaignRevenue = Object.values(campaignRevenueTotals).reduce(
+    (sum, amount) => sum + amount,
+    0
+  );
+
+  const revenuePerDonation =
+    totalCampaignDonations > 0
+      ? totalCampaignRevenue / totalCampaignDonations
+      : 0;
+
+  const renderSingleOrMultiCurrencyValue = (
+    items: Array<{ currency: string; amount: number }>
+  ) => {
+    if (items.length === 1) {
+      return formatCurrency(items[0].amount, items[0].currency);
+    }
+    // if (items.length === 0) {
+    //   return formatCurrency(0, "USD");
+    // }
+    // return "Multiple currencies";
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 ">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -271,7 +351,7 @@ export default function AnalyticsPage() {
                 {analytics.overview.totalUsers.toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
-                +12% from last month
+                {analytics.overview.totalDonations.toLocaleString()} completed donations
               </p>
             </CardContent>
           </Card>
@@ -285,11 +365,23 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {formatCurrency(analytics.overview.platformRevenue, currency)}
+                {renderSingleOrMultiCurrencyValue(campaignRevenueTotalsList)}
               </div>
-              <p className="text-xs text-muted-foreground">
-                +8% from last month
-              </p>
+              {campaignRevenueTotalsList.length > 1 ? (
+                <CurrencyBreakdown
+                  amounts={campaignRevenueTotalsList}
+                  emptyLabel="No revenue yet"
+                  className="mt-2"
+                />
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Avg platform fee per donation{" "}
+                  {formatCurrency(
+                    revenuePerDonation,
+                    campaignRevenueTotalsList[0]?.currency || "USD"
+                  )}
+                </p>
+              )}
             </CardContent>
           </Card>
 
@@ -310,7 +402,7 @@ export default function AnalyticsPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          {/* <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 Total Donations
@@ -319,13 +411,25 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {formatCurrency(analytics.overview.totalAmount, currency)}
+                {renderSingleOrMultiCurrencyValue(campaignDonationTotalsList)}
               </div>
-              <p className="text-xs text-muted-foreground">
-                +15% from last month
-              </p>
+              {campaignDonationTotalsList.length > 1 ? (
+                <CurrencyBreakdown
+                  amounts={campaignDonationTotalsList}
+                  emptyLabel="No totals yet"
+                  className="mt-2"
+                />
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Avg donation{" "}
+                  {formatCurrency(
+                    averageDonationByCurrency[0]?.amount || 0,
+                    averageDonationByCurrency[0]?.currency || "USD"
+                  )}
+                </p>
+              )}
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
 
         {/* Charts Section */}
@@ -333,8 +437,8 @@ export default function AnalyticsPage() {
           {/* Revenue Growth Chart */}
           <Card>
             <CardHeader>
-              <CardTitle>Revenue Growth</CardTitle>
-              <CardDescription>Monthly revenue trends</CardDescription>
+              <CardTitle>Donation Growth</CardTitle>
+              <CardDescription>Monthly donation counts</CardDescription>
             </CardHeader>
             <CardContent>
               <ChartContainer config={chartConfig} className="h-64">
@@ -356,11 +460,10 @@ export default function AnalyticsPage() {
                     tickLine={false}
                     axisLine={false}
                     tickMargin={8}
-                    tickFormatter={(value) => formatCurrency(value, currency)}
                   />
                   <ChartTooltip 
                     content={<ChartTooltipContent 
-                      formatter={(value) => [formatCurrency(Number(value), currency), 'Revenue']}
+                      formatter={(value) => [Number(value), 'Donations']}
                     />} 
                   />
                   <Area
@@ -447,7 +550,10 @@ export default function AnalyticsPage() {
                       </div>
                       <div className="text-right">
                         <p className="font-medium">
-                          {formatCurrency(campaign.amount, currency)}
+                          {formatCurrency(
+                            campaign.amount,
+                            campaign.currency || "USD"
+                          )}
                         </p>
                         <p className="text-xs text-gray-500">
                           {campaign.chainers} ambassadors
@@ -487,10 +593,17 @@ export default function AnalyticsPage() {
                       </div>
                       <div className="text-right">
                         <p className="font-medium">
-                          {formatCurrency(chainer.raised, currency)}
+                          {formatCurrency(
+                            chainer.raised,
+                            chainer.currency || "USD"
+                          )}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {formatCurrency(chainer.commission, currency)} earned
+                          {formatCurrency(
+                            chainer.commission,
+                            chainer.currency || "USD"
+                          )}{" "}
+                          earned
                         </p>
                       </div>
                     </div>
@@ -527,7 +640,10 @@ export default function AnalyticsPage() {
                       </div>
                       <div className="text-right">
                         <p className="font-medium">
-                          {formatCurrency(donor.totalDonated, currency)}
+                          {formatCurrency(
+                            donor.totalDonated,
+                            donor.currency || "USD"
+                          )}
                         </p>
                       </div>
                     </div>
@@ -543,7 +659,7 @@ export default function AnalyticsPage() {
             <div className="space-y-2">
               <CardTitle>Revenue by Campaign</CardTitle>
               <CardDescription>
-                Platform revenue generated per campaign (fees accrued on completed donations)
+                Platform earnings per campaign based on lifetime completed donations
               </CardDescription>
             </div>
             {analytics.performance.campaignRevenue.length > 10 && (
@@ -562,8 +678,9 @@ export default function AnalyticsPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Campaign</TableHead>
+                    <TableHead className="text-right">Currency</TableHead>
                     <TableHead className="text-right">Donations</TableHead>
-                    <TableHead className="text-right">Total Donations</TableHead>
+                    <TableHead className="text-right">Total Raised</TableHead>
                     <TableHead className="text-right">Platform Revenue</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -572,20 +689,21 @@ export default function AnalyticsPage() {
                     ? analytics.performance.campaignRevenue
                     : analytics.performance.campaignRevenue.slice(0, 10)
                   ).map((row) => (
-                    <TableRow key={row.id}>
+                    <TableRow key={`${row.id}-${row.currency}`}>
                       <TableCell className="font-medium">{row.title}</TableCell>
+                      <TableCell className="text-right">{row.currency}</TableCell>
                       <TableCell className="text-right">{row.donations}</TableCell>
                       <TableCell className="text-right">
-                        {formatCurrency(row.raised, currency)}
+                        {formatCurrency(row.raised, row.currency)}
                       </TableCell>
                       <TableCell className="text-right">
-                        {formatCurrency(row.platformRevenue, currency)}
+                        {formatCurrency(row.platformRevenue, row.currency)}
                       </TableCell>
                     </TableRow>
                   ))}
                   {analytics.performance.campaignRevenue.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center text-sm text-gray-500">
+                      <TableCell colSpan={5} className="text-center text-sm text-gray-500">
                         No completed donations in this time range.
                       </TableCell>
                     </TableRow>
@@ -593,6 +711,18 @@ export default function AnalyticsPage() {
                 </TableBody>
               </Table>
             </div>
+            {campaignRevenueTotalsList.length > 0 && (
+              <div className="mt-4 rounded-lg border border-gray-200 bg-white p-3">
+                <p className="text-sm font-medium">Total platform revenue (lifetime)</p>
+                <div className="mt-2 grid gap-1 text-sm text-gray-600">
+                  {campaignRevenueTotalsList.map((item) => (
+                    <div key={item.currency}>
+                      {formatCurrency(item.amount, item.currency)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             {analytics.performance.campaignRevenue.length > 10 && (
               <p className="mt-3 text-xs text-gray-500">
                 Showing{" "}
@@ -671,23 +801,24 @@ export default function AnalyticsPage() {
         {/* Currency Distribution */}
         <Card>
           <CardHeader>
-            <CardTitle>Revenue by Currency</CardTitle>
+            <CardTitle>Platform Revenue by Currency</CardTitle>
             <CardDescription>
-              Distribution of donations by currency
+              Platform fees collected in each currency
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {analytics.charts.revenueByCurrency.map((currency) => (
+              {campaignRevenueTotalsList.length === 0 && (
+                <p className="text-sm text-gray-500">No platform revenue yet.</p>
+              )}
+              {campaignRevenueTotalsList.map((currency) => (
                 <div
                   key={currency.currency}
                   className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
                 >
                   <div>
                     <p className="font-medium">{currency.currency}</p>
-                    <p className="text-sm text-gray-500">
-                      {currency.percentage}% of total
-                    </p>
+                    <p className="text-sm text-gray-500">Platform revenue</p>
                   </div>
                   <div className="text-right">
                     <p className="font-bold">

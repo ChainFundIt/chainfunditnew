@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { users, campaigns, donations, chainers, commissionPayouts } from '@/lib/schema';
 import { eq, gte, count, sum, sql, desc, and } from 'drizzle-orm';
-import { convertFromNaira, convertToNaira } from '@/lib/utils/currency-conversion';
 
 /**
  * GET /api/admin/analytics
@@ -12,18 +11,10 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const range = searchParams.get('range') || '30d';
-    const displayCurrency = (searchParams.get('currency') || 'USD').toUpperCase();
 
     const normalizeAmount = (value: number) =>
       Number.isFinite(value) ? Number(value.toFixed(2)) : 0;
 
-    const convertCurrencySync = (amount: number, fromCurrency: string, toCurrency: string) => {
-      const from = (fromCurrency || 'USD').toUpperCase();
-      const to = (toCurrency || 'USD').toUpperCase();
-      if (from === to) return amount;
-      const amountInNGN = convertToNaira(amount, from);
-      return convertFromNaira(amountInNGN, to);
-    };
 
     // Calculate date range
     const getDateRange = (range: string) => {
@@ -55,12 +46,6 @@ export async function GET(request: NextRequest) {
     const [totalPayouts] = await db.select({ count: count() }).from(commissionPayouts);
 
     const donationTotalsByCurrency = await db
-      .select({ total: sum(donations.amount) })
-      .from(donations)
-      .where(eq(donations.paymentStatus, 'completed'));
-
-    // Total raised across all donations, converted to requested display currency
-    const donationTotalsForConversion = await db
       .select({
         currency: donations.currency,
         totalAmount: sum(donations.amount),
@@ -69,10 +54,9 @@ export async function GET(request: NextRequest) {
       .where(eq(donations.paymentStatus, 'completed'))
       .groupBy(donations.currency);
 
-    const totalAmountConverted = normalizeAmount(
-      donationTotalsForConversion.reduce((acc, row) => {
-        const amount = Number(row.totalAmount || 0);
-        return acc + convertCurrencySync(amount, row.currency, displayCurrency);
+    const totalAmount = normalizeAmount(
+      donationTotalsByCurrency.reduce((acc, row) => {
+        return acc + Number(row.totalAmount || 0);
       }, 0)
     );
 
@@ -92,31 +76,44 @@ export async function GET(request: NextRequest) {
       .where(eq(donations.paymentStatus, 'completed'))
       .groupBy(donations.paymentMethod, donations.currency);
 
-    const platformRevenueConverted = normalizeAmount(
-      donationFeeGroups.reduce((acc, row) => {
-        const method = (row.paymentMethod || '').toLowerCase();
-        const feeRate =
-          method === 'stripe' ? 0.025 : method === 'paystack' ? 0.015 : 0.02;
-        const fixedFee = method === 'stripe' ? 0.3 : 0;
+    const platformRevenueByCurrencyMap = new Map<string, number>();
+    donationFeeGroups.forEach((row) => {
+      const method = (row.paymentMethod || '').toLowerCase();
+      const feeRate =
+        method === 'stripe' ? 0.025 : method === 'paystack' ? 0.015 : 0.02;
+      const fixedFee = method === 'stripe' ? 0.3 : 0;
 
-        const gross = Number(row.totalAmount || 0);
-        const txCount = Number(row.donationCount || 0);
-        const feeInDonationCurrency = gross * feeRate + txCount * fixedFee;
+      const gross = Number(row.totalAmount || 0);
+      const txCount = Number(row.donationCount || 0);
+      const feeInDonationCurrency = gross * feeRate + txCount * fixedFee;
+      const currency = (row.currency || 'USD').toUpperCase();
 
-        return (
-          acc +
-          convertCurrencySync(feeInDonationCurrency, row.currency, displayCurrency)
-        );
-      }, 0)
-    );
+      platformRevenueByCurrencyMap.set(
+        currency,
+        normalizeAmount(
+          (platformRevenueByCurrencyMap.get(currency) || 0) +
+            feeInDonationCurrency
+        )
+      );
+    });
+
+    const platformRevenueByCurrency = Array.from(
+      platformRevenueByCurrencyMap.entries()
+    ).map(([currency, amount]) => ({ currency, amount }));
 
     const [averageDonation] = await db
       .select({ average: sql<number>`AVG(${donations.amount})` })
       .from(donations)
       .where(eq(donations.paymentStatus, 'completed'));
-    const averageDonationConverted = normalizeAmount(
-      totalDonations.count > 0 ? totalAmountConverted / totalDonations.count : 0
-    );
+
+    const averageDonationByCurrency = await db
+      .select({
+        currency: donations.currency,
+        average: sql<number>`AVG(${donations.amount})`,
+      })
+      .from(donations)
+      .where(eq(donations.paymentStatus, 'completed'))
+      .groupBy(donations.currency);
 
     // Growth data
     const userGrowth = await db
@@ -154,25 +151,17 @@ export async function GET(request: NextRequest) {
       .groupBy(sql`DATE_TRUNC('month', ${donations.createdAt})`, donations.currency)
       .orderBy(sql`DATE_TRUNC('month', ${donations.createdAt})`);
 
-    // Aggregate donation growth into display currency per month
-    const donationGrowthByMonth = new Map<
-      string,
-      { month: string; count: number; amount: number }
-    >();
+    // Aggregate donation growth into counts per month
+    const donationGrowthByMonth = new Map<string, { month: string; count: number }>();
 
     for (const row of donationGrowthRaw) {
       const monthKey = String(row.month);
       const existing = donationGrowthByMonth.get(monthKey) || {
         month: monthKey,
         count: 0,
-        amount: 0,
       };
 
-      const amount = Number(row.amount || 0);
       existing.count += Number(row.count || 0);
-      existing.amount = normalizeAmount(
-        existing.amount + convertCurrencySync(amount, row.currency, displayCurrency)
-      );
 
       donationGrowthByMonth.set(monthKey, existing);
     }
@@ -181,7 +170,7 @@ export async function GET(request: NextRequest) {
       (a, b) => new Date(a.month).getTime() - new Date(b.month).getTime()
     );
 
-    // Platform revenue by campaign (within selected range), calculated at donation time
+    // Platform revenue by campaign (lifetime), calculated at donation time
     const campaignRevenueGroups = await db
       .select({
         campaignId: donations.campaignId,
@@ -194,7 +183,7 @@ export async function GET(request: NextRequest) {
       .from(donations)
       .leftJoin(campaigns, eq(donations.campaignId, campaigns.id))
       .where(
-        and(gte(donations.createdAt, startDate), eq(donations.paymentStatus, 'completed'))
+        eq(donations.paymentStatus, 'completed')
       )
       .groupBy(
         donations.campaignId,
@@ -209,19 +198,23 @@ export async function GET(request: NextRequest) {
         id: string;
         title: string;
         donations: number;
-        raised: number; // total donation amount converted into display currency
-        platformRevenue: number; // fees converted into display currency
+        raised: number; // total donation amount in donation currency
+        platformRevenue: number; // fees in donation currency
+        currency: string;
       }
     >();
 
     for (const row of campaignRevenueGroups) {
       const campaignId = String(row.campaignId);
-      const existing = campaignRevenueById.get(campaignId) || {
+      const currency = (row.currency || 'USD').toUpperCase();
+      const key = `${campaignId}:${currency}`;
+      const existing = campaignRevenueById.get(key) || {
         id: campaignId,
         title: row.campaignTitle || 'Unknown',
         donations: 0,
         raised: 0,
         platformRevenue: 0,
+        currency,
       };
 
       const method = (row.paymentMethod || '').toLowerCase();
@@ -234,15 +227,12 @@ export async function GET(request: NextRequest) {
       const feeInDonationCurrency = gross * feeRate + txCount * fixedFee;
 
       existing.donations += txCount;
-      existing.raised = normalizeAmount(
-        existing.raised + convertCurrencySync(gross, row.currency, displayCurrency)
-      );
+      existing.raised = normalizeAmount(existing.raised + gross);
       existing.platformRevenue = normalizeAmount(
-        existing.platformRevenue +
-          convertCurrencySync(feeInDonationCurrency, row.currency, displayCurrency)
+        existing.platformRevenue + feeInDonationCurrency
       );
 
-      campaignRevenueById.set(campaignId, existing);
+      campaignRevenueById.set(key, existing);
     }
 
     const campaignRevenue = Array.from(campaignRevenueById.values()).sort(
@@ -304,35 +294,15 @@ export async function GET(request: NextRequest) {
       .where(eq(donations.paymentStatus, 'completed'))
       .groupBy(donations.donorId, users.fullName, donations.currency)
       .orderBy(desc(sum(donations.amount)))
-      .limit(200);
+      .limit(10);
 
-    const topDonorsById = new Map<
-      string,
-      { id: string; name: string; totalDonated: number; donationCount: number }
-    >();
-
-    for (const row of topDonorsRaw) {
-      const id = String(row.id);
-      const existing = topDonorsById.get(id) || {
-        id,
-        name: row.name || 'Unknown',
-        totalDonated: 0,
-        donationCount: 0,
-      };
-
-      const amount = Number(row.totalDonated || 0);
-      existing.totalDonated = normalizeAmount(
-        existing.totalDonated +
-          convertCurrencySync(amount, row.currency, displayCurrency)
-      );
-      existing.donationCount += Number(row.donationCount || 0);
-
-      topDonorsById.set(id, existing);
-    }
-
-    const topDonors = Array.from(topDonorsById.values())
-      .sort((a, b) => b.totalDonated - a.totalDonated)
-      .slice(0, 10);
+    const topDonors = topDonorsRaw.map((row) => ({
+      id: row.id,
+      name: row.name || 'Unknown',
+      currency: row.currency || 'USD',
+      totalDonated: normalizeAmount(Number(row.totalDonated || 0)),
+      donationCount: Number(row.donationCount || 0),
+    }));
 
     // Conversion rates
     const [donationToChainerRate] = await db
@@ -407,39 +377,44 @@ export async function GET(request: NextRequest) {
         totalUsers: totalUsers.count,
         totalCampaigns: totalCampaigns.count,
         totalDonations: totalDonations.count,
-        totalAmount: totalAmountConverted,
+        totalAmount,
         totalChainers: totalChainers.count,
         totalPayouts: totalPayouts.count,
-        platformRevenue: platformRevenueConverted,
-        averageDonation: averageDonationConverted,
+        platformRevenue: 0,
+        averageDonation: Number(averageDonation?.average || 0),
+        totalAmountByCurrency: donationTotalsByCurrency.map((row) => ({
+          currency: row.currency || 'USD',
+          amount: Number(row.totalAmount || 0),
+        })),
+        platformRevenueByCurrency,
+        averageDonationByCurrency: averageDonationByCurrency.map((row) => ({
+          currency: row.currency || 'USD',
+          amount: Number(row.average || 0),
+        })),
       },
       growth: {
         userGrowth,
         campaignGrowth,
         donationGrowth,
-        revenueGrowth: donationGrowth.map(d => ({ month: d.month, amount: Number(d.amount || 0) })),
+        revenueGrowth: donationGrowth.map(d => ({ month: d.month, amount: d.count })),
       },
       performance: {
         campaignRevenue,
         topCampaigns: topCampaigns.map(c => ({
           id: c.id,
           title: c.title,
-          amount: normalizeAmount(
-            convertCurrencySync(Number(c.amount || 0), c.currency, displayCurrency)
-          ),
+          amount: normalizeAmount(Number(c.amount || 0)),
           donations: c.donations,
           chainers: c.chainers,
+          currency: c.currency,
         })),
         topChainers: topChainers.map(c => ({
           id: c.id,
           name: c.name || 'Unknown',
           referrals: c.referrals,
-          raised: normalizeAmount(
-            convertCurrencySync(Number(c.raised || 0), c.currency || 'USD', displayCurrency)
-          ),
-          commission: normalizeAmount(
-            convertCurrencySync(Number(c.commission || 0), c.currency || 'USD', displayCurrency)
-          ),
+          raised: normalizeAmount(Number(c.raised || 0)),
+          commission: normalizeAmount(Number(c.commission || 0)),
+          currency: c.currency || 'USD',
         })),
         topDonors,
       },

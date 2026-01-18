@@ -29,6 +29,7 @@ export async function GET(
         createdAt: donations.createdAt,
         processedAt: donations.processedAt,
         paymentIntentId: donations.paymentIntentId,
+        failureReason: donations.failureReason,
         isAnonymous: donations.isAnonymous,
         donorName: donations.donorName,
         donorEmail: donations.donorEmail,

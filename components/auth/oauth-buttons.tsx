@@ -16,10 +16,9 @@ export function OAuthButtons({
 }: OAuthButtonsProps) {
   const handleOAuthSignIn = async (provider: "google" | "discord") => {
     try {
-      // Use NextAuth OAuth routes (configured at `app/api/oauth/[...nextauth]/route.ts`).
-      // NextAuth will handle provider redirects and our NextAuth `redirect` callback
-      // will send the user to `/api/auth/oauth-callback` to convert the session to JWT cookies.
-      window.location.href = `/api/oauth/signin/${provider}`;
+      // Start BetterAuth social sign-in, which redirects to the provider
+      // and then returns to our social callback to mint JWT cookies.
+      window.location.href = `/api/auth/social?provider=${provider}`;
     } catch (error) {
       console.error(`${provider} sign-in error:`, error);
       toast.error(`Unable to sign in with ${provider}. Please try again or use email/phone instead.`);

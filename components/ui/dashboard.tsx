@@ -46,6 +46,7 @@ import {
   XCircle,
   AlertTriangle
 } from "lucide-react"
+import { CurrencyBreakdown } from "@/components/admin/currency-breakdown"
 
 // Chart configurations
 const chartConfig = {
@@ -73,6 +74,7 @@ interface DashboardStats {
   totalCampaigns: number;
   totalDonations: number;
   totalRevenue: number;
+  totalRevenueByCurrency?: Array<{ currency: string; amount: number }>;
   pendingPayouts: number;
   pendingReview: number;
   activeChainers: number;
@@ -99,6 +101,7 @@ interface CampaignMetric {
   goal: number;
   percentage: number;
   status: 'active' | 'completed' | 'paused';
+  currency?: string;
 }
 
 interface ChainerMetric {
@@ -120,7 +123,6 @@ interface RevenueData {
 interface DashboardProps {
   stats: DashboardStats | null;
   loading: boolean;
-  currency?: string;
   onExportReport?: () => void;
   onExportPDF?: () => void;
   onSettings?: () => void;
@@ -140,7 +142,7 @@ const MetricCard = ({
   loading = false 
 }: {
   title: string;
-  value: string | number;
+  value: React.ReactNode;
   change?: string;
   subtitle?: string;
   icon: React.ComponentType<{ className?: string }>;
@@ -352,9 +354,9 @@ const CampaignPerformanceChart = ({ data, loading }: { data: CampaignMetric[]; l
 };
 
 // Activity Feed Component
-const ActivityFeed = ({ activities, loading, currency = 'USD' }: { activities: ActivityItem[]; loading: boolean; currency?: string }) => {
+const ActivityFeed = ({ activities, loading }: { activities: ActivityItem[]; loading: boolean }) => {
   const formatCurrency = (amount: number, activityCurrency?: string) => {
-    const currencyToUse = activityCurrency || currency;
+    const currencyToUse = activityCurrency || "USD";
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currencyToUse,
@@ -426,17 +428,9 @@ const ActivityFeed = ({ activities, loading, currency = 'USD' }: { activities: A
 export const ModernDashboard = ({
   stats,
   loading,
-  currency = 'USD',
   onReviewPayouts,
   onReviewCampaigns,
 }: DashboardProps) => {
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency,
-    }).format(amount);
-  };
-
   if (loading) {
     return (
       <div className="space-y-6 bg-gray-50 min-h-screen p-6">
@@ -447,7 +441,7 @@ export const ModernDashboard = ({
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <RevenueChart data={[]} loading />
-          <ActivityFeed activities={[]} loading currency={currency} />
+          <ActivityFeed activities={[]} loading />
         </div>
       </div>
     );
@@ -471,7 +465,12 @@ export const ModernDashboard = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
           title="Total Donations"
-          value={formatCurrency(stats.totalRevenue)}
+          value={
+            <CurrencyBreakdown
+              amounts={stats.totalRevenueByCurrency}
+              emptyLabel="No totals yet"
+            />
+          }
           change="+12.5%"
           subtitle="Trending up this month"
           icon={DollarSign}
@@ -505,7 +504,7 @@ export const ModernDashboard = ({
       {/* Charts and Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <CampaignPerformanceChart data={stats.topCampaigns} loading={false} />
-        <ActivityFeed activities={stats.recentActivity} loading={false} currency={currency} />
+        <ActivityFeed activities={stats.recentActivity} loading={false} />
       </div>
 
       {/* Additional Metrics */}

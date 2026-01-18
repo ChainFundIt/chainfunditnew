@@ -249,13 +249,46 @@ export async function POST(request: NextRequest) {
       }
     } else if (paymentProvider === "paystack") {
       try {
+        // Structure metadata with custom_fields for Paystack Dashboard display
         const campaignMetadata = {
           donationId,
           campaignId,
           donorName: donationDonorName || "",
           donorEmail: donationDonorEmail || user.email!,
-          campaignTitle: campaign.title,
-          campaignSlug: campaign.slug,
+          custom_fields: [
+            {
+              display_name: "Campaign Title",
+              variable_name: "campaign_title",
+              value: campaign.title,
+            },
+            {
+              display_name: "Campaign Slug",
+              variable_name: "campaign_slug",
+              value: campaign.slug,
+            },
+            {
+              display_name: "Campaign ID",
+              variable_name: "campaign_id",
+              value: campaignId,
+            },
+            {
+              display_name: "Donation ID",
+              variable_name: "donation_id",
+              value: donationId,
+            },
+            ...(campaign.description ? [{
+              display_name: "Campaign Description",
+              variable_name: "campaign_description",
+              value: campaign.description.length > 200 
+                ? campaign.description.substring(0, 200) + "..."
+                : campaign.description,
+            }] : []),
+            ...(campaign.goalAmount ? [{
+              display_name: "Campaign Goal",
+              variable_name: "campaign_goal",
+              value: `${campaign.currency} ${campaign.goalAmount}`,
+            }] : []),
+          ],
         };
 
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;

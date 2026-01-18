@@ -112,13 +112,45 @@ export async function createRecurringDonationSubscription(data: {
       where: eq(campaigns.id, data.campaignId),
     });
 
-    // Prepare comprehensive campaign metadata for Paystack receipts
+    // Prepare comprehensive campaign metadata with custom_fields for Paystack Dashboard display
     const campaignMetadata = {
       recurringDonationId: subscription.id,
       campaignId: data.campaignId,
       ...(campaign && {
-        campaignTitle: campaign.title,
-        campaignSlug: campaign.slug,
+        custom_fields: [
+          {
+            display_name: "Campaign Title",
+            variable_name: "campaign_title",
+            value: campaign.title,
+          },
+          {
+            display_name: "Campaign Slug",
+            variable_name: "campaign_slug",
+            value: campaign.slug,
+          },
+          {
+            display_name: "Campaign ID",
+            variable_name: "campaign_id",
+            value: data.campaignId,
+          },
+          {
+            display_name: "Recurring Donation ID",
+            variable_name: "recurring_donation_id",
+            value: subscription.id,
+          },
+          ...(campaign.description ? [{
+            display_name: "Campaign Description",
+            variable_name: "campaign_description",
+            value: campaign.description.length > 200 
+              ? campaign.description.substring(0, 200) + "..."
+              : campaign.description,
+          }] : []),
+          ...(campaign.goalAmount ? [{
+            display_name: "Campaign Goal",
+            variable_name: "campaign_goal",
+            value: `${campaign.currency} ${campaign.goalAmount}`,
+          }] : []),
+        ],
       }),
     };
 

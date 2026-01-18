@@ -17,6 +17,7 @@ interface DashboardStats {
   topCampaigns: any[];
   topChainers: any[];
   revenueTrend: any[];
+  totalRevenueByCurrency: { currency: string; amount: number }[];
 }
 
 /**
@@ -71,6 +72,15 @@ export async function GET(request: NextRequest) {
       .from(donations)
       .where(eq(donations.paymentStatus, 'completed'));
 
+    const revenueByCurrency = await db
+      .select({
+        currency: donations.currency,
+        total: sum(donations.amount),
+      })
+      .from(donations)
+      .where(eq(donations.paymentStatus, 'completed'))
+      .groupBy(donations.currency);
+
     // Get pending payouts - count both commission payouts and campaign creator payouts
     const [pendingCommissionPayouts] = await db
       .select({ count: count() })
@@ -103,6 +113,7 @@ export async function GET(request: NextRequest) {
         title: campaigns.title,
         goalAmount: campaigns.goalAmount,
         currentAmount: campaigns.currentAmount,
+        currency: campaigns.currency,
         status: campaigns.status,
         createdAt: campaigns.createdAt
       })
@@ -158,6 +169,10 @@ export async function GET(request: NextRequest) {
       totalCampaigns: totalCampaigns.count,
       totalDonations: totalDonations.count,
       totalRevenue: Number(revenueResult[0]?.total) || 0,
+      totalRevenueByCurrency: revenueByCurrency.map((row) => ({
+        currency: row.currency || 'USD',
+        amount: Number(row.total || 0),
+      })),
       pendingPayouts: totalPendingPayouts,
       pendingReview: pendingReview.count,
       activeChainers: activeChainers.count,

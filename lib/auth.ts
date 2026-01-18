@@ -301,40 +301,24 @@ setInterval(() => {
   }
 }, CACHE_TTL);
 
-// Build providers array with proper typing
-const providers: Array<
-  | { type: "email-otp"; apiKey: string | undefined }
-  | { type: "phone-otp"; apiKey: string | undefined }
-  | { type: "oauth"; id: "google" | "discord"; clientId: string; clientSecret: string }
-> = [
-  {
-    type: "email-otp",
-    apiKey: process.env.RESEND_API_KEY,
-  },
-  {
-    type: "phone-otp",
-    apiKey: process.env.TWILIO_AUTH_TOKEN,
-  },
-];
-
-// Add OAuth providers if credentials are available
-if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-  providers.push({
-    type: "oauth",
-    id: "google",
-    clientId: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  });
-}
-
-if (process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET) {
-  providers.push({
-    type: "oauth",
-    id: "discord",
-    clientId: process.env.DISCORD_CLIENT_ID,
-    clientSecret: process.env.DISCORD_CLIENT_SECRET,
-  });
-}
+const socialProviders = {
+  ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+    ? {
+        google: {
+          clientId: process.env.GOOGLE_CLIENT_ID,
+          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        },
+      }
+    : {}),
+  ...(process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET
+    ? {
+        discord: {
+          clientId: process.env.DISCORD_CLIENT_ID,
+          clientSecret: process.env.DISCORD_CLIENT_SECRET,
+        },
+      }
+    : {}),
+};
 
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET || "your-secret-key-change-in-production",
@@ -343,39 +327,24 @@ export const auth = betterAuth({
   appName: "ChainFundIt",
   database: drizzleAdapter(db, {
     provider: "pg", // PostgreSQL
+    schema: {
+      user: users,
+      account: accounts,
+      session: sessions,
+      verification: verificationTokens,
+    },
   }),
   plugins: [
     twoFactor({
       issuer: "ChainFundIt",
     }) as any,
   ],
-  providers,
-  callbacks: {
-    async signIn({ user, account, profile }: any) {
-      // Handle OAuth sign-in
-      if (account?.provider === "google" || account?.provider === "discord") {
-        // Update user profile with OAuth data
-        if (profile) {
-          await db.update(users)
-            .set({
-              fullName: profile.name || profile.username || user.name || user.email?.split('@')[0] || 'User',
-              avatar: profile.picture || profile.image || profile.avatar,
-              isVerified: true,
-              hasCompletedProfile: true,
-            })
-            .where(eq(users.id, user.id));
-        }
-      }
-      return true;
-    },
-    async session({ session, user }: any) {
-      // Add user data to session
-      if (session.user) {
-        session.user.id = user.id;
-        session.user.email = user.email;
-        session.user.name = user.name;
-      }
-      return session;
+  socialProviders,
+  user: {
+    fields: {
+      name: "fullName",
+      image: "avatar",
+      emailVerified: "isVerified",
     },
   },
 });

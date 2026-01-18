@@ -46,6 +46,15 @@ export async function GET(request: NextRequest) {
       .from(donations)
       .where(eq(donations.paymentStatus, 'completed'));
 
+    const totalRevenueByCurrency = await db
+      .select({
+        currency: donations.currency,
+        total: sum(donations.amount),
+      })
+      .from(donations)
+      .where(eq(donations.paymentStatus, 'completed'))
+      .groupBy(donations.currency);
+
     // Get campaign stats
     const [campaignStats] = await db
       .select({ count: count() })
@@ -127,6 +136,10 @@ export async function GET(request: NextRequest) {
       verifiedUsers: verifiedUsers.count,
       totalDonations: donationStats?.totalDonations || 0,
       totalRevenue: donationStats?.totalRevenue || 0,
+      totalRevenueByCurrency: (totalRevenueByCurrency || []).map((row) => ({
+        currency: row.currency || 'USD',
+        amount: Number(row.total || 0),
+      })),
       totalCampaigns: campaignStats?.count || 0,
       totalChainers: chainerStats?.count || 0,
       activeThisWeek: activeThisWeek.count,
