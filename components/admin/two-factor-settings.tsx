@@ -7,8 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
-import { Shield, ShieldCheck, ShieldX, Download, RefreshCw } from 'lucide-react';
+import { Shield, ShieldCheck, ShieldX, Download, RefreshCw, HelpCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { TwoFactorRecovery } from './two-factor-recovery';
 
 interface TwoFactorSettingsProps {
   userEmail: string;
@@ -18,8 +19,10 @@ interface TwoFactorSettingsProps {
 export function TwoFactorSettings({ userEmail, onStartSetup }: TwoFactorSettingsProps) {
   const [isEnabled, setIsEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [userRole, setUserRole] = useState<'admin' | 'super_admin'>('admin');
   // Remove showSetup state as it's now managed by parent
   const [showDisable, setShowDisable] = useState(false);
+  const [showRecovery, setShowRecovery] = useState(false);
   const [disableCode, setDisableCode] = useState('');
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
   const [error, setError] = useState('');
@@ -35,6 +38,7 @@ export function TwoFactorSettings({ userEmail, onStartSetup }: TwoFactorSettings
       
       if (data.user) {
         setIsEnabled(data.user.twoFactorEnabled || false);
+        setUserRole(data.user.role || 'admin');
       }
     } catch (err) {
       console.error('Failed to check 2FA status:', err);
@@ -195,7 +199,23 @@ export function TwoFactorSettings({ userEmail, onStartSetup }: TwoFactorSettings
           </>
         )}
 
-        {showDisable && (
+        {showRecovery && (
+          <TwoFactorRecovery
+            userEmail={userEmail}
+            userRole={userRole}
+            onSuccess={() => {
+              setShowRecovery(false);
+              setShowDisable(false);
+              setIsEnabled(false);
+              checkTwoFactorStatus();
+            }}
+            onCancel={() => {
+              setShowRecovery(false);
+            }}
+          />
+        )}
+
+        {showDisable && !showRecovery && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-destructive">
@@ -213,15 +233,18 @@ export function TwoFactorSettings({ userEmail, onStartSetup }: TwoFactorSettings
                   id="disable-code"
                   value={disableCode}
                   onChange={(e) => setDisableCode(e.target.value)}
-                  placeholder="Enter 6-digit code from your app"
-                  maxLength={6}
+                  placeholder="Enter 6-digit code from your app or backup code"
+                  maxLength={8}
                 />
+                <p className="text-xs text-muted-foreground">
+                  You can also use a backup code if you have one
+                </p>
               </div>
               
               <div className="flex gap-2">
                 <Button
                   onClick={disableTwoFactor}
-                  disabled={isLoading || disableCode.length !== 6}
+                  disabled={isLoading || disableCode.length < 6}
                   variant="destructive"
                 >
                   {isLoading ? 'Disabling...' : 'Disable 2FA'}
@@ -235,6 +258,18 @@ export function TwoFactorSettings({ userEmail, onStartSetup }: TwoFactorSettings
                   }}
                 >
                   Cancel
+                </Button>
+              </div>
+
+              <div className="pt-2 border-t">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowRecovery(true)}
+                  className="w-full text-muted-foreground"
+                >
+                  <HelpCircle className="h-4 w-4 mr-2" />
+                  Lost access to your authenticator app?
                 </Button>
               </div>
             </CardContent>
