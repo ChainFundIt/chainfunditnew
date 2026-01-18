@@ -39,12 +39,29 @@ export async function GET(request: NextRequest) {
       })
       .from(commissionPayouts);
 
+    const totalAmountByCurrency = await db
+      .select({
+        currency: commissionPayouts.currency,
+        total: sum(commissionPayouts.amount),
+      })
+      .from(commissionPayouts)
+      .groupBy(commissionPayouts.currency);
+
     const [pendingAmount] = await db
       .select({
         total: sum(commissionPayouts.amount),
       })
       .from(commissionPayouts)
       .where(eq(commissionPayouts.status, 'pending'));
+
+    const pendingAmountByCurrency = await db
+      .select({
+        currency: commissionPayouts.currency,
+        total: sum(commissionPayouts.amount),
+      })
+      .from(commissionPayouts)
+      .where(eq(commissionPayouts.status, 'pending'))
+      .groupBy(commissionPayouts.currency);
 
     const [approvedAmount] = await db
       .select({
@@ -53,12 +70,30 @@ export async function GET(request: NextRequest) {
       .from(commissionPayouts)
       .where(eq(commissionPayouts.status, 'approved'));
 
+    const approvedAmountByCurrency = await db
+      .select({
+        currency: commissionPayouts.currency,
+        total: sum(commissionPayouts.amount),
+      })
+      .from(commissionPayouts)
+      .where(eq(commissionPayouts.status, 'approved'))
+      .groupBy(commissionPayouts.currency);
+
     const [paidAmount] = await db
       .select({
         total: sum(commissionPayouts.amount),
       })
       .from(commissionPayouts)
       .where(eq(commissionPayouts.status, 'paid'));
+
+    const paidAmountByCurrency = await db
+      .select({
+        currency: commissionPayouts.currency,
+        total: sum(commissionPayouts.amount),
+      })
+      .from(commissionPayouts)
+      .where(eq(commissionPayouts.status, 'paid'))
+      .groupBy(commissionPayouts.currency);
 
     // Get fraud alerts (high amount payouts)
     const [fraudAlerts] = await db
@@ -146,6 +181,22 @@ export async function GET(request: NextRequest) {
       pendingAmount: Number(pendingAmount?.total) || 0,
       approvedAmount: Number(approvedAmount?.total) || 0,
       paidAmount: Number(paidAmount?.total) || 0,
+      totalAmountByCurrency: (totalAmountByCurrency || []).map((row) => ({
+        currency: row.currency || 'USD',
+        amount: Number(row.total || 0),
+      })),
+      pendingAmountByCurrency: (pendingAmountByCurrency || []).map((row) => ({
+        currency: row.currency || 'USD',
+        amount: Number(row.total || 0),
+      })),
+      approvedAmountByCurrency: (approvedAmountByCurrency || []).map((row) => ({
+        currency: row.currency || 'USD',
+        amount: Number(row.total || 0),
+      })),
+      paidAmountByCurrency: (paidAmountByCurrency || []).map((row) => ({
+        currency: row.currency || 'USD',
+        amount: Number(row.total || 0),
+      })),
       fraudAlerts: fraudAlerts.count,
       averageProcessingTime: Number(avgProcessingTime?.average) || 0,
       recentPayouts,

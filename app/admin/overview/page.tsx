@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { useGeolocationCurrency } from '@/hooks/use-geolocation-currency';
 import { formatCurrency } from '@/lib/utils/currency';
 import { ModernDashboard } from '@/components/ui/dashboard';
 
@@ -17,6 +16,7 @@ interface DashboardStats {
   totalCampaigns: number;
   totalDonations: number;
   totalRevenue: number;
+  totalRevenueByCurrency?: Array<{ currency: string; amount: number }>;
   pendingPayouts: number;
   pendingReview: number;
   activeChainers: number;
@@ -43,6 +43,7 @@ interface CampaignMetric {
   goal: number;
   percentage: number;
   status: 'active' | 'completed' | 'paused';
+  currency?: string;
 }
 
 interface ChainerMetric {
@@ -66,9 +67,17 @@ export default function AdminDashboardOverview() {
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('30d');
   const router = useRouter();
-  const { locationInfo } = useGeolocationCurrency();
-  const currency = locationInfo?.currency?.code || 'USD';
-  const country = locationInfo?.country;
+
+  const formatCurrencyList = (
+    amounts?: Array<{ currency: string; amount: number }>
+  ) => {
+    if (!amounts || amounts.length === 0) {
+      return 'No totals';
+    }
+    return amounts
+      .map((entry) => formatCurrency(entry.amount, entry.currency))
+      .join(' | ');
+  };
 
   useEffect(() => {
     fetchDashboardData();
@@ -118,7 +127,7 @@ export default function AdminDashboardOverview() {
       ['Total Users', stats.totalUsers.toString(), '+12%', timestamp],
       ['Active Campaigns', stats.totalCampaigns.toString(), '+8%', timestamp],
       ['Total Donations', stats.totalDonations.toString(), '+15%', timestamp],
-      ['Total Revenue', `${formatCurrency(stats.totalRevenue, currency)}`, '+18%', timestamp],
+      ['Total Revenue', `${formatCurrencyList(stats.totalRevenueByCurrency)}`, '+18%', timestamp],
       ['Pending Payouts', stats.pendingPayouts.toString(), '', timestamp],
       ['Active Chainers', stats.activeChainers.toString(), '', timestamp],
       ['', '', '', ''],
@@ -130,8 +139,8 @@ export default function AdminDashboardOverview() {
       ['Campaign Title', 'Raised Amount', 'Goal', 'Status'],
       ...stats.topCampaigns.map(campaign => [
         campaign.title,
-        formatCurrency(campaign.raised, currency),
-        formatCurrency(campaign.goal, currency),
+        formatCurrency(campaign.raised, campaign.currency || 'USD'),
+        formatCurrency(campaign.goal, campaign.currency || 'USD'),
         campaign.status
       ]),
       ['', '', '', ''],
@@ -253,7 +262,7 @@ export default function AdminDashboardOverview() {
             </div>
             <div class="metric">
               <h3>Total Donations</h3>
-              <p>${formatCurrency(stats.totalRevenue, currency)}</p>
+              <p>${formatCurrencyList(stats.totalRevenueByCurrency)}</p>
             </div>
           </div>
         </div>
@@ -273,8 +282,8 @@ export default function AdminDashboardOverview() {
               ${stats.topCampaigns.map(campaign => `
                 <tr>
                   <td>${campaign.title}</td>
-                  <td>${formatCurrency(campaign.raised, currency)}</td>
-                  <td>${formatCurrency(campaign.goal, currency)}</td>
+                  <td>${formatCurrency(campaign.raised, campaign.currency || 'USD')}</td>
+                  <td>${formatCurrency(campaign.goal, campaign.currency || 'USD')}</td>
                   <td>${campaign.status}</td>
                 </tr>
               `).join('')}
@@ -368,7 +377,6 @@ export default function AdminDashboardOverview() {
         <ModernDashboard
           stats={stats}
           loading={loading}
-          currency={currency}
           onExportReport={handleExportReport}
           onExportPDF={handleExportPDF}
           onSettings={handleSettings}

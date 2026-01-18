@@ -28,6 +28,7 @@ interface AdminSettings {
   notificationEmail: string;
   notifyOnCharityDonation: boolean;
   notifyOnCampaignDonation: boolean;
+  notifyOnCampaignCreated: boolean;
   notifyOnPayoutRequest: boolean;
   notifyOnLargeDonation: boolean;
   notifyOnAccountChangeRequest: boolean;
@@ -133,6 +134,7 @@ export default function AdminSettingsPage() {
         notificationEmail: '',
         notifyOnCharityDonation: false,
         notifyOnCampaignDonation: false,
+        notifyOnCampaignCreated: false,
         notifyOnPayoutRequest: false,
         notifyOnLargeDonation: false,
         notifyOnAccountChangeRequest: false,
@@ -332,6 +334,20 @@ export default function AdminSettingsPage() {
                     <Switch
                       checked={notificationSettings?.notifyOnCampaignDonation || false}
                       onCheckedChange={(checked) => updateNotificationSetting('notifyOnCampaignDonation', checked)}
+                      disabled={!notificationSettings?.emailNotificationsEnabled}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Campaign Created</Label>
+                      <p className="text-sm text-gray-500">
+                        Get notified when a new campaign is created
+                      </p>
+                    </div>
+                    <Switch
+                      checked={notificationSettings?.notifyOnCampaignCreated || false}
+                      onCheckedChange={(checked) => updateNotificationSetting('notifyOnCampaignCreated', checked)}
                       disabled={!notificationSettings?.emailNotificationsEnabled}
                     />
                   </div>

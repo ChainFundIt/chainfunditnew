@@ -32,6 +32,7 @@ const StripeApplePayButton: React.FC<StripeApplePayButtonProps> = ({
 
   useEffect(() => {
     if (!stripe) {
+      console.log('[Apple Pay] Stripe not loaded yet');
       return;
     }
 
@@ -49,10 +50,22 @@ const StripeApplePayButton: React.FC<StripeApplePayButtonProps> = ({
 
     // Check if Apple Pay is available
     paymentRequest.canMakePayment().then((result) => {
+      console.log('[Apple Pay] canMakePayment result:', result);
       if (result && result.applePay) {
+        console.log('[Apple Pay] Apple Pay is available!');
         setCanMakePayment(true);
         paymentRequestRef.current = paymentRequest;
+      } else {
+        console.log('[Apple Pay] Apple Pay not available. Reasons:', {
+          hasResult: !!result,
+          hasApplePay: !!(result && result.applePay),
+          userAgent: navigator.userAgent,
+          isHTTPS: window.location.protocol === 'https:',
+          isLocalhost: window.location.hostname === 'localhost',
+        });
       }
+    }).catch((error) => {
+      console.error('[Apple Pay] Error checking availability:', error);
     });
 
     // Handle payment method event

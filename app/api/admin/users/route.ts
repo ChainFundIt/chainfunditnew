@@ -83,6 +83,18 @@ export async function GET(request: NextRequest) {
             eq(donations.paymentStatus, 'completed')
           ));
 
+        const donationTotalsByCurrency = await db
+          .select({
+            currency: donations.currency,
+            totalAmount: sum(donations.amount),
+          })
+          .from(donations)
+          .where(and(
+            eq(donations.donorId, user.id),
+            eq(donations.paymentStatus, 'completed')
+          ))
+          .groupBy(donations.currency);
+
         // Get campaign stats and titles
         const campaignList = await db
           .select({
@@ -116,6 +128,10 @@ export async function GET(request: NextRequest) {
           stats: {
             totalDonations: totalDonationsCount,
             totalDonated: totalDonatedAmount,
+            totalDonatedByCurrency: donationTotalsByCurrency.map((row) => ({
+              currency: row.currency || 'USD',
+              amount: Number(row.totalAmount || 0),
+            })),
             totalRaised: 0, // This would need to be calculated from campaigns
             totalCampaigns: totalCampaignsCount,
             totalChains: Number(chainerStats?.count || 0),

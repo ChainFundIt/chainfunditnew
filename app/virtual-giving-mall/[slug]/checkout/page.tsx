@@ -19,6 +19,41 @@ function CheckoutForm({ donationId }: { donationId: string }) {
   const router = useRouter();
   const params = useParams();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [applePayAvailable, setApplePayAvailable] = useState(false);
+
+  // Check Apple Pay availability
+  useEffect(() => {
+    if (!stripe) return;
+
+    const checkApplePay = async () => {
+      try {
+        const paymentRequest = stripe.paymentRequest({
+          country: 'US',
+          currency: 'usd',
+          total: {
+            label: 'Test',
+            amount: 1000,
+          },
+        });
+
+        const canMakePayment = await paymentRequest.canMakePayment();
+        if (canMakePayment && canMakePayment.applePay) {
+          console.log('[Checkout] Apple Pay is available');
+          setApplePayAvailable(true);
+        } else {
+          console.log('[Checkout] Apple Pay not available:', {
+            canMakePayment,
+            userAgent: navigator.userAgent,
+            protocol: window.location.protocol,
+          });
+        }
+      } catch (error) {
+        console.error('[Checkout] Error checking Apple Pay:', error);
+      }
+    };
+
+    checkApplePay();
+  }, [stripe]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,6 +84,17 @@ function CheckoutForm({ donationId }: { donationId: string }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Debug info in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs">
+          <p><strong>Apple Pay Debug:</strong></p>
+          <p>Available: {applePayAvailable ? 'Yes' : 'No'}</p>
+          <p>Stripe loaded: {stripe ? 'Yes' : 'No'}</p>
+          <p>Protocol: {window.location.protocol}</p>
+          <p>User Agent: {navigator.userAgent.includes('Safari') ? 'Safari' : 'Other'}</p>
+        </div>
+      )}
+      
       <PaymentElement />
       
       <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -108,6 +154,8 @@ function CheckoutContent() {
         colorPrimary: '#16a34a',
       },
     },
+    // PaymentElement automatically includes Apple Pay if available and domain is verified
+    // No need to explicitly specify paymentMethodTypes
   };
 
   return (

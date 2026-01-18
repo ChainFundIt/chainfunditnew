@@ -88,16 +88,41 @@ export async function POST(
       // Use Paystack for Nigerian Naira
       const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL}/charities/${charity.slug}/payment-callback`;
       
+      // Structure metadata with custom_fields for Paystack Dashboard display
+      const charityMetadata = {
+        donationId: donation.id,
+        charityId: charity.id,
+        charityName: charity.name,
+        donorName: isAnonymous ? 'Anonymous' : donorName || 'Anonymous',
+        custom_fields: [
+          {
+            display_name: "Charity Name",
+            variable_name: "charity_name",
+            value: charity.name,
+          },
+          {
+            display_name: "Charity ID",
+            variable_name: "charity_id",
+            value: charity.id,
+          },
+          {
+            display_name: "Donation ID",
+            variable_name: "donation_id",
+            value: donation.id,
+          },
+          {
+            display_name: "Donor Name",
+            variable_name: "donor_name",
+            value: isAnonymous ? 'Anonymous' : donorName || 'Anonymous',
+          },
+        ],
+      };
+
       const paystackResponse = await initializePaystackPayment(
         donorEmail,
         parseFloat(amount),
         currency,
-        {
-          donationId: donation.id,
-          charityId: charity.id,
-          charityName: charity.name,
-          donorName: isAnonymous ? 'Anonymous' : donorName || 'Anonymous',
-        },
+        charityMetadata,
         callbackUrl
       );
 

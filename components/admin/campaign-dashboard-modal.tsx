@@ -77,14 +77,12 @@ interface CampaignDashboardModalProps {
   campaignId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  currency?: string;
 }
 
 export function CampaignDashboardModal({
   campaignId,
   open,
   onOpenChange,
-  currency: userCurrency,
 }: CampaignDashboardModalProps) {
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [donations, setDonations] = useState<Donation[]>([]);
@@ -177,7 +175,7 @@ export function CampaignDashboardModal({
     return d.paymentStatus === statusFilter;
   });
 
-  const campaignCurrency = campaign?.currency || userCurrency || 'USD';
+  const campaignCurrency = campaign?.currency || 'USD';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -424,16 +422,6 @@ export function CampaignDashboardModal({
                                   <div className="font-medium">
                                     {formatCurrency(donation.amount, donation.currency)}
                                   </div>
-                                  {donation.convertedAmount && donation.convertedCurrency && (
-                                    <div className="text-xs text-gray-500 mt-1">
-                                      ≈ {formatCurrency(donation.convertedAmount, donation.convertedCurrency)}
-                                      {donation.exchangeRate && (
-                                        <span className="ml-1">
-                                          (Rate: {Number(donation.exchangeRate).toFixed(4)})
-                                        </span>
-                                      )}
-                                    </div>
-                                  )}
                                 </TableCell>
                                 <TableCell>
                                   <div className="flex items-center gap-1">

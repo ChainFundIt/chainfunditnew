@@ -45,7 +45,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils/currency";
-import { useGeolocationCurrency } from '@/hooks/use-geolocation-currency';
+import { CurrencyBreakdown } from "@/components/admin/currency-breakdown";
 
 interface Chainer {
   id: string;
@@ -75,6 +75,8 @@ interface ChainerStats {
   bannedChainers: number;
   totalCommissions: number;
   totalRaised: number;
+  totalCommissionsByCurrency?: Array<{ currency: string; amount: number }>;
+  totalRaisedByCurrency?: Array<{ currency: string; amount: number }>;
   averageCommissionRate: number;
   topPerformers: Chainer[];
   recentActivity: any[];
@@ -89,8 +91,6 @@ export default function ChainersPage() {
   const [selectedChainers, setSelectedChainers] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const { locationInfo } = useGeolocationCurrency();
-  const currency = locationInfo?.currency?.code || 'USD';
 
   useEffect(() => {
     fetchChainers();
@@ -282,9 +282,10 @@ export default function ChainersPage() {
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {formatCurrency(stats.totalCommissions, currency)}
-                </div>
+                <CurrencyBreakdown
+                  amounts={stats.totalCommissionsByCurrency}
+                  emptyLabel="No totals yet"
+                />
                 <p className="text-xs text-muted-foreground">
                   {stats.averageCommissionRate}% avg rate
                 </p>
@@ -299,9 +300,10 @@ export default function ChainersPage() {
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {formatCurrency(stats.totalRaised, currency)}
-                </div>
+                <CurrencyBreakdown
+                  amounts={stats.totalRaisedByCurrency}
+                  emptyLabel="No totals yet"
+                />
                 <p className="text-xs text-muted-foreground">
                   Through chainer referrals
                 </p>
@@ -422,14 +424,14 @@ export default function ChainersPage() {
                           {chainer.totalReferrals} referrals
                         </div>
                         <div className="text-sm text-gray-500">
-                          {formatCurrency(chainer.totalRaised, chainer.currency || currency)} raised
+                          {formatCurrency(chainer.totalRaised, chainer.currency || "USD")} raised
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
                         <div className="font-medium">
-                          {formatCurrency(chainer.commissionEarned, chainer.currency || currency)}
+                          {formatCurrency(chainer.commissionEarned, chainer.currency || "USD")}
                         </div>
                         <div className="text-sm text-gray-500">
                           {chainer.commissionRate}% rate

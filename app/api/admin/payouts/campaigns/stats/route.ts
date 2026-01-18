@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { campaignPayouts } from '@/lib/schema';
 import { eq, count, sum, sql } from 'drizzle-orm';
-import { convertToNaira } from '@/lib/utils/currency-conversion';
-import { getCurrencyCode } from '@/lib/utils/currency';
 
 /**
  * GET /api/admin/payouts/campaigns/stats
@@ -34,7 +32,7 @@ export async function GET(request: NextRequest) {
       .from(campaignPayouts)
       .where(eq(campaignPayouts.status, 'rejected'));
 
-    // Get all payouts with their currencies for proper conversion
+    // Get all payouts with their currencies
     const allPayouts = await db
       .select({
         requestedAmount: campaignPayouts.requestedAmount,
@@ -44,30 +42,46 @@ export async function GET(request: NextRequest) {
       })
       .from(campaignPayouts);
 
-    // Convert all amounts to NGN before summing
+    const totalsByCurrency = new Map<string, number>();
+    const pendingByCurrency = new Map<string, number>();
+    const approvedByCurrency = new Map<string, number>();
+    const paidByCurrency = new Map<string, number>();
+
     let totalAmount = 0;
     let pendingAmount = 0;
     let approvedAmount = 0;
     let paidAmount = 0;
 
-    allPayouts.forEach(payout => {
-      const currency = getCurrencyCode(payout.currency || 'USD');
+    allPayouts.forEach((payout) => {
+      const currency = (payout.currency || 'USD').toUpperCase();
       const requestedAmount = parseFloat(payout.requestedAmount || '0');
       const netAmount = parseFloat(payout.netAmount || '0');
       const status = payout.status;
 
-      // Convert requested amount to NGN
-      const requestedAmountInNGN = convertToNaira(requestedAmount, currency);
-      totalAmount += requestedAmountInNGN;
+      totalAmount += requestedAmount;
+      totalsByCurrency.set(
+        currency,
+        (totalsByCurrency.get(currency) || 0) + requestedAmount
+      );
 
       if (status === 'pending') {
-        pendingAmount += requestedAmountInNGN;
+        pendingAmount += requestedAmount;
+        pendingByCurrency.set(
+          currency,
+          (pendingByCurrency.get(currency) || 0) + requestedAmount
+        );
       } else if (status === 'approved') {
-        approvedAmount += requestedAmountInNGN;
+        approvedAmount += requestedAmount;
+        approvedByCurrency.set(
+          currency,
+          (approvedByCurrency.get(currency) || 0) + requestedAmount
+        );
       } else if (status === 'completed') {
-        // For completed payouts, use net amount
-        const netAmountInNGN = convertToNaira(netAmount, currency);
-        paidAmount += netAmountInNGN;
+        paidAmount += netAmount;
+        paidByCurrency.set(
+          currency,
+          (paidByCurrency.get(currency) || 0) + netAmount
+        );
       }
     });
 
@@ -81,6 +95,18 @@ export async function GET(request: NextRequest) {
       pendingAmount,
       approvedAmount,
       paidAmount,
+      totalAmountByCurrency: Array.from(totalsByCurrency.entries()).map(
+        ([currency, amount]) => ({ currency, amount })
+      ),
+      pendingAmountByCurrency: Array.from(pendingByCurrency.entries()).map(
+        ([currency, amount]) => ({ currency, amount })
+      ),
+      approvedAmountByCurrency: Array.from(approvedByCurrency.entries()).map(
+        ([currency, amount]) => ({ currency, amount })
+      ),
+      paidAmountByCurrency: Array.from(paidByCurrency.entries()).map(
+        ([currency, amount]) => ({ currency, amount })
+      ),
     };
 
     return NextResponse.json(stats);

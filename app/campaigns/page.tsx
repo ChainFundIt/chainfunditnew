@@ -59,12 +59,12 @@ export default function AllCampaignsPage() {
     useUnifiedItems();
 
   // Geolocation and filtering
-  const {
-    geolocation,
-    loading: locationLoading,
-    error: locationError,
-  } = useGeolocation();
-  const { shouldShowCampaign } = useCampaignFiltering(geolocation);
+  // const {
+  //   geolocation,
+  //   loading: locationLoading,
+  //   error: locationError,
+  // } = useGeolocation();
+  // const { shouldShowCampaign } = useCampaignFiltering(geolocation);
 
   // Debounce search query
   useEffect(() => {
@@ -100,14 +100,14 @@ export default function AllCampaignsPage() {
       filtered = filtered.filter((item) => item.type === "campaign");
 
       // Filter by geolocation (only for campaigns with currency)
-      if (geolocation && !locationLoading) {
-        filtered = filtered.filter((item) => {
-          if (item.type === "campaign" && item.currency) {
-            return shouldShowCampaign(item.currency);
-          }
-          return true;
-        });
-      }
+      // if (geolocation && !locationLoading) {
+      //   filtered = filtered.filter((item) => {
+      //     if (item.type === "campaign" && item.currency) {
+      //       return shouldShowCampaign(item.currency);
+      //     }
+      //     return true;
+      //   });
+      // }
 
       // Filter by search query
       if (debouncedSearchQuery.trim()) {
@@ -196,9 +196,9 @@ export default function AllCampaignsPage() {
     selectedCategory,
     selectedStatus,
     sortBy,
-    geolocation,
-    shouldShowCampaign,
-    locationLoading,
+    // geolocation,
+    // shouldShowCampaign,
+    // locationLoading,
   ]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -260,7 +260,7 @@ export default function AllCampaignsPage() {
       <div className="bg-white px-4 py-20 flex justify-center relative" style={{zIndex: "5"}}>
         <div className="max-w-[80rem] w-full">
           {/* Location Indicator */}
-          {geolocation && (
+          {/* {geolocation && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
               <div className="flex items-center gap-2 text-blue-800">
                 <MapPin className="h-4 w-4" />
@@ -269,7 +269,7 @@ export default function AllCampaignsPage() {
                 </span>
               </div>
             </div>
-          )}
+          )} */}
 
           {/* Search and Filters */}
           <div className="bg-white rounded-2xl p-6 mb-8">
@@ -485,7 +485,7 @@ export default function AllCampaignsPage() {
                     key={`${item.type}-${item.id}`}
                     item={item}
                     viewMode={viewMode}
-                    geolocation={geolocation}
+                    // geolocation={geolocation}
                   />
                 ))}
               </div>

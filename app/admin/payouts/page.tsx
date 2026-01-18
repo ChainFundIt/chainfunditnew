@@ -45,7 +45,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils/currency";
-import { useGeolocationCurrency } from "@/hooks/use-geolocation-currency";
+import { CurrencyBreakdown } from "@/components/admin/currency-breakdown";
 import Link from "next/link";
 import {
   Dialog,
@@ -166,6 +166,10 @@ interface PayoutStats {
   pendingAmount: number;
   approvedAmount: number;
   paidAmount: number;
+  totalAmountByCurrency?: Array<{ currency: string; amount: number }>;
+  pendingAmountByCurrency?: Array<{ currency: string; amount: number }>;
+  approvedAmountByCurrency?: Array<{ currency: string; amount: number }>;
+  paidAmountByCurrency?: Array<{ currency: string; amount: number }>;
   averageProcessingTime: number;
   recentPayouts: Payout[];
 }
@@ -187,6 +191,10 @@ export default function PayoutsPage() {
     pendingAmount: number;
     approvedAmount: number;
     paidAmount: number;
+    totalAmountByCurrency?: Array<{ currency: string; amount: number }>;
+    pendingAmountByCurrency?: Array<{ currency: string; amount: number }>;
+    approvedAmountByCurrency?: Array<{ currency: string; amount: number }>;
+    paidAmountByCurrency?: Array<{ currency: string; amount: number }>;
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [campaignCreatorLoading, setCampaignCreatorLoading] = useState(true);
@@ -216,8 +224,6 @@ export default function PayoutsPage() {
     useState<CampaignCreatorPayout | null>(null);
   const [approvalNotes, setApprovalNotes] = useState("");
   const [rejectionReason, setRejectionReason] = useState("");
-  const { locationInfo } = useGeolocationCurrency();
-  const currency = locationInfo?.currency?.code || "USD";
 
   // Debounce campaign creator search term
   useEffect(() => {
@@ -605,6 +611,20 @@ export default function PayoutsPage() {
     ),
   };
 
+  const charityTotalsByCurrency = charityPayouts.reduce<
+    Array<{ currency: string; amount: number }>
+  >((acc, payout) => {
+    const currency = payout.currency || "USD";
+    const amount = parseFloat(payout.amount);
+    const existing = acc.find((entry) => entry.currency === currency);
+    if (existing) {
+      existing.amount += amount;
+    } else {
+      acc.push({ currency, amount });
+    }
+    return acc;
+  }, []);
+
   if (loading && charityLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -699,12 +719,10 @@ export default function PayoutsPage() {
                     <Clock className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">
-                      {formatCurrency(
-                        campaignCreatorStats.pendingAmount,
-                        currency
-                      )}
-                    </div>
+                    <CurrencyBreakdown
+                      amounts={campaignCreatorStats.pendingAmountByCurrency}
+                      emptyLabel="0.00"
+                    />
                     <p className="text-xs text-muted-foreground">
                       Awaiting approval
                     </p>
@@ -719,12 +737,10 @@ export default function PayoutsPage() {
                     <CheckCircle className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">
-                      {formatCurrency(
-                        campaignCreatorStats.paidAmount,
-                        currency
-                      )}
-                    </div>
+                    <CurrencyBreakdown
+                      amounts={campaignCreatorStats.paidAmountByCurrency}
+                      emptyLabel="No paid totals"
+                    />
                     <p className="text-xs text-muted-foreground">
                       Successfully processed
                     </p>
@@ -1076,9 +1092,10 @@ export default function PayoutsPage() {
                     <Clock className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">
-                      {formatCurrency(stats.pendingAmount, currency)}
-                    </div>
+                    <CurrencyBreakdown
+                      amounts={stats.pendingAmountByCurrency}
+                      emptyLabel="No pending totals"
+                    />
                     <p className="text-xs text-muted-foreground">
                       Awaiting approval
                     </p>
@@ -1093,9 +1110,10 @@ export default function PayoutsPage() {
                     <CheckCircle className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">
-                      {formatCurrency(stats.paidAmount, currency)}
-                    </div>
+                    <CurrencyBreakdown
+                      amounts={stats.paidAmountByCurrency}
+                      emptyLabel="No paid totals"
+                    />
                     <p className="text-xs text-muted-foreground">
                       Successfully processed
                     </p>
@@ -1376,13 +1394,12 @@ export default function PayoutsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{charityStats.total}</div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {formatCharityCurrency(
-                      charityStats.totalAmount.toString(),
-                      "NGN"
-                    )}{" "}
-                    total
-                  </p>
+                  <div className="mt-2">
+                    <CurrencyBreakdown
+                      amounts={charityTotalsByCurrency}
+                      emptyLabel="No totals yet"
+                    />
+                  </div>
                 </CardContent>
               </Card>
 

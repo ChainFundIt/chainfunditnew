@@ -211,12 +211,13 @@ export const userPreferences = pgTable("user_preferences", {
 	notificationEmail: varchar("notification_email", { length: 255 }),
 	notifyOnCharityDonation: boolean("notify_on_charity_donation").default(true).notNull(),
 	notifyOnCampaignDonation: boolean("notify_on_campaign_donation").default(true).notNull(),
+	notifyOnCampaignCreated: boolean("notify_on_campaign_created").default(true).notNull(),
 	notifyOnPayoutRequest: boolean("notify_on_payout_request").default(true).notNull(),
 	notifyOnLargeDonation: boolean("notify_on_large_donation").default(true).notNull(),
 	largeDonationThreshold: varchar("large_donation_threshold", { length: 20 }).default('1000'),
-	pushNotificationsEnabled: boolean("push_notifications_enabled").default(false).notNull(),
+	pushNotificationsEnabled: boolean("push_notifications_enabled").default(true).notNull(),
 	pushSubscription: jsonb("push_subscription"),
-	dailySummaryEnabled: boolean("daily_summary_enabled").default(false).notNull(),
+	dailySummaryEnabled: boolean("daily_summary_enabled").default(true).notNull(),
 	weeklySummaryEnabled: boolean("weekly_summary_enabled").default(true).notNull(),
 	summaryTime: varchar("summary_time", { length: 10 }).default('09:00'),
 	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
@@ -232,12 +233,13 @@ export const adminSettings = pgTable("admin_settings", {
 	notificationEmail: varchar("notification_email", { length: 255 }),
 	notifyOnCharityDonation: boolean("notify_on_charity_donation").default(true).notNull(),
 	notifyOnCampaignDonation: boolean("notify_on_campaign_donation").default(true).notNull(),
+	notifyOnCampaignCreated: boolean("notify_on_campaign_created").default(true).notNull(),
 	notifyOnPayoutRequest: boolean("notify_on_payout_request").default(true).notNull(),
 	notifyOnLargeDonation: boolean("notify_on_large_donation").default(true).notNull(),
 	largeDonationThreshold: varchar("large_donation_threshold", { length: 20 }).default('1000'),
-	pushNotificationsEnabled: boolean("push_notifications_enabled").default(false).notNull(),
+	pushNotificationsEnabled: boolean("push_notifications_enabled").default(true).notNull(),
 	pushSubscription: jsonb("push_subscription"),
-	dailySummaryEnabled: boolean("daily_summary_enabled").default(false).notNull(),
+	dailySummaryEnabled: boolean("daily_summary_enabled").default(true).notNull(),
 	weeklySummaryEnabled: boolean("weekly_summary_enabled").default(true).notNull(),
 	summaryTime: varchar("summary_time", { length: 10 }).default('09:00'),
 	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
@@ -245,6 +247,16 @@ export const adminSettings = pgTable("admin_settings", {
 	notifyOnAccountChangeRequest: boolean("notify_on_account_change_request").default(true).notNull(),
 }, (table) => [
 	unique("admin_settings_user_id_unique").on(table.userId),
+]);
+
+export const campaignCreatorCheckins = pgTable("campaign_creator_checkins", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	campaignId: uuid("campaign_id").notNull(),
+	userId: uuid("user_id").notNull(),
+	day: integer("day").notNull(),
+	sentAt: timestamp("sent_at", { mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	unique("campaign_creator_checkins_campaign_day_unique").on(table.campaignId, table.day),
 ]);
 
 export const emailOtps = pgTable("email_otps", {

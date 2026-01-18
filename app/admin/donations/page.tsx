@@ -8,6 +8,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,9 +51,8 @@ import {
   Filter,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { useGeolocationCurrency } from "@/hooks/use-geolocation-currency";
 import { formatCurrency } from "@/lib/utils/currency";
+import { CurrencyBreakdown } from "@/components/admin/currency-breakdown";
 import Link from "next/link";
 
 interface Donation {
@@ -97,8 +103,53 @@ interface DonationStats {
   totalAmount: number;
   completedAmount: number;
   pendingAmount: number;
+  refundedAmount?: number;
   averageDonation: number;
+  totalAmountByCurrency?: Array<{ currency: string; amount: number }>;
+  completedAmountByCurrency?: Array<{ currency: string; amount: number }>;
+  pendingAmountByCurrency?: Array<{ currency: string; amount: number }>;
+  refundedAmountByCurrency?: Array<{ currency: string; amount: number }>;
+  averageDonationByCurrency?: Array<{ currency: string; amount: number }>;
   recentDonations: Donation[];
+}
+
+interface DonationDetails {
+  id: string;
+  campaignId: string;
+  donorId: string;
+  amount: number | string;
+  currency: string;
+  paymentStatus: string;
+  paymentMethod: string;
+  chainerId?: string | null;
+  createdAt: string;
+  processedAt?: string | null;
+  paymentIntentId?: string | null;
+  isAnonymous?: boolean | null;
+  donorName?: string | null;
+  donorEmail?: string | null;
+  donorUserName?: string | null;
+  donorUserEmail?: string | null;
+  campaignTitle?: string | null;
+  chainerInfo?: {
+    id: string;
+    userId: string;
+    totalReferrals: number;
+    totalRaised: number;
+    commissionEarned: number;
+    chainerName?: string | null;
+  } | null;
+  fraudScore?: number;
+  suspiciousActivity?: boolean;
+  donorHistory?: Array<{
+    id: string;
+    amount: number | string;
+    currency: string;
+    paymentStatus: string;
+    createdAt: string;
+    campaignTitle?: string | null;
+  }>;
+  failureReason?: string;
 }
 
 export default function DonationsPage() {
@@ -115,12 +166,15 @@ export default function DonationsPage() {
   const [charityStatusFilter, setCharityStatusFilter] = useState("all");
   const [selectedCharity, setSelectedCharity] = useState("all");
   const [currencyFilter, setCurrencyFilter] = useState("all");
-  const router = useRouter();
-  const { locationInfo } = useGeolocationCurrency();
-  const currency = locationInfo?.currency?.code;
   const [selectedDonations, setSelectedDonations] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [selectedDonationId, setSelectedDonationId] = useState<string | null>(
+    null
+  );
+  const [selectedDonationDetails, setSelectedDonationDetails] =
+    useState<DonationDetails | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
 
   useEffect(() => {
     fetchDonations();
@@ -236,7 +290,6 @@ export default function DonationsPage() {
     action: string,
     reason?: string
   ) => {
-    // Handle "view" action separately - it doesn't require a PATCH request
     if (action === "view") {
       handleViewDonation(donationId);
       return;
@@ -279,7 +332,24 @@ export default function DonationsPage() {
   };
 
   const handleViewDonation = (donationId: string) => {
-    router.push(`/admin/donations/${donationId}`);
+    fetchDonationDetails(donationId);
+  };
+
+  const fetchDonationDetails = async (donationId: string) => {
+    setSelectedDonationId(donationId);
+    setSelectedDonationDetails(null);
+    setDetailsLoading(true);
+    try {
+      const response = await fetch(`/api/admin/donations/${donationId}`);
+      if (!response.ok) throw new Error("Failed to fetch donation details");
+      const data = await response.json();
+      setSelectedDonationDetails(data);
+    } catch (error) {
+      console.error("Error fetching donation details:", error);
+      toast.error("Failed to load donation details");
+    } finally {
+      setDetailsLoading(false);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -379,6 +449,20 @@ export default function DonationsPage() {
     ).length,
   };
 
+  const charityTotalsByCurrency = filteredCharityDonations.reduce<
+    Array<{ currency: string; amount: number }>
+  >((acc, donation) => {
+    const currency = donation.currency || "USD";
+    const amount = parseFloat(donation.amount);
+    const existing = acc.find((entry) => entry.currency === currency);
+    if (existing) {
+      existing.amount += amount;
+    } else {
+      acc.push({ currency, amount });
+    }
+    return acc;
+  }, []);
+
   if (loading && charityLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -464,16 +548,11 @@ export default function DonationsPage() {
                     <TrendingUp className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-semibold text-brand-green-dark">
-                      {formatCurrency(
-                        stats?.completedAmount || 0,
-                        currency || "USD"
-                      )}{" "}
-                      <span className="text-xs text-muted-foreground">
-                        {" "}
-                        completed
-                      </span>
-                    </div>
+                    <CurrencyBreakdown
+                      amounts={stats.completedAmountByCurrency}
+                      emptyLabel="No completed amounts"
+                      className="mt-1"
+                    />
                   </CardContent>
                 </Card>
 
@@ -485,15 +564,10 @@ export default function DonationsPage() {
                     <BarChart3 className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-semibold text-brand-green-dark">
-                      {formatCurrency(
-                        stats?.averageDonation || 0,
-                        currency || "USD"
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Per donation
-                    </p>
+                    <CurrencyBreakdown
+                      amounts={stats.averageDonationByCurrency}
+                      emptyLabel="No averages yet"
+                    />
                   </CardContent>
                 </Card>
               </div>
@@ -563,7 +637,7 @@ export default function DonationsPage() {
                           type="checkbox"
                           checked={
                             selectedDonations.length ===
-                              (donations || []).length &&
+                            (donations || []).length &&
                             (donations || []).length > 0
                           }
                           onChange={(e) => {
@@ -628,23 +702,6 @@ export default function DonationsPage() {
                         <TableCell>
                           <div className="font-medium">
                             {formatCurrency(donation.amount, donation.currency)}
-                            {donation.convertedAmount &&
-                              donation.convertedCurrency && (
-                                <div className="text-xs text-gray-500 mt-1">
-                                  ≈{" "}
-                                  {formatCurrency(
-                                    donation.convertedAmount,
-                                    donation.convertedCurrency
-                                  )}
-                                  {donation.exchangeRate && (
-                                    <span className="ml-1">
-                                      (Rate:{" "}
-                                      {Number(donation.exchangeRate).toFixed(2)}
-                                      )
-                                    </span>
-                                  )}
-                                </div>
-                              )}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -763,13 +820,10 @@ export default function DonationsPage() {
                   <DollarSign className="h-4 w-4 text-gray-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
-                    {formatCharityCurrency(
-                      charityStats.totalAmount.toString(),
-                      currency || "USD"
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Combined value</p>
+                  <CurrencyBreakdown
+                    amounts={charityTotalsByCurrency}
+                    emptyLabel="No totals yet"
+                  />
                 </CardContent>
               </Card>
 
@@ -950,6 +1004,242 @@ export default function DonationsPage() {
             )}
           </TabsContent>
         </Tabs>
+
+        <Dialog
+          open={Boolean(selectedDonationId)}
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedDonationId(null);
+              setSelectedDonationDetails(null);
+            }
+          }}
+        >
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Donation Details</DialogTitle>
+              <DialogDescription>
+                {selectedDonationDetails?.id
+                  ? `Donation ${selectedDonationDetails.id}`
+                  : "Loading donation details"}
+              </DialogDescription>
+            </DialogHeader>
+
+            {detailsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+              </div>
+            ) : selectedDonationDetails ? (
+              <div className="space-y-6">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="rounded-lg border p-4 space-y-2">
+                    <h3 className="text-sm font-semibold">Donation</h3>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Amount</span>
+                      <span className="font-medium">
+                        {formatCurrency(
+                          Number(selectedDonationDetails.amount),
+                          selectedDonationDetails.currency
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Status</span>
+                      <span>{getStatusBadge(selectedDonationDetails.paymentStatus)}</span>
+                    </div>
+                    {selectedDonationDetails.paymentStatus === "failed" && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Failure Reason</span>
+                        <span>{selectedDonationDetails.failureReason || "Unknown"}</span>
+                      </div>
+
+                    )}
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Method</span>
+                      <span className="text-right capitalize">
+                        {selectedDonationDetails.paymentMethod}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Created</span>
+                      <span>{formatDate(selectedDonationDetails.createdAt)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Processed</span>
+                      <span>
+                        {selectedDonationDetails.processedAt
+                          ? formatDate(selectedDonationDetails.processedAt)
+                          : "Not processed"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Payment Intent</span>
+                      <span className="truncate max-w-[200px]">
+                        {selectedDonationDetails.paymentIntentId || "—"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border p-4 space-y-2">
+                    <h3 className="text-sm font-semibold">Donor</h3>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Name</span>
+                      <span>
+                        {selectedDonationDetails.isAnonymous
+                          ? "Anonymous"
+                          : selectedDonationDetails.donorName ||
+                          selectedDonationDetails.donorUserName ||
+                          "Unknown"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Email</span>
+                      <span>
+                        {selectedDonationDetails.isAnonymous
+                          ? "Hidden"
+                          : selectedDonationDetails.donorEmail ||
+                          selectedDonationDetails.donorUserEmail ||
+                          "Unknown"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Donor ID</span>
+                      <span className="truncate max-w-[200px]">
+                        {selectedDonationDetails.donorId}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Anonymous</span>
+                      <span>
+                        {selectedDonationDetails.isAnonymous ? "Yes" : "No"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border p-4 space-y-2">
+                    <h3 className="text-sm font-semibold">Campaign</h3>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Title</span>
+                      <span className="text-right">
+                        {selectedDonationDetails.campaignTitle || "Unknown"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Campaign ID</span>
+                      <span className="truncate max-w-[200px]">
+                        {selectedDonationDetails.campaignId}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border p-4 space-y-2">
+                    <h3 className="text-sm font-semibold">Chained</h3>
+                    {selectedDonationDetails.chainerInfo ? (
+                      <>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Name</span>
+                          <span>
+                            {selectedDonationDetails.chainerInfo.chainerName ||
+                              "Unknown"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Referrals</span>
+                          <span>
+                            {selectedDonationDetails.chainerInfo.totalReferrals}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Raised</span>
+                          <span>
+                            {formatCurrency(
+                              Number(
+                                selectedDonationDetails.chainerInfo.totalRaised
+                              ),
+                              selectedDonationDetails.currency
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Commission</span>
+                          <span>
+                            {formatCurrency(
+                              Number(
+                                selectedDonationDetails.chainerInfo
+                                  .commissionEarned
+                              ),
+                              selectedDonationDetails.currency
+                            )}
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        Direct donation
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* <div className="rounded-lg border p-4 space-y-2">
+                  <h3 className="text-sm font-semibold">Risk Assessment</h3>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Fraud Score</span>
+                    <span>{selectedDonationDetails.fraudScore ?? 0}/100</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Suspicious Activity</span>
+                    <span>
+                      {selectedDonationDetails.suspiciousActivity ? "Yes" : "No"}
+                    </span>
+                  </div>
+                </div> */}
+
+                <div className="rounded-lg border p-4 space-y-3">
+                  <h3 className="text-sm font-semibold">Recent Donor Activity</h3>
+                  {selectedDonationDetails.donorHistory &&
+                    selectedDonationDetails.donorHistory.length > 0 ? (
+                    <div className="space-y-2">
+                      {selectedDonationDetails.donorHistory.map((history) => (
+                        <div
+                          key={history.id}
+                          className="flex items-center justify-between text-sm"
+                        >
+                          <div>
+                            <div className="font-medium">
+                              {history.campaignTitle || "Unknown campaign"}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {formatRelativeTime(history.createdAt)}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-medium">
+                              {formatCurrency(
+                                Number(history.amount),
+                                history.currency
+                              )}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {history.paymentStatus}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No recent donations found.
+                    </p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Donation details could not be loaded.
+              </p>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

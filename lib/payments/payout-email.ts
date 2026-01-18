@@ -1,7 +1,7 @@
 import { Resend } from "resend";
-import { CheckCircle } from "lucide-react";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://chainfundit.com";
 
 interface PayoutEmailData {
   userEmail: string;
@@ -75,7 +75,8 @@ export async function sendPayoutApprovalEmail(data: PayoutEmailData) {
           .logo-img {
             max-width: 150px;
             height: auto;
-            margin-bottom: 15px;
+            display: block;
+            margin: 0 auto 15px;
           }
           .success-icon {
             width: 60px;
@@ -86,6 +87,12 @@ export async function sendPayoutApprovalEmail(data: PayoutEmailData) {
             align-items: center;
             justify-content: center;
             margin-bottom: 15px;
+          }
+          .success-icon-check {
+            color: white;
+            font-size: 30px;
+            font-weight: bold;
+            line-height: 1;
           }
           .success-icon::before {
             content: "✓";
@@ -213,11 +220,11 @@ export async function sendPayoutApprovalEmail(data: PayoutEmailData) {
         <div class="container">
           <div class="header">
             ${(() => {
-              const logoUrl = `/images/logo.svg`;
+              const logoUrl = `${appUrl}/images/logo.svg`;
               return `<img src="${logoUrl}" alt="ChainFundit Logo" class="logo-img" />`;
             })()}
             <div class="success-icon">
-              <CheckCircle className="h-10 w-10 text-white" />
+              <span class="success-icon-check">✓</span>
             </div>
             <div class="logo">ChainFundIt</div>
             <div class="title">Payout Approved!</div>
@@ -415,7 +422,8 @@ export async function sendPayoutConfirmationEmail(data: PayoutEmailData) {
           .logo-img {
             max-width: 150px;
             height: auto;
-            margin-bottom: 15px;
+            display: block;
+            margin: 0 auto 15px;
           }
           .success-icon {
             width: 60px;
@@ -426,6 +434,12 @@ export async function sendPayoutConfirmationEmail(data: PayoutEmailData) {
             align-items: center;
             justify-content: center;
             margin-bottom: 15px;
+          }
+          .success-icon-check {
+            color: white;
+            font-size: 30px;
+            font-weight: bold;
+            line-height: 1;
           }
           .success-icon::before {
             content: "✓";
@@ -565,11 +579,11 @@ export async function sendPayoutConfirmationEmail(data: PayoutEmailData) {
         <div class="container">
           <div class="header">
             ${(() => {
-              const logoUrl = `/images/logo.svg`;
+              const logoUrl = `${appUrl}/images/logo.svg`;
               return `<img src="${logoUrl}" alt="ChainFundit Logo" class="logo-img" />`;
             })()}
             <div class="success-icon">
-              <CheckCircle className="h-10 w-10 text-white" />
+              <span class="success-icon-check">✓</span>
             </div>
             <div class="logo">ChainFundIt</div>
             <div class="title">Payout Request Confirmed</div>
@@ -760,7 +774,8 @@ export async function sendPayoutCompletionEmail(
           .logo-img {
             max-width: 150px;
             height: auto;
-            margin-bottom: 15px;
+            display: block;
+            margin: 0 auto 15px;
           }
           .success-icon {
             width: 60px;
@@ -771,6 +786,12 @@ export async function sendPayoutCompletionEmail(
             align-items: center;
             justify-content: center;
             margin-bottom: 15px;
+          }
+          .success-icon-check {
+            color: white;
+            font-size: 30px;
+            font-weight: bold;
+            line-height: 1;
           }
           .success-icon::before {
             content: "✓";
@@ -871,11 +892,11 @@ export async function sendPayoutCompletionEmail(
         <div class="container">
           <div class="header">
             ${(() => {
-              const logoUrl = `/images/logo.svg`;
+              const logoUrl = `${appUrl}/images/logo.svg`;
               return `<img src="${logoUrl}" alt="ChainFundit Logo" class="logo-img" />`;
             })()}
             <div class="success-icon">
-              <CheckCircle className="h-10 w-10 text-white" />
+              <span class="success-icon-check">✓</span>
             </div>
             <div class="logo">ChainFundIt</div>
             <div class="title">Payout Completed!</div>
@@ -1019,7 +1040,8 @@ export async function sendPayoutFailureEmail(data: PayoutFailureEmailData) {
           .logo-img {
             max-width: 150px;
             height: auto;
-            margin-bottom: 15px;
+            display: block;
+            margin: 0 auto 15px;
           }
           .error-icon {
             width: 60px;
@@ -1120,7 +1142,7 @@ export async function sendPayoutFailureEmail(data: PayoutFailureEmailData) {
         <div class="container">
           <div class="header">
             ${(() => {
-              const logoUrl = `/images/logo.svg`;
+              const logoUrl = `${appUrl}/images/logo.svg`;
               return `<img src="${logoUrl}" alt="ChainFundit Logo" class="logo-img" />`;
             })()}
             <div class="error-icon"></div>

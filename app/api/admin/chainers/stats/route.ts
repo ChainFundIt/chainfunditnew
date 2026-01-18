@@ -34,12 +34,30 @@ export async function GET(request: NextRequest) {
       })
       .from(chainers);
 
+    const totalCommissionsByCurrency = await db
+      .select({
+        currency: campaigns.currency,
+        total: sum(chainers.commissionEarned),
+      })
+      .from(chainers)
+      .leftJoin(campaigns, eq(chainers.campaignId, campaigns.id))
+      .groupBy(campaigns.currency);
+
     // Get total raised through chainers
     const [totalRaised] = await db
       .select({
         total: sum(chainers.totalRaised),
       })
       .from(chainers);
+
+    const totalRaisedByCurrency = await db
+      .select({
+        currency: campaigns.currency,
+        total: sum(chainers.totalRaised),
+      })
+      .from(chainers)
+      .leftJoin(campaigns, eq(chainers.campaignId, campaigns.id))
+      .groupBy(campaigns.currency);
 
     // Get average commission rate (using commissionEarned/totalRaised ratio)
     const [averageCommissionRate] = await db
@@ -143,6 +161,14 @@ export async function GET(request: NextRequest) {
       bannedChainers: bannedChainers.count,
       totalCommissions: Number(totalCommissions?.total) || 0,
       totalRaised: Number(totalRaised?.total) || 0,
+      totalCommissionsByCurrency: (totalCommissionsByCurrency || []).map((row) => ({
+        currency: row.currency || 'USD',
+        amount: Number(row.total || 0),
+      })),
+      totalRaisedByCurrency: (totalRaisedByCurrency || []).map((row) => ({
+        currency: row.currency || 'USD',
+        amount: Number(row.total || 0),
+      })),
       averageCommissionRate: Number(averageCommissionRate?.average) || 0,
       fraudAlerts: fraudAlerts.count,
       topPerformers,

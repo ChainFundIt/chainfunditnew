@@ -40,15 +40,12 @@ export async function generateMetadata({
 
   const campaignData = campaign[0];
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://chainfundit.com";
-  const logoUrl = `${baseUrl}/images/logo.svg`;
+  const fallbackOgImageUrl = `${baseUrl}/opengraph-image`;
 
-  // Get the campaign URL
   const campaignUrl = `${baseUrl}/campaign/${slug}`;
 
-  // Get cover image URL - ensure it's absolute and use proxy for R2 images
   let coverImageUrl = campaignData.coverImageUrl;
   if (coverImageUrl && !coverImageUrl.startsWith("http")) {
-    // If it's a relative URL, make it absolute
     coverImageUrl = coverImageUrl.startsWith("/")
       ? `${baseUrl}${coverImageUrl}`
       : `${baseUrl}/${coverImageUrl}`;
@@ -78,14 +75,13 @@ export async function generateMetadata({
       ]
     : [
         {
-          url: logoUrl,
-          width: 512,
-          height: 512,
-          alt: "Chainfundit Logo",
+          url: fallbackOgImageUrl,
+          width: 1200,
+          height: 630,
+          alt: "Chainfundit — Raise funds, support dreams",
         },
       ];
 
-  // Prepare description - use subtitle or truncate description
   const description =
     campaignData.subtitle ||
     (campaignData.description
@@ -112,10 +108,10 @@ export async function generateMetadata({
       type: "website",
     },
     twitter: {
-      card: proxiedCoverImageUrl ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title: campaignData.title,
       description: description,
-      images: proxiedCoverImageUrl ? [proxiedCoverImageUrl] : [logoUrl],
+      images: [proxiedCoverImageUrl ?? fallbackOgImageUrl],
     },
     alternates: {
       canonical: campaignUrl,
@@ -126,12 +122,10 @@ export async function generateMetadata({
 const page = async ({ params }: PageProps) => {
   const { slug } = await params;
 
-  // Handle undefined slug
   if (!slug || slug === "undefined") {
     notFound();
   }
 
-  // Find campaign by slug only
   const campaign = await db
     .select()
     .from(campaigns)
@@ -143,10 +137,6 @@ const page = async ({ params }: PageProps) => {
   }
 
   const campaignData = campaign[0];
-
-  // Note: Private campaigns are filtered out from public listings,
-  // but can be accessed via direct link (when shared by creator)
-  // So we allow access here - the visibility check is handled in listings
 
   return (
     <div className="h-full">
