@@ -36,14 +36,31 @@ export async function GET(request: NextRequest) {
     const startDate = getDateRange(range);
 
     // Overview metrics
-    const [totalUsers] = await db.select({ count: count() }).from(users);
-    const [totalCampaigns] = await db.select({ count: count() }).from(campaigns);
+    const [totalUsers] = await db
+      .select({ count: count() })
+      .from(users)
+      .where(gte(users.createdAt, startDate));
+    const [totalCampaigns] = await db
+      .select({ count: count() })
+      .from(campaigns)
+      .where(gte(campaigns.createdAt, startDate));
     const [totalDonations] = await db
       .select({ count: count() })
       .from(donations)
-      .where(eq(donations.paymentStatus, 'completed'));
-    const [totalChainers] = await db.select({ count: count() }).from(chainers);
-    const [totalPayouts] = await db.select({ count: count() }).from(commissionPayouts);
+      .where(
+        and(
+          gte(donations.createdAt, startDate),
+          eq(donations.paymentStatus, 'completed')
+        )
+      );
+    const [totalChainers] = await db
+      .select({ count: count() })
+      .from(chainers)
+      .where(gte(chainers.createdAt, startDate));
+    const [totalPayouts] = await db
+      .select({ count: count() })
+      .from(commissionPayouts)
+      .where(gte(commissionPayouts.createdAt, startDate));
 
     const donationTotalsByCurrency = await db
       .select({
@@ -51,7 +68,12 @@ export async function GET(request: NextRequest) {
         totalAmount: sum(donations.amount),
       })
       .from(donations)
-      .where(eq(donations.paymentStatus, 'completed'))
+      .where(
+        and(
+          gte(donations.createdAt, startDate),
+          eq(donations.paymentStatus, 'completed')
+        )
+      )
       .groupBy(donations.currency);
 
     const totalAmount = normalizeAmount(
@@ -73,7 +95,12 @@ export async function GET(request: NextRequest) {
         totalAmount: sum(donations.amount),
       })
       .from(donations)
-      .where(eq(donations.paymentStatus, 'completed'))
+      .where(
+        and(
+          gte(donations.createdAt, startDate),
+          eq(donations.paymentStatus, 'completed')
+        )
+      )
       .groupBy(donations.paymentMethod, donations.currency);
 
     const platformRevenueByCurrencyMap = new Map<string, number>();
@@ -104,7 +131,12 @@ export async function GET(request: NextRequest) {
     const [averageDonation] = await db
       .select({ average: sql<number>`AVG(${donations.amount})` })
       .from(donations)
-      .where(eq(donations.paymentStatus, 'completed'));
+      .where(
+        and(
+          gte(donations.createdAt, startDate),
+          eq(donations.paymentStatus, 'completed')
+        )
+      );
 
     const averageDonationByCurrency = await db
       .select({
@@ -112,7 +144,12 @@ export async function GET(request: NextRequest) {
         average: sql<number>`AVG(${donations.amount})`,
       })
       .from(donations)
-      .where(eq(donations.paymentStatus, 'completed'))
+      .where(
+        and(
+          gte(donations.createdAt, startDate),
+          eq(donations.paymentStatus, 'completed')
+        )
+      )
       .groupBy(donations.currency);
 
     // Growth data
@@ -170,7 +207,7 @@ export async function GET(request: NextRequest) {
       (a, b) => new Date(a.month).getTime() - new Date(b.month).getTime()
     );
 
-    // Platform revenue by campaign (lifetime), calculated at donation time
+    // Platform revenue by campaign (within selected range), calculated at donation time
     const campaignRevenueGroups = await db
       .select({
         campaignId: donations.campaignId,
@@ -183,7 +220,10 @@ export async function GET(request: NextRequest) {
       .from(donations)
       .leftJoin(campaigns, eq(donations.campaignId, campaigns.id))
       .where(
-        eq(donations.paymentStatus, 'completed')
+        and(
+          gte(donations.createdAt, startDate),
+          eq(donations.paymentStatus, 'completed')
+        )
       )
       .groupBy(
         donations.campaignId,
@@ -245,19 +285,24 @@ export async function GET(request: NextRequest) {
         id: campaigns.id,
         title: campaigns.title,
         currency: campaigns.currency,
-        amount: campaigns.currentAmount,
-        donations: sql<number>`(
-          SELECT COUNT(*) FROM ${donations} 
-          WHERE ${donations.campaignId} = ${campaigns.id} 
-          AND ${donations.paymentStatus} = 'completed'
-        )`,
+        amount: sum(donations.amount),
+        donations: count(),
         chainers: sql<number>`(
-          SELECT COUNT(*) FROM ${chainers} 
+          SELECT COUNT(*) FROM ${chainers}
           WHERE ${chainers.campaignId} = ${campaigns.id}
+          AND ${chainers.createdAt} >= ${startDate}
         )`,
       })
-      .from(campaigns)
-      .orderBy(desc(campaigns.currentAmount))
+      .from(donations)
+      .leftJoin(campaigns, eq(donations.campaignId, campaigns.id))
+      .where(
+        and(
+          gte(donations.createdAt, startDate),
+          eq(donations.paymentStatus, 'completed')
+        )
+      )
+      .groupBy(campaigns.id, campaigns.title, campaigns.currency)
+      .orderBy(desc(sum(donations.amount)))
       .limit(10);
 
     // Top performing chainers
@@ -277,6 +322,7 @@ export async function GET(request: NextRequest) {
         commission: chainers.commissionEarned,
       })
       .from(chainers)
+      .where(gte(chainers.createdAt, startDate))
       .orderBy(desc(chainers.commissionEarned))
       .limit(10);
 
@@ -291,7 +337,12 @@ export async function GET(request: NextRequest) {
       })
       .from(donations)
       .leftJoin(users, eq(donations.donorId, users.id))
-      .where(eq(donations.paymentStatus, 'completed'))
+      .where(
+        and(
+          gte(donations.createdAt, startDate),
+          eq(donations.paymentStatus, 'completed')
+        )
+      )
       .groupBy(donations.donorId, users.fullName, donations.currency)
       .orderBy(desc(sum(donations.amount)))
       .limit(10);
@@ -308,8 +359,14 @@ export async function GET(request: NextRequest) {
     const [donationToChainerRate] = await db
       .select({
         rate: sql<number>`(
-          SELECT COUNT(*)::float / (SELECT COUNT(*) FROM ${donations} WHERE ${donations.paymentStatus} = 'completed')::float * 100
+          SELECT COUNT(*)::float / NULLIF(
+            (SELECT COUNT(*) FROM ${donations}
+              WHERE ${donations.paymentStatus} = 'completed'
+              AND ${donations.createdAt} >= ${startDate}
+            ), 0
+          )::float * 100
           FROM ${chainers}
+          WHERE ${chainers.createdAt} >= ${startDate}
         )`,
       })
       .from(chainers);
@@ -321,7 +378,12 @@ export async function GET(request: NextRequest) {
         amount: sum(donations.amount),
       })
       .from(donations)
-      .where(eq(donations.paymentStatus, 'completed'))
+      .where(
+        and(
+          gte(donations.createdAt, startDate),
+          eq(donations.paymentStatus, 'completed')
+        )
+      )
       .groupBy(donations.currency);
 
     const totalCurrencyAmount = currencyDistribution.reduce((sum, curr) => sum + Number(curr.amount || 0), 0);
@@ -339,6 +401,7 @@ export async function GET(request: NextRequest) {
         count: count(),
       })
       .from(donations)
+      .where(gte(donations.createdAt, startDate))
       .groupBy(donations.paymentStatus);
 
     const totalDonationsCount = donationsByStatus.reduce((sum, status) => sum + status.count, 0);
@@ -356,6 +419,7 @@ export async function GET(request: NextRequest) {
         count: count(),
       })
       .from(campaigns)
+      .where(gte(campaigns.createdAt, startDate))
       .groupBy(campaigns.status);
 
     const totalCampaignsCount = campaignsByStatus.reduce((sum, status) => sum + status.count, 0);
