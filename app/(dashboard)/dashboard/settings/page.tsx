@@ -2,17 +2,19 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Bell, CreditCard, Lock, User } from "lucide-react";
+import { Bell, CreditCard, Lock, Star, User } from "lucide-react";
 import Account from "./account";
 import Security from "./security";
 import Preferences from "./preferences";
 import Payments from "./payments";
+import ReviewSettings from "./review";
 
 const tabs = [
   { label: "Account", Icon: User },
   { label: "Security", Icon: Lock },
   { label: "Preferences", Icon: Bell },
   { label: "Payments", Icon: CreditCard },
+  { label: "Review", Icon: Star },
 ];
 
 const SettingsPageContent = () => {
@@ -76,6 +78,7 @@ const SettingsPageContent = () => {
           {activeTab === "Security" && <Security />}
           {activeTab === "Preferences" && <Preferences />}
           {activeTab === "Payments" && <Payments />}
+          {activeTab === "Review" && <ReviewSettings />}
         </div>
       </div>
     </div>

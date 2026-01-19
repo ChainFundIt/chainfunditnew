@@ -56,6 +56,9 @@ const Footer = (props: Props) => {
               >
                 Success stories
               </div>
+              <div className="hover:text-[#59ad4a] cursor-pointer">
+                <Link href="/careers">Careers</Link>
+              </div>
               <div
                 className="hover:text-[#59ad4a] cursor-pointer"
                 onClick={() => {

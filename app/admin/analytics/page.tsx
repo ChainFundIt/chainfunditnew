@@ -254,6 +254,14 @@ export default function AnalyticsPage() {
     {} as Record<string, number>
   );
 
+  const campaignDonationCountsById = analytics.performance.campaignRevenue.reduce(
+    (acc, campaign) => {
+      acc[campaign.id] = (acc[campaign.id] || 0) + campaign.donations;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+
   const campaignRevenueTotalsList = Object.entries(campaignRevenueTotals)
     .map(([currencyCode, amount]) => ({
       currency: currencyCode,
@@ -402,7 +410,7 @@ export default function AnalyticsPage() {
             </CardContent>
           </Card>
 
-          {/* <Card>
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 Total Donations
@@ -429,7 +437,7 @@ export default function AnalyticsPage() {
                 </p>
               )}
             </CardContent>
-          </Card> */}
+          </Card>
         </div>
 
         {/* Charts Section */}
@@ -530,11 +538,16 @@ export default function AnalyticsPage() {
               <div className="space-y-4">
                 {analytics.performance.topCampaigns
                   .slice(0, 5)
-                  .map((campaign, index) => (
-                    <div
-                      key={campaign.id}
-                      className="flex items-center justify-between"
-                    >
+                  .map((campaign, index) => {
+                    const donationCount =
+                      campaignDonationCountsById[campaign.id] ??
+                      campaign.donations;
+
+                    return (
+                      <div
+                        key={campaign.id}
+                        className="flex items-center justify-between"
+                      >
                       <div className="flex items-center gap-3">
                         <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium">
                           {index + 1}
@@ -544,7 +557,7 @@ export default function AnalyticsPage() {
                             {campaign.title}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {campaign.donations} donations
+                            {donationCount} donations
                           </p>
                         </div>
                       </div>
@@ -560,7 +573,8 @@ export default function AnalyticsPage() {
                         </p>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
               </div>
             </CardContent>
           </Card>
@@ -659,7 +673,7 @@ export default function AnalyticsPage() {
             <div className="space-y-2">
               <CardTitle>Revenue by Campaign</CardTitle>
               <CardDescription>
-                Platform earnings per campaign based on lifetime completed donations
+                Platform earnings per campaign based on completed donations in range
               </CardDescription>
             </div>
             {analytics.performance.campaignRevenue.length > 10 && (
@@ -713,7 +727,7 @@ export default function AnalyticsPage() {
             </div>
             {campaignRevenueTotalsList.length > 0 && (
               <div className="mt-4 rounded-lg border border-gray-200 bg-white p-3">
-                <p className="text-sm font-medium">Total platform revenue (lifetime)</p>
+                <p className="text-sm font-medium">Total platform revenue in range</p>
                 <div className="mt-2 grid gap-1 text-sm text-gray-600">
                   {campaignRevenueTotalsList.map((item) => (
                     <div key={item.currency}>
