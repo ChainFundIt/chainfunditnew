@@ -1,6 +1,6 @@
 {
-  "id": "28be0b95-cba4-4678-b0e9-2fc92b6e0f0c",
-  "prevId": "4bc7c4ce-c148-4093-9753-9aa9c98f3022",
+  "id": "9351443a-3e98-4809-9180-447c7c0e6882",
+  "prevId": "28be0b95-cba4-4678-b0e9-2fc92b6e0f0c",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -294,6 +294,117 @@
           ]
         }
       },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ambassador_applications": {
+      "name": "ambassador_applications",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "full_name": {
+          "name": "full_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "phone": {
+          "name": "phone",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "state_of_residence": {
+          "name": "state_of_residence",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "age": {
+          "name": "age",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mass_comms": {
+          "name": "mass_comms",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "creates_content": {
+          "name": "creates_content",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "handles": {
+          "name": "handles",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "interest": {
+          "name": "interest",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "helped_before": {
+          "name": "helped_before",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "helped_description": {
+          "name": "helped_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cv_file": {
+          "name": "cv_file",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "intro_video_file": {
+          "name": "intro_video_file",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "intro_video_link": {
+          "name": "intro_video_link",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

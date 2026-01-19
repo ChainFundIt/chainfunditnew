@@ -31,6 +31,7 @@ import {
   Shield,
   User,
   Briefcase,
+  FileText,
 } from "lucide-react";
 import { MoneyTick } from "iconsax-reactjs";
 import Image from "next/image";
@@ -59,6 +60,12 @@ const navigation = [
     name: "Careers",
     href: "/admin/careers",
     icon: Briefcase,
+    current: false,
+  },
+  {
+    name: "Ambassador Applications",
+    href: "/admin/ambassador-applications",
+    icon: FileText,
     current: false,
   },
   {

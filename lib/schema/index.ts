@@ -26,3 +26,4 @@ export * from './favourites';
 export * from './campaign-creator-checkins';
 export * from './careers';
 export * from './platform-reviews';
+export * from './ambassador-applications';
