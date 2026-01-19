@@ -37,7 +37,7 @@ async function getAuthedUser(request: NextRequest) {
 }
 
 async function getEligibility(userId: string) {
-  const [row] = (await db.execute(sql`
+  const result = await db.execute(sql`
     select
       exists(
         select 1 from ${donations}
@@ -49,7 +49,10 @@ async function getEligibility(userId: string) {
         where ${campaignPayouts.userId} = ${userId}
           and ${campaignPayouts.status} = 'completed'
       ) as "creatorEligible"
-  `)) as Array<{ donorEligible: boolean; creatorEligible: boolean }>;
+  `);
+  const row = result.rows?.[0] as
+    | { donorEligible: boolean; creatorEligible: boolean }
+    | undefined;
 
   const donorEligible = Boolean(row?.donorEligible);
   const creatorEligible = Boolean(row?.creatorEligible);

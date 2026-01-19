@@ -89,18 +89,18 @@ const themeConfigs: Record<string, ThemeConfig> = {
     ],
   },
   Valentine: {
-    mainHeading: "Love That Makes a Difference",
-    mainDescription: "The best way to celebrate the spirit of love is by uplifting someone else. Your gesture of support can make a huge impact in someone’s life.",
+    mainHeading: "Lead With Love This Pre-Valentine Season",
+    mainDescription: "Celebrate the season of love early by uplifting someone else. A small act of generosity can create a big change in someone’s life.",
     carouselSlides: [
       {
-        heading: "Love That Makes a Difference",
+        heading: "Lead With Love This Pre-Valentine Season",
         description:
-          "The best way to celebrate the spirit of love is by uplifting someone else. Your gesture of support can make a huge impact in someone’s life.",
+          "Celebrate the season of love early by uplifting someone else. A small act of generosity can create a big change in someone’s life.",
       },
       {
-        heading: "Turn Love into Impact",
+        heading: "Turn Early Love Into Impact",
         description:
-          "This Valentine’s Day, let your love transcend words. Show your support for people, communities, and dreams that need care.",
+          "Ahead of Valentine’s Day, let your love go beyond words. Support people, communities, and dreams that need care.",
       },
     ],
     images: [
@@ -111,13 +111,13 @@ const themeConfigs: Record<string, ThemeConfig> = {
     features: [
       {
         title: "Share Love, Support Causes",
-        desc: "This Valentine's Day, show your love by supporting meaningful causes. Every donation is an act of love that creates lasting impact",
+        desc: "Kick off the season by supporting meaningful causes. Every donation is an act of love that creates lasting impact",
         bgClass: "bg-brand-green-dark",
         textColor: "text-white",
       },
       {
         title: "Love in Action",
-        desc: "Spread love and compassion through giving. Your generous donations help turn love into tangible support for those who need it most",
+        desc: "Spread love and compassion through giving. Your donations turn early love into tangible support for those who need it most",
         bgClass: "bg-brand-green-light",
         textColor: "text-white",
       },
@@ -249,6 +249,48 @@ const themeConfigs: Record<string, ThemeConfig> = {
       },
     ],
   },
+  Iftar: {
+    mainHeading: "Share Iftar, Share Hope",
+    mainDescription:
+      "Iftar brings people together. Help provide meals, care, and dignity to families breaking their fast this Ramadan.",
+    carouselSlides: [
+      {
+        heading: "Share Iftar, Share Hope",
+        description:
+          "Iftar brings people together. Help provide meals, care, and dignity to families breaking their fast this Ramadan.",
+      },
+      {
+        heading: "An Iftar That Feeds More Than Hunger",
+        description:
+          "Your support funds food packs and essentials for communities in need. Make every sunset a moment of relief.",
+      },
+    ],
+    images: [
+      "/images/ramadan-donation-1.jpg",
+      "/images/ramadan-donation-2.jpg",
+      "/images/secure.png",
+    ],
+    features: [
+      {
+        title: "Feed Families at Iftar",
+        desc: "Provide meals that help families break their fast with comfort and care.",
+        bgClass: "bg-brand-green-dark",
+        textColor: "text-white",
+      },
+      {
+        title: "Give Essentials With Compassion",
+        desc: "Support food packs and essentials that carry families through the month.",
+        bgClass: "bg-brand-green-light",
+        textColor: "text-white",
+      },
+      {
+        title: "Secure payments",
+        desc: "Industry-standard safety measures secure funds raised and your payouts",
+        bgClass: "bg-brand-green-light",
+        textColor: "text-white",
+      },
+    ],
+  },
   NewYear: {
     mainHeading: "New Year, New Opportunities to Give Back",
     mainDescription: "Start the year strong by supporting ideas and initiatives that empower people and build better futures.",
@@ -342,6 +384,7 @@ export const themes: Record<string, ThemeConfig> = {
   eid: themeConfigs.Eid,
   easter: themeConfigs.Easter,
   ramadan: themeConfigs.Ramadan,
+  iftar: themeConfigs.Iftar,
   newyear: themeConfigs.NewYear,
   thanksgiving: themeConfigs.Thanksgiving,
 };
