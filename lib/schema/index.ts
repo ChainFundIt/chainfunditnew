@@ -24,3 +24,5 @@ export * from './user-kyc-verifications';
 export * from './recurring-donations';
 export * from './favourites';
 export * from './campaign-creator-checkins';
+export * from './careers';
+export * from './platform-reviews';

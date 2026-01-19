@@ -141,6 +141,20 @@
       "when": 1768726129957,
       "tag": "0019_rich_steel_serpent",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1768828933467,
+      "tag": "0020_bitter_captain_marvel",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1768830432459,
+      "tag": "0022_flippant_grey_gargoyle",
+      "breakpoints": true
     }
   ]
 }

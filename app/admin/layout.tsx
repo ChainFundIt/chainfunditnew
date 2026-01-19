@@ -30,6 +30,7 @@ import {
   LogOut,
   Shield,
   User,
+  Briefcase,
 } from "lucide-react";
 import { MoneyTick } from "iconsax-reactjs";
 import Image from "next/image";
@@ -52,6 +53,12 @@ const navigation = [
     name: "Campaigns",
     href: "/admin/campaigns",
     icon: BarChart3,
+    current: false,
+  },
+  {
+    name: "Careers",
+    href: "/admin/careers",
+    icon: Briefcase,
     current: false,
   },
   {

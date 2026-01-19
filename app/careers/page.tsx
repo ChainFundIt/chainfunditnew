@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -20,6 +18,11 @@ import {
   TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
+import { db } from "@/lib/db";
+import { careerOpenings } from "@/lib/schema";
+import { asc, desc, eq } from "drizzle-orm";
+
+export const dynamic = "force-dynamic";
 
 const benefits = [
   {
@@ -68,7 +71,13 @@ const values = [
   "Work-life balance and employee wellbeing",
 ];
 
-export default function CareersPage() {
+export default async function CareersPage() {
+  const openings = await db
+    .select()
+    .from(careerOpenings)
+    .where(eq(careerOpenings.isActive, true))
+    .orderBy(asc(careerOpenings.sortOrder), desc(careerOpenings.createdAt));
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
       <Navbar />
@@ -152,10 +161,139 @@ export default function CareersPage() {
           </div>
 
           <div className="space-y-6">
-            <p className="text-xl text-gray-600 text-center">
-              There are no open positions at the moment. Check back soon!
-            </p>
+            {openings.length === 0 ? (
+              <p className="text-xl text-gray-600 text-center">
+                There are no open positions at the moment. Check back soon!
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {openings.map((opening) => {
+                  const responsibilities = Array.isArray(
+                    opening.responsibilities
+                  )
+                    ? opening.responsibilities
+                    : [];
+                  const requirements = Array.isArray(opening.requirements)
+                    ? opening.requirements
+                    : [];
+
+                  return (
+                    <Card
+                      key={opening.id}
+                      className="border border-gray-200 hover:shadow-lg transition-all duration-200"
+                    >
+                      <CardContent className="p-6 space-y-4">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <h3 className="text-2xl font-semibold text-gray-900">
+                              {opening.title}
+                            </h3>
+                            {opening.department && (
+                              <p className="text-sm text-gray-600">
+                                {opening.department}
+                              </p>
+                            )}
+                          </div>
+                          <Badge className="bg-green-100 text-green-700 hover:bg-green-200">
+                            Open
+                          </Badge>
+                        </div>
+
+                        <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                          {opening.location && (
+                            <span className="flex items-center gap-2">
+                              <MapPin className="h-4 w-4 text-green-600" />
+                              {opening.location}
+                            </span>
+                          )}
+                          {opening.employmentType && (
+                            <span className="flex items-center gap-2">
+                              <Clock className="h-4 w-4 text-green-600" />
+                              {opening.employmentType}
+                            </span>
+                          )}
+                        </div>
+
+                        {opening.summary && (
+                          <p className="text-gray-700">{opening.summary}</p>
+                        )}
+
+                        {responsibilities.length > 0 && (
+                          <div>
+                            <h4 className="text-sm font-semibold text-gray-900 mb-2">
+                              What you'll do
+                            </h4>
+                            <ul className="space-y-1 text-sm text-gray-600">
+                              {responsibilities.map((item, index) => (
+                                <li key={index} className="flex gap-2">
+                                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
+                                  <span>{item}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {requirements.length > 0 && (
+                          <div>
+                            <h4 className="text-sm font-semibold text-gray-900 mb-2">
+                              What we're looking for
+                            </h4>
+                            <ul className="space-y-1 text-sm text-gray-600">
+                              {requirements.map((item, index) => (
+                                <li key={index} className="flex gap-2">
+                                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
+                                  <span>{item}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        <div>
+                          <Button asChild>
+                            <a
+                              href={
+                                opening.applyUrl ||
+                                "mailto:careers@chainfundit.com"
+                              }
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              Apply now
+                            </a>
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
           </div>
+        </div>
+
+        {/* Ambassador Program */}
+        <div className="mb-16">
+          <Card className="bg-[#FDFBF7] border border-[#F5F5F4]">
+            <CardContent className="p-8 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+              <div className="space-y-3">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-100 text-[#A16207] text-xs font-bold">
+                  AMBASSADOR PROGRAM
+                </div>
+                <h3 className="text-2xl font-semibold text-gray-900">
+                  ChainFundIt Ambassador
+                </h3>
+                <p className="text-gray-700 max-w-2xl">
+                  Meet the storytellers behind the Doing Good Series. Learn more
+                  about the role, responsibilities, and how to apply.
+                </p>
+              </div>
+              <Button asChild className="bg-[#104109] px-6 py-3 rounded-full">
+                <Link href="/ambassadors">View Ambassador Role</Link>
+              </Button>
+            </CardContent>
+          </Card>
         </div>
 
         {/* No Open Positions Message */}
