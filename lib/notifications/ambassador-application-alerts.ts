@@ -82,7 +82,7 @@ export async function sendAmbassadorApplicationConfirmation(
                 If we need any additional information, we'll reach out to you.
               </p>
               <p style="text-align: center;">
-                <a href="${appUrl}/doing-good" class="button">Learn More</a>
+                <a href="${appUrl}/doinggood" class="button">Learn More</a>
               </p>
             </div>
             <div class="footer">

@@ -45,7 +45,6 @@ import {
   Shield,
   Play,
   Pause,
-  Ban,
 } from "lucide-react";
 import { BsFillStopFill } from "react-icons/bs";
 import { toast } from "sonner";
@@ -70,7 +69,7 @@ interface Campaign {
   goalAmount: number;
   currentAmount: number;
   currency: string;
-  status: "active" | "paused" | "completed" | "closed";
+  status: "active" | "paused" | "completed" | "closed" | "under_review";
   category: string;
   createdAt: string;
   updatedAt: string;
@@ -200,7 +199,18 @@ export default function AdminCampaignsPage() {
         throw new Error("Failed to update campaign");
       }
 
-      toast.success(`Campaign ${action} successfully`);
+      const actionMessages: Record<string, string> = {
+        hold: "placed on hold",
+        activate: "activated",
+        close: "closed",
+        pause: "paused",
+        resume: "resumed",
+        verify: "verified",
+        unverify: "unverified",
+        update: "updated",
+      };
+      const actionMessage = actionMessages[action] || `${action}ed`;
+      toast.success(`Campaign ${actionMessage} successfully`);
       fetchCampaigns();
     } catch (error) {
       console.error("Error updating campaign:", error);
@@ -261,30 +271,13 @@ export default function AdminCampaignsPage() {
     setIsModalOpen(true);
   };
 
-  const handleBanCampaign = async (campaign: Campaign) => {
-    try {
-      const response = await fetch(`/api/admin/campaigns/${campaign.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "ban" }),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to ban campaign");
-      }
-      toast.success("Campaign banned successfully");
-      fetchCampaigns();
-    } catch (error) {
-      console.error("Error banning campaign:", error);
-      toast.error("Failed to ban campaign");
-    }
-  };
-
   const getStatusBadge = (status: string) => {
     const variants = {
       active: "default",
       paused: "secondary",
       completed: "default",
       closed: "destructive",
+      under_review: "secondary",
     } as const;
 
     const colors = {
@@ -292,6 +285,7 @@ export default function AdminCampaignsPage() {
       paused: "bg-yellow-100 text-yellow-800",
       completed: "bg-blue-100 text-blue-800",
       closed: "bg-red-100 text-red-800",
+      under_review: "bg-orange-100 text-orange-800",
     };
 
     return (
@@ -300,7 +294,7 @@ export default function AdminCampaignsPage() {
           colors[status as keyof typeof colors] || "bg-gray-100 text-gray-800"
         }
       >
-        {status.toUpperCase()}
+        {status.replace(/_/g, " ").toUpperCase()}
       </Badge>
     );
   };
@@ -315,6 +309,8 @@ export default function AdminCampaignsPage() {
         return <CheckCircle className="h-4 w-4 text-blue-600" />;
       case "closed":
         return <BsFillStopFill className="h-4 w-4 text-red-600" />;
+      case "under_review":
+        return <AlertTriangle className="h-4 w-4 text-orange-600" />;
       default:
         return <Clock className="h-4 w-4 text-gray-600" />;
     }
@@ -485,6 +481,7 @@ export default function AdminCampaignsPage() {
                       <SelectItem value="all">All Status</SelectItem>
                       <SelectItem value="active">Active</SelectItem>
                       <SelectItem value="paused">Paused</SelectItem>
+                      <SelectItem value="under_review">Under Review</SelectItem>
                       <SelectItem value="completed">Completed</SelectItem>
                       <SelectItem value="closed">Closed</SelectItem>
                     </SelectContent>
@@ -725,14 +722,44 @@ export default function AdminCampaignsPage() {
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleBanCampaign(campaign)}
-                              title="Ban campaign"
-                            >
-                              <Ban className="h-4 w-4 text-red-600" />
-                            </Button>
+                            {campaign.status !== "under_review" &&
+                              campaign.status !== "closed" &&
+                              campaign.status !== "completed" && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() =>
+                                    handleCampaignAction(campaign, "hold")
+                                  }
+                                  title="Hold campaign (under review)"
+                                >
+                                  <AlertTriangle className="h-4 w-4 text-orange-600" />
+                                </Button>
+                              )}
+                            {campaign.status === "under_review" && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() =>
+                                  handleCampaignAction(campaign, "activate")
+                                }
+                                title="Activate campaign"
+                              >
+                                <CheckCircle className="h-4 w-4 text-green-600" />
+                              </Button>
+                            )}
+                            {campaign.status !== "closed" && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() =>
+                                  handleCampaignAction(campaign, "close")
+                                }
+                                title="Close campaign"
+                              >
+                                <BsFillStopFill className="h-4 w-4 text-red-600" />
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>

@@ -5,8 +5,8 @@ import { Zap, Globe, Shield, CircleCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
-import { getCurrentTheme } from "@/lib/utils/theme-detection";
-import { themes, type ThemeKey } from "@/lib/utils/carousel-themes";
+import { getActiveThemes } from "@/lib/utils/theme-detection";
+import { themes } from "@/lib/utils/carousel-themes";
 
 const defaultFeatures = [
   {
@@ -27,33 +27,42 @@ const defaultFeatures = [
 ];
 
 const BenefitsCarousel = () => {
-  const themeKey: ThemeKey = useMemo(() => getCurrentTheme(), []);
-  const themeConfig = themes[themeKey] ?? themes.default;
+  const activeThemes = useMemo(() => getActiveThemes(), []);
 
   const slides = useMemo(() => {
+    const themedSlides = activeThemes.flatMap((themeKey) => {
+      const themeConfig = themes[themeKey] ?? themes.default;
+      const badge = `Seasonal Spotlight • ${themeKey}`;
+
+      return [
+        {
+          key: `${themeKey}-1`,
+          badge,
+          heading: themeConfig.carouselSlides?.[0]?.heading ?? themeConfig.mainHeading,
+          description:
+            themeConfig.carouselSlides?.[0]?.description ?? themeConfig.mainDescription,
+          features: (themeConfig.features ?? []).slice(0, 3).map((f) => ({
+            title: f.title,
+          })),
+          image: themeConfig.images?.[0] ?? "/images/secure.png",
+        },
+        {
+          key: `${themeKey}-2`,
+          badge,
+          heading: themeConfig.carouselSlides?.[1]?.heading ?? themeConfig.mainHeading,
+          description:
+            themeConfig.carouselSlides?.[1]?.description ?? themeConfig.mainDescription,
+          features: (themeConfig.features ?? []).slice(0, 3).map((f) => ({
+            title: f.title,
+          })),
+          image:
+            themeConfig.images?.[1] ?? themeConfig.images?.[0] ?? "/images/teamwork.png",
+        },
+      ];
+    });
+
     return [
-      {
-        key: `${themeKey}-1`,
-        badge: `Seasonal Spotlight • ${themeKey}`,
-        heading: themeConfig.carouselSlides?.[0]?.heading ?? themeConfig.mainHeading,
-        description:
-          themeConfig.carouselSlides?.[0]?.description ?? themeConfig.mainDescription,
-        features: (themeConfig.features ?? []).slice(0, 3).map((f) => ({
-          title: f.title,
-        })),
-        image: themeConfig.images?.[0] ?? "/images/secure.png",
-      },
-      {
-        key: `${themeKey}-2`,
-        badge: `Seasonal Spotlight • ${themeKey}`,
-        heading: themeConfig.carouselSlides?.[1]?.heading ?? themeConfig.mainHeading,
-        description:
-          themeConfig.carouselSlides?.[1]?.description ?? themeConfig.mainDescription,
-        features: (themeConfig.features ?? []).slice(0, 3).map((f) => ({
-          title: f.title,
-        })),
-        image: themeConfig.images?.[1] ?? themeConfig.images?.[0] ?? "/images/teamwork.png",
-      },
+      ...themedSlides,
       {
         key: "default",
         badge: "Powering Next-Gen Fundraising",
@@ -64,7 +73,7 @@ const BenefitsCarousel = () => {
         image: "/images/donations.jpg",
       },
     ];
-  }, [themeConfig, themeKey]);
+  }, [activeThemes]);
 
   const autoplay = useRef(
     Autoplay({
