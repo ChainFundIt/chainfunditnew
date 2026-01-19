@@ -90,17 +90,17 @@ const themeConfigs: Record<string, ThemeConfig> = {
   },
   Valentine: {
     mainHeading: "Lead With Love This Pre-Valentine Season",
-    mainDescription: "Celebrate the season of love early by uplifting someone else. A small act of generosity can create a big change in someone’s life.",
+    mainDescription: "Celebrate Valentine's Day by uplifting someone else. A small act of generosity can create a big change in someone’s life.",
     carouselSlides: [
       {
-        heading: "Lead With Love This Pre-Valentine Season",
+        heading: "Lead With Love This Valentine's",
         description:
-          "Celebrate the season of love early by uplifting someone else. A small act of generosity can create a big change in someone’s life.",
+          "Celebrate Valentine's Day by uplifting someone else. A small act of generosity can create a big change in someone’s life.",
       },
       {
-        heading: "Turn Early Love Into Impact",
+        heading: "Turn Love Into Impact",
         description:
-          "Ahead of Valentine’s Day, let your love go beyond words. Support people, communities, and dreams that need care.",
+          "This Valentine's Day, let your love go beyond words. Support people, communities, and dreams that need care.",
       },
     ],
     images: [

@@ -112,6 +112,73 @@ export const getCurrentTheme = (manualOverride?: ThemeKey): ThemeKey => {
   return "default";
 };
 
+const DAYS_IN_ADVANCE_FOR_PREVIEW = 30;
+
+const getDaysUntilValentines = (now: Date): number | null => {
+  const year = now.getFullYear();
+  const todayUtc = Date.UTC(year, now.getMonth(), now.getDate());
+  const valentinesUtc = Date.UTC(year, 1, 14);
+
+  if (todayUtc > valentinesUtc) {
+    return null;
+  }
+
+  const diffDays = Math.ceil((valentinesUtc - todayUtc) / (1000 * 60 * 60 * 24));
+  return diffDays;
+};
+
+const getDaysUntilRamadanStart = (now: Date): number | null => {
+  for (let offset = 0; offset <= 45; offset += 1) {
+    const candidate = new Date(now);
+    candidate.setDate(now.getDate() + offset);
+    const hijriCandidate = toHijri(
+      candidate.getFullYear(),
+      candidate.getMonth() + 1,
+      candidate.getDate()
+    );
+
+    if (hijriCandidate.hm === 9 && hijriCandidate.hd === 1) {
+      return offset;
+    }
+  }
+
+  return null;
+};
+
+/**
+ * Get active themes for the current date
+ * Returns multiple seasonal themes when overlapping previews apply
+ */
+export const getActiveThemes = (): ThemeKey[] => {
+  const now = new Date();
+  const activeThemes: ThemeKey[] = [];
+
+  const daysUntilValentines = getDaysUntilValentines(now);
+  if (daysUntilValentines !== null && daysUntilValentines <= DAYS_IN_ADVANCE_FOR_PREVIEW) {
+    activeThemes.push("valentines");
+  }
+
+  try {
+    const hijriNow = toHijri(now.getFullYear(), now.getMonth() + 1, now.getDate());
+    if (hijriNow.hm === 9) {
+      activeThemes.push("iftar");
+    } else {
+      const daysUntilRamadan = getDaysUntilRamadanStart(now);
+      if (daysUntilRamadan !== null && daysUntilRamadan <= DAYS_IN_ADVANCE_FOR_PREVIEW) {
+        activeThemes.push("iftar");
+      }
+    }
+  } catch (error) {
+    console.warn("Failed to convert to Hijri date:", error);
+  }
+
+  if (activeThemes.length === 0) {
+    activeThemes.push(getCurrentTheme());
+  }
+
+  return Array.from(new Set(activeThemes));
+};
+
 /**
  * Get all available theme keys
  */

@@ -222,6 +222,8 @@ export async function GET(request: NextRequest) {
           )
           .limit(1);
 
+        const payoutEligibleStatus = campaign.status !== "under_review";
+
         return {
           ...campaign,
           currencyCode,
@@ -237,7 +239,10 @@ export async function GET(request: NextRequest) {
           payoutProvider,
           payoutConfig,
           availableForPayout:
-            payoutSupported && availableAmount > 0 && !activePayout,
+            payoutSupported &&
+            availableAmount > 0 &&
+            !activePayout &&
+            payoutEligibleStatus,
           activePayout,
         };
       })
@@ -378,6 +383,13 @@ export async function POST(request: NextRequest) {
         { error: "Campaign not found or unauthorized" },
         { status: 404 }
       );
+
+    if (campaign.status === "under_review") {
+      return NextResponse.json(
+        { error: "Payouts are disabled while this campaign is under review." },
+        { status: 403 }
+      );
+    }
 
     const donationsForCampaign = await db
       .select({

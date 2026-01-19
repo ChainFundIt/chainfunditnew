@@ -210,7 +210,7 @@ export default async function CareersPage() {
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button asChild className="bg-[#104109] px-6 py-3 rounded-full">
-                    <Link href="/doing-good">View Ambassador Role</Link>
+                    <Link href="/doinggood">View Ambassador Role</Link>
                   </Button>
                 </div>
               </div>
