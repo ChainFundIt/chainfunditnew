@@ -62,9 +62,9 @@ export const getCurrentTheme = (manualOverride?: ThemeKey): ThemeKey => {
     const hijriDay = hijriDate.hd; // Hijri day
     
     // Ramadan: 9th month of Islamic calendar (approximately March-April in Gregorian)
-    // Show theme for the entire month of Ramadan
+    // Show Iftar fundraiser theme for the entire month
     if (hijriMonth === 9) {
-      return "ramadan";
+      return "iftar";
     }
     
     // Eid al-Fitr: 1st-3rd of Shawwal (10th month)
@@ -123,6 +123,7 @@ export const getAvailableThemes = (): ThemeKey[] => {
     "eid",
     "easter",
     "ramadan",
+    "iftar",
     "newyear",
     "thanksgiving",
   ];

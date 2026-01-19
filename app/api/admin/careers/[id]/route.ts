@@ -22,10 +22,11 @@ const toList = (value: unknown) => {
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAdminAuthWith2FA(request);
+    const { id } = await context.params;
 
     const body = await request.json();
     const {
@@ -69,7 +70,7 @@ export async function PATCH(
     const [opening] = await db
       .update(careerOpenings)
       .set(updates)
-      .where(eq(careerOpenings.id, params.id))
+      .where(eq(careerOpenings.id, id))
       .returning();
 
     if (!opening) {
@@ -104,14 +105,15 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAdminAuthWith2FA(request);
+    const { id } = await context.params;
 
     const [deleted] = await db
       .delete(careerOpenings)
-      .where(eq(careerOpenings.id, params.id))
+      .where(eq(careerOpenings.id, id))
       .returning();
 
     if (!deleted) {
