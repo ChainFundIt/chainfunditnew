@@ -343,12 +343,12 @@ export default async function CareersPage() {
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-4">
-            <Button
+            {/* <Button
               asChild
               className="bg-white text-[#104109] hover:bg-gray-100 rounded-full px-8 py-4 h-auto"
             >
               <a href="mailto:careers@chainfundit.com">Contact careers</a>
-            </Button>
+            </Button> */}
             <Button
               asChild
               variant="outline"
