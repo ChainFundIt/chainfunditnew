@@ -155,6 +155,13 @@
       "when": 1768830432459,
       "tag": "0022_flippant_grey_gargoyle",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1768839892313,
+      "tag": "0022_romantic_king_cobra",
+      "breakpoints": true
     }
   ]
 }

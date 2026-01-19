@@ -3,6 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Heart, Share2, Eye, Calendar, User, Target, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatCurrencyWithConversion } from '@/lib/utils/currency';
@@ -56,6 +57,7 @@ interface CampaignCardProps {
 }
 
 export function CampaignCard({ campaign, viewMode, geolocation, convertedAmounts }: CampaignCardProps) {
+  const router = useRouter();
   const progressPercentage = campaign.stats?.progressPercentage || 
     Math.min(100, Math.round((campaign.currentAmount / campaign.goalAmount) * 100));
 
@@ -143,7 +145,7 @@ export function CampaignCard({ campaign, viewMode, geolocation, convertedAmounts
           </div>
 
           {/* Content */}
-          <div className="md:w-2/3 p-6 flex flex-col justify-between h-[400px]">
+          <div className="md:w-2/3 p-6 flex flex-col justify-between h-[400px]" onClick={() => router.push(`/campaign/${campaign.slug}`)}>
             <div>
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
@@ -226,7 +228,7 @@ export function CampaignCard({ campaign, viewMode, geolocation, convertedAmounts
 
   // Grid view - Updated design matching homepage
   return (
-    <div className="group rounded-2xl overflow-hidden bg-white border border-[#E8E8E8] hover:border-[#104901] hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col">
+    <div className="group rounded-2xl overflow-hidden bg-white border border-[#E8E8E8] hover:border-[#104901] hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col" onClick={() => router.push(`/campaign/${campaign.slug}`)}>
       {/* IMAGE SECTION */}
       <div className="relative w-full h-[200px] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
         {needsEmojiFallback(campaign.coverImageUrl) ? (
