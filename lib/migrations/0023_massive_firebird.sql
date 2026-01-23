@@ -1,0 +1,1 @@
+ALTER TABLE "ambassador_applications" ADD COLUMN "decision" varchar(20) DEFAULT 'pending' NOT NULL;

@@ -78,6 +78,7 @@ export async function POST(request: NextRequest) {
         introVideoFile: videoPayload,
         introVideoLink:
           formData.get("videoLink")?.toString().trim() || null,
+        decision: "pending",
       })
       .returning();
 

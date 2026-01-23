@@ -162,6 +162,13 @@
       "when": 1768839892313,
       "tag": "0022_romantic_king_cobra",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1769126431023,
+      "tag": "0023_massive_firebird",
+      "breakpoints": true
     }
   ]
 }
