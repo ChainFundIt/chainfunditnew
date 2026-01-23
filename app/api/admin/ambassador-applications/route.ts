@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { ambassadorApplications } from "@/lib/schema";
-import { and, desc, or, sql, count } from "drizzle-orm";
+import { and, desc, or, sql, count, eq } from "drizzle-orm";
 import { requireAdminAuthWith2FA } from "@/lib/admin-auth";
 
 const sanitizeFileMeta = (file: any) => {
@@ -19,6 +19,8 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
+    const decision = searchParams.get("decision") || "";
+    const sort = searchParams.get("sort") || "createdAt";
     const limit = Number(searchParams.get("limit") || 20);
     const offset = Number(searchParams.get("offset") || 0);
 
@@ -32,12 +34,27 @@ export async function GET(request: NextRequest) {
         )
       );
     }
+    if (decision && decision !== "all") {
+      conditions.push(eq(ambassadorApplications.decision, decision));
+    }
+
+    const decisionOrder = sql`CASE ${ambassadorApplications.decision}
+      WHEN 'pending' THEN 0
+      WHEN 'maybe' THEN 1
+      WHEN 'yes' THEN 2
+      WHEN 'no' THEN 3
+      ELSE 4
+    END`;
 
     const applications = await db
       .select()
       .from(ambassadorApplications)
       .where(conditions.length ? and(...conditions) : undefined)
-      .orderBy(desc(ambassadorApplications.createdAt))
+      .orderBy(
+        ...(sort === "decision"
+          ? [decisionOrder, desc(ambassadorApplications.createdAt)]
+          : [desc(ambassadorApplications.createdAt)])
+      )
       .limit(limit)
       .offset(offset);
 

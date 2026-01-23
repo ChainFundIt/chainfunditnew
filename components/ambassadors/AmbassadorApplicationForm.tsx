@@ -2,6 +2,13 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -97,48 +104,52 @@ export default function AmbassadorApplicationForm() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <label className="text-sm font-semibold text-[#1C1917]">
-            Full Name (required)
+            Full Name
           </label>
           <Input
             required
             value={formData.fullName}
+            className="h-10 bg-gray-50 rounded-lg border border-gray-300 text-xs focus:border-[#109104] focus:ring-[#109104] shadow-none outline-none placeholder:text-gray-400 transition-colors"
             onChange={(event) => handleChange("fullName", event.target.value)}
           />
         </div>
         <div className="space-y-2">
           <label className="text-sm font-semibold text-[#1C1917]">
-            Email Address (required)
+            Email Address
           </label>
           <Input
             required
             type="email"
             value={formData.email}
+            className="h-10 bg-gray-50 rounded-lg border border-gray-300 text-xs focus:border-[#109104] focus:ring-[#109104] shadow-none outline-none placeholder:text-gray-400 transition-colors"
             onChange={(event) => handleChange("email", event.target.value)}
           />
         </div>
         <div className="space-y-2">
           <label className="text-sm font-semibold text-[#1C1917]">
-            Phone Number (required)
+            Phone Number
           </label>
           <Input
             required
             value={formData.phone}
             onChange={(event) => handleChange("phone", event.target.value)}
+            className="h-10 bg-gray-50 rounded-lg border border-gray-300 text-xs focus:border-[#109104] focus:ring-[#109104] shadow-none outline-none placeholder:text-gray-400 transition-colors"
           />
         </div>
         <div className="space-y-2">
           <label className="text-sm font-semibold text-[#1C1917]">
-            State of Residence (required)
+            State of Residence
           </label>
           <Input
             required
             value={formData.state}
             onChange={(event) => handleChange("state", event.target.value)}
+            className="h-10 bg-gray-50 rounded-lg border border-gray-300 text-xs focus:border-[#109104] focus:ring-[#109104] shadow-none outline-none placeholder:text-gray-400 transition-colors"
           />
         </div>
         <div className="space-y-2">
           <label className="text-sm font-semibold text-[#1C1917]">
-            Age (required)
+            Age
           </label>
           <Input
             required
@@ -146,6 +157,7 @@ export default function AmbassadorApplicationForm() {
             min="16"
             value={formData.age}
             onChange={(event) => handleChange("age", event.target.value)}
+            className="h-10 bg-gray-50 rounded-lg border border-gray-300 text-xs focus:border-[#109104] focus:ring-[#109104] shadow-none outline-none placeholder:text-gray-400 transition-colors"
           />
         </div>
       </div>
@@ -153,7 +165,7 @@ export default function AmbassadorApplicationForm() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <label className="text-sm font-semibold text-[#1C1917]">
-            Mass Communication or related field?
+            Are you a student or graduate of Mass Communication or a related field?
           </label>
           <div className="flex gap-4 text-sm text-[#78716c]">
             {["Yes", "No"].map((value) => (
@@ -172,48 +184,54 @@ export default function AmbassadorApplicationForm() {
             ))}
           </div>
         </div>
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-[#1C1917]">
-            Do you create content on social media?
-          </label>
-          <div className="flex gap-4 text-sm text-[#78716c]">
-            {["Yes", "No"].map((value) => (
-              <label key={value} className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="createsContent"
-                  value={value}
-                  checked={formData.createsContent === value}
-                  onChange={(event) =>
-                    handleChange("createsContent", event.target.value)
-                  }
-                />
-                {value}
-              </label>
-            ))}
-          </div>
+      </div>
+      <div className="space-y-2">
+        <label className="text-sm font-semibold text-[#1C1917]">
+          Do you create content on social media (TikTok, Instagram, YouTube, etc.)?
+        </label>
+        <div className="flex gap-4 text-sm text-[#78716c]">
+          {["Yes", "No"].map((value) => (
+            <label key={value} className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="createsContent"
+                value={value}
+                checked={formData.createsContent === value}
+                onChange={(event) =>
+                  handleChange("createsContent", event.target.value)
+                }
+              />
+              {value}
+            </label>
+          ))}
         </div>
       </div>
 
       <div className="space-y-2">
         <label className="text-sm font-semibold text-[#1C1917]">
-          If yes, drop 1-2 handles or links
+          If yes, drop 1-2 handles or links to your content
         </label>
         <Input
           value={formData.handles}
           onChange={(event) => handleChange("handles", event.target.value)}
+          className="h-10 bg-gray-50 rounded-lg border border-gray-300 text-xs focus:border-[#109104] focus:ring-[#109104] shadow-none outline-none placeholder:text-gray-400 transition-colors"
         />
       </div>
 
       <div className="space-y-2">
         <label className="text-sm font-semibold text-[#1C1917]">
-          Why are you interested? (3-5 sentences)
+          Why are you interested?
+          <span className="text-xs text-[#78716c]">{" "}
+            Think of this as your informal cover letter — let your passion and voice shine! 
+            This should be a minimum of 200 words, and a maximum word count of 300
+          </span>
         </label>
         <Textarea
           required
           rows={5}
           value={formData.interest}
           onChange={(event) => handleChange("interest", event.target.value)}
+          className="h-10 bg-gray-50 rounded-lg border border-gray-300 text-xs focus:border-[#109104] focus:ring-[#109104] shadow-none outline-none placeholder:text-gray-400 transition-colors"
         />
       </div>
 
@@ -241,7 +259,8 @@ export default function AmbassadorApplicationForm() {
 
       <div className="space-y-2">
         <label className="text-sm font-semibold text-[#1C1917]">
-          If yes, briefly describe
+          If yes, briefly describe what you helped with and the impact it had.
+          <span className="text-xs text-[#78716c]">{" "}This should be a minimum of 200 words, and a maximum word count of 300</span>
         </label>
         <Textarea
           rows={3}
@@ -249,25 +268,32 @@ export default function AmbassadorApplicationForm() {
           onChange={(event) =>
             handleChange("helpedDescription", event.target.value)
           }
+          className="h-10 bg-gray-50 rounded-lg border border-gray-300 text-xs focus:border-[#109104] focus:ring-[#109104] shadow-none outline-none placeholder:text-gray-400 transition-colors"
         />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <label className="text-sm font-semibold text-[#1C1917]">
-            Upload your CV (PDF or DOCX only)
+            Upload your CV (.pdf, .doc, .docx only)
+            <span className="text-xs text-[#78716c]">{" "}(max size 5MB)</span>
           </label>
           <Input
             type="file"
+            required
             accept=".pdf,.doc,.docx"
             onChange={(event) =>
               setCvFile(event.target.files?.[0] || null)
             }
+            className="h-10 bg-gray-50 rounded-lg border border-gray-300 text-xs focus:border-[#109104] focus:ring-[#109104] shadow-none outline-none placeholder:text-gray-400 transition-colors"
           />
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <label className="text-sm font-semibold text-[#1C1917]">
-            Share a short video (under 2 minutes)
+            Share a short video introducing yourself and why you’d make a great ambassador
           </label>
           <Input
             type="file"
@@ -275,26 +301,53 @@ export default function AmbassadorApplicationForm() {
             onChange={(event) =>
               setVideoFile(event.target.files?.[0] || null)
             }
+            className="h-10 bg-gray-50 rounded-lg border border-gray-300 text-xs focus:border-[#109104] focus:ring-[#109104] shadow-none outline-none placeholder:text-gray-400 transition-colors"
+          />
+          <span className="text-xs text-[#78716c]">{" "}(under 2 minutes, max size 300MB)</span>
+
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-[#1C1917]">
+            Or paste a link to your video
+          </label>
+          <Input
+            type="url"
+            required
+            placeholder="https://..."
+            value={formData.videoLink}
+            onChange={(event) => handleChange("videoLink", event.target.value)}
+            className="h-10 bg-gray-50 rounded-lg border border-gray-300 text-xs focus:border-[#109104] focus:ring-[#109104] shadow-none outline-none placeholder:text-gray-400 transition-colors"
           />
         </div>
       </div>
 
-      <div className="space-y-2">
-        <label className="text-sm font-semibold text-[#1C1917]">
-          Or paste a video link
-        </label>
-        <Input
-          placeholder="https://..."
-          value={formData.videoLink}
-          onChange={(event) => handleChange("videoLink", event.target.value)}
-        />
-      </div>
 
-      {status === "success" && (
-        <div className="text-sm text-green-700">
-          Thanks! Your application has been submitted.
-        </div>
-      )}
+      <Dialog
+        open={status === "success"}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) setStatus("idle");
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Thank you for applying!</DialogTitle>
+            <DialogDescription className="text-sm text-[#78716c]">
+              We&apos;ve received your ambassador application. Our team reviews
+              applications on a rolling basis and will reach out if we need more
+              information.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              className="bg-[#104109] px-6 py-2 rounded-full h-auto"
+              onClick={() => setStatus("idle")}
+            >
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {status === "error" && (
         <div className="text-sm text-red-600">{errorMessage}</div>

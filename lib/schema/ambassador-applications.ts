@@ -25,6 +25,7 @@ export const ambassadorApplications = pgTable("ambassador_applications", {
   cvFile: jsonb("cv_file"),
   introVideoFile: jsonb("intro_video_file"),
   introVideoLink: text("intro_video_link"),
+  decision: varchar("decision", { length: 20 }).default("pending").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

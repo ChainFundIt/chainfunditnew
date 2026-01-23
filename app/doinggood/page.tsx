@@ -41,7 +41,7 @@ export default function AmbassadorPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button className="bg-[#104109] px-8 py-4 rounded-full h-auto">
+              <Button variant="outline" className="bg-[#104109] border-2 border-[#104109] text-white px-8 py-4 rounded-full h-auto">
                 <Link href="#application-form">
                   Apply Now
                 </Link>
@@ -249,10 +249,8 @@ export default function AmbassadorPage() {
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-4">
-            <Button className="bg-white text-[#104109] hover:bg-gray-100 rounded-full px-8 py-4 h-auto">
-              <Link
-                href="#application-form"
-              >
+            <Button variant="outline" className="bg-white border-2 border-[#104109] text-[#104109] hover:bg-[#104109] hover:text-white hover:border-2 hover:border-white px-8 py-4 rounded-full h-auto">
+              <Link href="#application-form">
                 Apply Now
               </Link>
             </Button>
