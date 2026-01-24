@@ -36,9 +36,6 @@ export async function notifyAdminsOfAmbassadorApplication(
 
     for (const adminUser of adminUsers) {
       const config = settingsMap.get(adminUser.id);
-      const emailEnabled = config ? config.emailNotificationsEnabled : true;
-      if (!emailEnabled) continue;
-
       const recipientEmail = config?.notificationEmail || adminUser.email;
       if (!recipientEmail) continue;
 
@@ -81,8 +78,8 @@ export async function sendAmbassadorApplicationConfirmation(
               <p>
                 If we need any additional information, we'll reach out to you.
               </p>
-              <p style="text-align: center;">
-                <a href="${appUrl}/doinggood" class="button">Learn More</a>
+              <p class="text-center text-white">
+                <a href="${appUrl}/doinggood" class="bg-brand-green-dark text-white px-4 py-2 rounded-md">Learn More</a>
               </p>
             </div>
             <div class="footer">

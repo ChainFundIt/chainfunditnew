@@ -79,9 +79,9 @@ export function UnifiedItemCard({
   const progressPercentage =
     isCampaign && item.goalAmount
       ? Math.min(
-          100,
-          Math.round((item.currentAmount || 0) / item.goalAmount) * 100
-        )
+        100,
+        Math.round((item.currentAmount || 0) / item.goalAmount) * 100
+      )
       : 0;
 
   // Check favourite status on mount (only if user is authenticated)
@@ -245,7 +245,7 @@ export function UnifiedItemCard({
           </div>
 
           {/* Content */}
-          <div className="md:w-2/3 p-6 flex flex-col justify-between h-[400px]">
+          <div className="md:w-2/3 p-6 flex flex-col justify-between h-[400px]" onClick={() => getItemUrl()}>
             <div>
               <div className="flex items-start justify-between mb-2">
                 <Link href={getItemUrl()}>
