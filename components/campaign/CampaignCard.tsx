@@ -118,7 +118,7 @@ export function CampaignCard({ campaign, viewMode, geolocation, convertedAmounts
 
   if (viewMode === 'list') {
     return (
-      <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden" onClick={() => router.push(`/campaign/${campaign.slug}`)}>
         <div className="flex flex-col md:flex-row">
           {/* Image */}
           <div className="md:w-1/3 h-[400px] relative">
@@ -145,7 +145,7 @@ export function CampaignCard({ campaign, viewMode, geolocation, convertedAmounts
           </div>
 
           {/* Content */}
-          <div className="md:w-2/3 p-6 flex flex-col justify-between h-[400px]" onClick={() => router.push(`/campaign/${campaign.slug}`)}>
+          <div className="md:w-2/3 p-6 flex flex-col justify-between h-[400px]">
             <div>
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">

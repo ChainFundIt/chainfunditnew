@@ -44,26 +44,52 @@ export async function generateMetadata({
 
   const campaignUrl = `${baseUrl}/campaign/${slug}`;
 
-  let coverImageUrl = campaignData.coverImageUrl;
-  if (coverImageUrl && !coverImageUrl.startsWith("http")) {
-    coverImageUrl = coverImageUrl.startsWith("/")
-      ? `${baseUrl}${coverImageUrl}`
-      : `${baseUrl}/${coverImageUrl}`;
-  }
+  const r2BaseUrl =
+    process.env.R2_PUBLIC_ACCESS_KEY ||
+    // Fallback used elsewhere in the codebase (`components/ui/r2-image.tsx`)
+    "https://pub-bc49c704eeac4df0a625097110e79d09.r2.dev";
 
-  const getProxiedImageUrl = (url: string | null | undefined): string | null => {
+  const normalizeCoverImageUrl = (url: string | null | undefined): string | null => {
     if (!url) return null;
-    
-    if (url.includes('r2.dev') || url.includes('pub-')) {
-      const encodedUrl = encodeURIComponent(url);
-      return `${baseUrl}/api/images?url=${encodedUrl}`;
+    let u = url.trim();
+    if (!u) return null;
+
+    // Fix common broken uploads: "undefined/<file>" should be served from R2 base URL.
+    if (u.startsWith("undefined/")) {
+      u = `${r2BaseUrl.replace(/\/$/, "")}/${u.replace(/^undefined\//, "")}`;
     }
-    
-    return url;
+
+    // If it's a relative URL, make it absolute.
+    if (!u.startsWith("http://") && !u.startsWith("https://")) {
+      u = u.startsWith("/") ? `${baseUrl}${u}` : `${baseUrl}/${u}`;
+    }
+
+    return u;
   };
 
-  const proxiedCoverImageUrl = getProxiedImageUrl(coverImageUrl);
+  const toProxiedOgImage = (absoluteUrl: string | null): string | null => {
+    if (!absoluteUrl) return null;
+    // Avoid double-proxying.
+    if (absoluteUrl.includes("/api/images?url=")) return absoluteUrl;
 
+    // Proxy external images through our domain so social crawlers can reliably fetch them.
+    // (Some crawlers struggle with redirects/CDNs/CORS; the proxy returns a clean 200 image.)
+    if (!absoluteUrl.startsWith(baseUrl)) {
+      return `${baseUrl}/api/images?url=${encodeURIComponent(absoluteUrl)}`;
+    }
+
+    // Still proxy known R2/public-bucket URLs, even if baseUrl differs.
+    if (absoluteUrl.includes("r2.dev") || absoluteUrl.includes("pub-")) {
+      return `${baseUrl}/api/images?url=${encodeURIComponent(absoluteUrl)}`;
+    }
+
+    return absoluteUrl;
+  };
+
+  const normalizedCover = normalizeCoverImageUrl(campaignData.coverImageUrl);
+  const proxiedCoverImageUrl = toProxiedOgImage(normalizedCover);
+
+  // Put cover first, but always include a fallback so previews still look good if crawlers can't fetch the cover.
   const images = proxiedCoverImageUrl
     ? [
         {
@@ -71,6 +97,12 @@ export async function generateMetadata({
           width: 1200,
           height: 630,
           alt: campaignData.title,
+        },
+        {
+          url: fallbackOgImageUrl,
+          width: 1200,
+          height: 630,
+          alt: "Chainfundit — Raise funds, support dreams",
         },
       ]
     : [
