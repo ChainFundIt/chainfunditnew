@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       videoFile = null;
     }
 
-    if (videoLink) {
+    if (videoLink && !videoFile) {
       try {
         const url = new URL(videoLink);
         if (!["http:", "https:"].includes(url.protocol)) {

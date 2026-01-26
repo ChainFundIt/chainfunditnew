@@ -57,6 +57,9 @@ export default function AmbassadorApplicationForm() {
       .split(/\s+/)
       .filter(Boolean).length;
 
+  const interestWordCount = countWords(formData.interest);
+  const helpedWordCount = countWords(formData.helpedDescription);
+
   const validateForm = () => {
     const errors: Record<string, string> = {};
     if (!formData.fullName.trim()) errors.fullName = "Full name is required.";
@@ -92,7 +95,7 @@ export default function AmbassadorApplicationForm() {
         "Video must be 20MB or less, or provide a link instead.";
     }
 
-    if (trimmedVideoLink) {
+    if (trimmedVideoLink && !videoFile) {
       try {
         const url = new URL(trimmedVideoLink);
         if (!["http:", "https:"].includes(url.protocol)) {
@@ -333,9 +336,20 @@ export default function AmbassadorApplicationForm() {
           onChange={(event) => handleChange("interest", event.target.value)}
           className="h-10 bg-gray-50 rounded-lg border border-gray-300 text-xs focus:border-[#109104] focus:ring-[#109104] shadow-none outline-none placeholder:text-gray-400 transition-colors"
         />
-        {fieldErrors.interest && (
-          <span className="text-xs text-red-600">{fieldErrors.interest}</span>
-        )}
+        <div className="flex items-center justify-between text-xs">
+          <span
+            className={
+              interestWordCount < 200 || interestWordCount > 300
+                ? "text-red-600"
+                : "text-[#78716c]"
+            }
+          >
+            {interestWordCount} / 300 words
+          </span>
+          {fieldErrors.interest && (
+            <span className="text-red-600">{fieldErrors.interest}</span>
+          )}
+        </div>
       </div>
 
       <div className="space-y-2">
@@ -373,11 +387,23 @@ export default function AmbassadorApplicationForm() {
           }
           className="h-10 bg-gray-50 rounded-lg border border-gray-300 text-xs focus:border-[#109104] focus:ring-[#109104] shadow-none outline-none placeholder:text-gray-400 transition-colors"
         />
-        {fieldErrors.helpedDescription && (
-          <span className="text-xs text-red-600">
-            {fieldErrors.helpedDescription}
+        <div className="flex items-center justify-between text-xs">
+          <span
+            className={
+              formData.helpedBefore === "Yes" &&
+              (helpedWordCount < 200 || helpedWordCount > 300)
+                ? "text-red-600"
+                : "text-[#78716c]"
+            }
+          >
+            {helpedWordCount} / 300 words
           </span>
-        )}
+          {fieldErrors.helpedDescription && (
+            <span className="text-red-600">
+              {fieldErrors.helpedDescription}
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
