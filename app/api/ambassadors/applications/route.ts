@@ -48,9 +48,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const videoLink = formData.get("videoLink")?.toString().trim();
+    const videoLink = formData.get("videoLink")?.toString().trim() || "";
     const cvFile = formData.get("cvFile");
-    const videoFile = formData.get("videoFile");
+    const rawVideoFile = formData.get("videoFile");
+    let videoFile = rawVideoFile instanceof File ? rawVideoFile : null;
 
     if (!cvFile) {
       return NextResponse.json(
@@ -64,6 +65,10 @@ export async function POST(request: NextRequest) {
         { error: "Video upload or link is required" },
         { status: 400 }
       );
+    }
+
+    if (videoLink && videoFile && videoFile.size > MAX_VIDEO_SIZE) {
+      videoFile = null;
     }
 
     if (videoLink) {
