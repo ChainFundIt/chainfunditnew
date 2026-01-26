@@ -48,8 +48,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const videoLink = formData.get("videoLink")?.toString().trim();
     const cvFile = formData.get("cvFile");
     const videoFile = formData.get("videoFile");
+
+    if (!cvFile) {
+      return NextResponse.json(
+        { error: "CV is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!videoFile && !videoLink) {
+      return NextResponse.json(
+        { error: "Video upload or link is required" },
+        { status: 400 }
+      );
+    }
+
+    if (videoLink) {
+      try {
+        const url = new URL(videoLink);
+        if (!["http:", "https:"].includes(url.protocol)) {
+          return NextResponse.json(
+            { error: "Video link must start with http:// or https://." },
+            { status: 400 }
+          );
+        }
+      } catch {
+        return NextResponse.json(
+          { error: "Video link must be a valid URL." },
+          { status: 400 }
+        );
+      }
+    }
 
     const [cvPayload, videoPayload] = await Promise.all([
       toFilePayload(cvFile instanceof File ? cvFile : null, MAX_CV_SIZE),
@@ -76,8 +108,7 @@ export async function POST(request: NextRequest) {
           formData.get("helpedDescription")?.toString().trim() || null,
         cvFile: cvPayload,
         introVideoFile: videoPayload,
-        introVideoLink:
-          formData.get("videoLink")?.toString().trim() || null,
+        introVideoLink: videoLink || null,
         decision: "pending",
       })
       .returning();
@@ -112,11 +143,16 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Ambassador application error:", error);
 
-    const message =
-      error instanceof Error && error.message === "File too large"
-        ? "File too large. Please upload a smaller file."
-        : "Failed to submit application";
+    if (error instanceof Error && error.message === "File too large") {
+      return NextResponse.json(
+        { error: "File too large. Please upload a smaller file." },
+        { status: 413 }
+      );
+    }
 
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to submit application" },
+      { status: 500 }
+    );
   }
 }
