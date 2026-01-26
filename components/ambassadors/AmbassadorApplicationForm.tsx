@@ -39,10 +39,13 @@ export default function AmbassadorApplicationForm() {
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    if (fieldErrors[field]) {
+    if (fieldErrors[field] || (field === "videoLink" && fieldErrors.video)) {
       setFieldErrors((prev) => {
         const next = { ...prev };
         delete next[field];
+        if (field === "videoLink") {
+          delete next.video;
+        }
         return next;
       });
     }
@@ -84,6 +87,11 @@ export default function AmbassadorApplicationForm() {
       errors.video = "Please upload a video or provide a link.";
     }
 
+    if (videoFile && !trimmedVideoLink && videoFile.size > MAX_VIDEO_SIZE) {
+      errors.video =
+        "Video must be 20MB or less, or provide a link instead.";
+    }
+
     if (trimmedVideoLink) {
       try {
         const url = new URL(trimmedVideoLink);
@@ -99,8 +107,8 @@ export default function AmbassadorApplicationForm() {
       errors.cvFile = "CV must be 5MB or less.";
     }
 
-    if (videoFile && videoFile.size > MAX_VIDEO_SIZE) {
-      errors.video = "Video must be 20MB or less.";
+    if (videoFile && trimmedVideoLink && videoFile.size > MAX_VIDEO_SIZE) {
+      // Link provided; ignore oversized file.
     }
 
     setFieldErrors(errors);
@@ -130,9 +138,12 @@ export default function AmbassadorApplicationForm() {
       payload.append("interest", formData.interest);
       payload.append("helpedBefore", formData.helpedBefore);
       payload.append("helpedDescription", formData.helpedDescription);
-      payload.append("videoLink", formData.videoLink);
+      const trimmedVideoLink = formData.videoLink.trim();
+      payload.append("videoLink", trimmedVideoLink);
       if (cvFile) payload.append("cvFile", cvFile);
-      if (videoFile) payload.append("videoFile", videoFile);
+      if (videoFile && (!trimmedVideoLink || videoFile.size <= MAX_VIDEO_SIZE)) {
+        payload.append("videoFile", videoFile);
+      }
 
       const response = await fetch("/api/ambassadors/applications", {
         method: "POST",
@@ -411,7 +422,7 @@ export default function AmbassadorApplicationForm() {
             className="h-10 bg-gray-50 rounded-lg border border-gray-300 text-xs focus:border-[#109104] focus:ring-[#109104] shadow-none outline-none placeholder:text-gray-400 transition-colors"
           />
           <span className="text-xs text-[#78716c]">
-            {" "}(under 2 minutes, max size 20MB)
+            {" "}(under 2 minutes, max size 20MB — or use a link)
           </span>
 
         </div>
