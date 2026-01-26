@@ -92,7 +92,7 @@ export default function AmbassadorApplicationForm() {
 
     if (videoFile && !trimmedVideoLink && videoFile.size > MAX_VIDEO_SIZE) {
       errors.video =
-        "Video must be 20MB or less, or provide a link instead.";
+        "The video file is too large. Please upload a smaller file, or provide a link instead.";
     }
 
     if (trimmedVideoLink && !videoFile) {
