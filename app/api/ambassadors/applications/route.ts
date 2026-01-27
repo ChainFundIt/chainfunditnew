@@ -131,18 +131,17 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    await Promise.all([
-      notifyAdminsOfAmbassadorApplication({
-        applicationId: application.id,
-        fullName,
-        email,
-        stateOfResidence: state,
-        hasCv: Boolean(cvPayload),
-        hasVideo: Boolean(videoPayload),
-        videoLink: formData.get("videoLink")?.toString().trim() || null,
-      }),
-      sendAmbassadorApplicationConfirmation(email, fullName),
-    ]);
+    await notifyAdminsOfAmbassadorApplication({
+      applicationId: application.id,
+      fullName,
+      email,
+      stateOfResidence: state,
+      hasCv: Boolean(cvPayload),
+      hasVideo: Boolean(videoPayload),
+      videoLink: formData.get("videoLink")?.toString().trim() || null,
+    });
+
+    await sendAmbassadorApplicationConfirmation(email, fullName);
 
     return NextResponse.json({ applicationId: application.id });
   } catch (error) {

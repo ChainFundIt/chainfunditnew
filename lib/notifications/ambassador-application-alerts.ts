@@ -34,13 +34,18 @@ export async function notifyAdminsOfAmbassadorApplication(
       adminConfigs.map((config) => [config.userId, config])
     );
 
-    for (const adminUser of adminUsers) {
-      const config = settingsMap.get(adminUser.id);
-      const recipientEmail = config?.notificationEmail || adminUser.email;
-      if (!recipientEmail) continue;
+    const recipients = adminUsers
+      .map((adminUser) => {
+        const config = settingsMap.get(adminUser.id);
+        return config?.notificationEmail || adminUser.email;
+      })
+      .filter(Boolean);
 
-      await sendAdminEmail(recipientEmail, data);
-    }
+    await Promise.allSettled(
+      recipients.map((recipientEmail) =>
+        sendAdminEmail(recipientEmail as string, data)
+      )
+    );
   } catch (error) {
     console.error("Error notifying admins of ambassador application:", error);
   }
