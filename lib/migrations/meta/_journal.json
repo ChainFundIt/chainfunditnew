@@ -169,6 +169,20 @@
       "when": 1769126431023,
       "tag": "0023_massive_firebird",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1769643240623,
+      "tag": "0024_wandering_vector",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1769644021546,
+      "tag": "0025_robust_the_hood",
+      "breakpoints": true
     }
   ]
 }

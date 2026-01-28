@@ -18,6 +18,7 @@ export const careerOpenings = pgTable("career_openings", {
   summary: text("summary"),
   responsibilities: jsonb("responsibilities"),
   requirements: jsonb("requirements"),
+  customFields: jsonb("custom_fields"),
   applyUrl: varchar("apply_url", { length: 500 }),
   isActive: boolean("is_active").default(true).notNull(),
   sortOrder: integer("sort_order").default(0).notNull(),

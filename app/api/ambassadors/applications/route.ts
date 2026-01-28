@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { ambassadorApplications, adminNotifications } from "@/lib/schema";
+import { ambassadorApplications } from "@/lib/schema";
 import {
   notifyAdminsOfAmbassadorApplication,
   sendAmbassadorApplicationConfirmation,
 } from "@/lib/notifications/ambassador-application-alerts";
+import { createAdminNotification } from "@/lib/notifications/application-notification-utils";
 
 export const runtime = "nodejs";
 
@@ -118,7 +119,7 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
-    await db.insert(adminNotifications).values({
+    await createAdminNotification({
       title: "New Ambassador Application",
       message: `${fullName} submitted an ambassador application.`,
       type: "user",
