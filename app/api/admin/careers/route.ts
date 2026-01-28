@@ -20,6 +20,19 @@ const toList = (value: unknown) => {
   return [];
 };
 
+const toCustomFields = (value: unknown) => {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const label = String((item as any).label || "").trim();
+      const fieldValue = String((item as any).value || "").trim();
+      if (!label || !fieldValue) return null;
+      return { label, value: fieldValue };
+    })
+    .filter(Boolean);
+};
+
 export async function GET(request: NextRequest) {
   try {
     await requireAdminAuthWith2FA(request);
@@ -68,6 +81,7 @@ export async function POST(request: NextRequest) {
       summary,
       responsibilities,
       requirements,
+      customFields,
       applyUrl,
       isActive = true,
       sortOrder = 0,
@@ -90,6 +104,7 @@ export async function POST(request: NextRequest) {
         summary: summary?.trim?.() || null,
         responsibilities: toList(responsibilities),
         requirements: toList(requirements),
+        customFields: toCustomFields(customFields),
         applyUrl: applyUrl?.trim?.() || null,
         isActive: Boolean(isActive),
         sortOrder: Number.isFinite(Number(sortOrder)) ? Number(sortOrder) : 0,

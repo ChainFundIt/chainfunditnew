@@ -69,6 +69,12 @@ const navigation = [
     current: false,
   },
   {
+    name: "Partnership Applications",
+    href: "/admin/partnership-applications",
+    icon: FileText,
+    current: false,
+  },
+  {
     name: "Ambassadors",
     href: "/admin/ambassadors",
     icon: Share,

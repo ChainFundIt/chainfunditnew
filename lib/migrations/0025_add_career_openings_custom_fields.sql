@@ -1,0 +1,2 @@
+ALTER TABLE "career_openings"
+ADD COLUMN "custom_fields" jsonb;

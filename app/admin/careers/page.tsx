@@ -33,6 +33,7 @@ interface CareerOpening {
   summary?: string | null;
   responsibilities?: string[] | null;
   requirements?: string[] | null;
+  customFields?: Array<{ label: string; value: string }> | null;
   applyUrl?: string | null;
   isActive: boolean;
   sortOrder: number;
@@ -48,6 +49,7 @@ const emptyForm = {
   summary: "",
   responsibilities: "",
   requirements: "",
+  customFields: [] as Array<{ label: string; value: string }>,
   applyUrl: "",
   isActive: true,
   sortOrder: 0,
@@ -59,7 +61,9 @@ export default function AdminCareersPage() {
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ ...emptyForm });
-
+  const [showNewField, setShowNewField] = useState(false);
+  const [newFieldLabel, setNewFieldLabel] = useState("");
+  const [newFieldValue, setNewFieldValue] = useState("");
   const employmentOptions = useMemo(
     () => ["Full-time", "Part-time", "Contract", "Internship", "Volunteer"],
     []
@@ -89,6 +93,33 @@ export default function AdminCareersPage() {
   const resetForm = () => {
     setForm({ ...emptyForm });
     setEditingId(null);
+    setShowNewField(false);
+    setNewFieldLabel("");
+    setNewFieldValue("");
+  };
+
+  const handleAddCustomField = () => {
+    const label = newFieldLabel.trim();
+    const value = newFieldValue.trim();
+    if (!label || !value) {
+      toast.error("Custom field label and value are required");
+      return;
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      customFields: [...prev.customFields, { label, value }],
+    }));
+    setNewFieldLabel("");
+    setNewFieldValue("");
+    setShowNewField(false);
+  };
+
+  const handleRemoveCustomField = (index: number) => {
+    setForm((prev) => ({
+      ...prev,
+      customFields: prev.customFields.filter((_, idx) => idx !== index),
+    }));
   };
 
   const handleSubmit = async () => {
@@ -108,6 +139,7 @@ export default function AdminCareersPage() {
         summary: form.summary.trim() || null,
         responsibilities: form.responsibilities.trim(),
         requirements: form.requirements.trim(),
+        customFields: form.customFields,
         applyUrl: form.applyUrl.trim() || null,
       };
 
@@ -145,6 +177,7 @@ export default function AdminCareersPage() {
       summary: opening.summary || "",
       responsibilities: (opening.responsibilities || []).join("\n"),
       requirements: (opening.requirements || []).join("\n"),
+      customFields: opening.customFields || [],
       applyUrl: opening.applyUrl || "",
       isActive: opening.isActive,
       sortOrder: opening.sortOrder ?? 0,
@@ -373,12 +406,77 @@ export default function AdminCareersPage() {
             </div>
 
             <div className="flex flex-wrap gap-3">
+              <div className="w-full space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-medium text-gray-700">
+                    Custom fields
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowNewField((prev) => !prev)}
+                  >
+                    {showNewField ? "Cancel" : "Add new field"}
+                  </Button>
+                </div>
+
+                {form.customFields.length > 0 && (
+                  <div className="space-y-2">
+                    {form.customFields.map((field, index) => (
+                      <div
+                        key={`${field.label}-${index}`}
+                        className="flex items-center justify-between gap-3 rounded-md border border-gray-200 px-3 py-2"
+                      >
+                        <div className="text-sm">
+                          <span className="font-medium">{field.label}:</span>{" "}
+                          {field.value}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveCustomField(index)}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {showNewField && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        Field label
+                      </label>
+                      <Input
+                        value={newFieldLabel}
+                        onChange={(event) => setNewFieldLabel(event.target.value)}
+                        placeholder="e.g. Reporting Line"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Field value</label>
+                      <Input
+                        value={newFieldValue}
+                        onChange={(event) => setNewFieldValue(event.target.value)}
+                        placeholder="e.g. Growth / Partnerships Lead"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Button onClick={handleAddCustomField}>
+                        Add field
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
               <Button onClick={handleSubmit} disabled={submitting}>
                 {submitting
                   ? "Saving..."
                   : editingId
-                  ? "Update Role"
-                  : "Add Role"}
+                    ? "Update Role"
+                    : "Add Role"}
               </Button>
               {editingId && (
                 <Button variant="outline" onClick={resetForm}>

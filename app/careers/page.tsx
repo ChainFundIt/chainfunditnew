@@ -216,12 +216,37 @@ export default async function CareersPage() {
               </div>
             )}
 
+            <div className="rounded-[40px] border border-[#f5f5f4] bg-[#FDFBF7] p-8 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between lg:col-span-2">
+              <div className="space-y-3">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-100 text-[#A16207] text-xs font-bold">
+                  OPEN ROLE
+                </div>
+                <div className="font-jakarta font-bold text-[28px] leading-[34px] text-[#1C1917]">
+                  Partnerships &amp; Growth Associate
+                </div>
+                <div className="text-[#78716c] max-w-[760px]">
+                  Support the expansion of ChainFundIt by onboarding charities,
+                  community organisations, and individual campaigners.
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button asChild className="bg-[#104109] p-6 rounded-full">
+                  <Link href="/careers/partnerships-growth-associate">
+                    View Role 
+                  </Link>
+                </Button>
+              </div>
+            </div>
+
             {openings.map((opening) => {
               const responsibilities = Array.isArray(opening.responsibilities)
                 ? opening.responsibilities
                 : [];
               const requirements = Array.isArray(opening.requirements)
                 ? opening.requirements
+                : [];
+              const customFields = Array.isArray(opening.customFields)
+                ? opening.customFields
                 : [];
 
               return (
@@ -287,6 +312,19 @@ export default async function CareersPage() {
                           <li key={index}>{item}</li>
                         ))}
                       </ul>
+                    </div>
+                  )}
+
+                  {customFields.length > 0 && (
+                    <div className="space-y-2">
+                      {customFields.map((field, index) => (
+                        <div key={`${field.label}-${index}`} className="text-sm">
+                          <span className="font-semibold text-[#1C1917]">
+                            {field.label}:
+                          </span>{" "}
+                          <span className="text-[#78716c]">{field.value}</span>
+                        </div>
+                      ))}
                     </div>
                   )}
 

@@ -1,0 +1,23 @@
+CREATE TABLE "partnership_applications" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"full_name" varchar(255) NOT NULL,
+	"email" varchar(255) NOT NULL,
+	"phone" varchar(50) NOT NULL,
+	"city_state" varchar(255) NOT NULL,
+	"availability" varchar(20) NOT NULL,
+	"start_timeline" varchar(30) NOT NULL,
+	"motivation" text NOT NULL,
+	"targets_comfort" boolean NOT NULL,
+	"explain_chainfundit" text NOT NULL,
+	"respond_to_charity" text NOT NULL,
+	"dm_to_charity" text NOT NULL,
+	"message_to_family" text NOT NULL,
+	"convinced_before" text NOT NULL,
+	"handle_rejection" text NOT NULL,
+	"hours_per_week" integer NOT NULL,
+	"has_internet" boolean NOT NULL,
+	"meaning_of_doing_good" text NOT NULL,
+	"additional_info" text,
+	"decision" varchar(20) DEFAULT 'pending' NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL
+);

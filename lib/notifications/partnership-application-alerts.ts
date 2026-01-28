@@ -4,27 +4,25 @@ import {
 } from "@/lib/notifications/application-notification-utils";
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://chainfundit.com";
 
-interface AmbassadorApplicationEmailData {
+interface PartnershipApplicationEmailData {
   fullName: string;
   email: string;
-  stateOfResidence: string;
-  hasCv: boolean;
-  hasVideo: boolean;
-  videoLink?: string | null;
+  cityState: string;
+  availability: string;
   applicationId: string;
 }
 
-export async function notifyAdminsOfAmbassadorApplication(
-  data: AmbassadorApplicationEmailData
+export async function notifyAdminsOfPartnershipApplication(
+  data: PartnershipApplicationEmailData
 ) {
   try {
     await sendAdminEmail(data);
   } catch (error) {
-    console.error("Error notifying admins of ambassador application:", error);
+    console.error("Error notifying admins of partnership application:", error);
   }
 }
 
-export async function sendAmbassadorApplicationConfirmation(
+export async function sendPartnershipApplicationConfirmation(
   recipientEmail: string,
   fullName: string
 ) {
@@ -50,14 +48,11 @@ export async function sendAmbassadorApplicationConfirmation(
             <div class="content">
               <p>Hello ${fullName},</p>
               <p>
-                Thanks for applying to become a ChainFundIt Ambassador. We have
-                received your application and will review it shortly.
+                Thanks for applying for the Partnerships & Growth Associate role.
+                We have received your application and will review it shortly.
               </p>
-              <p>
-                If we need any additional information, we'll reach out to you.
-              </p>
-              <p class="text-center text-white">
-                <a href="${appUrl}/doinggood" class="bg-brand-green-dark text-white px-4 py-2 rounded-md">Learn More</a>
+              <p style="text-align: center;">
+                <a href="${appUrl}/careers" class="button">View Careers</a>
               </p>
             </div>
             <div class="footer">
@@ -70,17 +65,17 @@ export async function sendAmbassadorApplicationConfirmation(
 
     await sendApplicantEmail({
       recipientEmail,
-      subject: "We received your ambassador application",
+      subject: "We received your application",
       html,
     });
   } catch (error) {
-    console.error("Error sending ambassador confirmation email:", error);
+    console.error("Error sending partnership confirmation email:", error);
   }
 }
 
-async function sendAdminEmail(data: AmbassadorApplicationEmailData) {
-  const adminUrl = `${appUrl}/admin/ambassador-applications`;
-  const subject = `New Ambassador Application: ${data.fullName}`;
+async function sendAdminEmail(data: PartnershipApplicationEmailData) {
+  const adminUrl = `${appUrl}/admin/partnership-applications`;
+  const subject = `New Partnerships & Growth Application: ${data.fullName}`;
   const html = `
     <!DOCTYPE html>
     <html>
@@ -99,24 +94,18 @@ async function sendAdminEmail(data: AmbassadorApplicationEmailData) {
       <body>
         <div class="container">
           <div class="header">
-            <h1>New Ambassador Application</h1>
+            <h1>New Partnership Application</h1>
           </div>
           <div class="content">
-            <p>A new ambassador application has been submitted.</p>
+            <p>A new Partnerships & Growth Associate application has been submitted.</p>
             <div class="details">
               <div class="row"><span class="label">Name:</span><span>${data.fullName}</span></div>
               <div class="row"><span class="label">Email:</span><span>${data.email}</span></div>
-              <div class="row"><span class="label">State:</span><span>${data.stateOfResidence}</span></div>
-              <div class="row"><span class="label">CV:</span><span>${data.hasCv ? "Yes" : "No"}</span></div>
-              <div class="row"><span class="label">Video:</span><span>${data.hasVideo ? "Yes" : "No"}</span></div>
-              ${
-                data.videoLink
-                  ? `<div class="row"><span class="label">Video link:</span><span>${data.videoLink}</span></div>`
-                  : ""
-              }
+              <div class="row"><span class="label">City/State:</span><span>${data.cityState}</span></div>
+              <div class="row"><span class="label">Availability:</span><span>${data.availability}</span></div>
             </div>
             <div style="text-align: center;">
-              <a href="${adminUrl}" class="button">View Applications</a>
+              <a href="${adminUrl}" class="button">Review applications</a>
             </div>
           </div>
         </div>

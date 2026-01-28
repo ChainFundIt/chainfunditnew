@@ -20,6 +20,19 @@ const toList = (value: unknown) => {
   return [];
 };
 
+const toCustomFields = (value: unknown) => {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const label = String((item as any).label || "").trim();
+      const fieldValue = String((item as any).value || "").trim();
+      if (!label || !fieldValue) return null;
+      return { label, value: fieldValue };
+    })
+    .filter(Boolean);
+};
+
 export async function PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -37,6 +50,7 @@ export async function PATCH(
       summary,
       responsibilities,
       requirements,
+      customFields,
       applyUrl,
       isActive,
       sortOrder,
@@ -58,6 +72,9 @@ export async function PATCH(
     }
     if (requirements !== undefined) {
       updates.requirements = toList(requirements);
+    }
+    if (customFields !== undefined) {
+      updates.customFields = toCustomFields(customFields);
     }
     if (typeof applyUrl === "string") updates.applyUrl = applyUrl.trim();
     if (typeof isActive === "boolean") updates.isActive = isActive;
