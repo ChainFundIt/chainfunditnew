@@ -203,7 +203,7 @@ export function UnifiedItemCard({
 
   if (viewMode === "list") {
     return (
-      <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden" onClick={() => router.push(getItemUrl())}>
         <div className="flex flex-col md:flex-row">
           {/* Image */}
           <div className="md:w-1/3 h-[400px] relative">
@@ -245,14 +245,12 @@ export function UnifiedItemCard({
           </div>
 
           {/* Content */}
-          <div className="md:w-2/3 p-6 flex flex-col justify-between h-[400px]" onClick={() => getItemUrl()}>
+          <div className="md:w-2/3 p-6 flex flex-col justify-between h-[400px]">
             <div>
               <div className="flex items-start justify-between mb-2">
-                <Link href={getItemUrl()}>
                   <h3 className="text-2xl font-bold text-gray-900 hover:text-[#104901] transition-colors line-clamp-2">
                     {item.title}
                   </h3>
-                </Link>
               </div>
 
               <p className="text-gray-600 mb-4 line-clamp-3">
@@ -293,7 +291,7 @@ export function UnifiedItemCard({
   // Campaign cards
   if (isCampaign) {
     return (
-      <div className="group rounded-2xl overflow-hidden bg-white border border-[#E8E8E8] hover:border-[#104901] hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col">
+      <div className="group rounded-2xl overflow-hidden bg-white border border-[#E8E8E8] hover:border-[#104901] hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col" onClick={() => router.push(getItemUrl())}>
         {/* IMAGE SECTION */}
         <div className="relative w-full h-[200px] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
           {needsFallback ? (

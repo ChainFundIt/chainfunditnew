@@ -245,9 +245,9 @@ export default function CharityDetailPage() {
             {/* Header */}
             <div className="bg-white rounded-2xl p-8 border border-gray-200">
               <div className="flex items-start gap-4 mb-6">
-                {charity.logo && (
+                {charity?.logo && (
                   <Image
-                    src={charity.logo}
+                    src={charity?.logo}
                     alt={charity.name}
                     className="h-20 w-20 rounded-lg object-cover flex-shrink-0"
                     width={80}

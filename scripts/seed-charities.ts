@@ -122,8 +122,16 @@ async function cacheCharityLogoToR2(charity: NewCharity): Promise<string | undef
     return existingLogo;
   }
   
-  // If R2 is not configured, return the original logo
+  // If R2 is not configured, avoid Clearbit and fallback to favicon when possible
   if (!canUploadToR2()) {
+    if (isClearbitLogo(existingLogo)) {
+      const domain = safeDomainFromWebsite(charity.website);
+      if (domain) {
+        const [fallbackUrl] = getFaviconFallbackUrls(domain);
+        console.log(`⚠️  R2 not configured, using favicon for ${charity.name}: ${fallbackUrl}`);
+        return fallbackUrl;
+      }
+    }
     console.log(`⚠️  R2 not configured, using original logo for ${charity.name}: ${existingLogo}`);
     return existingLogo;
   }

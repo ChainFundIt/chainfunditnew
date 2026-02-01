@@ -113,7 +113,7 @@ type CampaignFormData = {
   video: string;
   story: string;
   isChained: boolean;
-  chainerCommissionRate: number;
+  chainerCommissionRate: number | "";
 };
 
 const tabs = ["S", "M", "L"];
@@ -158,7 +158,7 @@ export default function CreateCampaignPage() {
     video: "",
     story: "",
     isChained: false,
-    chainerCommissionRate: 0,
+    chainerCommissionRate: "",
   });
 
   const [uploadedFiles, setUploadedFiles] = useState({
@@ -733,17 +733,18 @@ export default function CreateCampaignPage() {
                     </label>
                     <input
                       type="number"
-                      min={0}
                       max={10}
                       value={formData.chainerCommissionRate}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const value = e.target.value;
                         handleFieldChange(
                           "chainerCommissionRate",
-                          +e.target.value
-                        )
-                      }
-                      className="w-full md:w-64 px-4 py-3 rounded-lg bg-[#F5F5F5] font-medium text-lg text-[#5F8555] placeholder:text-[#5F8555] focus:outline-none focus:ring-2 focus:ring-[#5F8555]"
+                          value === "" ? "" : Number(value)
+                        );
+                      }}
+                      className="w-full md:w-64 px-4 py-3 rounded-lg bg-[#F5F5F5] font-medium text-lg text-[#5F8555] placeholder:text-[#5F8555] focus:outline-none focus:ring-2 focus:ring-[#5F8555] appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
+                    <span className="text-xs text-[#104109]">Commission Rate must be between 0 - 10%</span>
                   </div>
                 )}
               </div>

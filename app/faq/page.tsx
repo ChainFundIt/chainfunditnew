@@ -27,6 +27,7 @@ import {
   SelectGroup,
 } from "@/components/ui/select";
 import Footer from "@/components/layout/Footer";
+import Link from "next/link";
 
 const faqCategories = [
   { id: "general", name: "General", icon: HelpCircle },
@@ -140,7 +141,7 @@ const faqDataByCategory = {
       id: 6,
       question: "Can I get a refund for my donation?",
       answer:
-        "Donations on ChainFundIt are generally non-refundable, as they are considered voluntary gifts. However, if there was an error (such as a duplicate charge or donation to the wrong campaign), please contact us at <a href='mailto:campaigns@chainfundit.com'>campaigns@chainfundit.com</a> within 48 hours, and we'll do our best to help.",
+        "Donations on ChainFundIt are generally non-refundable, as they are considered voluntary gifts. However, if there was an error (such as a duplicate charge or donation to the wrong campaign), please contact us at campaigns@chainfundit.com within 48 hours, and we'll do our best to help.",
     },
   ],
   campaigns: [
@@ -148,7 +149,7 @@ const faqDataByCategory = {
       id: 6,
       question: "How do I create a campaign?",
       answer:
-        "Click the &quot;Create Campaign&quot; button, fill in your campaign details, upload images, set your funding goal, and submit. Your campaign will go live immediately.",
+        "Click the Create Campaign button, fill in your campaign details, upload images, set your funding goal, and submit. Your campaign will go live immediately.",
     },
     {
       id: 7,
@@ -274,11 +275,10 @@ export default function FAQPage() {
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                    selectedCategory === category.id
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedCategory === category.id
                       ? "bg-[#104109] text-white shadow-lg"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
+                    }`}
                 >
                   <Icon className="h-4 w-4" />
                   {category.name}
@@ -295,9 +295,8 @@ export default function FAQPage() {
           </h2>
           <p className="text-gray-600 text-base">
             {selectedCategory !== "all"
-              ? `in ${
-                  faqCategories.find((c) => c.id === selectedCategory)?.name
-                }`
+              ? `in ${faqCategories.find((c) => c.id === selectedCategory)?.name
+              }`
               : ""}
           </p>
         </div>
@@ -408,7 +407,7 @@ export default function FAQPage() {
               </div>
 
               <div className="text-[#059669] font-bold text-base flex gap-2 items-center cursor-pointer mt-auto">
-                campaigns@chainfundit.com
+                <Link href='mailto:campaigns@chainfundit.com'>campaigns@chainfundit.com</Link>
                 <ArrowRight size={14} color="#059669" />
               </div>
             </div>
@@ -427,7 +426,7 @@ export default function FAQPage() {
               </div>
 
               <div className="text-[#059669] font-bold text-base flex gap-2 items-center cursor-pointer mt-auto">
-                +44 20 3838 0360
+                <Link href='tel:+234(0)8090986009'>+234 (0) 809 098 6009</Link>
                 <ArrowRight size={14} color="#059669" />
               </div>
             </div>
@@ -446,7 +445,7 @@ export default function FAQPage() {
               </div>
 
               <div className="text-[#059669] font-bold text-base flex gap-2 items-center cursor-pointer mt-auto">
-                Start Chat
+                <Link href='https://wa.me/+2348090986009'>Start Chat</Link>
                 <ArrowRight size={14} color="#059669" />
               </div>
             </div>

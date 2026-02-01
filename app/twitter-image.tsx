@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
+export const revalidate = 86400;
 
 export const size = {
   width: 1200,
@@ -9,21 +10,13 @@ export const size = {
 
 export const contentType = "image/png";
 
-function toBase64(input: string) {
-  const bytes = new TextEncoder().encode(input);
-  let binary = "";
-  for (const b of bytes) binary += String.fromCharCode(b);
-  return btoa(binary);
-}
-
 async function getLogoDataUri() {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://chainfundit.com";
-  const logoUrl = new URL("/images/logo.svg", appUrl).toString();
-  const svg = await fetch(logoUrl, { cache: "force-cache" }).then((r) => {
-    if (!r.ok) throw new Error(`Failed to fetch logo SVG: ${r.status}`);
-    return r.text();
-  });
-  return `data:image/svg+xml;base64,${toBase64(svg)}`;
+  // IMPORTANT: Don't fetch from the public site here (can be flaky and cause preview images to fail).
+  // Bundle the SVG with the route and embed it as a data URI.
+  const svg = await fetch(new URL("./og-assets/logo.svg", import.meta.url)).then((r) =>
+    r.text(),
+  );
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
 export default async function TwitterImage() {
