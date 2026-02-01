@@ -110,16 +110,16 @@ export function SignupForm({
           </p>
         </div>
 
-        <OAuthButtons mode="signup" />
+        {/* <OAuthButtons mode="signup" /> */}
 
-        <div className="relative py-2">
+        {/* <div className="relative py-2">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-300"></div>
           </div>
           <div className="relative flex justify-center text-xs">
             <span className="px-2 bg-white text-gray-500 font-medium">or continue with email</span>
           </div>
-        </div>
+        </div> */}
 
         <div className="grid gap-2">
           <Label

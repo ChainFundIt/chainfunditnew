@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { useCharities, useCharityCategories } from "@/hooks/use-charities";
 import Footer from "@/components/layout/Footer";
+import { useRouter } from "next/navigation";
 // Category icon mapping
 const categoryIcons: Record<string, any> = {
   Health: Stethoscope,
@@ -64,6 +65,7 @@ export default function VirtualGivingMallPage() {
     })),
   ];
   const filteredCharities = charities;
+  const router = useRouter();
   return (
     <div className="font-jakarta">
       <Navbar />
@@ -233,6 +235,7 @@ export default function VirtualGivingMallPage() {
                 return (
                   <div
                     key={charity.id}
+                    onClick={() => router.push(`/virtual-giving-mall/${charity.slug}`)}
                     className="group rounded-2xl overflow-hidden bg-white border border-[#E8E8E8] hover:border-[#104901] hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col"
                   >
                     {/* IMAGE SECTION */}

@@ -1,53 +1,29 @@
 import { ImageResponse } from "next/og";
-import { db } from "@/lib/db";
-import { campaigns } from "@/lib/schema";
-import { eq } from "drizzle-orm";
 
 export const runtime = "edge";
+export const revalidate = 86400;
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-function toBase64(input: string) {
-  const bytes = new TextEncoder().encode(input);
-  let binary = "";
-  for (const b of bytes) binary += String.fromCharCode(b);
-  return btoa(binary);
-}
-
 async function getLogoDataUri() {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://chainfundit.com";
-  const logoUrl = new URL("/images/logo.svg", appUrl).toString();
-  const svg = await fetch(logoUrl, { cache: "force-cache" }).then((r) => {
-    if (!r.ok) throw new Error(`Failed to fetch logo SVG: ${r.status}`);
-    return r.text();
-  });
-  return `data:image/svg+xml;base64,${toBase64(svg)}`;
+  const svg = await fetch(new URL("../../og-assets/logo.svg", import.meta.url)).then((r) =>
+    r.text(),
+  );
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
-function normalizeCoverUrl(coverImageUrl: string | null | undefined) {
-  if (!coverImageUrl) return null;
-  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://chainfundit.com").replace(
-    /\/$/,
-    "",
-  );
-
-  let u = coverImageUrl.trim();
-  if (!u) return null;
-
-  const r2BaseUrl =
-    process.env.R2_PUBLIC_ACCESS_KEY ||
-    "https://pub-bc49c704eeac4df0a625097110e79d09.r2.dev";
-
-  if (u.startsWith("undefined/")) {
-    u = `${r2BaseUrl.replace(/\/$/, "")}/${u.replace(/^undefined\//, "")}`;
-  }
-
-  if (!u.startsWith("http://") && !u.startsWith("https://")) {
-    u = u.startsWith("/") ? `${baseUrl}${u}` : `${baseUrl}/${u}`;
-  }
-
-  return u;
+function slugToTitle(slug: string) {
+  const decoded = decodeURIComponent(slug);
+  const words = decoded
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ")
+    .filter(Boolean);
+  if (!words.length) return "Chainfundit";
+  const titled = words.map((w) => w.charAt(0).toUpperCase() + w.slice(1));
+  return titled.join(" ");
 }
 
 export default async function CampaignOpenGraphImage({
@@ -56,21 +32,12 @@ export default async function CampaignOpenGraphImage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [campaign] = await db
-    .select({
-      title: campaigns.title,
-      subtitle: campaigns.subtitle,
-      coverImageUrl: campaigns.coverImageUrl,
-    })
-    .from(campaigns)
-    .where(eq(campaigns.slug, slug))
-    .limit(1);
-
-  const title = campaign?.title || "Chainfundit";
-  const subtitle = campaign?.subtitle || "Raise funds, support dreams";
+  // IMPORTANT: Don't hit the database here. Social scrapers are sensitive to latency/timeouts.
+  // We render a deterministic branded image (logo + title) based on the slug.
+  const title = slugToTitle(slug);
+  const subtitle = "Support this campaign on Chainfundit";
 
   const logoDataUri = await getLogoDataUri().catch(() => null);
-  const coverUrl = normalizeCoverUrl(campaign?.coverImageUrl);
 
   return new ImageResponse(
     (
@@ -87,21 +54,7 @@ export default async function CampaignOpenGraphImage({
           position: "relative",
         }}
       >
-        {coverUrl ? (
-          <img
-            src={coverUrl}
-            alt=""
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-            }}
-          />
-        ) : null}
-
-        {/* dark overlay for readability */}
+        {/* overlay for readability */}
         <div
           style={{
             position: "absolute",

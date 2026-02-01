@@ -16,82 +16,78 @@ if (!process.env.DATABASE_URL) {
 
 import { db } from '@/lib/db';
 import { charities } from '@/lib/schema/charities';
-import { eq, isNull, or } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 /**
- * Script to fix charity logos that may have been lost
- * This restores logos from the seed data without attempting R2 uploads
+ * Script to replace Clearbit logo URLs with favicon-based URLs.
+ * Clearbit often 403s, and the UI hides clearbit URLs by design.
  */
 
-const charityLogos: Record<string, string> = {
-  'save-the-children': 'https://logo.clearbit.com/savethechildren.org',
-  'doctors-without-borders': 'https://logo.clearbit.com/doctorswithoutborders.org',
-  'world-wildlife-fund': 'https://logo.clearbit.com/worldwildlife.org',
-  'unicef': 'https://logo.clearbit.com/unicef.org',
-  'oxfam-international': 'https://logo.clearbit.com/oxfam.org',
-  'care-international': 'https://logo.clearbit.com/care.org',
-  'plan-international': 'https://logo.clearbit.com/plan-international.org',
-  'water-org': 'https://logo.clearbit.com/water.org',
-  'islamic-relief-worldwide': 'https://logo.clearbit.com/islamic-relief.org',
-  'nigerian-red-cross-society': 'https://www.google.com/s2/favicons?domain=redcrossnigeria.org&sz=256',
-  'tony-elumelu-foundation': 'https://logo.clearbit.com/tonyelumelufoundation.org',
-  'slum2school-africa': 'https://logo.clearbit.com/slum2school.org',
-  'fate-foundation': 'https://logo.clearbit.com/fatefoundation.org',
-  'project-pink-blue': 'https://logo.clearbit.com/projectpinkblue.org',
+const logoOverrides: Record<string, string> = {
   'mentally-aware-nigeria-initiative': '/images/MANI.png',
-  'she-writes-woman': 'https://logo.clearbit.com/shewriteswoman.org',
-  'the-bloom-foundation': 'https://logo.clearbit.com/thebloomfoundation.org',
-  'african-leadership-academy': 'https://logo.clearbit.com/africanleadershipacademy.org',
   'education-as-a-vaccine': '/images/EV.png',
-  'feeding-america': 'https://logo.clearbit.com/feedingamerica.org',
-  'habitat-for-humanity': 'https://logo.clearbit.com/habitat.org',
-  'american-red-cross': 'https://logo.clearbit.com/redcross.org',
-  'the-nature-conservancy': 'https://logo.clearbit.com/nature.org',
-  'direct-relief': 'https://logo.clearbit.com/directrelief.org',
-  'goodwill-industries': 'https://logo.clearbit.com/goodwill.org',
-  'room-to-read': 'https://logo.clearbit.com/roomtoread.org',
-  'kiva': 'https://logo.clearbit.com/kiva.org',
-  'charity-water': 'https://logo.clearbit.com/charitywater.org',
-  'heifer-international': 'https://logo.clearbit.com/heifer.org',
-  'fomwan-orphanage': 'https://www.google.com/s2/favicons?domain=fomwanofficial.org&sz=256',
 };
+
+function isClearbitLogo(url?: string | null): boolean {
+  return Boolean(url && url.includes('logo.clearbit.com'));
+}
+
+function safeDomainFromWebsite(website?: string | null): string | null {
+  if (!website) return null;
+  try {
+    const u = new URL(website);
+    return u.hostname.replace(/^www\./, '');
+  } catch {
+    return null;
+  }
+}
+
+function getFaviconUrlForDomain(domain: string): string {
+  return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=256`;
+}
 
 async function fixCharityLogos() {
   try {
     console.log('🔧 Fixing charity logos...\n');
 
-    const allCharities = await db.query.charities.findMany();
+    const clearbitCharities = await db
+      .select()
+      .from(charities)
+      .where(sql`${charities.logo} LIKE '%logo.clearbit.com%'`);
+
+    if (clearbitCharities.length === 0) {
+      console.log('✅ No charities found with Clearbit logos.');
+      return;
+    }
 
     let fixed = 0;
     let skipped = 0;
 
-    for (const charity of allCharities) {
-      const expectedLogo = charityLogos[charity.slug];
-      
-      // Only update if:
-      // 1. We have an expected logo for this charity
-      // 2. The current logo is missing, empty, or null
-      const needsUpdate = expectedLogo && (!charity.logo || charity.logo.trim() === '');
+    for (const charity of clearbitCharities) {
+      const overrideLogo = logoOverrides[charity.slug];
+      const domain = safeDomainFromWebsite(charity.website);
+      const fallbackLogo = domain ? getFaviconUrlForDomain(domain) : null;
+      const nextLogo = overrideLogo || fallbackLogo;
 
-      if (needsUpdate) {
+      if (nextLogo && isClearbitLogo(charity.logo)) {
         await db.update(charities)
           .set({ 
-            logo: expectedLogo,
+            logo: nextLogo,
             updatedAt: new Date(),
           })
           .where(eq(charities.id, charity.id));
         
-        console.log(`✅ Fixed logo for ${charity.name}: ${expectedLogo}`);
+        console.log(`✅ Replaced logo for ${charity.name}: ${nextLogo}`);
         fixed++;
-      } else if (expectedLogo) {
-        console.log(`⏭️  Skipped ${charity.name} (already has logo: ${charity.logo?.substring(0, 50)}...)`);
+      } else if (nextLogo) {
+        console.log(`⏭️  Skipped ${charity.name} (current logo is not clearbit)`);
         skipped++;
       } else {
-        console.log(`⚠️  No logo mapping for ${charity.name} (slug: ${charity.slug})`);
+        console.log(`⚠️  No fallback logo for ${charity.name} (slug: ${charity.slug})`);
       }
     }
 
-    console.log(`\n✨ Done! Fixed ${fixed} logos, skipped ${skipped} charities.`);
+    console.log(`\n✨ Done! Replaced ${fixed} logos, skipped ${skipped} charities.`);
   } catch (error) {
     console.error('❌ Error fixing logos:', error);
     process.exit(1);
