@@ -207,7 +207,7 @@ export default async function CareersPage() {
                     about the role, responsibilities, and how to apply. 
                   </div>
                   <span className="text-[#78716c]">
-                    Closes on 6th February 2026.
+                    Closes on 13th February 2026.
                   </span>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4">
