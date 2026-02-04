@@ -197,20 +197,22 @@ export default async function CareersPage() {
               <div className="rounded-[40px] border border-[#f5f5f4] bg-[#FDFBF7] p-8 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between lg:col-span-2">
                 <div className="space-y-3">
                   <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-100 text-[#A16207] text-xs font-bold">
-                    AMBASSADOR PROGRAM
+                    OPEN
                   </div>
                   <div className="font-jakarta font-bold text-[28px] leading-[34px] text-[#1C1917]">
                     ChainFundIt Ambassador (Doing Good Series)
                   </div>
                   <div className="text-[#78716c] max-w-[760px]">
                     Meet the storytellers behind the Doing Good Series. Learn more
-                    about the role, responsibilities, and how to apply. Open for 3
-                    weeks from today.
+                    about the role, responsibilities, and how to apply. 
                   </div>
+                  <span className="text-[#78716c]">
+                    Closes on 6th February 2026.
+                  </span>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button asChild className="bg-[#104109] p-6 rounded-full">
-                    <Link href="/doinggood">View Ambassador Role</Link>
+                    <Link href="/doinggood">View Role</Link>
                   </Button>
                 </div>
               </div>
@@ -219,7 +221,7 @@ export default async function CareersPage() {
             <div className="rounded-[40px] border border-[#f5f5f4] bg-[#FDFBF7] p-8 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between lg:col-span-2">
               <div className="space-y-3">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-100 text-[#A16207] text-xs font-bold">
-                  OPEN ROLE
+                Not accepting applications for this role right now.
                 </div>
                 <div className="font-jakarta font-bold text-[28px] leading-[34px] text-[#1C1917]">
                   Partnerships &amp; Growth Associate
@@ -228,13 +230,13 @@ export default async function CareersPage() {
                   Support the expansion of ChainFundIt by onboarding charities,
                   community organisations, and individual campaigners.
                 </div>
+               
               </div>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button asChild className="bg-[#104109] p-6 rounded-full">
-                  <Link href="/careers/partnerships-growth-associate">
-                    View Role 
-                  </Link>
+              <div className="flex flex-col  gap-4">
+                <Button disabled={true} asChild className="bg-[#104109] p-6 rounded-full">
+                  View Role 
                 </Button>
+                
               </div>
             </div>
 
