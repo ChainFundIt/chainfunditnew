@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { campaigns, users, donations, chainers } from '@/lib/schema';
+import {
+  sendCampaignHoldEmail,
+  sendCampaignReactivatedEmail,
+} from '@/lib/notifications/campaign-status-emails';
 import { eq, and, count, sum, desc } from 'drizzle-orm';
 
 /**
@@ -28,6 +32,7 @@ export async function GET(
         createdAt: campaigns.createdAt,
         updatedAt: campaigns.updatedAt,
         isActive: campaigns.isActive,
+        isVerified: campaigns.isVerified,
         coverImageUrl: campaigns.coverImageUrl,
         creatorName: users.fullName,
         creatorEmail: users.email,
@@ -153,6 +158,20 @@ export async function PATCH(
       );
     }
 
+    const creator = await db.query.users.findFirst({
+      where: eq(users.id, existingCampaign.creatorId),
+    });
+    const creatorEmail = creator?.email || '';
+    const creatorName =
+      creator?.fullName || creatorEmail.split('@')[0] || 'there';
+    const baseUrl =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      request.headers.get('origin') ||
+      'https://chainfundit.com';
+    const campaignUrl = existingCampaign.slug
+      ? `${baseUrl}/campaign/${existingCampaign.slug}`
+      : baseUrl;
+
     let updatedCampaign;
 
     switch (action) {
@@ -161,6 +180,9 @@ export async function PATCH(
           .update(campaigns)
           .set({ 
             status: 'under_review',
+            complianceStatus: 'in_review',
+            reviewRequired: true,
+            isActive: true,
             updatedAt: new Date(),
           })
           .where(eq(campaigns.id, campaignId))
@@ -172,6 +194,9 @@ export async function PATCH(
           .update(campaigns)
           .set({ 
             status: 'active',
+            complianceStatus: 'approved',
+            reviewRequired: false,
+            isActive: true,
             updatedAt: new Date(),
           })
           .where(eq(campaigns.id, campaignId))
@@ -215,7 +240,7 @@ export async function PATCH(
         updatedCampaign = await db
           .update(campaigns)
           .set({ 
-            isActive: true,
+            isVerified: true,
             updatedAt: new Date(),
           })
           .where(eq(campaigns.id, campaignId))
@@ -226,7 +251,7 @@ export async function PATCH(
         updatedCampaign = await db
           .update(campaigns)
           .set({ 
-            isActive: false,
+            isVerified: false,
             updatedAt: new Date(),
           })
           .where(eq(campaigns.id, campaignId))
@@ -249,6 +274,30 @@ export async function PATCH(
           { error: 'Invalid action' },
           { status: 400 }
         );
+    }
+
+    if (creatorEmail) {
+      try {
+        if (action === 'hold') {
+          await sendCampaignHoldEmail({
+            userEmail: creatorEmail,
+            userName: creatorName,
+            campaignTitle: existingCampaign.title,
+            campaignUrl,
+          });
+        }
+
+        if (action === 'activate') {
+          await sendCampaignReactivatedEmail({
+            userEmail: creatorEmail,
+            userName: creatorName,
+            campaignTitle: existingCampaign.title,
+            campaignUrl,
+          });
+        }
+      } catch (emailError) {
+        console.error('Failed to send campaign status email:', emailError);
+      }
     }
 
     return NextResponse.json({

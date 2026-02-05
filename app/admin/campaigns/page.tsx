@@ -70,6 +70,7 @@ interface Campaign {
   currentAmount: number;
   currency: string;
   status: "active" | "paused" | "completed" | "closed" | "under_review";
+  complianceStatus?: "in_review" | "approved" | "blocked";
   category: string;
   createdAt: string;
   updatedAt: string;
@@ -374,7 +375,7 @@ export default function AdminCampaignsPage() {
                 <Button
                   size="sm"
                   className="bg-brand-green-dark text-white"
-                  onClick={() => router.push("/admin/dashboard/analytics")}
+                  onClick={() => router.push("/admin/analytics")}
                 >
                   <BarChart3 className="h-4 w-4 mr-2" />
                   Analytics
@@ -650,6 +651,11 @@ export default function AdminCampaignsPage() {
                           <div className="flex items-center space-x-2">
                             {getStatusIcon(campaign.status)}
                             {getStatusBadge(campaign.status)}
+                            {campaign.isVerified && (
+                              <Badge className="bg-green-100 text-green-800">
+                                Verified
+                              </Badge>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -758,6 +764,19 @@ export default function AdminCampaignsPage() {
                                 title="Close campaign"
                               >
                                 <BsFillStopFill className="h-4 w-4 text-red-600" />
+                              </Button>
+                            )}
+                            {!campaign.isVerified && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCampaignAction(campaign, "verify");
+                                }}
+                                title="Verify campaign"
+                              >
+                                <Shield className="h-4 w-4 text-green-600" />
                               </Button>
                             )}
                           </div>

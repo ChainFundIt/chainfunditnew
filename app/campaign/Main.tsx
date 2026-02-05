@@ -580,26 +580,37 @@ const Main = ({ campaignSlug }: MainProps) => {
                 )}
               </div>
 
-              {/* Verified Badge Overlay */}
+              {/* Status Badge Overlay */}
               <div className="absolute top-4 left-4">
-                {campaignData.isActive && (
-                  <div className="bg-white/95 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-lg">
-                    <span className="text-sm font-medium text-gray-900">
-                      ACTIVE
+                {campaignData.status === "under_review" && (
+                  <div className="bg-orange-100/95 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-lg">
+                    <span className="text-sm font-medium text-orange-800">
+                      UNDER REVIEW
                     </span>
                   </div>
                 )} 
-                {!campaignData.isActive && (
-                  <div className="bg-white/95 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-lg">
-                    <span className="text-sm font-medium text-gray-900">
-                      INACTIVE
+                {campaignData.status !== "under_review" && isGoalReached && (
+                  <div className="bg-blue-100/95 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-lg">
+                    <span className="text-sm font-medium text-blue-800">
+                      GOAL REACHED
                     </span>
                   </div>
                 )}
-                {isGoalReached && (
-                  <div className="bg-white/95 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-lg">
-                    <span className="text-sm font-medium text-gray-900">
-                      GOAL REACHED
+                {campaignData.status !== "under_review" &&
+                  !isGoalReached &&
+                  campaignData.isActive && (
+                  <div className="bg-green-100/95 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-lg">
+                    <span className="text-sm font-medium text-green-800">
+                      ACTIVE
+                    </span>
+                  </div>
+                )}
+                {campaignData.status !== "under_review" &&
+                  !isGoalReached &&
+                  !campaignData.isActive && (
+                  <div className="bg-gray-100/95 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-lg">
+                    <span className="text-sm font-medium text-gray-800">
+                      INACTIVE
                     </span>
                   </div>
                 )}
