@@ -200,7 +200,7 @@ export default async function CareersPage() {
                     OPEN
                   </div>
                   <div className="font-jakarta font-bold text-[28px] leading-[34px] text-[#1C1917]">
-                    ChainFundIt Ambassador (Doing Good Series)
+                    ChainFundIt Ambassador 
                   </div>
                   <div className="text-[#78716c] max-w-[760px]">
                     Meet the storytellers behind the Doing Good Series. Learn more
