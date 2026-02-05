@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { campaigns, users, donations, chainers } from '@/lib/schema';
-import { eq, like, and, desc, count, sum, sql } from 'drizzle-orm';
+import { eq, like, and, desc, count, sum, sql, or } from 'drizzle-orm';
 
 /**
  * GET /api/admin/campaigns
@@ -28,7 +28,16 @@ export async function GET(request: NextRequest) {
     }
     
     if (status !== 'all') {
-      whereConditions.push(eq(campaigns.status, status as any));
+      if (status === 'under_review') {
+        whereConditions.push(
+          or(
+            eq(campaigns.status, 'under_review'),
+            eq(campaigns.complianceStatus, 'in_review')
+          )
+        );
+      } else {
+        whereConditions.push(eq(campaigns.status, status as any));
+      }
     }
     
     // Category filtering not available in current schema
@@ -50,6 +59,8 @@ export async function GET(request: NextRequest) {
         currentAmount: campaigns.currentAmount,
         currency: campaigns.currency,
         status: campaigns.status,
+        isVerified: campaigns.isVerified,
+        complianceStatus: campaigns.complianceStatus,
         createdAt: campaigns.createdAt,
         updatedAt: campaigns.updatedAt,
         isActive: campaigns.isActive,
@@ -91,8 +102,14 @@ export async function GET(request: NextRequest) {
           .from(chainers)
           .where(eq(chainers.campaignId, campaign.id));
 
+        const effectiveStatus =
+          campaign.complianceStatus === 'in_review'
+            ? 'under_review'
+            : campaign.status;
+
         return {
           ...campaign,
+          status: effectiveStatus,
           donationCount: donationStats?.count || 0,
           chainerCount: chainerStats?.count || 0,
           reportCount: 0,

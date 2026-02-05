@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     const [pendingReview] = await db
       .select({ count: count() })
       .from(campaigns)
-      .where(eq(campaigns.isActive, false));
+      .where(eq(campaigns.complianceStatus, 'in_review'));
 
     const reportedCampaigns = { count: 0 };
 

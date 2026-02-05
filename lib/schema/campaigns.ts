@@ -22,6 +22,7 @@ export const campaigns = pgTable('campaigns', {
   minimumDonation: decimal('minimum_donation', { precision: 15, scale: 2 }).notNull(),
   chainerCommissionRate: decimal('chainer_commission_rate', { precision: 3, scale: 1 }).notNull(), // 1.0-10.0
   isChained: boolean('is_chained').default(false).notNull(), // Whether campaign allows chaining
+  isVerified: boolean('is_verified').default(false).notNull(),
   currentAmount: decimal('current_amount', { precision: 15, scale: 2 }).default('0').notNull(),
   status: varchar('status', { length: 20 }).default('active').notNull(), // active, paused, goal_reached, closed, expired
   visibility: varchar('visibility', { length: 20 }).default('public').notNull(), // public, private
