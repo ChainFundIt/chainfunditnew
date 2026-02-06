@@ -278,10 +278,11 @@ export default function CreateCampaignPage() {
       payload.append("goalAmount", formData.goal.toString());
       payload.append("currency", formData.currency);
       payload.append("minimumDonation", "1");
-      payload.append(
-        "chainerCommissionRate",
-        formData.chainerCommissionRate.toString()
-      );
+      const commissionRateValue =
+        formData.isChained && formData.chainerCommissionRate !== ""
+          ? formData.chainerCommissionRate.toString()
+          : "0";
+      payload.append("chainerCommissionRate", commissionRateValue);
       payload.append("isChained", formData.isChained.toString());
       payload.append("visibility", formData.visibility);
 
@@ -308,9 +309,11 @@ export default function CreateCampaignPage() {
       });
 
       const data = await res.json();
+      
 
       if (!res.ok) {
-        throw new Error(data.error || "Failed to create campaign");
+        const errorText = data?.error || "Unknown error";
+        throw new Error(`Campaign creation failed (${res.status}): ${errorText}`);
       }
       const campaignUrl = `${window.location.origin}/campaign/${data.data.slug}`;
       let shortUrl = null;
@@ -325,7 +328,11 @@ export default function CreateCampaignPage() {
       });
       setShowSuccessModal(true);
     } catch (err) {
-      alert("Failed to create campaign. Please try again.");
+      const message =
+        err instanceof Error && err.message
+          ? err.message
+          : "Failed to create campaign. Please try again.";
+      alert(message);
     } finally {
       setIsLoading(false);
     }
@@ -364,6 +371,32 @@ export default function CreateCampaignPage() {
   const handleAiDone = () => {
     setFormData((prev) => ({ ...prev, story: aiInstruction }));
     setShowAiModal(false);
+  };
+
+  const handleOpenAiModal = () => {
+    const story = (formData.story || "").trim();
+    const existing = aiInstruction.trim();
+
+    if (!story) {
+      setAiInstruction(existing);
+      setShowAiModal(true);
+      return;
+    }
+
+    if (!existing) {
+      setAiInstruction(story);
+      setShowAiModal(true);
+      return;
+    }
+
+    if (existing.includes(story)) {
+      setAiInstruction(existing);
+      setShowAiModal(true);
+      return;
+    }
+
+    setAiInstruction(`${existing}\n\nCurrent Description:\n${story}`);
+    setShowAiModal(true);
   };
 
   const handleViewCampaign = () => {
@@ -1041,7 +1074,7 @@ export default function CreateCampaignPage() {
                     </div>
                     <button
                       type="button"
-                      onClick={() => setShowAiModal(true)}
+                      onClick={handleOpenAiModal}
                       className="w-full bg-[#104109] py-3 px-4 flex gap-2 items-center justify-center font-semibold text-white hover:bg-white hover:text-[#104109] hover:border-[#104109] border transition-colors rounded-bl-xl rounded-br-xl"
                     >
                       <Airplay size={20} />
