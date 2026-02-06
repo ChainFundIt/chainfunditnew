@@ -67,6 +67,7 @@ export async function GET(
         minimumDonation: campaigns.minimumDonation,
         chainerCommissionRate: campaigns.chainerCommissionRate,
         isChained: campaigns.isChained,
+        isVerified: campaigns.isVerified,
         currentAmount: campaigns.currentAmount,
         status: campaigns.status,
         visibility: campaigns.visibility,

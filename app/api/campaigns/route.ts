@@ -217,7 +217,7 @@ export async function POST(request: NextRequest) {
     const documents = formData.get('documents') as string;
 
     // Validate required fields
-    if (!title || !description || !goalAmount || !currency || !minimumDonation || !chainerCommissionRate) {
+    if (!title || !description || !goalAmount || !currency || !minimumDonation) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields' },
         { status: 400 }
@@ -234,6 +234,12 @@ export async function POST(request: NextRequest) {
 
     // Validate isChained field
     const isChainedBool = isChained === 'true';
+    if (isChainedBool && !chainerCommissionRate) {
+      return NextResponse.json(
+        { success: false, error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
 
     // Idempotency: if this exact creation request was already processed for this user,
     // return the existing campaign instead of creating a duplicate.

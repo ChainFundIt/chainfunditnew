@@ -20,6 +20,7 @@ import {
   Clock,
   ArrowLeft,
   ArrowRight,
+  Shield,
 } from "lucide-react";
 import CTA from "./cta";
 import ChainModal from "./chain-modal";
@@ -70,6 +71,7 @@ interface CampaignData {
   minimumDonation: string;
   chainerCommissionRate: number;
   isChained: boolean;
+  isVerified: boolean;
   currentAmount: number;
   status: string;
   isActive: boolean;
@@ -546,9 +548,17 @@ const Main = ({ campaignSlug }: MainProps) => {
           <div className="lg:col-span-2 space-y-6">
             {/* Title */}
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 mt-6">
-                {campaignData.title}
-              </h1>
+              <div className="flex flex-wrap items-center gap-2 mb-2 mt-6">
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
+                  {campaignData.title}
+                </h1>
+                {campaignData.isVerified && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-white border border-green-200 px-2 py-1 text-xs font-semibold text-green-700 shadow-sm">
+                    <Shield className="h-3 w-3 text-green-600" />
+                    Verified
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Main Image with Verified Badge */}
