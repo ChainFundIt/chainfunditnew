@@ -33,6 +33,7 @@ import { useTopChainers } from "@/hooks/use-top-chainers";
 import ClientToaster from "@/components/ui/client-toaster";
 import { formatCurrency, getCurrencySymbol } from "@/lib/utils/currency";
 import { ExternalToast, toast } from "sonner";
+import Link from "next/link";
 
 const autoRefreshInterval = 120000; // 2 minutes
 
@@ -533,11 +534,13 @@ const Main = ({ campaignSlug }: MainProps) => {
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center gap-2 text-sm">
-            <span className="text-gray-500">Campaigns</span>
+            <Link href="/campaigns" className="text-gray-500 hover:text-gray-900">Campaigns</Link>
             <span className="text-gray-400">/</span>
-            <span style={{ color: "#104901" }} className="font-medium">
+            <Link href={`/campaign/${campaignData.slug}`} className="text-gray-500 hover:text-gray-900">
+              <span style={{ color: "#104901" }} className="font-medium">
               {campaignData.reason}
             </span>
+            </Link>
           </div>
         </div>
       </div>
