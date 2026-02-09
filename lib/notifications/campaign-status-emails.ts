@@ -55,7 +55,7 @@ export async function sendCampaignHoldEmail(
 
               <div class="info-box">
                 <strong>To proceed, we require additional information to verify the authenticity of your campaign.</strong>
-                <p>Please send an email to <a href="mailto:campaigns@chainfundit.com">campaigns@chainfundit.com</a> with supporting documents or evidence that confirm the legitimacy of the campaign. This could include:</p>
+                <p>Please send an email to <a href="mailto:campaigns@chainfundit.com">campaigns@chainfundit.com</a>, or reach us through WhatsApp at <a href="https://wa.me/+2348090986009?text=Hello, I need to verify my campaign on ChainFundIt">+238090986009</a> with supporting documents or evidence that confirm the legitimacy of the campaign. This could include:</p>
                 <ul>
                   <li>Identification or affiliation with the person/cause listed</li>
                   <li>Photos, hospital/school/official letters (if relevant)</li>
