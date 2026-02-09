@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,8 @@ import { ArrowLeft, Save, Loader2, Upload, X } from "lucide-react";
 import Image from "next/image";
 import { formatCurrency } from "@/lib/utils/currency";
 import { useFileUpload } from "@/hooks/use-upload";
-
+import { Switch } from "@/components/ui/switch";
+import { triggerPlatformReviewPrompt } from "@/lib/utils/review-prompt";
 interface CampaignFormData {
   title: string;
   subtitle: string;
@@ -24,6 +25,7 @@ interface CampaignFormData {
   currency: string;
   minimumDonation: number;
   chainerCommissionRate: number;
+  isChained: boolean;
 }
 
 interface Campaign {
@@ -66,6 +68,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [unauthorized, setUnauthorized] = useState(false);
+  const [isChained, setIsChained] = useState(false);
   const router = useRouter();
 
   const [formData, setFormData] = useState<CampaignFormData>({
@@ -78,9 +81,10 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
     videoUrl: "",
     coverImageUrl: "",
     goalAmount: 0,
-    currency: "NGN",
+    currency: "NGN",    
     minimumDonation: 0,
     chainerCommissionRate: 0,
+    isChained: false,
   });
 
   const [newCoverImage, setNewCoverImage] = useState<File | null>(null);
@@ -138,6 +142,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
           currency: campaignData.currency || "NGN",
           minimumDonation: campaignData.minimumDonation || 0,
           chainerCommissionRate: campaignData.chainerCommissionRate || 0,
+          isChained: campaignData.isChained || false
         });
         
       } catch (err) {
@@ -151,7 +156,29 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
     loadCampaign();
   }, [params]);
 
-  const handleInputChange = (field: keyof CampaignFormData, value: string | number) => {
+  useEffect(() => {
+    if (!campaign || !campaign.id) return;
+    const goal = Number(campaign.goalAmount ?? 0);
+    const current = Number(campaign.currentAmount ?? 0);
+    const progress = Number(campaign.stats?.progressPercentage ?? 0);
+    const reached = (goal > 0 && current >= goal) || progress >= 100;
+    if (!reached) return;
+
+    const key = `cf_platform_review_prompt_goal_${campaign.id}`;
+    try {
+      if (localStorage.getItem(key) === "1") return;
+      localStorage.setItem(key, "1");
+    } catch {
+      // ignore
+    }
+
+    triggerPlatformReviewPrompt({ reason: "goal_reached" });
+  }, [campaign]);
+
+  const handleInputChange: (
+    field: keyof CampaignFormData,
+    value: CampaignFormData[keyof CampaignFormData]
+  ) => void = (field, value) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -514,6 +541,14 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
                   placeholder="Enter minimum donation"
                   className="rounded-xl border-gray-300 focus:border-[#104109] focus:ring-[#104109]"
                   min="0"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#104109] mb-2">Do you want your campaign to be chained?</label>
+                <Switch
+                  checked={formData.isChained}
+                  onCheckedChange={(checked) => handleInputChange("isChained", checked ? 1 : 0)}
                 />
               </div>
 

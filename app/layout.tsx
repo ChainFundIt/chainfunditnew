@@ -7,6 +7,7 @@ import { GoogleAnalytics } from "@/components/layout/GoogleAnalytics";
 import { CookieBanner } from "@/components/layout/CookieBanner";
 import { AutoFavoriteHandler } from "@/components/auth/auto-favorite-handler";
 import  StartCampaignFab from "@/components/layout/StartCampaignFab";
+import PlatformReviewPrompt from "@/components/reviews/PlatformReviewPrompt";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -118,6 +119,7 @@ export default function RootLayout({
           <StartCampaignFab />
           <GoogleAnalytics />
           <PerformanceMonitor />
+          <PlatformReviewPrompt />
           <ClientToaster />
           <CookieBanner />
           <AutoFavoriteHandler />

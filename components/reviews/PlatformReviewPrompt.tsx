@@ -18,6 +18,11 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import {
+  PLATFORM_REVIEW_PROMPT_EVENT,
+  type PlatformReviewPromptEventDetail,
+  type PlatformReviewPromptReason,
+} from "@/lib/utils/review-prompt";
 
 type Mode = "create" | "edit";
 
@@ -44,7 +49,8 @@ type MeResponse =
 
 const REVIEW_PROMPT_NEXT_AT_KEY = "cf_platform_review_prompt_next_at";
 const REVIEW_PROMPT_DONE_KEY = "cf_platform_review_prompt_done";
-const PROMPT_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const INELIGIBLE_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const LATER_COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 function safeNow() {
   return Date.now();
@@ -62,11 +68,11 @@ function canPromptNow() {
   }
 }
 
-function snoozePrompt() {
+function snoozePrompt(ms: number) {
   try {
     localStorage.setItem(
       REVIEW_PROMPT_NEXT_AT_KEY,
-      String(safeNow() + PROMPT_COOLDOWN_MS)
+      String(safeNow() + ms)
     );
   } catch {
     // ignore
@@ -135,10 +141,43 @@ export default function PlatformReviewPrompt() {
     }
   };
 
+  const openFromTrigger = async (opts: {
+    reason: PlatformReviewPromptReason;
+    bypassCooldown?: boolean;
+    // If true, open even if not eligible (still requires mode=create).
+    allowIneligible?: boolean;
+  }) => {
+    try {
+      if (localStorage.getItem(REVIEW_PROMPT_DONE_KEY) === "1") return;
+    } catch {
+      // ignore
+    }
+
+    if (!opts.bypassCooldown && !canPromptNow()) return;
+
+    const data = await fetchMe();
+    if (!data || data.success !== true) return;
+
+    // If they already have a review, never prompt again.
+    if (data.mode !== "create") {
+      markPromptDone();
+      return;
+    }
+
+    if (!opts.allowIneligible && !data.eligible) return;
+
+    setOpen(true);
+  };
+
   useEffect(() => {
     let cancelled = false;
 
     async function maybePrompt() {
+      // "Current flow": only auto-prompt inside the dashboard.
+      if (typeof window !== "undefined") {
+        const path = window.location?.pathname ?? "";
+        if (!path.startsWith("/dashboard")) return;
+      }
       if (!canPromptNow()) return;
 
       const data = await fetchMe();
@@ -149,7 +188,7 @@ export default function PlatformReviewPrompt() {
         setOpen(true);
       } else {
         // Avoid re-checking too frequently for users who aren't eligible yet.
-        snoozePrompt();
+        snoozePrompt(INELIGIBLE_COOLDOWN_MS);
       }
     }
 
@@ -160,9 +199,31 @@ export default function PlatformReviewPrompt() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const { detail } = event as CustomEvent<PlatformReviewPromptEventDetail>;
+      const reason = detail?.reason ?? "dashboard_load";
+      const bypassCooldown = Boolean(detail?.bypassCooldown);
+
+      // Event triggers should show the modal even if not eligible yet,
+      // but still only if they haven't left a review.
+      openFromTrigger({
+        reason,
+        bypassCooldown,
+        allowIneligible: true,
+      }).catch(() => {});
+    };
+
+    window.addEventListener(PLATFORM_REVIEW_PROMPT_EVENT, handler);
+    return () => {
+      window.removeEventListener(PLATFORM_REVIEW_PROMPT_EVENT, handler);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const closeWithSnooze = () => {
     setOpen(false);
-    snoozePrompt();
+    snoozePrompt(LATER_COOLDOWN_MS);
   };
 
   const handleSave = async () => {
@@ -321,7 +382,7 @@ export default function PlatformReviewPrompt() {
               onClick={closeWithSnooze}
               disabled={saving}
             >
-              Not now
+              Later
             </Button>
             <Button
               type="button"

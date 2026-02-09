@@ -5,6 +5,10 @@ import { eq } from 'drizzle-orm';
 import { parse } from 'cookie';
 import { verifyUserJWT } from '@/lib/auth';
 
+function normalizePhone(value: unknown): string {
+  return String(value ?? '').replace(/\D/g, '');
+}
+
 async function getUserFromRequest(request: NextRequest) {
   const cookie = request.headers.get('cookie') || '';
   const cookies = parse(cookie);
@@ -42,6 +46,7 @@ export async function POST(request: NextRequest) {
       fullName,
       avatar,
       bio,
+      phone,
       instagram,
       facebook,
       linkedin,
@@ -50,11 +55,13 @@ export async function POST(request: NextRequest) {
       youtube,
     } = await request.json();
 
+    const normalizedPhone = normalizePhone(phone);
     const updateResult = await db.update(users)
       .set({
         fullName,
         avatar,
         bio,
+        phone: normalizedPhone || null,
         instagram,
         facebook,
         linkedin,

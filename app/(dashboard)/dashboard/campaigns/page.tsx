@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, Clock, Link, MessageSquare } from "lucide-react";
 import HeartBeat from "@/public/icons/HeartBeat";
 import { DonationsIcon } from "@/public/icons/DonationsIcon";
+import { triggerPlatformReviewPrompt } from "@/lib/utils/review-prompt";
 
 const tabs = [
   { label: "Live", Icon: HeartBeat },
@@ -92,6 +93,27 @@ export default function CampaignsPage() {
       fetchCampaigns();
     }
   }, [user?.id, authLoading]);
+
+  // Prompt when any of the user's campaigns reaches its goal.
+  useEffect(() => {
+    const reached = userCampaigns.find((c) => {
+      const goal = Number(c.goalAmount ?? 0);
+      const current = Number(c.currentAmount ?? 0);
+      const progress = Number(c.stats?.progressPercentage ?? 0);
+      return (goal > 0 && current >= goal) || progress >= 100;
+    });
+    if (!reached) return;
+
+    const key = `cf_platform_review_prompt_goal_${reached.id}`;
+    try {
+      if (localStorage.getItem(key) === "1") return;
+      localStorage.setItem(key, "1");
+    } catch {
+      // ignore
+    }
+
+    triggerPlatformReviewPrompt({ reason: "goal_reached" });
+  }, [userCampaigns]);
 
   return (
     <div className="bg-[#F0F7Ef] p-6 font-jakarta md:min-h-[calc(100vh-122px)] min-h-[calc(100vh-149px)]">

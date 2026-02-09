@@ -7,7 +7,6 @@ import ClientToaster from "@/components/ui/client-toaster";
 import SessionTimeoutProvider from "@/components/providers/SessionTimeoutProvider";
 import { TokenRefreshProvider } from "@/hooks/use-token-refresh";
 import SearchBar from "@/components/dashboard/SearchBar";
-import PlatformReviewPrompt from "@/components/reviews/PlatformReviewPrompt";
 
 const layout = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -25,7 +24,6 @@ const layout = ({ children }: { children: React.ReactNode }) => {
             </div>
           </div>
         </div>
-        <PlatformReviewPrompt />
         <ClientToaster />
       </SessionTimeoutProvider>
     </TokenRefreshProvider>
