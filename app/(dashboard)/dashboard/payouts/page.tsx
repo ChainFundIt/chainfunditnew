@@ -35,6 +35,7 @@ import {
   PayoutSuccessModal,
   type PayoutSuccessData,
 } from "@/components/payments/payout-success-modal";
+import { triggerPlatformReviewPrompt } from "@/lib/utils/review-prompt";
 
 import Card from "../_components/Card/page";
 
@@ -890,6 +891,7 @@ const PayoutsPage = () => {
         onClose={() => {
           setShowSuccessModal(false);
           setTimeout(() => setPayoutSuccessData(null), 200);
+          triggerPlatformReviewPrompt({ reason: "payout" });
         }}
       />
     </div>

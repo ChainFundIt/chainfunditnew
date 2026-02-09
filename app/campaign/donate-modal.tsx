@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   X,
   Copy,
@@ -30,6 +30,7 @@ import Image from "next/image";
 import { trackDonation, track } from "@/lib/analytics";
 import { useShortenLink } from "@/hooks/use-shorten-link";
 import { getFullCampaignUrl } from "@/lib/utils/campaign-url";
+import { triggerPlatformReviewPrompt } from "@/lib/utils/review-prompt";
 
 interface Campaign {
   id: string;
@@ -56,6 +57,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
   campaign,
   referralChainer,
 }) => {
+  const promptedForReviewRef = useRef(false);
   const [step, setStep] = useState<"donate" | "payment" | "stripe-payment" | "thankyou">("donate");
   const [period, setPeriod] = useState("one-time");
   const [amount, setAmount] = useState("");
@@ -128,6 +130,20 @@ const DonateModal: React.FC<DonateModalProps> = ({
       }
     }
   }, [campaign, open]);
+
+  // Prompt for a platform review right after a successful donation flow reaches "thankyou"
+  // (covers Stripe success callback + Paystack redirect thank-you state).
+  useEffect(() => {
+    if (!open) {
+      promptedForReviewRef.current = false;
+      return;
+    }
+
+    if (step === "thankyou" && !promptedForReviewRef.current) {
+      promptedForReviewRef.current = true;
+      triggerPlatformReviewPrompt({ reason: "donation" });
+    }
+  }, [open, step]);
 
   useEffect(() => {
     let cancelled = false;

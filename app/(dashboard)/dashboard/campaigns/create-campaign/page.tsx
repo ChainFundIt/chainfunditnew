@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Activity,
@@ -59,6 +59,7 @@ import ClientToaster from "@/components/ui/client-toaster";
 import { Switch } from "@/components/ui/switch";
 import { useShortenLink } from "@/hooks/use-shorten-link";
 import { useFileUpload } from "@/hooks/use-upload";
+import { triggerPlatformReviewPrompt } from "@/lib/utils/review-prompt";
 
 const reasons = [
   { text: "Business", icon: <Briefcase /> },
@@ -135,6 +136,7 @@ export default function CreateCampaignPage() {
   const [createdCampaign, setCreatedCampaign] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("S");
   const [isLoading, setIsLoading] = useState(false);
+  const promptedForReviewRef = useRef(false);
   const [creationRequestId] = useState(() => {
     try {
       if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") return crypto.randomUUID();
@@ -145,6 +147,15 @@ export default function CreateCampaignPage() {
   });
 
   const router = useRouter();
+
+  useEffect(() => {
+    if (showSuccessModal && createdCampaign && !promptedForReviewRef.current) {
+      promptedForReviewRef.current = true;
+      triggerPlatformReviewPrompt({
+        reason: "campaign_created",
+      });
+    }
+  }, [showSuccessModal, createdCampaign]);
 
   const [formData, setFormData] = useState<CampaignFormData>({
     title: "",
@@ -188,7 +199,7 @@ export default function CreateCampaignPage() {
             imageUrls: [...prev.imageUrls, result.url],
           }));
         }
-      } catch (error) {}
+      } catch (error) { }
     }
   };
 
@@ -206,7 +217,7 @@ export default function CreateCampaignPage() {
             documentUrls: [...prev.documentUrls, result.url],
           }));
         }
-      } catch (error) {}
+      } catch (error) { }
     }
   };
 
@@ -309,7 +320,7 @@ export default function CreateCampaignPage() {
       });
 
       const data = await res.json();
-      
+
 
       if (!res.ok) {
         const errorText = data?.error || "Unknown error";
@@ -475,11 +486,10 @@ export default function CreateCampaignPage() {
               className="flex flex-col md:flex-row items-center gap-3"
             >
               <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg transition-all ${
-                  step >= s.number
+                className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg transition-all ${step >= s.number
                     ? "bg-[#104109] text-white"
                     : "bg-[#E5ECDE] text-[#5F8555]"
-                }`}
+                  }`}
               >
                 {step > s.number ? <Check size={20} /> : s.number}
               </div>
@@ -488,9 +498,8 @@ export default function CreateCampaignPage() {
                   Step {s.number}
                 </p>
                 <p
-                  className={`font-semibold ${
-                    step === s.number ? "text-[#104109]" : "text-[#ADADAD]"
-                  }`}
+                  className={`font-semibold ${step === s.number ? "text-[#104109]" : "text-[#ADADAD]"
+                    }`}
                 >
                   {s.label}
                 </p>
@@ -589,11 +598,10 @@ export default function CreateCampaignPage() {
                         key={reason.text}
                         type="button"
                         onClick={() => handleFieldChange("reason", reason.text)}
-                        className={`px-4 py-3 flex gap-2 items-center rounded-lg transition-all ${
-                          formData.reason === reason.text
+                        className={`px-4 py-3 flex gap-2 items-center rounded-lg transition-all ${formData.reason === reason.text
                             ? "bg-[#104109] text-white"
                             : "bg-[#F5F5F5] text-[#5F8555] hover:bg-[#D9D9D9]"
-                        }`}
+                          }`}
                       >
                         {reason.icon}
                         <span className="text-sm">{reason.text}</span>
@@ -616,11 +624,10 @@ export default function CreateCampaignPage() {
                         onClick={() =>
                           handleFieldChange("fundraisingFor", person.text)
                         }
-                        className={`px-4 py-3 flex gap-2 items-center rounded-lg transition-all ${
-                          formData.fundraisingFor === person.text
+                        className={`px-4 py-3 flex gap-2 items-center rounded-lg transition-all ${formData.fundraisingFor === person.text
                             ? "bg-[#104109] text-white"
                             : "bg-[#F5F5F5] text-[#5F8555] hover:bg-[#D9D9D9]"
-                        }`}
+                          }`}
                       >
                         {person.icon}
                         <span className="text-sm">{person.text}</span>
@@ -716,11 +723,10 @@ export default function CreateCampaignPage() {
                         key={time.text}
                         type="button"
                         onClick={() => handleFieldChange("duration", time.text)}
-                        className={`px-3 py-3 flex gap-2 items-center justify-center rounded-lg transition-all text-sm ${
-                          formData.duration === time.text
+                        className={`px-3 py-3 flex gap-2 items-center justify-center rounded-lg transition-all text-sm ${formData.duration === time.text
                             ? "bg-[#104109] text-white"
                             : "bg-[#F5F5F5] text-[#5F8555] hover:bg-[#D9D9D9]"
-                        }`}
+                          }`}
                       >
                         {time.icon}
                         <span>{time.text}</span>
@@ -1017,34 +1023,6 @@ export default function CreateCampaignPage() {
             {/* Step 4: Review & Launch */}
             {step === 4 && (
               <div className="bg-white rounded-2xl p-8 shadow-sm flex flex-col gap-8">
-                <h2 className="text-3xl font-bold text-[#104109]">
-                  Review & Launch
-                </h2>
-
-                {/* Campaign Preview */}
-                <div className="bg-[#F5F5F5] rounded-xl overflow-hidden">
-                  {uploadedFiles.coverImageUrl && (
-                    <div className="relative w-full h-64 mb-4">
-                      <Image
-                        src={uploadedFiles.coverImageUrl}
-                        alt="Campaign cover"
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                  )}
-                  <div className="p-6">
-                    <h3 className="text-2xl font-bold text-[#104109] mb-2">
-                      {formData.title || "Untitled Campaign"}
-                    </h3>
-                    <p className="text-sm text-[#5F8555] mb-4 uppercase tracking-wide">
-                      {formData.reason || "UNCATEGORIZED"}
-                    </p>
-                    <p className="text-[#5F8555]">
-                      {formData.story || "No description provided."}
-                    </p>
-                  </div>
-                </div>
 
                 {/* Story Section */}
                 <div className="flex flex-col gap-3">
@@ -1080,6 +1058,32 @@ export default function CreateCampaignPage() {
                       <Airplay size={20} />
                       Suggest with AI
                     </button>
+                  </div>
+                </div>
+
+                <h2 className="text-3xl font-bold text-[#104109]">
+                  Review & Launch
+                </h2>
+
+                {/* Campaign Preview */}
+                <div className="bg-[#F5F5F5] rounded-xl overflow-hidden">
+                  {uploadedFiles.coverImageUrl && (
+                    <div className="relative w-full h-64 mb-4">
+                      <Image
+                        src={uploadedFiles.coverImageUrl}
+                        alt="Campaign cover"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="p-6">
+                    <h3 className="text-2xl font-bold text-[#104109] mb-2">
+                      {formData.title || "Untitled Campaign"}
+                    </h3>
+                    <p className="text-sm text-[#5F8555] mb-4 uppercase tracking-wide">
+                      {formData.reason || "UNCATEGORIZED"}
+                    </p>
                   </div>
                 </div>
 
@@ -1150,11 +1154,10 @@ export default function CreateCampaignPage() {
                               key={tab}
                               type="button"
                               onClick={() => setActiveTab(tab)}
-                              className={`px-6 py-2 rounded-md font-semibold transition-colors ${
-                                activeTab === tab
+                              className={`px-6 py-2 rounded-md font-semibold transition-colors ${activeTab === tab
                                   ? "bg-[#104109] text-white"
                                   : "bg-transparent text-[#5F8555] hover:bg-[#D9D9D9]"
-                              }`}
+                                }`}
                             >
                               {tab}
                             </button>

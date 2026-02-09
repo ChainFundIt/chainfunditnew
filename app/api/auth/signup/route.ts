@@ -15,6 +15,10 @@ function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+function normalizePhone(value: unknown): string {
+  return String(value ?? "").replace(/\D/g, "");
+}
+
 // Rate limiting function
 function checkRateLimit(identifier: string, limit: number = 3, windowMs: number = 60000): boolean {
   const now = Date.now();
@@ -36,12 +40,19 @@ function checkRateLimit(identifier: string, limit: number = 3, windowMs: number 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { action, email, otp, fullName } = body;
+    const { action, email, otp, fullName, phone } = body;
 
     if (action === "request_email_otp") {
       if (!email) {
         return NextResponse.json(
           { success: false, error: "Please enter your email address to continue." },
+          { status: 400 }
+        );
+      }
+      const normalizedPhone = normalizePhone(phone);
+      if (!normalizedPhone) {
+        return NextResponse.json(
+          { success: false, error: "Please enter your phone number to continue." },
           { status: 400 }
         );
       }
@@ -182,11 +193,13 @@ export async function POST(request: NextRequest) {
 
       // Create user with normalized email (always store lowercase)
       const name = fullName || normalizedEmail.split("@")[0];
+      const normalizedPhone = normalizePhone(phone);
       const [newUser] = await db
         .insert(users)
         .values({ 
           email: normalizedEmail, // Store normalized email
           fullName: name, 
+          phone: normalizedPhone || undefined,
           hasCompletedProfile: false,
           role: 'user' // Default role for new signups
         })

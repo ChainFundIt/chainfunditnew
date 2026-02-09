@@ -235,9 +235,11 @@ export async function PUT(
 
     // Only allow updating certain fields
     const allowedFields = [
-      'title', 
-      'subtitle', 
-      'description', 
+      'title',
+      'subtitle',
+      'description',
+      'reason',
+      'fundraisingFor',
       'duration',
       'videoUrl',
       'coverImageUrl',
@@ -245,13 +247,18 @@ export async function PUT(
       'currency',
       'minimumDonation',
       'chainerCommissionRate',
-      'status', 
+      'isChained',
+      'status',
       'isActive'
     ];
     
     allowedFields.forEach(field => {
       if (body[field] !== undefined) {
-        updateData[field] = body[field];
+        if (field === 'isChained') {
+          updateData[field] = Boolean(body[field]);
+        } else {
+          updateData[field] = body[field];
+        }
       }
     });
 

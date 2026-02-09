@@ -3,6 +3,7 @@ import { Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Image from "next/image";
+import { phoneNumber } from "better-auth/plugins";
 
 type Props = {};
 
@@ -11,6 +12,7 @@ const Account = (props: Props) => {
   const [form, setForm] = useState({
     fullName: "",
     bio: "",
+    phone: "",
     instagram: "",
     facebook: "",
     linkedin: "",
@@ -40,6 +42,7 @@ const Account = (props: Props) => {
           setForm({
             fullName: data.user.fullName || "",
             bio: data.user.bio || "",
+            phone: data.user.phone || "",
             instagram: data.user.instagram || "",
             facebook: data.user.facebook || "",
             linkedin: data.user.linkedin || "",
@@ -81,6 +84,11 @@ const Account = (props: Props) => {
     e.preventDefault();
     setIsLoading(true);
     try {
+      if (form.phone && !/^\+\d/.test(form.phone.trim())) {
+        toast.error("Please include your country code (e.g., +234)");
+        setIsLoading(false);
+        return;
+      }
       const res = await fetch("/api/user/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -171,6 +179,20 @@ const Account = (props: Props) => {
           />
           <div className=" text-xs text-[#9ca3af] ml-auto">
             {250 - form.bio.length} Characters Left
+          </div>
+        </div>
+        <div className="flex flex-col gap-2">
+          <div className="font-bold text-base text-[#374159]">Phone Number (include country code)</div>
+          <input
+            type="text"
+            name="phone"
+            value={form.phone}
+            onChange={handleChange}
+            className="bg-[#f9fafb] w-full md:w-[40rem] rounded-lg outline-none border border-[#e5e7eb] p-2 text-sm text-[#6b7280] placeholder:text-sm placeholder:text-[#6b7280]"
+            placeholder="e.g., +234 801 234 5678"
+          />
+          <div className="text-xs text-[#9ca3af]">
+            Include your country code (e.g., +234).
           </div>
         </div>
       </div>

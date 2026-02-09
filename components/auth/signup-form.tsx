@@ -19,7 +19,7 @@ export function SignupForm({
   const [isLoading, setIsLoading] = useState(false);
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect");
-
+  const [phone, setPhone] = useState("");
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -28,6 +28,15 @@ export function SignupForm({
       return;
     }
 
+    // if (!Phone.trim)
+    if (!phone.trim()) {
+      toast.error("Please enter your phone number");
+      return;
+    }
+    if (!/^\+\d/.test(phone.trim())) {
+      toast.error("Please include your country code (e.g., +234)");
+      return;
+    }
     setIsLoading(true);
     
     try {
@@ -39,7 +48,8 @@ export function SignupForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "request_email_otp",
-          email: email.trim()
+          email: email.trim(),
+          phone: phone.trim()
         }),
         signal: controller.signal,
       });
@@ -65,6 +75,10 @@ export function SignupForm({
           userMessage = "Please enter your email address to continue.";
         } else if (data.error?.includes("Failed to send")) {
           userMessage = "Unable to send verification code to your email. Please check your email address and try again.";
+        } else if (data.error?.includes("Phone number is required")) {
+          userMessage = "Please enter your phone number to continue.";
+        } else if (data.error?.includes("Failed to send")) {
+          userMessage = "Unable to send verification code to your phone. Please check your phone number and try again.";
         }
         throw new Error(userMessage || "Unable to send verification code. Please try again.");
       }
@@ -72,7 +86,7 @@ export function SignupForm({
       toast.success("Verification code sent! Check your email.");
       
       // Use router.push for better performance instead of window.location
-      let otpUrl = `/otp?email=${encodeURIComponent(email.trim())}&mode=signup`;
+      let otpUrl = `/otp?email=${encodeURIComponent(email.trim())}&phone=${encodeURIComponent(phone.trim())}&mode=signup`;
       if (redirect) otpUrl += `&redirect=${encodeURIComponent(redirect)}`;
       
       // Small delay to ensure toast is shown
@@ -96,7 +110,7 @@ export function SignupForm({
     } finally {
       setIsLoading(false);
     }
-  }, [email, redirect]);
+  }, [email, phone, redirect]);
 
   return (
     <form className={cn("flex flex-col w-full gap-3", className)} onSubmit={handleSubmit} {...props}>
@@ -139,6 +153,29 @@ export function SignupForm({
             disabled={isLoading}
             autoComplete="email"
           />
+        </div>
+
+        <div className="grid gap-2">
+          <Label
+            htmlFor="phone"
+            className="font-medium text-xs text-gray-700"
+          >
+            Phone Number (include country code)
+          </Label>
+          <Input
+            id="phone"
+            type="tel"
+            placeholder="e.g., +234 801 234 5678"
+            className="h-10 bg-gray-50 rounded-lg border border-gray-300 text-xs focus:border-[#109104] focus:ring-[#109104] shadow-none outline-none placeholder:text-gray-400 transition-colors"
+            required
+            value={phone}
+            onChange={e => setPhone(e.target.value)}
+            disabled={isLoading}
+            autoComplete="tel"
+          />
+          <p className="text-[11px] text-gray-500">
+            Include your country code (e.g., +234).
+          </p>
         </div>
 
         <Button

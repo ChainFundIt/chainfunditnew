@@ -105,6 +105,7 @@ function OtpPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect");
+  const phoneParam = searchParams.get("phone");
 
   // Determine identifier and type (signup: query, login: localStorage)
   useEffect(() => {
@@ -210,7 +211,7 @@ function OtpPageInner() {
     try {
       let payload, endpoint;
       if (loginType === "email") {
-        payload = { action: "verify_email_otp", email: identifier, otp };
+        payload = { action: "verify_email_otp", email: identifier, otp, phone: phoneParam || undefined };
         endpoint = mode === "signup" ? "/api/auth/signup" : "/api/auth/signin";
       } else {
         // For phone, also send the email from query params if available
