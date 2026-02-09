@@ -546,19 +546,24 @@ const Main = ({ campaignSlug }: MainProps) => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Campaign Details */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Title */}
+            {/* Title & Subtitle  */}
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-2 mt-6">
                 <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
                   {campaignData.title}
                 </h1>
                 {campaignData.isVerified && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-white border border-green-200 px-2 py-1 text-xs font-semibold text-green-700 shadow-sm">
-                    <Shield className="h-3 w-3 text-green-600" />
+                  <span className="inline-flex items-center gap-1 rounded-full bg-green-500 text-white border border-green-200 px-3 py-2 text-sm font-semibold shadow-sm">
+                    <Shield className="h-3 w-3 text-white" />
                     Verified
                   </span>
                 )}
               </div>
+              {campaignData.subtitle && (
+                <h6 className="text-base md:text-lg font-medium text-gray-900">
+                  {campaignData.subtitle}
+                </h6>
+              )}
             </div>
 
             {/* Main Image with Verified Badge */}
