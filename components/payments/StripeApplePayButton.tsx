@@ -5,6 +5,7 @@ import { useStripe } from '@stripe/react-stripe-js';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { track } from '@/lib/analytics';
+import { getCurrencyCode } from '@/lib/utils/currency';
 
 interface StripeApplePayButtonProps {
   amount: number;
@@ -39,7 +40,7 @@ const StripeApplePayButton: React.FC<StripeApplePayButtonProps> = ({
     // Create payment request
     const paymentRequest = stripe.paymentRequest({
       country,
-      currency: currency.toLowerCase(),
+      currency: getCurrencyCode(currency).toLowerCase(),
       total: {
         label: 'Donation',
         amount: Math.round(amount * 100), // Convert to cents

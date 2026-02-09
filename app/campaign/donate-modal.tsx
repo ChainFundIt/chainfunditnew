@@ -252,7 +252,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
               clientSecret: subscriptionResult.clientSecret,
               donationId: subscriptionResult.subscriptionId,
               amount: amountNum,
-              currency: selectedCurrency,
+              currency: currencyCode,
             });
             setStep("stripe-payment");
           } else {
@@ -288,7 +288,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
             clientSecret: result.clientSecret,
             donationId: result.donationId,
             amount: amountNum,
-            currency: selectedCurrency,
+            currency: currencyCode,
           });
           setStep("stripe-payment");
         }
