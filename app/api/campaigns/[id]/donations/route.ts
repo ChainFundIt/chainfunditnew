@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { donations } from '@/lib/schema/donations';
 import { users } from '@/lib/schema/users';
+import { campaigns } from '@/lib/schema/campaigns';
 import { eq, desc, and } from 'drizzle-orm';
+import { convertToNaira, convertFromNaira } from '@/lib/utils/currency-conversion';
 
 export async function GET(
   request: NextRequest,
@@ -29,12 +31,22 @@ export async function GET(
       whereConditions.push(eq(donations.paymentMethod, paymentMethod));
     }
 
+    // Fetch campaign currency for conversion and display
+    const [campaignRow] = await db
+      .select({ currency: campaigns.currency })
+      .from(campaigns)
+      .where(eq(campaigns.id, campaignId))
+      .limit(1);
+    const campaignCurrency = campaignRow?.currency?.toUpperCase() || 'NGN';
+
     // Build the base query
     const baseQuery = db
       .select({
         id: donations.id,
         amount: donations.amount,
         currency: donations.currency,
+        convertedAmount: donations.convertedAmount,
+        convertedCurrency: donations.convertedCurrency,
         paymentStatus: donations.paymentStatus,
         paymentMethod: donations.paymentMethod,
         message: donations.message,
@@ -70,11 +82,13 @@ export async function GET(
     // No need to filter by status again since it's already in the WHERE clause
     const filteredDonations = campaignDonations;
 
-    // Format donations for frontend with null safety
+    // Format donations for frontend with null safety (include converted for campaign-currency display)
     const formattedDonations = filteredDonations.map(donation => ({
       id: donation.id || '',
       amount: donation.amount || '0',
       currency: donation.currency || 'NGN',
+      convertedAmount: donation.convertedAmount != null ? String(donation.convertedAmount) : null,
+      convertedCurrency: donation.convertedCurrency || null,
       paymentStatus: donation.paymentStatus || 'pending',
       paymentMethod: donation.paymentMethod || 'stripe',
       message: donation.message || '',
@@ -87,13 +101,20 @@ export async function GET(
       donorAvatar: donation.isAnonymous ? null : (donation.donorAvatar || null),
     }));
 
-    // Calculate donation stats with null safety
+    // Calculate donation stats in campaign currency (use converted amount when available)
     const completedDonations = campaignDonations.filter(d => d && d.paymentStatus === 'completed');
-    const totalAmount = completedDonations.reduce((sum, d) => {
-      const amount = d.amount;
-      if (!amount || isNaN(parseFloat(amount))) return sum;
-      return sum + parseFloat(amount);
-    }, 0);
+    let totalAmount = 0;
+    for (const d of completedDonations) {
+      const amount = d.amount ? parseFloat(String(d.amount)) : 0;
+      if (isNaN(amount)) continue;
+      const curr = (d.currency || 'NGN').toUpperCase();
+      if (d.convertedAmount != null && d.convertedCurrency?.toUpperCase() === campaignCurrency) {
+        totalAmount += parseFloat(String(d.convertedAmount));
+      } else {
+        const amountInNGN = convertToNaira(amount, curr);
+        totalAmount += campaignCurrency === 'NGN' ? amountInNGN : convertFromNaira(amountInNGN, campaignCurrency);
+      }
+    }
     const uniqueDonors = new Set(
       completedDonations
         .map(d => d.donorName)
@@ -103,6 +124,7 @@ export async function GET(
     return NextResponse.json({
       success: true,
       donations: formattedDonations,
+      campaignCurrency,
       stats: {
         totalDonations: completedDonations.length,
         totalAmount,

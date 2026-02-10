@@ -46,7 +46,8 @@ const db = drizzle(sql, { schema });
 
 import { campaigns } from '../lib/schema/campaigns';
 import { donations } from '../lib/schema/donations';
-import { eq, and, sum, sql as sqlFn, inArray } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
+import { convertToNaira, convertFromNaira } from '../lib/utils/currency-conversion';
 
 // Import payment verification functions
 const getPaystackVerification = async () => {
@@ -59,23 +60,47 @@ const getStripeVerification = async () => {
   return getStripePaymentIntent;
 };
 
-// Helper function to update campaign amount (duplicated here to avoid importing lib/db)
-async function updateCampaignAmount(campaignId: string): Promise<number | null> {
+// Compute total raised in campaign currency (same logic as lib/utils/campaign-amount.ts)
+async function getCampaignTotalInCampaignCurrency(campaignId: string): Promise<number> {
+  const [campaignRow] = await db
+    .select({ currency: campaigns.currency })
+    .from(campaigns)
+    .where(eq(campaigns.id, campaignId))
+    .limit(1);
+  const campaignCurrency = (campaignRow?.currency || 'NGN').toUpperCase();
+
+  const completedDonations = await db
+    .select({
+      amount: donations.amount,
+      currency: donations.currency,
+      convertedAmount: donations.convertedAmount,
+      convertedCurrency: donations.convertedCurrency,
+    })
+    .from(donations)
+    .where(and(
+      eq(donations.campaignId, campaignId),
+      eq(donations.paymentStatus, 'completed')
+    ));
+
+  let totalAmount = 0;
+  for (const d of completedDonations) {
+    const amount = d.amount ? parseFloat(String(d.amount)) : 0;
+    if (isNaN(amount)) continue;
+    const curr = (d.currency || 'NGN').toUpperCase();
+    if (d.convertedAmount != null && d.convertedCurrency?.toUpperCase() === campaignCurrency) {
+      totalAmount += parseFloat(String(d.convertedAmount));
+    } else {
+      const amountInNGN = convertToNaira(amount, curr);
+      totalAmount += campaignCurrency === 'NGN' ? amountInNGN : convertFromNaira(amountInNGN, campaignCurrency);
+    }
+  }
+  return totalAmount;
+}
+
+// Recalculate campaign amount in campaign currency (matches lib/utils/campaign-amount.ts)
+async function updateCampaignAmountLocal(campaignId: string): Promise<number | null> {
   try {
-    const donationStats = await db
-      .select({
-        totalAmount: sum(
-          sqlFn`COALESCE(${donations.convertedAmount}, ${donations.amount})`
-        ),
-      })
-      .from(donations)
-      .where(and(
-        eq(donations.campaignId, campaignId),
-        eq(donations.paymentStatus, 'completed')
-      ));
-
-    const totalAmount = Number(donationStats[0]?.totalAmount || 0);
-
+    const totalAmount = await getCampaignTotalInCampaignCurrency(campaignId);
     await db
       .update(campaigns)
       .set({
@@ -83,7 +108,6 @@ async function updateCampaignAmount(campaignId: string): Promise<number | null> 
         updatedAt: new Date(),
       })
       .where(eq(campaigns.id, campaignId));
-
     return totalAmount;
   } catch (error) {
     console.error('Error updating campaign amount:', error);
@@ -315,20 +339,8 @@ async function fixCampaignAmounts(options: {
             };
           }
 
-          // Calculate what the new amount should be
-          const donationStats = await db
-            .select({
-              totalAmount: sum(
-                sqlFn`COALESCE(${donations.convertedAmount}, ${donations.amount})`
-              ),
-            })
-            .from(donations)
-            .where(and(
-              eq(donations.campaignId, campaign.id),
-              eq(donations.paymentStatus, 'completed')
-            ));
-
-          const newAmount = Number(donationStats[0]?.totalAmount || 0);
+          // Calculate what the new amount should be (in campaign currency)
+          const newAmount = await getCampaignTotalInCampaignCurrency(campaign.id);
           const oldAmount = parseFloat(campaign.currentAmount || '0');
           const difference = newAmount - oldAmount;
 
@@ -542,7 +554,7 @@ async function fixCampaignAmounts(options: {
             }
           }
 
-          const result = await updateCampaignAmount(campaign.id);
+          const result = await updateCampaignAmountLocal(campaign.id);
           if (result !== null) {
             results.success++;
             console.log(`   ✅ Updated campaign amount to ${result.toFixed(2)}`);

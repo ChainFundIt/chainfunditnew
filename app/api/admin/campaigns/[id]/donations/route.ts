@@ -5,6 +5,7 @@ import { users } from '@/lib/schema/users';
 import { campaigns } from '@/lib/schema/campaigns';
 import { chainers } from '@/lib/schema/chainers';
 import { eq, desc, and } from 'drizzle-orm';
+import { convertToNaira, convertFromNaira } from '@/lib/utils/currency-conversion';
 
 /**
  * GET /api/admin/campaigns/[id]/donations
@@ -117,10 +118,18 @@ export async function GET(
     const pendingDonations = allDonations.filter(d => d.paymentStatus === 'pending');
     const failedDonations = allDonations.filter(d => d.paymentStatus === 'failed');
 
-    const totalAmount = completedDonations.reduce((sum, d) => {
+    const campaignCurrency = (campaign.currency || 'NGN').toUpperCase();
+    let totalAmount = 0;
+    for (const d of completedDonations) {
       const amount = Number(d.amount) || 0;
-      return sum + amount;
-    }, 0);
+      const curr = (d.currency || 'NGN').toUpperCase();
+      if (d.convertedAmount != null && d.convertedCurrency?.toUpperCase() === campaignCurrency) {
+        totalAmount += Number(d.convertedAmount);
+      } else {
+        const amountInNGN = convertToNaira(amount, curr);
+        totalAmount += campaignCurrency === 'NGN' ? amountInNGN : convertFromNaira(amountInNGN, campaignCurrency);
+      }
+    }
 
     const uniqueDonors = new Set(
       completedDonations
