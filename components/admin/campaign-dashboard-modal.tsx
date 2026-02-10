@@ -420,8 +420,22 @@ export function CampaignDashboardModal({
                                 </TableCell>
                                 <TableCell>
                                   <div className="font-medium">
-                                    {formatCurrency(donation.amount, donation.currency)}
+                                    {donation.convertedAmount != null &&
+                                    donation.convertedCurrency &&
+                                    campaign?.currency &&
+                                    donation.convertedCurrency.toUpperCase() === campaign.currency.toUpperCase()
+                                      ? formatCurrency(donation.convertedAmount, donation.convertedCurrency)
+                                      : formatCurrency(donation.amount, donation.currency)}
                                   </div>
+                                  {donation.convertedAmount != null &&
+                                    donation.convertedCurrency &&
+                                    campaign?.currency &&
+                                    donation.convertedCurrency.toUpperCase() === campaign.currency.toUpperCase() &&
+                                    donation.currency.toUpperCase() !== campaign.currency.toUpperCase() && (
+                                      <div className="text-xs text-muted-foreground">
+                                        donated as {formatCurrency(donation.amount, donation.currency)}
+                                      </div>
+                                    )}
                                 </TableCell>
                                 <TableCell>
                                   <div className="flex items-center gap-1">

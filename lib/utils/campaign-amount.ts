@@ -1,16 +1,15 @@
 import { db } from '@/lib/db';
 import { donations } from '@/lib/schema/donations';
 import { campaigns } from '@/lib/schema/campaigns';
-import { eq, and, sum, sql } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { checkAndUpdateGoalReached } from './campaign-validation';
+import { convertToNaira, convertFromNaira } from './currency-conversion';
 
 /**
  * Updates the campaign's current_amount by recalculating from all completed donations.
- * This function ensures consistency by:
- * 1. Using convertedAmount when available (for currency conversions), otherwise using amount
- * 2. Only counting donations with paymentStatus = 'completed'
- * 3. Recalculating from scratch to avoid double-counting or race conditions
- * 
+ * Sums in campaign currency: uses convertedAmount when available and in campaign currency,
+ * otherwise converts donation.amount from donation.currency to campaign currency.
+ *
  * @param campaignId - The ID of the campaign to update
  * @param options - Optional configuration
  * @returns The updated current amount, or null if update failed
@@ -22,14 +21,19 @@ export async function updateCampaignAmount(
   }
 ): Promise<number | null> {
   try {
-    // Calculate total amount from completed donations
-    // Use convertedAmount if available (for currency conversions), otherwise use amount
-    // This ensures we always use the campaign's currency
-    const donationStats = await db
+    const [campaignRow] = await db
+      .select({ currency: campaigns.currency })
+      .from(campaigns)
+      .where(eq(campaigns.id, campaignId))
+      .limit(1);
+    const campaignCurrency = (campaignRow?.currency || 'NGN').toUpperCase();
+
+    const completedDonations = await db
       .select({
-        totalAmount: sum(
-          sql`COALESCE(${donations.convertedAmount}, ${donations.amount})`
-        ),
+        amount: donations.amount,
+        currency: donations.currency,
+        convertedAmount: donations.convertedAmount,
+        convertedCurrency: donations.convertedCurrency,
       })
       .from(donations)
       .where(and(
@@ -37,7 +41,18 @@ export async function updateCampaignAmount(
         eq(donations.paymentStatus, 'completed')
       ));
 
-    const totalAmount = Number(donationStats[0]?.totalAmount || 0);
+    let totalAmount = 0;
+    for (const d of completedDonations) {
+      const amount = d.amount ? parseFloat(String(d.amount)) : 0;
+      if (isNaN(amount)) continue;
+      const curr = (d.currency || 'NGN').toUpperCase();
+      if (d.convertedAmount != null && d.convertedCurrency?.toUpperCase() === campaignCurrency) {
+        totalAmount += parseFloat(String(d.convertedAmount));
+      } else {
+        const amountInNGN = convertToNaira(amount, curr);
+        totalAmount += campaignCurrency === 'NGN' ? amountInNGN : convertFromNaira(amountInNGN, campaignCurrency);
+      }
+    }
 
     // Update campaign currentAmount
     await db

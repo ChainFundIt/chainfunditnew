@@ -1167,11 +1167,36 @@ const Main = ({ campaignSlug }: MainProps) => {
                         <span className="text-sm text-gray-600">
                           donated{" "}
                           <span className="" style={{ color: "#104901" }}>
-                            {formatCurrency(
-                              parseFloat(donation.amount),
-                              donation.currency
-                            )}
+                            {donation.convertedAmount &&
+                            donation.convertedCurrency &&
+                            campaignData?.currency &&
+                            donation.convertedCurrency.toUpperCase() ===
+                              campaignData.currency.toUpperCase()
+                              ? formatCurrency(
+                                  parseFloat(donation.convertedAmount),
+                                  donation.convertedCurrency
+                                )
+                              : formatCurrency(
+                                  parseFloat(donation.amount),
+                                  donation.currency
+                                )}
                           </span>
+                          {donation.convertedAmount &&
+                            donation.convertedCurrency &&
+                            campaignData?.currency &&
+                            donation.convertedCurrency.toUpperCase() ===
+                              campaignData.currency.toUpperCase() &&
+                            donation.currency.toUpperCase() !==
+                              campaignData.currency.toUpperCase() && (
+                              <span className="text-gray-500 text-xs ml-1">
+                                (donated as{" "}
+                                {formatCurrency(
+                                  parseFloat(donation.amount),
+                                  donation.currency
+                                )}
+                                )
+                              </span>
+                            )}
                         </span>
                       </div>
                       <p className="text-sm text-gray-500 mb-2">

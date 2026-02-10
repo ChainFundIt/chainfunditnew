@@ -4,6 +4,8 @@ export interface CampaignDonation {
   id: string;
   amount: string;
   currency: string;
+  convertedAmount?: string | null;
+  convertedCurrency?: string | null;
   paymentStatus: string;
   paymentMethod?: string;
   message?: string;

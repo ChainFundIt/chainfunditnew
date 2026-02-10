@@ -179,10 +179,19 @@ export async function fetchExchangeRateFallback(
  */
 const APPROXIMATE_RATES_TO_NGN: Record<string, number> = {
   NGN: 1.0,
-  USD: 1500.0, // Approximate: 1 USD ≈ 1500 NGN
-  GBP: 1900.0, // Approximate: 1 GBP ≈ 1900 NGN
-  EUR: 1650.0, // Approximate: 1 EUR ≈ 1650 NGN
-  CAD: 1100.0, // Approximate: 1 CAD ≈ 1100 NGN
+  USD: 1500.0,   // Approximate: 1 USD ≈ 1500 NGN
+  GBP: 1900.0,   // Approximate: 1 GBP ≈ 1900 NGN
+  EUR: 1650.0,   // Approximate: 1 EUR ≈ 1650 NGN
+  CAD: 1100.0,   // Approximate: 1 CAD ≈ 1100 NGN
+  AUD: 1000.0,   // Approximate: 1 AUD ≈ 1000 NGN
+  CHF: 1650.0,   // Approximate: 1 CHF ≈ 1650 NGN
+  JPY: 10.0,     // Approximate: 1 JPY ≈ 10 NGN (100 JPY ≈ 1000 NGN)
+  SGD: 1125.0,   // Approximate: 1 SGD ≈ 1125 NGN
+  HKD: 192.0,    // Approximate: 1 HKD ≈ 192 NGN
+  NZD: 900.0,    // Approximate: 1 NZD ≈ 900 NGN
+  GHS: 100.0,    // Approximate: 1 GHS ≈ 100 NGN
+  ZAR: 82.0,     // Approximate: 1 ZAR ≈ 82 NGN
+  KES: 11.5,     // Approximate: 1 KES ≈ 11.5 NGN
 };
 
 /**
