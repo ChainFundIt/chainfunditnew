@@ -6,13 +6,6 @@ export const revalidate = 86400;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-async function getLogoDataUri() {
-  const svg = await fetch(new URL("../../og-assets/logo.svg", import.meta.url)).then((r) =>
-    r.text(),
-  );
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-}
-
 function slugToTitle(slug: string) {
   const decoded = decodeURIComponent(slug);
   const words = decoded
@@ -36,8 +29,6 @@ export default async function CampaignOpenGraphImage({
   // We render a deterministic branded image (logo + title) based on the slug.
   const title = slugToTitle(slug);
   const subtitle = "Support this campaign on Chainfundit";
-
-  const logoDataUri = await getLogoDataUri().catch(() => null);
 
   return new ImageResponse(
     (
@@ -75,28 +66,23 @@ export default async function CampaignOpenGraphImage({
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-            {logoDataUri ? (
-              <div
-                style={{
-                  width: 88,
-                  height: 88,
-                  borderRadius: 22,
-                  background: "rgba(255,255,255,0.92)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  boxShadow: "0 18px 60px rgba(0,0,0,0.35)",
-                }}
-              >
-                <img
-                  src={logoDataUri}
-                  width={66}
-                  height={66}
-                  alt="Chainfundit logo"
-                  style={{ display: "block" }}
-                />
-              </div>
-            ) : null}
+            <div
+              style={{
+                width: 88,
+                height: 88,
+                borderRadius: 9999,
+                background: "rgba(34,197,94,0.18)",
+                border: "3px solid rgba(34,197,94,0.7)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 18px 60px rgba(0,0,0,0.35)",
+                fontSize: 40,
+                fontWeight: 900,
+              }}
+            >
+              C
+            </div>
             <div style={{ fontSize: 28, fontWeight: 700, opacity: 0.95 }}>
               chainfundit.com
             </div>
