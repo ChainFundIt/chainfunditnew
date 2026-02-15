@@ -10,17 +10,7 @@ export const size = {
 
 export const contentType = "image/png";
 
-async function getLogoDataUri() {
-  // IMPORTANT: Don't fetch from the public site here (can be flaky and cause preview images to fail).
-  // Bundle the SVG with the route and embed it as a data URI.
-  const svg = await fetch(new URL("./og-assets/logo.svg", import.meta.url)).then((r) =>
-    r.text(),
-  );
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-}
-
 export default async function TwitterImage() {
-  const logoDataUri = await getLogoDataUri();
   return new ImageResponse(
     (
       <div
@@ -41,22 +31,19 @@ export default async function TwitterImage() {
           style={{
             width: 118,
             height: 118,
-            borderRadius: 30,
-            background: "rgba(255,255,255,0.92)",
+            borderRadius: 9999,
+            background: "rgba(34,197,94,0.2)",
+            border: "3px solid rgba(34,197,94,0.75)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             boxShadow: "0 18px 60px rgba(0,0,0,0.35)",
             marginBottom: 28,
+            fontSize: 48,
+            fontWeight: 900,
           }}
         >
-          <img
-            src={logoDataUri}
-            width={92}
-            height={92}
-            alt="Chainfundit logo"
-            style={{ display: "block" }}
-          />
+          C
         </div>
         <div
           style={{

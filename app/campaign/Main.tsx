@@ -777,7 +777,7 @@ const Main = ({ campaignSlug }: MainProps) => {
               <div className="p-6">
                 {activeTab === "our-story" && (
                   <div className="prose prose-gray max-w-none">
-                    <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    <p className="text-gray-700 text-justify leading-relaxed whitespace-pre-wrap">
                       {campaignData.description}
                     </p>
                   </div>
