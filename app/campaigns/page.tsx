@@ -20,6 +20,7 @@ import { useGeolocation, useCampaignFiltering } from "@/hooks/use-geolocation";
 import Footer from "@/components/layout/Footer";
 import { getRelatedCategories } from "@/lib/utils/category-mapping";
 import Navbar from "@/components/layout/Navbar";
+import Link from "next/link";
 
 // Campaign categories only
 const allCategories = [
@@ -253,8 +254,14 @@ export default function AllCampaignsPage() {
             Support causes you care about and make a difference in people&apos;s
             lives
           </div>
-          <div className="md:flex hidden absolute left-1/2 rounded-full h-[24rem] w-[24rem] bg-[#FACC151A] blur-[100px]"></div>
-          <div className="md:flex hidden  absolute right-1/3 -top-[50px] rounded-full h-[24rem] w-[24rem] bg-[#10B98133] blur-[100px]"></div>
+          <Link href={"/campaigns/chained"} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/30 text-sm text-[#e5f7e9] hover:bg-white/20 transition-colors cursor-pointer">
+              <span className="font-semibold">Looking to be an ambassador?</span>
+              <span className="underline underline-offset-2">
+                Browse campaigns that allow chaining
+              </span>
+          </Link>
+          <div className="md:flex hidden absolute left-1/2 rounded-full h-[24rem] w-[24rem] bg-[#FACC151A] blur-[100px] pointer-events-none"></div>
+          <div className="md:flex hidden  absolute right-1/3 -top-[50px] rounded-full h-[24rem] w-[24rem] bg-[#10B98133] blur-[100px] pointer-events-none"></div>
         </div>
       </div>
       <div className="bg-white px-4 py-20 flex justify-center relative" style={{zIndex: "5"}}>

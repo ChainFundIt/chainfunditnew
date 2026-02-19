@@ -57,6 +57,12 @@ const navigation = [
     current: false,
   },
   {
+    name: "Chained Campaigns",
+    href: "/admin/campaigns/chained",
+    icon: Share,
+    current: false,
+  },
+  {
     name: "Careers",
     href: "/admin/careers",
     icon: Briefcase,

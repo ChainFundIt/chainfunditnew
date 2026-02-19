@@ -65,6 +65,8 @@ export async function GET(request: NextRequest) {
         updatedAt: campaigns.updatedAt,
         isActive: campaigns.isActive,
         coverImageUrl: campaigns.coverImageUrl,
+        isChained: campaigns.isChained,
+        chainerCommissionRate: campaigns.chainerCommissionRate,
         creatorName: users.fullName,
       })
       .from(campaigns)
@@ -109,6 +111,10 @@ export async function GET(request: NextRequest) {
 
         return {
           ...campaign,
+          // Normalize numeric fields that may come back as strings (decimals)
+          goalAmount: Number(campaign.goalAmount),
+          currentAmount: Number(campaign.currentAmount),
+          chainerCommissionRate: Number(campaign.chainerCommissionRate || 0),
           status: effectiveStatus,
           donationCount: donationStats?.count || 0,
           chainerCount: chainerStats?.count || 0,
