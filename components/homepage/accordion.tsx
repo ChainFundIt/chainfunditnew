@@ -41,7 +41,7 @@ export function FaqsAccordion() {
       value: "item-6",
       question: "Can I get a refund for my donation?",
       answer:
-        "Donations on ChainFundIt are generally non-refundable, as they are considered voluntary gifts. However, if there was an error (such as a duplicate charge or donation to the wrong campaign), please contact us at <a href='mailto:campaigns@chainfundit.com'>campaigns@chainfundit.com</a> within 48 hours, and we'll do our best to help.",
+        "Donations on ChainFundIt are generally non-refundable, as they are considered voluntary gifts. However, if there was an error (such as a duplicate charge or donation to the wrong campaign), please contact us at campaigns@chainfundit.com within 48 hours, and we'll do our best to help.",
     },
   ];
 
