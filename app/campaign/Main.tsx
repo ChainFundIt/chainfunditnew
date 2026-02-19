@@ -21,6 +21,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Shield,
+  Link2,
 } from "lucide-react";
 import CTA from "./cta";
 import ChainModal from "./chain-modal";
@@ -538,8 +539,8 @@ const Main = ({ campaignSlug }: MainProps) => {
             <span className="text-gray-400">/</span>
             <Link href={`/campaign/${campaignData.slug}`} className="text-gray-500 hover:text-gray-900">
               <span style={{ color: "#104901" }} className="font-medium">
-              {campaignData.reason}
-            </span>
+                {campaignData.reason}
+              </span>
             </Link>
           </div>
         </div>
@@ -606,7 +607,7 @@ const Main = ({ campaignSlug }: MainProps) => {
                       UNDER REVIEW
                     </span>
                   </div>
-                )} 
+                )}
                 {campaignData.status !== "under_review" && isGoalReached && (
                   <div className="bg-blue-100/95 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-lg">
                     <span className="text-sm font-medium text-blue-800">
@@ -617,21 +618,21 @@ const Main = ({ campaignSlug }: MainProps) => {
                 {campaignData.status !== "under_review" &&
                   !isGoalReached &&
                   campaignData.isActive && (
-                  <div className="bg-green-100/95 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-lg">
-                    <span className="text-sm font-medium text-green-800">
-                      ACTIVE
-                    </span>
-                  </div>
-                )}
+                    <div className="bg-green-100/95 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-lg">
+                      <span className="text-sm font-medium text-green-800">
+                        ACTIVE
+                      </span>
+                    </div>
+                  )}
                 {campaignData.status !== "under_review" &&
                   !isGoalReached &&
                   !campaignData.isActive && (
-                  <div className="bg-gray-100/95 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-lg">
-                    <span className="text-sm font-medium text-gray-800">
-                      INACTIVE
-                    </span>
-                  </div>
-                )}
+                    <div className="bg-gray-100/95 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-lg">
+                      <span className="text-sm font-medium text-gray-800">
+                        INACTIVE
+                      </span>
+                    </div>
+                  )}
               </div>
             </div>
 
@@ -642,11 +643,10 @@ const Main = ({ campaignSlug }: MainProps) => {
                   <button
                     key={img}
                     onClick={() => setSelectedImage(idx)}
-                    className={`relative flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-all ${
-                      selectedImage === idx
+                    className={`relative flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === idx
                         ? "border-[#104901] ring-2 ring-offset-2"
                         : "border-gray-200 hover:border-gray-300"
-                    }`}
+                      }`}
                   >
                     {needsEmojiFallback(img) ? (
                       <EmojiFallbackImage
@@ -712,11 +712,10 @@ const Main = ({ campaignSlug }: MainProps) => {
               <div className="flex border-b border-gray-200">
                 <button
                   onClick={() => setActiveTab("our-story")}
-                  className={`flex-1 px-6 py-4 text-base font-medium transition-colors ${
-                    activeTab === "our-story"
+                  className={`flex-1 px-6 py-4 text-base font-medium transition-colors ${activeTab === "our-story"
                       ? "border-b-2 bg-[#F0F9EC]"
                       : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                  }`}
+                    }`}
                   style={
                     activeTab === "our-story"
                       ? { color: "#104901", borderBottomColor: "#104901" }
@@ -727,11 +726,10 @@ const Main = ({ campaignSlug }: MainProps) => {
                 </button>
                 <button
                   onClick={() => setActiveTab("updates")}
-                  className={`flex-1 px-6 py-4 text-base font-medium transition-colors relative ${
-                    activeTab === "updates"
+                  className={`flex-1 px-6 py-4 text-base font-medium transition-colors relative ${activeTab === "updates"
                       ? "border-b-2 bg-[#F0F9EC]"
                       : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                  }`}
+                    }`}
                   style={
                     activeTab === "updates"
                       ? { color: "#104901", borderBottomColor: "#104901" }
@@ -750,11 +748,10 @@ const Main = ({ campaignSlug }: MainProps) => {
                 </button>
                 <button
                   onClick={() => setActiveTab("documents")}
-                  className={`flex-1 px-6 py-4 text-base font-medium transition-colors relative ${
-                    activeTab === "documents"
+                  className={`flex-1 px-6 py-4 text-base font-medium transition-colors relative ${activeTab === "documents"
                       ? "border-b-2 bg-[#F0F9EC]"
                       : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                  }`}
+                    }`}
                   style={
                     activeTab === "documents"
                       ? { color: "#104901", borderBottomColor: "#104901" }
@@ -1000,7 +997,7 @@ const Main = ({ campaignSlug }: MainProps) => {
                             {donation.isAnonymous
                               ? "A"
                               : donation.donorName?.charAt(0).toUpperCase() ||
-                                "D"}
+                              "D"}
                           </span>
                         )}
                       </div>
@@ -1039,6 +1036,16 @@ const Main = ({ campaignSlug }: MainProps) => {
                   <ArrowRight />
                   <span>Donate Now</span>
                 </Button>
+                {campaignData.isChained && (
+                  <Button
+                    onClick={() => setChainModalOpen(true)}
+                    disabled={shouldDisableButtons}
+                    className="rounded-3xl h-auto py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Link2 />
+                    <span>Become an Ambassador</span>
+                  </Button>
+                )}
                 <Button
                   onClick={() => setShareModalOpen(true)}
                   disabled={shouldDisableButtons}
@@ -1153,7 +1160,7 @@ const Main = ({ campaignSlug }: MainProps) => {
                           {donation.isAnonymous
                             ? "A"
                             : donation.donorName?.charAt(0).toUpperCase() ||
-                              "D"}
+                            "D"}
                         </span>
                       )}
                     </div>
@@ -1168,26 +1175,26 @@ const Main = ({ campaignSlug }: MainProps) => {
                           donated{" "}
                           <span className="" style={{ color: "#104901" }}>
                             {donation.convertedAmount &&
-                            donation.convertedCurrency &&
-                            campaignData?.currency &&
-                            donation.convertedCurrency.toUpperCase() ===
+                              donation.convertedCurrency &&
+                              campaignData?.currency &&
+                              donation.convertedCurrency.toUpperCase() ===
                               campaignData.currency.toUpperCase()
                               ? formatCurrency(
-                                  parseFloat(donation.convertedAmount),
-                                  donation.convertedCurrency
-                                )
+                                parseFloat(donation.convertedAmount),
+                                donation.convertedCurrency
+                              )
                               : formatCurrency(
-                                  parseFloat(donation.amount),
-                                  donation.currency
-                                )}
+                                parseFloat(donation.amount),
+                                donation.currency
+                              )}
                           </span>
                           {donation.convertedAmount &&
                             donation.convertedCurrency &&
                             campaignData?.currency &&
                             donation.convertedCurrency.toUpperCase() ===
-                              campaignData.currency.toUpperCase() &&
+                            campaignData.currency.toUpperCase() &&
                             donation.currency.toUpperCase() !==
-                              campaignData.currency.toUpperCase() && (
+                            campaignData.currency.toUpperCase() && (
                               <span className="text-gray-500 text-xs ml-1">
                                 (donated as{" "}
                                 {formatCurrency(
@@ -1232,7 +1239,7 @@ const Main = ({ campaignSlug }: MainProps) => {
             </div>
           )}
         </div>
-      
+
       </div>
       {/* CTA Section */}
       <CTA />

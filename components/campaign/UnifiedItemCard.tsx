@@ -79,12 +79,12 @@ export function UnifiedItemCard({
   const progressPercentage =
     isCampaign && item.goalAmount
       ? Math.min(
-        100,
-        Math.round((item.currentAmount || 0) / item.goalAmount) * 100
-      )
+          100,
+          Math.round(
+            ((item.currentAmount || 0) / item.goalAmount) * 100
+          )
+        )
       : 0;
-
-  // Check favourite status on mount (only if user is authenticated)
   useEffect(() => {
     if (authLoading) return;
 
