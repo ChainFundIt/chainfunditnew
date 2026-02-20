@@ -858,6 +858,40 @@ const PayoutsPage = () => {
         />
       </div>
 
+      {/* Ambassador commissions shortcut */}
+      <div className="mt-4">
+        <div className="bg-white border border-emerald-100 rounded-2xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-full bg-emerald-100 flex items-center justify-center">
+              <TrendingUp className="h-4 w-4 text-emerald-700" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-900">
+                Ambassador commissions
+              </p>
+              <p className="text-xs text-gray-600">
+                See commissions you&apos;ve earned by chaining and sharing campaigns.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs border-emerald-500 text-emerald-700 hover:bg-emerald-50"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.location.href = "/dashboard/payouts/commissions";
+                }
+              }}
+            >
+              View commission payouts
+              <ExternalLink className="h-3 w-3 ml-1" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
       {/* Campaigns List */}
       <div className="text-2xl font-bold text-[#104109]">Your Campaigns</div>
       <div className="flex flex-col gap-4">

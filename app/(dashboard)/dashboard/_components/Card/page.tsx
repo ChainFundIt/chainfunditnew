@@ -38,7 +38,7 @@ const Card = ({
             borderRadius: "7px",
           }}
         >
-          <Icon />
+          <Icon color="white" />
         </div>
         <div
           style={{

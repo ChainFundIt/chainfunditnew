@@ -264,7 +264,9 @@ export default function CreateCampaignPage() {
       const story =
         data.choices?.[0]?.message?.content ?? "No suggestion generated.";
       setAiInstruction(story);
+      console.log("AI suggestion:", story);
     } catch (error) {
+      console.error("Error generating suggestion:", error);
       setAiInstruction("Error generating suggestion. Try again.");
     } finally {
       setIsLoading(false);
