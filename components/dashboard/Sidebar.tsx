@@ -29,6 +29,7 @@ const sideBarButtons = [
   },
   { icon: CampaignsIcon, label: "Campaigns", url: "/dashboard/campaigns" },
   { icon: DonationsIcon, label: "Donations", url: "/dashboard/donations" },
+  { icon: Share, label: "Ambassador", url: "/dashboard/ambassador" },
   { icon: PayoutsIcon, label: "Payouts", url: "/dashboard/payouts" },
   { icon: SettingsIcon, label: "Settings", url: "/dashboard/settings" },
 ];

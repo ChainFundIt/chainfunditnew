@@ -1043,7 +1043,7 @@ const Main = ({ campaignSlug }: MainProps) => {
                     className="rounded-3xl h-auto py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Link2 />
-                    <span>Become an Ambassador</span>
+                    <span>Chain Campaign</span>
                   </Button>
                 )}
                 <Button
