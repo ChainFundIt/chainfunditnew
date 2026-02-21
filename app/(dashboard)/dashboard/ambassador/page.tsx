@@ -106,9 +106,9 @@ export default function AmbassadorDashboardPage() {
         typeof window !== "undefined" ? window.location.origin : "";
       const link = `${base}/c/${referralCode}`;
       await navigator.clipboard.writeText(link);
-      toast.success("Referral link copied");
+      toast.success("Chain link copied");
     } catch {
-      toast.error("Unable to copy link");
+      toast.error("Unable to copy chain link");
     }
   };
 
@@ -124,7 +124,7 @@ export default function AmbassadorDashboardPage() {
           Ambassador
         </div>
         <div className="text-[#6B7280] text-[14px] font-medium leading-[21px]">
-          Track how your referral links are helping campaigns raise funds and how much
+          Track how your chain links are helping campaigns raise funds and how much
           commission you&apos;ve earned.
         </div>
       </div>
@@ -145,7 +145,7 @@ export default function AmbassadorDashboardPage() {
                 You haven&apos;t chained any campaigns yet
               </p>
               <p className="text-gray-600 text-sm max-w-md">
-                When you chain a campaign and share your referral link, you&apos;ll
+                When you chain a campaign and share your chain link, you&apos;ll
                 see your impact and earnings here.
               </p>
             </div>
@@ -195,7 +195,7 @@ export default function AmbassadorDashboardPage() {
               containerStyle={isMobile ? { width: "100%" } : {}}
               bgColor="#104109"
               value={stats?.totalReferrals || 0}
-              text="TOTAL REFERRALS"
+              text="TOTAL CHAINS"
               Icon={Users}
             />
 
@@ -233,13 +233,13 @@ export default function AmbassadorDashboardPage() {
                         Your earnings
                       </th>
                       <th className="py-3 px-4 font-medium text-gray-500">
-                        Referrals
+                        Chains
                       </th>
                       <th className="py-3 px-4 font-medium text-gray-500">
                         Progress
                       </th>
                       <th className="py-3 pl-4 font-medium text-gray-500">
-                        Referral link
+                        Chain (Link)
                       </th>
                     </tr>
                   </thead>

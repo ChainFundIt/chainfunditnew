@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
 import { db } from '@/lib/db';
-import { users } from '@/lib/schema';
+import { users, chainers } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -17,6 +17,9 @@ interface CampaignDonationEmailData {
   message?: string;
   isLargeDonation: boolean;
   donationId: string;
+  referralAmbassadorName?: string;
+  referralAmbassadorCode?: string;
+  referralLink?: string;
 }
 
 /**
@@ -82,6 +85,9 @@ export async function sendCampaignDonationEmail(data: CampaignDonationEmailData)
             .detail-label { font-weight: 600; color: #6b7280; }
             .detail-value { color: #111827; }
             .message-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; }
+            .ambassador-box { background: #ecfeff; border-left: 4px solid #0ea5e9; padding: 15px; margin: 20px 0; border-radius: 8px; }
+            .ambassador-box strong { color: #0f172a; }
+            .ambassador-link { color: #0369a1; text-decoration: none; font-weight: 600; }
             .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
             .button { display: inline-block; background: #16a34a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
             .large-donation-badge { background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 15px; margin: 20px 0; text-align: center; }
@@ -133,6 +139,14 @@ export async function sendCampaignDonationEmail(data: CampaignDonationEmailData)
                 <div class="message-box">
                   <strong>💬 Donor Message:</strong><br/>
                   "${data.message}"
+                </div>
+              ` : ''}
+              
+              ${data.referralAmbassadorName ? `
+                <div class="ambassador-box">
+                  <strong>Referral Spotlight:</strong><br/>
+                  This gift arrived through ambassador ${data.referralAmbassadorName}${data.referralAmbassadorCode ? ` (code: ${data.referralAmbassadorCode})` : ''}.
+                  ${data.referralLink ? `<div style="margin-top: 8px;"><a href="${data.referralLink}" class="ambassador-link">View the referral chain →</a></div>` : ''}
                 </div>
               ` : ''}
               
@@ -225,6 +239,35 @@ export async function sendCampaignDonationEmailById(
       }
     }
 
+    let referralAmbassadorName: string | undefined;
+    let referralAmbassadorCode: string | undefined;
+    let referralLink: string | undefined;
+
+    if (donationData.chainerId) {
+      const ambassador = await db
+        .select({
+          referralCode: chainers.referralCode,
+          ambassadorName: users.fullName,
+        })
+        .from(chainers)
+        .leftJoin(users, eq(chainers.userId, users.id))
+        .where(eq(chainers.id, donationData.chainerId))
+        .limit(1);
+
+      if (ambassador.length) {
+        referralAmbassadorName =
+          ambassador[0].ambassadorName || 'Chain Ambassador';
+        referralAmbassadorCode = ambassador[0].referralCode || undefined;
+
+        if (referralAmbassadorCode) {
+          const baseAppUrl =
+            process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ||
+            'https://chainfundit.com';
+          referralLink = `${baseAppUrl}/c/${referralAmbassadorCode}`;
+        }
+      }
+    }
+
     const emailData: CampaignDonationEmailData = {
       campaignCreatorEmail: creator.email,
       campaignCreatorName: creator.fullName || 'Campaign Creator',
@@ -237,6 +280,9 @@ export async function sendCampaignDonationEmailById(
       message: donationData.message || undefined,
       isLargeDonation,
       donationId: donationData.id,
+      referralAmbassadorName,
+      referralAmbassadorCode,
+      referralLink,
     };
 
     return await sendCampaignDonationEmail(emailData);
@@ -245,4 +291,3 @@ export async function sendCampaignDonationEmailById(
     return { sent: false, reason: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
-

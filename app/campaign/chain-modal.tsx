@@ -123,7 +123,7 @@ const ChainModal: React.FC<ChainModalProps> = ({
     }
 
     if (!acceptTerms || !confirmUnderstanding) {
-      toast.error("You need to agree to the ambassador terms to continue");
+      toast.error("You need to agree to the ambassador agreement to continue");
       return;
     }
 
@@ -216,14 +216,14 @@ const ChainModal: React.FC<ChainModalProps> = ({
               {step === "form" 
                 ? "Chain this campaign" 
                 : step === "terms"
-                ? "Ambassador Terms"
+                ? "Ambassador Agreement"
                 : "Congratulations!"}
             </h2>
             <p className="text-base text-[#5F8555] mt-1">
               {step === "form" 
                 ? "Get your very own custom link you can share with your personal network."
                 : step === "terms"
-                ? "Please review and agree to the ambassador terms before proceeding."
+                ? "Please review and agree to the ambassador agreement before proceeding."
                 : "You can now share this campaign with your personal network, using your own custom link."}
             </p>
           </div>
@@ -384,7 +384,7 @@ const ChainModal: React.FC<ChainModalProps> = ({
             <div className="space-y-5">
               <div className="bg-white/80 border border-[#C0BFC4] rounded-lg max-h-[70vh] overflow-y-auto p-4">
                 <h3 className="text-lg font-semibold text-[#104901] mb-2">
-                  ChainFundIt Chain Ambassador Terms and Conditions
+                  ChainFundIt Chain Ambassador Agreement
                 </h3>
                 <p className="text-xs text-[#6b7280] mb-3">
                   This Agreement sets out the terms and conditions under which you may
@@ -461,7 +461,7 @@ const ChainModal: React.FC<ChainModalProps> = ({
                     className="text-sm text-[#374151]"
                   >
                     I confirm that I have read and understood the ambassador
-                    terms and how commissions work.
+                     agreement and how commissions work.
                   </Label>
                 </div>
 
@@ -477,8 +477,7 @@ const ChainModal: React.FC<ChainModalProps> = ({
                     htmlFor="ambassador-agree"
                     className="text-sm text-[#374151]"
                   >
-                    I agree to the ChainFundIt Chain Ambassador Terms and
-                    Conditions.
+                    I agree to the ChainFundIt Chain Ambassador Agreement.
                   </Label>
                 </div>
 

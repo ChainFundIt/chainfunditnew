@@ -29,9 +29,9 @@ export function CurrencyBreakdown({
     <div className={cn("space-y-1 text-sm", className)}>
       {sortedAmounts.map((entry) => (
         <div key={entry.currency} className="flex items-center justify-between">
-          <span className="text-sm text-black font-medium">
+          {/* <span className="text-sm text-black font-medium">
             {entry.currency}
-          </span>
+          </span> */}
           <span className="font-medium text-base">
             {formatCurrency(entry.amount, entry.currency)}
           </span>
