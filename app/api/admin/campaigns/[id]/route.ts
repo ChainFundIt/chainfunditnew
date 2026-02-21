@@ -4,6 +4,7 @@ import { campaigns, users, donations, chainers } from '@/lib/schema';
 import {
   sendCampaignHoldEmail,
   sendCampaignReactivatedEmail,
+  sendCampaignVerifiedEmail,
 } from '@/lib/notifications/campaign-status-emails';
 import { eq, and, count, sum, desc } from 'drizzle-orm';
 
@@ -289,6 +290,15 @@ export async function PATCH(
 
         if (action === 'activate') {
           await sendCampaignReactivatedEmail({
+            userEmail: creatorEmail,
+            userName: creatorName,
+            campaignTitle: existingCampaign.title,
+            campaignUrl,
+          });
+        }
+
+        if (action === 'verify') {
+          await sendCampaignVerifiedEmail({
             userEmail: creatorEmail,
             userName: creatorName,
             campaignTitle: existingCampaign.title,

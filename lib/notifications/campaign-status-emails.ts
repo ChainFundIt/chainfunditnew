@@ -180,3 +180,86 @@ export async function sendCampaignReactivatedEmail(
     return null;
   }
 }
+
+export async function sendCampaignVerifiedEmail(
+  data: CampaignStatusEmailData
+) {
+  try {
+    const subject = "Your Campaign is Now Verified ✅";
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 45%, #16a34a 100%); color: white; padding: 32px 24px; text-align: center; border-radius: 12px 12px 0 0; }
+            .logo-img { max-width: 160px; height: auto; margin-bottom: 15px; }
+            .content { background: #ffffff; padding: 32px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px; }
+            .badge { display: inline-flex; align-items: center; gap: 8px; background: #dcfce7; color: #166534; padding: 10px 16px; border-radius: 999px; font-weight: 600; margin: 20px 0; }
+            .cta-button { display: inline-block; margin: 32px auto 24px; padding: 14px 28px; background: #16a34a; color: #fff; border-radius: 999px; text-decoration: none; font-weight: 600; }
+            .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
+            p { margin-bottom: 16px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              ${(() => {
+                const logoUrl = `/images/logo.svg`;
+                return `<img src="${logoUrl}" alt="ChainFundit Logo" class="logo-img" />`;
+              })()}
+              <h1>Verified Badge Unlocked</h1>
+              <p>Your community can trust this story even more.</p>
+            </div>
+
+            <div class="content">
+              <p>Hi ${data.userName},</p>
+              <p>Thank you for creating your campaign on ChainFundIt.</p>
+              <p>We’re pleased to share that <strong>${data.campaignTitle}</strong> has officially been given the <strong>“Verified”</strong> tag.</p>
+
+              <div class="badge">✅ Campaign Verified</div>
+
+              <p>This badge adds an extra layer of authenticity to your campaign and helps build trust with donors, which can significantly increase confidence in supporting your cause.</p>
+
+              <p>We’re excited to see your fundraising journey unfold and wish you every success in reaching your goal. Need support promoting your campaign or sharing updates? Reach us anytime at <a href="mailto:campaigns@chainfundit.com">campaigns@chainfundit.com</a>.</p>
+
+              ${data.campaignUrl ? `
+              <div style="text-align:center;">
+                <a href="${data.campaignUrl}" class="cta-button">View Campaign</a>
+              </div>
+              ` : ''}
+
+              <p><strong>Raise funds. Support dreams. Join the movement.</strong></p>
+
+              <p>Warm regards,<br />
+              The ChainFundIt Team</p>
+            </div>
+
+            <div class="footer">
+              <p><a href="https://www.chainfundit.com">www.chainfundit.com</a></p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    if (!process.env.RESEND_API_KEY) {
+      console.error("RESEND_API_KEY is not configured");
+      return null;
+    }
+
+    const result = await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || "notifications@chainfundit.com",
+      to: data.userEmail,
+      subject,
+      html,
+    });
+
+    return result;
+  } catch (error) {
+    console.error("Error sending campaign verified email:", error);
+    return null;
+  }
+}

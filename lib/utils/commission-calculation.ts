@@ -4,6 +4,8 @@ import { chainers } from '@/lib/schema/chainers';
 import { campaigns } from '@/lib/schema/campaigns';
 import { commissionPayouts } from '@/lib/schema/commission-payouts';
 import { referrals } from '@/lib/schema/referrals';
+import { users } from '@/lib/schema/users';
+import { sendChainerDonationEmail } from '@/lib/notifications/chainer-donation-email';
 import { eq, and } from 'drizzle-orm';
 
 /**
@@ -21,6 +23,8 @@ export async function calculateAndDistributeCommissions(donationId: string) {
         chainerId: donations.chainerId,
         amount: donations.amount,
         currency: donations.currency,
+        donorName: donations.donorName,
+        isAnonymous: donations.isAnonymous,
       })
       .from(donations)
       .where(eq(donations.id, donationId))
@@ -39,6 +43,8 @@ export async function calculateAndDistributeCommissions(donationId: string) {
         id: campaigns.id,
         chainerCommissionRate: campaigns.chainerCommissionRate,
         creatorId: campaigns.creatorId,
+        title: campaigns.title,
+        slug: campaigns.slug,
       })
       .from(campaigns)
       .where(eq(campaigns.id, donationData.campaignId))
@@ -63,7 +69,11 @@ export async function calculateAndDistributeCommissions(donationId: string) {
         totalCommission,
         donationData.donorId,
         donationData.id,
-        donationData.currency
+        donationData.currency,
+        campaignData.title,
+        campaignData.slug,
+        donationData.donorName,
+        donationData.isAnonymous
       );
     }
 
@@ -93,7 +103,11 @@ async function handleDirectReferralCommission(
   totalCommission: number,
   donorId: string,
   donationId: string,
-  currency: string
+  currency: string,
+  campaignTitle: string,
+  campaignSlug?: string | null,
+  donorName?: string | null,
+  donorIsAnonymous?: boolean
 ) {
   try {
 
@@ -106,8 +120,12 @@ async function handleDirectReferralCommission(
         totalRaised: chainers.totalRaised,
         totalReferrals: chainers.totalReferrals,
         commissionEarned: chainers.commissionEarned,
+        referralCode: chainers.referralCode,
+        userEmail: users.email,
+        userName: users.fullName,
       })
       .from(chainers)
+      .leftJoin(users, eq(chainers.userId, users.id))
       .where(eq(chainers.id, chainerId))
       .limit(1);
 
@@ -149,9 +167,22 @@ async function handleDirectReferralCommission(
       referrerId: chainerData.userId,
       referredId: donorId,
       campaignId: campaignId,
-      referralCode: '', // We'll get this from chainer if needed
+      referralCode: chainerData.referralCode || '',
       isConverted: true,
     });
+
+    if (chainerData.userEmail) {
+      await sendChainerDonationEmail({
+        chainerEmail: chainerData.userEmail,
+        chainerName: chainerData.userName || 'Chain Ambassador',
+        campaignTitle,
+        campaignSlug: campaignSlug || undefined,
+        donationAmount,
+        donationCurrency: currency || 'USD',
+        donorName: donorIsAnonymous ? null : donorName,
+        referralCode: chainerData.referralCode,
+      });
+    }
 
   } catch (error) {
     console.error('💥 Error processing direct referral commission:', error);
