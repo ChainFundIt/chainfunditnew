@@ -38,6 +38,26 @@ import Link from "next/link";
 
 const autoRefreshInterval = 120000; // 2 minutes
 
+const INVALID_IMAGE_TOKENS = new Set([
+  "",
+  "undefined",
+  "null",
+  "about:blank",
+  "n/a",
+  "na",
+]);
+
+const sanitizeImageUrl = (url?: string | null): string | null => {
+  if (!url || typeof url !== "string") return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  const normalized = trimmed.toLowerCase();
+  if (INVALID_IMAGE_TOKENS.has(normalized)) {
+    return null;
+  }
+  return trimmed;
+};
+
 const getYouTubeThumbnail = (url: string): string | null => {
   const regex =
     /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
@@ -520,12 +540,14 @@ const Main = ({ campaignSlug }: MainProps) => {
     return [];
   };
 
-  const galleryImages = parseJsonArray(campaign?.galleryImages).filter(
-    (img) => img && img !== "undefined"
-  );
+  const galleryImages = parseJsonArray(campaign?.galleryImages)
+    .map((img) => sanitizeImageUrl(img))
+    .filter((img): img is string => Boolean(img));
 
-  const campaignImages = campaignData?.coverImageUrl
-    ? [campaignData.coverImageUrl, ...galleryImages]
+  const normalizedCoverImage = sanitizeImageUrl(campaignData?.coverImageUrl);
+
+  const campaignImages = normalizedCoverImage
+    ? [normalizedCoverImage, ...galleryImages]
     : galleryImages;
 
   const campaignDocuments = parseJsonArray(campaignData?.documents);
