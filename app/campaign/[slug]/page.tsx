@@ -149,6 +149,10 @@ export async function generateMetadata({
   const progress =
     goalAmount > 0 ? Math.round((currentAmount / goalAmount) * 100) : 0;
 
+  const twitterImages = proxiedCoverImageUrl
+    ? [proxiedCoverImageUrl]
+    : [`${baseUrl}/campaign/${slug}/twitter-image`];
+
   return {
     title: `${campaignData.title} | Chainfundit`,
     description: description,
@@ -165,7 +169,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: campaignData.title,
       description: description,
-      images: [`${baseUrl}/campaign/${slug}/twitter-image`],
+      images: twitterImages,
     },
     alternates: {
       canonical: campaignUrl,
