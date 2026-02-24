@@ -3,11 +3,13 @@ import { headers } from 'next/headers';
 import { verifyPaystackWebhook, verifyPaystackPayment } from '@/lib/payments/paystack';
 import { db } from '@/lib/db';
 import { donations } from '@/lib/schema/donations';
+import { recurringDonations, recurringDonationPayments } from '@/lib/schema/recurring-donations';
 import { campaigns } from '@/lib/schema/campaigns';
 import { notifications } from '@/lib/schema/notifications';
 import { charityDonations, charities } from '@/lib/schema/charities';
 import { campaignPayouts, commissionPayouts } from '@/lib/schema';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, and } from 'drizzle-orm';
+import { createPaystackPlan, createPaystackSubscription } from '@/lib/payments/paystack-subscriptions';
 import { 
   DONATION_STATUS_CONFIG, 
   getFailureReason
@@ -100,6 +102,12 @@ async function handleChargeSuccess(data: any) {
   try {
     const donationId = data.metadata?.donationId;
     const reference = data.reference;
+    const recurringDonationId = extractRecurringDonationId(data.metadata);
+
+    if (recurringDonationId) {
+      await handleRecurringChargeSuccess(data, recurringDonationId, donationId, reference);
+      return;
+    }
 
     if (!donationId) {
       console.error('❌ No donation ID found in charge metadata');
@@ -143,6 +151,21 @@ async function handleChargeSuccess(data: any) {
  */
 async function handleCampaignDonationSuccess(donationId: string, reference: string, campaignId: string) {
   try {
+    const existingDonation = await db
+      .select({ paymentStatus: donations.paymentStatus })
+      .from(donations)
+      .where(eq(donations.id, donationId))
+      .limit(1);
+
+    if (!existingDonation.length) {
+      console.error('❌ Donation not found:', donationId);
+      return;
+    }
+
+    if (existingDonation[0].paymentStatus === 'completed') {
+      return;
+    }
+
     // Verify the transaction
     const verification = await verifyPaystackPayment(reference);
     
@@ -269,6 +292,12 @@ async function handleChargeFailed(data: any) {
   try {
     const donationId = data.metadata?.donationId;
     const reference = data.reference;
+    const recurringDonationId = extractRecurringDonationId(data.metadata);
+
+    if (recurringDonationId) {
+      await handleRecurringChargeFailed(data, recurringDonationId, donationId, reference);
+      return;
+    }
 
     if (!donationId) {
       console.error('❌ No donation ID found in failed charge metadata');
@@ -405,6 +434,162 @@ async function handleChargePending(data: any) {
     }
   } catch (error) {
     console.error('💥 Error handling pending charge:', error);
+  }
+}
+
+function extractRecurringDonationId(metadata: any): string | null {
+  if (!metadata) return null;
+
+  if (typeof metadata.recurringDonationId === 'string' && metadata.recurringDonationId) {
+    return metadata.recurringDonationId;
+  }
+
+  const customField = Array.isArray(metadata.custom_fields)
+    ? metadata.custom_fields.find(
+        (field: any) =>
+          field?.variable_name === 'recurring_donation_id' && typeof field?.value === 'string'
+      )
+    : null;
+
+  if (customField?.value) {
+    return customField.value;
+  }
+
+  return null;
+}
+
+async function handleRecurringChargeSuccess(
+  data: any,
+  recurringDonationId: string,
+  donationIdFromMetadata: string | undefined,
+  reference: string
+) {
+  const recurringDonation = await db.query.recurringDonations.findFirst({
+    where: eq(recurringDonations.id, recurringDonationId),
+  });
+
+  if (!recurringDonation) {
+    console.error('Recurring donation not found:', recurringDonationId);
+    return;
+  }
+
+  const { updateSubscriptionAfterPayment, processRecurringDonationPayment } = await import('@/lib/services/subscription-service');
+
+  let donationId = donationIdFromMetadata;
+
+  if (!donationId) {
+    const created = await processRecurringDonationPayment(recurringDonationId);
+    if (!created.success || !created.donationId) {
+      console.error('Failed to create recurring donation payment:', created.error);
+      return;
+    }
+    donationId = created.donationId;
+  }
+
+  await handleCampaignDonationSuccess(
+    donationId,
+    reference,
+    recurringDonation.campaignId
+  );
+
+  await db
+    .update(recurringDonationPayments)
+    .set({ paystackTransactionId: reference })
+    .where(
+      and(
+        eq(recurringDonationPayments.recurringDonationId, recurringDonationId),
+        eq(recurringDonationPayments.donationId, donationId)
+      )
+    );
+
+  await updateSubscriptionAfterPayment(recurringDonationId, donationId, true);
+
+  if (!recurringDonation.paystackSubscriptionId) {
+    const authorizationCode = data.authorization?.authorization_code;
+    const customerCode =
+      data.customer?.customer_code || recurringDonation.paystackCustomerCode;
+
+    if (!authorizationCode || !customerCode) {
+      console.error(
+        `Missing authorization/customer code for recurring setup ${recurringDonationId}`
+      );
+      return;
+    }
+
+    const plan = await createPaystackPlan(
+      `Recurring Donation - ${recurringDonation.amount} ${recurringDonation.currency}`,
+      parseFloat(recurringDonation.amount),
+      recurringDonation.currency,
+      recurringDonation.period as 'monthly' | 'quarterly' | 'yearly',
+      {
+        recurringDonationId,
+        campaignId: recurringDonation.campaignId,
+      }
+    );
+
+    const paystackSubscription = await createPaystackSubscription(
+      customerCode,
+      plan.plan_code,
+      authorizationCode,
+      {
+        recurringDonationId,
+        campaignId: recurringDonation.campaignId,
+      }
+    );
+
+    await db
+      .update(recurringDonations)
+      .set({
+        paystackSubscriptionId: paystackSubscription.subscription_code,
+        paystackCustomerCode: customerCode,
+        status: 'active',
+        isActive: true,
+        updatedAt: new Date(),
+      })
+      .where(eq(recurringDonations.id, recurringDonationId));
+  }
+}
+
+async function handleRecurringChargeFailed(
+  data: any,
+  recurringDonationId: string,
+  donationIdFromMetadata: string | undefined,
+  reference: string
+) {
+  const recurringDonation = await db.query.recurringDonations.findFirst({
+    where: eq(recurringDonations.id, recurringDonationId),
+  });
+
+  if (!recurringDonation) {
+    console.error('Recurring donation not found:', recurringDonationId);
+    return;
+  }
+
+  const failureReason = getFailureReason(
+    'paystack',
+    'failed',
+    data.gateway_response || data.status || 'Recurring charge failed'
+  );
+
+  if (donationIdFromMetadata) {
+    await handleCampaignDonationFailed(
+      donationIdFromMetadata,
+      reference,
+      recurringDonation.campaignId,
+      data
+    );
+
+    const { updateSubscriptionAfterPayment } = await import('@/lib/services/subscription-service');
+    await updateSubscriptionAfterPayment(recurringDonationId, donationIdFromMetadata, false);
+  } else {
+    await db
+      .update(recurringDonations)
+      .set({
+        failedAttempts: (recurringDonation.failedAttempts || 0) + 1,
+        lastFailureReason: failureReason,
+        updatedAt: new Date(),
+      })
+      .where(eq(recurringDonations.id, recurringDonationId));
   }
 }
 

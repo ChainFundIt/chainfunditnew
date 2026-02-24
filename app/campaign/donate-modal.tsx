@@ -115,21 +115,25 @@ const DonateModal: React.FC<DonateModalProps> = ({
         return;
       }
 
-      setSelectedCurrency(campaign.currency || "₦");
-      
-      const currencyCode = getCurrencyCode(campaign.currency);
-      const { primary, alternatives } = getIntelligentProviders(currencyCode);
-      
-      const allProviders = primary ? [primary, ...alternatives] : alternatives;
-      setSupportedProviders(allProviders);
-      
-      if (primary) {
-        setPaymentProvider(primary);
-      } else if (alternatives.length > 0) {
-        setPaymentProvider(alternatives[0]);
-      }
+      // Initialize currency only once per modal open; preserve user selection during live campaign refreshes.
+      setSelectedCurrency((prev) => prev || campaign.currency || "₦");
     }
   }, [campaign, open]);
+
+  useEffect(() => {
+    if (!campaign || !open) return;
+
+    const effectiveCurrency = selectedCurrency || campaign.currency || "₦";
+    const currencyCode = getCurrencyCode(effectiveCurrency);
+    const { primary, alternatives } = getIntelligentProviders(currencyCode);
+    const allProviders = primary ? [primary, ...alternatives] : alternatives;
+
+    setSupportedProviders(allProviders);
+
+    if (allProviders.length > 0 && !allProviders.includes(paymentProvider)) {
+      setPaymentProvider(primary || allProviders[0]);
+    }
+  }, [campaign, open, selectedCurrency, paymentProvider]);
 
   // Prompt for a platform review right after a successful donation flow reaches "thankyou"
   // (covers Stripe success callback + Paystack redirect thank-you state).
@@ -168,18 +172,6 @@ const DonateModal: React.FC<DonateModalProps> = ({
 
   const handleCurrencyChange = (currency: string) => {
     setSelectedCurrency(currency);
-    
-    const currencyCode = getCurrencyCode(currency);
-    const { primary, alternatives } = getIntelligentProviders(currencyCode);
-    
-    const allProviders = primary ? [primary, ...alternatives] : alternatives;
-    setSupportedProviders(allProviders);
-    
-    if (primary) {
-      setPaymentProvider(primary);
-    } else if (alternatives.length > 0) {
-      setPaymentProvider(alternatives[0]);
-    }
   };
 
   const handleDonate = () => {
@@ -230,19 +222,12 @@ const DonateModal: React.FC<DonateModalProps> = ({
       });
 
       if (isRecurring) {
-        const response = await fetch('/api/auth/session');
-        const session = await response.json();
-        
-        if (!session || !session.user) {
-          toast.error("You must be logged in to set up recurring donations. Please sign in first.");
-          return;
-        }
-
         const subscriptionResponse = await fetch('/api/payments/subscriptions/initialize', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
+          credentials: 'include',
           body: JSON.stringify({
             campaignId: campaign.id,
             amount: amountNum,
@@ -258,9 +243,21 @@ const DonateModal: React.FC<DonateModalProps> = ({
           }),
         });
 
-        const subscriptionResult = await subscriptionResponse.json();
+        const subscriptionResult = await subscriptionResponse.json().catch(() => null);
 
-        if (subscriptionResult.success) {
+        if (!subscriptionResponse.ok) {
+          if (subscriptionResponse.status === 401) {
+            toast.error("You must be logged in to set up recurring donations. Please sign in first.");
+            return;
+          }
+
+          toast.error(
+            subscriptionResult?.error || "Failed to create subscription. Please try again."
+          );
+          return;
+        }
+
+        if (subscriptionResult?.success) {
           if (subscriptionResult.provider === 'paystack' && subscriptionResult.authorizationUrl) {
             window.location.href = subscriptionResult.authorizationUrl;
           } else if (subscriptionResult.provider === 'stripe' && subscriptionResult.clientSecret) {
@@ -276,7 +273,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
             setStep("thankyou");
           }
         } else {
-          toast.error(subscriptionResult.error || "Failed to create subscription. Please try again.");
+          toast.error(subscriptionResult?.error || "Failed to create subscription. Please try again.");
         }
         return;
       }
@@ -866,7 +863,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
                 </Label>
                 <div className="grid grid-cols-1 gap-3">
                   {supportedProviders.length > 0 ? (
-                    supportedProviders.map((provider, index) => {
+                    supportedProviders.map((provider) => {
                       const currencyCode = getCurrencyCode(selectedCurrency);
                       const { primary } = getIntelligentProviders(currencyCode);
                       const isRecommended = provider === primary;

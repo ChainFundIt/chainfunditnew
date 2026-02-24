@@ -83,6 +83,9 @@ export async function createStripeSubscription(
     const price = await stripe.prices.create({
       unit_amount: Math.round(amount * 100), // Convert to cents
       currency: currency.toLowerCase(),
+      product_data: {
+        name: `Recurring Donation (${period})`,
+      },
       recurring: {
         interval: getStripeInterval(period),
         interval_count: getIntervalCount(period),
@@ -220,4 +223,3 @@ export async function updateStripeSubscriptionAmount(
     throw error;
   }
 }
-
