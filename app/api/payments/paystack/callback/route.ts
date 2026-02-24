@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { donations } from '@/lib/schema/donations';
+import { recurringDonations } from '@/lib/schema/recurring-donations';
 import { campaigns } from '@/lib/schema/campaigns';
 import { eq } from 'drizzle-orm';
 import { verifyPaystackPayment } from '@/lib/payments/paystack';
+import { createPaystackPlan, createPaystackSubscription } from '@/lib/payments/paystack-subscriptions';
 import { updateCampaignAmount } from '@/lib/utils/campaign-amount';
 import { toast } from 'sonner';
 import { sendDonorConfirmationEmailById } from '@/lib/notifications/donor-confirmation-email';
@@ -84,6 +86,54 @@ export async function GET(request: NextRequest) {
 
     // Update campaign currentAmount
     await updateCampaignAmount(donation[0].campaignId);
+
+    // If this is recurring setup payment, activate Paystack subscription immediately
+    const recurringDonationId = verification.data?.metadata?.recurringDonationId;
+    if (recurringDonationId) {
+      const recurringDonation = await db.query.recurringDonations.findFirst({
+        where: eq(recurringDonations.id, recurringDonationId),
+      });
+
+      if (recurringDonation && !recurringDonation.paystackSubscriptionId) {
+        const authorizationCode = (verification.data as any)?.authorization?.authorization_code;
+        const customerCode =
+          verification.data?.customer?.customer_code || recurringDonation.paystackCustomerCode;
+
+        if (authorizationCode && customerCode) {
+          const plan = await createPaystackPlan(
+            `Recurring Donation - ${recurringDonation.amount} ${recurringDonation.currency}`,
+            parseFloat(recurringDonation.amount),
+            recurringDonation.currency,
+            recurringDonation.period as 'monthly' | 'quarterly' | 'yearly',
+            {
+              recurringDonationId: recurringDonation.id,
+              campaignId: recurringDonation.campaignId,
+            }
+          );
+
+          const paystackSubscription = await createPaystackSubscription(
+            customerCode,
+            plan.plan_code,
+            authorizationCode,
+            {
+              recurringDonationId: recurringDonation.id,
+              campaignId: recurringDonation.campaignId,
+            }
+          );
+
+          await db
+            .update(recurringDonations)
+            .set({
+              paystackSubscriptionId: paystackSubscription.subscription_code,
+              paystackCustomerCode: customerCode,
+              status: 'active',
+              isActive: true,
+              updatedAt: new Date(),
+            })
+            .where(eq(recurringDonations.id, recurringDonation.id));
+        }
+      }
+    }
 
     // Send confirmation email to donor
     await sendDonorConfirmationEmailById(donation[0].id);

@@ -6,7 +6,7 @@ import { users } from '@/lib/schema/users';
 import { eq } from 'drizzle-orm';
 import { getSupportedProviders } from '@/lib/payments/config';
 import { validateCampaignForDonations } from '@/lib/utils/campaign-validation';
-import { normalizePeriod, isRecurringPeriod } from '@/lib/utils/recurring-donations';
+import { isRecurringPeriod } from '@/lib/utils/recurring-donations';
 import { createRecurringDonationSubscription } from '@/lib/services/subscription-service';
 
 export async function POST(request: NextRequest) {
@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
       isAnonymous,
       donorName,
       donorPhone,
+      chainerId,
       authorizationCode, // For Paystack initial authorization
     } = body;
 
@@ -107,6 +108,7 @@ export async function POST(request: NextRequest) {
     const result = await createRecurringDonationSubscription({
       campaignId,
       donorId: user.id,
+      chainerId,
       amount,
       currency,
       period,
@@ -134,4 +136,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

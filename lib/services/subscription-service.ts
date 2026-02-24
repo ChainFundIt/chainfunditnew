@@ -12,6 +12,7 @@ import {
   createPaystackPlan,
   createPaystackSubscription,
 } from '@/lib/payments/paystack-subscriptions';
+import { initializePaystackPayment } from '@/lib/payments/paystack';
 import {
   calculateNextBillingDate,
   getBillingDay,
@@ -19,9 +20,6 @@ import {
   isRecurringPeriod,
 } from '@/lib/utils/recurring-donations';
 import type { SubscriptionPeriod } from '@/lib/payments/stripe-subscriptions';
-import { sendDonorConfirmationEmailById } from '@/lib/notifications/donor-confirmation-email';
-import { shouldNotifyUserOfDonation, formatDonationNotificationMessage } from '@/lib/utils/donation-notification-utils';
-import { notifications } from '@/lib/schema/notifications';
 
 /**
  * Create a recurring donation subscription
@@ -50,6 +48,9 @@ export async function createRecurringDonationSubscription(data: {
   const nextBillingDate = calculateNextBillingDate(normalizedPeriod);
   const billingDay = getBillingDay();
 
+  const isPaystackWithoutAuthorization =
+    data.paymentMethod === 'paystack' && !data.authorizationCode;
+
   const subscriptionRecord = await db.insert(recurringDonations).values({
     campaignId: data.campaignId,
     donorId: data.donorId,
@@ -62,8 +63,8 @@ export async function createRecurringDonationSubscription(data: {
     billingDay: billingDay,
     message: data.message,
     isAnonymous: data.isAnonymous || false,
-    status: 'active',
-    isActive: true,
+    status: isPaystackWithoutAuthorization ? 'pending' : 'active',
+    isActive: !isPaystackWithoutAuthorization,
   }).returning();
 
   const subscription = subscriptionRecord[0];
@@ -163,17 +164,16 @@ export async function createRecurringDonationSubscription(data: {
       campaignMetadata
     );
 
-    // Create Paystack plan
-    const plan = await createPaystackPlan(
-      `Recurring Donation - ${data.amount} ${data.currency}`,
-      data.amount,
-      data.currency,
-      normalizedPeriod,
-      campaignMetadata
-    );
-
     // Create Paystack subscription (requires authorization code from first payment)
     if (data.authorizationCode) {
+      const plan = await createPaystackPlan(
+        `Recurring Donation - ${data.amount} ${data.currency}`,
+        data.amount,
+        data.currency,
+        normalizedPeriod,
+        campaignMetadata
+      );
+
       const paystackSubscription = await createPaystackSubscription(
         customer.customer_code,
         plan.plan_code,
@@ -194,10 +194,73 @@ export async function createRecurringDonationSubscription(data: {
         subscription,
       };
     } else {
-      // Return plan code for initial authorization
+      // Start with a first charge to capture Paystack authorization_code for recurring billing
+      const pendingDonation = await db.insert(donations).values({
+        campaignId: data.campaignId,
+        donorId: data.donorId,
+        chainerId: data.chainerId,
+        amount: data.amount.toString(),
+        currency: data.currency,
+        paymentMethod: 'paystack',
+        paymentStatus: 'pending',
+        message: data.message,
+        isAnonymous: data.isAnonymous || false,
+      }).returning();
+
+      const pendingDonationId = pendingDonation[0].id;
+
+      const billingPeriodStart = new Date();
+      const billingPeriodEnd = calculateNextBillingDate(
+        normalizedPeriod,
+        billingPeriodStart
+      );
+
+      await db.insert(recurringDonationPayments).values({
+        recurringDonationId: subscription.id,
+        donationId: pendingDonationId,
+        amount: data.amount.toString(),
+        currency: data.currency,
+        paymentStatus: 'pending',
+        billingPeriodStart: billingPeriodStart.toISOString().split('T')[0],
+        billingPeriodEnd: billingPeriodEnd.toISOString().split('T')[0],
+        scheduledDate: billingPeriodStart.toISOString().split('T')[0],
+      });
+
+      const callbackUrl = process.env.NEXT_PUBLIC_APP_URL
+        ? `${process.env.NEXT_PUBLIC_APP_URL}/api/payments/paystack/callback`
+        : undefined;
+
+      const paystackInit = await initializePaystackPayment(
+        data.donorEmail,
+        data.amount,
+        data.currency,
+        {
+          donationId: pendingDonationId,
+          recurringDonationId: subscription.id,
+          recurringSetup: true,
+          campaignId: data.campaignId,
+        },
+        callbackUrl
+      );
+
+      await db
+        .update(donations)
+        .set({ paymentIntentId: paystackInit.data.reference })
+        .where(eq(donations.id, pendingDonationId));
+
+      await db
+        .update(recurringDonationPayments)
+        .set({ paystackTransactionId: paystackInit.data.reference })
+        .where(
+          and(
+            eq(recurringDonationPayments.recurringDonationId, subscription.id),
+            eq(recurringDonationPayments.donationId, pendingDonationId)
+          )
+        );
+
       return {
         subscription,
-        authorizationUrl: plan.authorization_url,
+        authorizationUrl: paystackInit.data.authorization_url,
       };
     }
   }
@@ -319,4 +382,3 @@ export async function updateSubscriptionAfterPayment(
       .where(eq(recurringDonations.id, recurringDonationId));
   }
 }
-
