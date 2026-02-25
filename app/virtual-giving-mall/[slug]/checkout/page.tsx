@@ -25,10 +25,15 @@ function CheckoutForm({ donationId }: { donationId: string }) {
   useEffect(() => {
     if (!stripe) return;
 
+    const stripeCountry =
+      typeof process !== 'undefined' && process.env.NEXT_PUBLIC_STRIPE_ACCOUNT_COUNTRY
+        ? process.env.NEXT_PUBLIC_STRIPE_ACCOUNT_COUNTRY
+        : 'US';
+
     const checkApplePay = async () => {
       try {
         const paymentRequest = stripe.paymentRequest({
-          country: 'US',
+          country: stripeCountry,
           currency: 'usd',
           total: {
             label: 'Test',
@@ -85,13 +90,31 @@ function CheckoutForm({ donationId }: { donationId: string }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Debug info in development */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs">
-          <p><strong>Apple Pay Debug:</strong></p>
+      {(process.env.NODE_ENV === 'development' || !applePayAvailable) && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs space-y-1">
+          <p><strong>Apple Pay</strong></p>
           <p>Available: {applePayAvailable ? 'Yes' : 'No'}</p>
-          <p>Stripe loaded: {stripe ? 'Yes' : 'No'}</p>
-          <p>Protocol: {window.location.protocol}</p>
-          <p>User Agent: {navigator.userAgent.includes('Safari') ? 'Safari' : 'Other'}</p>
+          {!applePayAvailable && (
+            <p className="text-amber-800 mt-2">
+              To see Apple Pay: use Safari, add a card in Wallet, and verify your domain in{' '}
+              <a
+                href="https://dashboard.stripe.com/settings/payment_methods"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
+                Stripe Dashboard → Payment methods → Apple Pay
+              </a>
+              . Domain verification is separate from Paystack.
+            </p>
+          )}
+          {process.env.NODE_ENV === 'development' && (
+            <>
+              <p>Stripe loaded: {stripe ? 'Yes' : 'No'}</p>
+              <p>Protocol: {window.location.protocol}</p>
+              <p>Browser: {navigator.userAgent.includes('Safari') ? 'Safari' : 'Other'}</p>
+            </>
+          )}
         </div>
       )}
       

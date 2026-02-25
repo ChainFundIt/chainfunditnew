@@ -236,7 +236,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
         </div>
       </div>
 
-      {/* Apple Pay Button */}
+      {/* Apple Pay Button (shows in Safari when domain is verified in Stripe Dashboard) */}
       <div>
         <StripeApplePayButton
           amount={amount}

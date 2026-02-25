@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { charities, type NewCharity } from '@/lib/schema/charities';
-import { eq, like, and, desc, asc, sql } from 'drizzle-orm';
+import { campaigns } from '@/lib/schema/campaigns';
+import { eq, and, desc, asc, sql } from 'drizzle-orm';
 
 /**
  * GET /api/charities
@@ -24,6 +25,7 @@ export async function GET(request: NextRequest) {
     const country = searchParams.get('country');
     const sortBy = searchParams.get('sortBy') || 'name'; // name, created, donations
     const sortOrder = searchParams.get('sortOrder') || 'asc';
+    const includeCharityCampaigns = searchParams.get('includeCharityCampaigns') === 'true';
 
     // Build where conditions
     const conditions = [];
@@ -69,25 +71,136 @@ export async function GET(request: NextRequest) {
         break;
     }
 
-    // Get charities with pagination
-    const charitiesList = await db.query.charities.findMany({
+    if (!includeCharityCampaigns) {
+      // Get charities with pagination
+      const charitiesList = await db.query.charities.findMany({
+        where: whereClause,
+        orderBy: orderByClause,
+        limit,
+        offset,
+      });
+
+      // Get total count for pagination
+      const totalCountResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(charities)
+        .where(whereClause);
+
+      const totalCount = Number(totalCountResult[0]?.count || 0);
+      const totalPages = Math.ceil(totalCount / limit);
+
+      return NextResponse.json({
+        charities: charitiesList,
+        pagination: {
+          page,
+          limit,
+          totalCount,
+          totalPages,
+          hasMore: page < totalPages,
+        },
+      });
+    }
+
+    // When mixed listing is requested, merge charity records + charity-category campaigns.
+    // We paginate in-memory so counts reflect the combined list.
+    const allCharities = await db.query.charities.findMany({
       where: whereClause,
       orderBy: orderByClause,
-      limit,
-      offset,
     });
 
-    // Get total count for pagination
-    const totalCountResult = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(charities)
-      .where(whereClause);
-    
-    const totalCount = Number(totalCountResult[0]?.count || 0);
+    const campaignConditions: any[] = [
+      eq(campaigns.isActive, true),
+      eq(campaigns.visibility, 'public'),
+      eq(campaigns.status, 'active'),
+      sql`LOWER(${campaigns.reason}) = 'charity'`,
+    ];
+
+    if (search) {
+      campaignConditions.push(
+        sql`(${campaigns.title} ILIKE ${`%${search}%`} OR ${campaigns.description} ILIKE ${`%${search}%`})`
+      );
+    }
+
+    if (isVerified !== null && isVerified !== undefined) {
+      campaignConditions.push(eq(campaigns.isVerified, isVerified === 'true'));
+    }
+
+    if (category && !['Global', 'Charity', 'Charity Campaign'].includes(category)) {
+      campaignConditions.push(sql`1 = 0`);
+    }
+
+    const campaignRows = await db
+      .select({
+        id: campaigns.id,
+        title: campaigns.title,
+        subtitle: campaigns.subtitle,
+        description: campaigns.description,
+        slug: campaigns.slug,
+        coverImageUrl: campaigns.coverImageUrl,
+        isVerified: campaigns.isVerified,
+        currentAmount: campaigns.currentAmount,
+        createdAt: campaigns.createdAt,
+        updatedAt: campaigns.updatedAt,
+      })
+      .from(campaigns)
+      .where(and(...campaignConditions));
+
+    const mappedCampaigns = campaignRows.map((campaign) => ({
+      id: campaign.id,
+      name: campaign.title,
+      slug: campaign.slug,
+      description: campaign.description,
+      mission: campaign.subtitle ?? campaign.description,
+      email: null,
+      phone: null,
+      website: null,
+      address: null,
+      city: null,
+      state: null,
+      country: null,
+      postalCode: null,
+      category: 'Charity Campaign',
+      focusAreas: [],
+      logo: campaign.coverImageUrl,
+      coverImage: campaign.coverImageUrl,
+      isVerified: campaign.isVerified,
+      isActive: true,
+      totalReceived: campaign.currentAmount,
+      totalPaidOut: '0',
+      pendingAmount: '0',
+      registrationNumber: null,
+      createdAt: campaign.createdAt,
+      updatedAt: campaign.updatedAt,
+      sourceType: 'campaign',
+    }));
+
+    const merged = [...allCharities, ...mappedCampaigns];
+    const direction = sortOrder === 'desc' ? -1 : 1;
+    merged.sort((a: any, b: any) => {
+      if (sortBy === 'created') {
+        return (
+          (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) *
+          direction
+        );
+      }
+      if (sortBy === 'donations') {
+        return (
+          (Number(a.totalReceived || 0) - Number(b.totalReceived || 0)) * direction
+        );
+      }
+      const left = String(a.name || '').toLowerCase();
+      const right = String(b.name || '').toLowerCase();
+      if (left < right) return -1 * direction;
+      if (left > right) return 1 * direction;
+      return 0;
+    });
+
+    const paginated = merged.slice(offset, offset + limit);
+    const totalCount = merged.length;
     const totalPages = Math.ceil(totalCount / limit);
 
     return NextResponse.json({
-      charities: charitiesList,
+      charities: paginated,
       pagination: {
         page,
         limit,
@@ -140,4 +253,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

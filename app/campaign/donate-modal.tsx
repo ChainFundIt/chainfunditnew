@@ -145,7 +145,8 @@ const DonateModal: React.FC<DonateModalProps> = ({
 
     if (step === "thankyou" && !promptedForReviewRef.current) {
       promptedForReviewRef.current = true;
-      triggerPlatformReviewPrompt({ reason: "donation" });
+      // Donations should prompt immediately after success, regardless of snooze cooldown.
+      triggerPlatformReviewPrompt({ reason: "donation", bypassCooldown: true });
     }
   }, [open, step]);
 
