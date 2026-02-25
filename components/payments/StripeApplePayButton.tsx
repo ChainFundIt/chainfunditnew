@@ -17,13 +17,20 @@ interface StripeApplePayButtonProps {
   label?: string;
 }
 
+// Stripe account country (two-letter ISO). Must match your Stripe Dashboard account.
+// Wrong country can prevent Apple Pay from showing. UK = GB, US = US.
+const STRIPE_ACCOUNT_COUNTRY =
+  typeof process !== 'undefined' && process.env.NEXT_PUBLIC_STRIPE_ACCOUNT_COUNTRY
+    ? process.env.NEXT_PUBLIC_STRIPE_ACCOUNT_COUNTRY
+    : 'US';
+
 const StripeApplePayButton: React.FC<StripeApplePayButtonProps> = ({
   amount,
   currency,
   donationId,
   onSuccess,
   onError,
-  country = 'US',
+  country = STRIPE_ACCOUNT_COUNTRY,
   label = 'Pay with Apple Pay',
 }) => {
   const stripe = useStripe();
@@ -37,9 +44,10 @@ const StripeApplePayButton: React.FC<StripeApplePayButtonProps> = ({
       return;
     }
 
-    // Create payment request
+    const requestCountry = country || STRIPE_ACCOUNT_COUNTRY;
+    // Create payment request (country must match your Stripe account country)
     const paymentRequest = stripe.paymentRequest({
-      country,
+      country: requestCountry,
       currency: getCurrencyCode(currency).toLowerCase(),
       total: {
         label: 'Donation',
