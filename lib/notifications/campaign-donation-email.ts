@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 import { db } from '@/lib/db';
 import { users, chainers } from '@/lib/schema';
+import { recurringDonationPayments, recurringDonations } from '@/lib/schema/recurring-donations';
 import { eq } from 'drizzle-orm';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -20,6 +21,8 @@ interface CampaignDonationEmailData {
   referralAmbassadorName?: string;
   referralAmbassadorCode?: string;
   referralLink?: string;
+  /** When set, donation is from a recurring gift; copy says "Monthly/Quarterly/Yearly donation" instead of "New donation" */
+  recurringPeriod?: 'monthly' | 'quarterly' | 'yearly';
 }
 
 /**
@@ -56,9 +59,21 @@ export async function sendCampaignDonationEmail(data: CampaignDonationEmailData)
 
     const formattedTotal = `${currencySymbol}${formattedAmount}`;
 
-    const subject = data.isLargeDonation 
+    const recurringLabel = data.recurringPeriod
+      ? data.recurringPeriod === 'monthly'
+        ? 'Monthly donation'
+        : data.recurringPeriod === 'quarterly'
+          ? 'Quarterly donation'
+          : data.recurringPeriod === 'yearly'
+            ? 'Yearly donation'
+            : 'Recurring donation'
+      : null;
+
+    const subject = data.isLargeDonation
       ? `🎉 Large Donation Received: ${formattedTotal} for ${data.campaignTitle}!`
-      : `New Donation Received: ${formattedTotal} for ${data.campaignTitle}!`;
+      : recurringLabel
+        ? `${recurringLabel} received: ${formattedTotal} for ${data.campaignTitle}!`
+        : `New Donation Received: ${formattedTotal} for ${data.campaignTitle}!`;
 
     // Get campaign URL
     const campaignUrl = data.campaignSlug 
@@ -97,13 +112,13 @@ export async function sendCampaignDonationEmail(data: CampaignDonationEmailData)
           <div class="container">
             <div class="header">
               <img src="${logoUrl}" alt="ChainFundit Logo" class="logo-img" />
-              <h1>${data.isLargeDonation ? '🎉 Large Donation Received!' : '✨ New Donation Received!'}</h1>
+              <h1>${data.isLargeDonation ? '🎉 Large Donation Received!' : recurringLabel ? `✨ ${recurringLabel} Received!` : '✨ New Donation Received!'}</h1>
             </div>
             
             <div class="content">
               <p>Hello ${data.campaignCreatorName},</p>
               
-              <p>Great news! Your campaign <strong>${data.campaignTitle}</strong> just received ${data.isLargeDonation ? 'a large' : 'a new'} donation!</p>
+              <p>Great news! Your campaign <strong>${data.campaignTitle}</strong> just received ${data.isLargeDonation ? 'a large' : recurringLabel ? `a ${recurringLabel.toLowerCase()}` : 'a new'} donation!</p>
               
               ${data.isLargeDonation ? `
                 <div class="large-donation-badge">
@@ -268,6 +283,20 @@ export async function sendCampaignDonationEmailById(
       }
     }
 
+    // Check if this donation is from a recurring (subscription) payment
+    let recurringPeriod: 'monthly' | 'quarterly' | 'yearly' | undefined;
+    const paymentLink = await db
+      .select({
+        period: recurringDonations.period,
+      })
+      .from(recurringDonationPayments)
+      .innerJoin(recurringDonations, eq(recurringDonationPayments.recurringDonationId, recurringDonations.id))
+      .where(eq(recurringDonationPayments.donationId, donationId))
+      .limit(1);
+    if (paymentLink.length && ['monthly', 'quarterly', 'yearly'].includes(paymentLink[0].period)) {
+      recurringPeriod = paymentLink[0].period as 'monthly' | 'quarterly' | 'yearly';
+    }
+
     const emailData: CampaignDonationEmailData = {
       campaignCreatorEmail: creator.email,
       campaignCreatorName: creator.fullName || 'Campaign Creator',
@@ -283,6 +312,7 @@ export async function sendCampaignDonationEmailById(
       referralAmbassadorName,
       referralAmbassadorCode,
       referralLink,
+      recurringPeriod,
     };
 
     return await sendCampaignDonationEmail(emailData);
