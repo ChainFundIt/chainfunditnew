@@ -11,6 +11,14 @@ import Image from "next/image";
 import { formatCurrency } from "@/lib/utils/currency";
 import { useFileUpload } from "@/hooks/use-upload";
 import { Switch } from "@/components/ui/switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { triggerPlatformReviewPrompt } from "@/lib/utils/review-prompt";
 interface CampaignFormData {
   title: string;
@@ -69,6 +77,10 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
   const [error, setError] = useState<string | null>(null);
   const [unauthorized, setUnauthorized] = useState(false);
   const [isChained, setIsChained] = useState(false);
+  const [chainCount, setChainCount] = useState(0);
+  const [initialChainerCommissionRate, setInitialChainerCommissionRate] = useState<number | null>(null);
+  const [showCommissionChangeDialog, setShowCommissionChangeDialog] = useState(false);
+  const [pendingSubmit, setPendingSubmit] = useState(false);
   const router = useRouter();
 
   const [formData, setFormData] = useState<CampaignFormData>({
@@ -118,6 +130,18 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
         
         const campaignData = result.data;
         setCampaign(campaignData);
+        setInitialChainerCommissionRate(campaignData.chainerCommissionRate ?? 0);
+
+        // Fetch chain count for this campaign (for commission-change prompt); use campaign id (uuid)
+        try {
+          const chainsRes = await fetch(`/api/campaigns/${campaignData.id}/chains`);
+          const chainsResult = await chainsRes.json();
+          if (chainsResult.success && chainsResult.data?.chainCount != null) {
+            setChainCount(Number(chainsResult.data.chainCount));
+          }
+        } catch {
+          // ignore; chain count stays 0
+        }
         
         // Check if user is the creator
         const userResponse = await fetch("/api/user/profile");
@@ -216,13 +240,10 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const performSubmit = async () => {
     setSaving(true);
     setError(null);
-
     try {
-      
       const response = await fetch(`/api/campaigns/${campaignId}`, {
         method: "PUT",
         headers: {
@@ -241,14 +262,34 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
         throw new Error(result.error || "Failed to update campaign");
       }
 
-      // Redirect to campaign page
+      setShowCommissionChangeDialog(false);
+      setPendingSubmit(false);
       router.push(`/campaign/${campaignId}`);
-      
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update campaign");
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const commissionChanged =
+      initialChainerCommissionRate !== null &&
+      formData.chainerCommissionRate !== initialChainerCommissionRate;
+
+    if (commissionChanged && chainCount > 0) {
+      setPendingSubmit(true);
+      setShowCommissionChangeDialog(true);
+      return;
+    }
+
+    await performSubmit();
+  };
+
+  const handleConfirmCommissionChange = () => {
+    performSubmit();
   };
 
   if (loading) {
@@ -562,8 +603,8 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
                   onChange={(e) => handleInputChange("chainerCommissionRate", parseFloat(e.target.value) || 0)}
                   placeholder="Enter commission rate"
                   className="rounded-xl border-gray-300 focus:border-[#104109] focus:ring-[#104109]"
-                  min="0"
-                  max="100"
+                  min="1"
+                  max="10"
                   step="0.1"
                 />
               </div>
@@ -619,6 +660,51 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
           </form>
         </div>
       </div>
+
+      <Dialog open={showCommissionChangeDialog} onOpenChange={(open) => { setShowCommissionChangeDialog(open); if (!open) setPendingSubmit(false); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-[#104109]">Change ambassador commission rate?</DialogTitle>
+            <DialogDescription asChild>
+              <div className="space-y-2 text-left">
+                <p>
+                  You have existing chainers on this campaign. Their commission rate is locked to the rate when they chained.
+                </p>
+                <p>
+                  <strong>Existing chainers</strong> will keep their current rate ({initialChainerCommissionRate ?? 0}%).{" "}
+                  <strong>New chainers</strong> will get the new rate ({formData.chainerCommissionRate}%).
+                </p>
+                <p>Do you want to continue with this change?</p>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => { setShowCommissionChangeDialog(false); setPendingSubmit(false); }}
+              className="rounded-xl"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              disabled={saving}
+              onClick={handleConfirmCommissionChange}
+              className="bg-[#104109] text-white hover:bg-[#0d3a01] rounded-xl"
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                  Saving...
+                </>
+              ) : (
+                "Continue"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

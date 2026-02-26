@@ -91,6 +91,7 @@ export default function PlatformReviewPrompt() {
   const [open, setOpen] = useState(false);
   const [me, setMe] = useState<MeResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [needsAuth, setNeedsAuth] = useState(false);
 
   // form state (hydrated from /api/reviews/me)
   const [saving, setSaving] = useState(false);
@@ -123,8 +124,15 @@ export default function PlatformReviewPrompt() {
 
   const fetchMe = async () => {
     setLoading(true);
+    setNeedsAuth(false);
     try {
       const res = await fetch("/api/reviews/me", { method: "GET" });
+      if (res.status === 401) {
+        setMe({ success: false, error: "Not authenticated" });
+        setNeedsAuth(true);
+        return null;
+      }
+
       const data = (await res.json()) as MeResponse;
       if (!res.ok || !data || data.success !== true) {
         setMe(data ?? { success: false, error: "Failed to load" });
@@ -291,6 +299,31 @@ export default function PlatformReviewPrompt() {
         <div className="p-6 max-h-[70vh] overflow-auto">
           {loading ? (
             <div className="text-sm text-muted-foreground">Loading…</div>
+          ) : needsAuth ? (
+            <div className="space-y-3">
+              <div className="text-sm text-muted-foreground">
+                Please sign in to leave a platform review.
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  className="rounded-2xl bg-[#104109] hover:bg-[#0b2f07]"
+                  onClick={() => {
+                    window.location.href = "/signup";
+                  }}
+                >
+                  Sign up / Sign in
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-2xl"
+                  onClick={closeWithSnooze}
+                >
+                  Later
+                </Button>
+              </div>
+            </div>
           ) : me && "success" in me && me.success ? (
             me.eligible ? (
               <div className="space-y-5 font-jakarta">
@@ -390,6 +423,7 @@ export default function PlatformReviewPrompt() {
               disabled={
                 saving ||
                 loading ||
+                needsAuth ||
                 !me ||
                 !("success" in me) ||
                 !me.success ||

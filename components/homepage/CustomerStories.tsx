@@ -109,15 +109,15 @@ const CustomerStories = (props: Props) => {
         {/* Reviews carousel */}
         {slides.length > 0 ? (
           <div className="overflow-hidden" ref={emblaRef}>
-            <div className="flex">
+            <div className="flex gap-4">
               {slides.map((review, index) => (
                 <motion.div
                   key={review.id}
                   initial={{ opacity: 0, y: 40 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.08 }}
+                  transition={{ duration: 0.3, delay: index * 0.5 }}
                   viewport={{ once: true }}
-                  className="min-w-0 flex-[0_0_92%] sm:flex-[0_0_60%] lg:flex-[0_0_33.333%] px-3"
+                  className="min-w-0 flex-[0_0_80%] sm:flex-[0_0_calc((100%-1rem)/2)] lg:flex-[0_0_calc((100%-2rem)/3)]"
                 >
                   <div className="bg-[#FDFBF7] rounded-[32px] p-8 flex flex-col gap-6 h-full">
                     {/* Star Rating */}

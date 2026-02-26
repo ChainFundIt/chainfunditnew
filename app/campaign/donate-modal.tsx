@@ -369,14 +369,16 @@ const DonateModal: React.FC<DonateModalProps> = ({
     const urlToCopy = (await getBestCampaignShareUrl()) || "";
     if (!urlToCopy) return;
     
+    const copyText = `I just donated ${selectedCurrency} ${amount} to "${campaign.title}"! Help support this cause: ${urlToCopy}`;
+
     try {
-      await navigator.clipboard.writeText(urlToCopy);
+      await navigator.clipboard.writeText(copyText);
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy link:', err);
       const textArea = document.createElement('textarea');
-      textArea.value = urlToCopy;
+      textArea.value = copyText;
       document.body.appendChild(textArea);
       textArea.select();
       document.execCommand('copy');

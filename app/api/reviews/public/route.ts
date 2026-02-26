@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     const creatorEligibleSql = sql<boolean>`exists(
       select 1 from ${campaignPayouts}
       where ${campaignPayouts.userId} = ${users.id}
-        and ${campaignPayouts.status} = 'completed'
+        and ${campaignPayouts.status} in ('pending', 'approved', 'processing', 'completed')
     )`;
 
     const displayNameSql = sql<string>`case
