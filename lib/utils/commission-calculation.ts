@@ -51,22 +51,22 @@ export async function calculateAndDistributeCommissions(donationId: string) {
       .limit(1);
 
     if (!campaign.length) {
-      console.error('❌ Campaign not found:', donationData.campaignId);
+      console.error('Campaign not found:', donationData.campaignId);
       return;
     }
 
     const campaignData = campaign[0];
-    const commissionRate = Number(campaignData.chainerCommissionRate) / 100; // Convert percentage to decimal
+    const campaignCommissionRate = Number(campaignData.chainerCommissionRate) / 100; // Convert percentage to decimal
     const donationAmount = Number(donationData.amount);
-    const totalCommission = donationAmount * commissionRate;
 
-    // If donation came through a referral (chainerId exists)
+    // If donation came through a referral (chainerId exists), use that chainer's locked-in rate
+    let directReferralCommission = 0;
     if (donationData.chainerId) {
-      await handleDirectReferralCommission(
+      directReferralCommission = await handleDirectReferralCommission(
         donationData.chainerId,
         donationData.campaignId,
         donationAmount,
-        totalCommission,
+        campaignCommissionRate,
         donationData.donorId,
         donationData.id,
         donationData.currency,
@@ -77,13 +77,12 @@ export async function calculateAndDistributeCommissions(donationId: string) {
       );
     }
 
-    // Handle multi-level referrals (if the donor is also a chainer)
-    // This gives the donor chainer a commission for donating to their own chained campaign
+    // Handle multi-level referrals (if the donor is also a chainer) — use their locked-in rate
     await handleMultiLevelReferrals(
       donationData.donorId,
       donationData.campaignId,
       donationAmount,
-      totalCommission,
+      campaignCommissionRate,
       donationData.id,
       donationData.currency
     );
@@ -94,13 +93,14 @@ export async function calculateAndDistributeCommissions(donationId: string) {
 }
 
 /**
- * Handle direct referral commission (the chainer who referred the donor)
+ * Handle direct referral commission (the chainer who referred the donor).
+ * Uses the chainer's locked-in commission rate (at chain time); fallback to campaign rate for legacy chainers.
  */
 async function handleDirectReferralCommission(
   chainerId: string,
   campaignId: string,
   donationAmount: number,
-  totalCommission: number,
+  campaignCommissionRate: number,
   donorId: string,
   donationId: string,
   currency: string,
@@ -108,14 +108,15 @@ async function handleDirectReferralCommission(
   campaignSlug?: string | null,
   donorName?: string | null,
   donorIsAnonymous?: boolean
-) {
+): Promise<number> {
   try {
 
-    // Get chainer details
+    // Get chainer details (including their locked-in commission rate)
     const chainer = await db
       .select({
         id: chainers.id,
         userId: chainers.userId,
+        commissionRate: chainers.commissionRate,
         commissionDestination: chainers.commissionDestination,
         totalRaised: chainers.totalRaised,
         totalReferrals: chainers.totalReferrals,
@@ -131,10 +132,15 @@ async function handleDirectReferralCommission(
 
     if (!chainer.length) {
       console.error('❌ Chainer not found:', chainerId);
-      return;
+      return 0;
     }
 
     const chainerData = chainer[0];
+    // Use chainer's locked-in rate (percentage at chain time); fallback to campaign rate for legacy chainers
+    const chainerRateDecimal = chainerData.commissionRate != null && Number(chainerData.commissionRate) > 0
+      ? Number(chainerData.commissionRate) / 100
+      : campaignCommissionRate;
+    const totalCommission = donationAmount * chainerRateDecimal;
 
     // Update chainer stats
     const newTotalRaised = Number(chainerData.totalRaised) + donationAmount;
@@ -184,20 +190,22 @@ async function handleDirectReferralCommission(
       });
     }
 
+    return totalCommission;
   } catch (error) {
     console.error('💥 Error processing direct referral commission:', error);
+    return 0;
   }
 }
 
 /**
- * Handle multi-level referrals (if the donor is also a chainer)
- * This gives the donor chainer a commission for donating to their own chained campaign
+ * Handle multi-level referrals (if the donor is also a chainer).
+ * Uses the donor chainer's locked-in commission rate for their self-referral commission.
  */
 async function handleMultiLevelReferrals(
   donorId: string,
   campaignId: string,
   donationAmount: number,
-  totalCommission: number,
+  campaignCommissionRate: number,
   donationId: string,
   currency: string
 ) {
@@ -208,6 +216,7 @@ async function handleMultiLevelReferrals(
       .select({
         id: chainers.id,
         userId: chainers.userId,
+        commissionRate: chainers.commissionRate,
         commissionDestination: chainers.commissionDestination,
         totalRaised: chainers.totalRaised,
         totalReferrals: chainers.totalReferrals,
@@ -225,9 +234,11 @@ async function handleMultiLevelReferrals(
     }
 
     const donorChainerData = donorChainer[0];
-
-    // Calculate self-referral commission (full commission since they're donating to their own chained campaign)
-    const selfReferralCommission = totalCommission;
+    // Use donor chainer's locked-in rate; fallback to campaign rate for legacy
+    const chainerRateDecimal = donorChainerData.commissionRate != null && Number(donorChainerData.commissionRate) > 0
+      ? Number(donorChainerData.commissionRate) / 100
+      : campaignCommissionRate;
+    const selfReferralCommission = donationAmount * chainerRateDecimal;
 
     // Update donor's chainer stats
     const newTotalRaised = Number(donorChainerData.totalRaised) + donationAmount;

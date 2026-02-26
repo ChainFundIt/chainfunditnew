@@ -3,6 +3,7 @@ export const PLATFORM_REVIEW_PROMPT_EVENT = "cf:platform-review-prompt" as const
 export type PlatformReviewPromptReason =
   | "donation"
   | "campaign_created"
+  | "campaign_chained"
   | "goal_reached"
   | "payout"
   | "dashboard_load";

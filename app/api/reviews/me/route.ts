@@ -47,7 +47,7 @@ async function getEligibility(userId: string) {
       exists(
         select 1 from ${campaignPayouts}
         where ${campaignPayouts.userId} = ${userId}
-          and ${campaignPayouts.status} = 'completed'
+          and ${campaignPayouts.status} in ('pending', 'approved', 'processing', 'completed')
       ) as "creatorEligible"
   `);
   const row = result.rows?.[0] as

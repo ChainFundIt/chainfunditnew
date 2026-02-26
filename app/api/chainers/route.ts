@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { chainers } from '@/lib/schema/chainers';
+import { campaigns } from '@/lib/schema/campaigns';
 import { eq } from 'drizzle-orm';
 import { validateCampaignForDonations } from '@/lib/utils/campaign-validation';
 
@@ -94,6 +95,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Lock this chainer to the campaign's current commission rate (protects them if creator changes rate later)
+    const campaignRow = await db
+      .select({ chainerCommissionRate: campaigns.chainerCommissionRate })
+      .from(campaigns)
+      .where(eq(campaigns.id, campaignId))
+      .limit(1);
+    const commissionRate = campaignRow.length
+      ? String(campaignRow[0].chainerCommissionRate ?? '5.0')
+      : '5.0';
+
     // Generate unique referral code
     const referralCode = generateReferralCode();
 
@@ -103,6 +114,7 @@ export async function POST(request: NextRequest) {
       referralCode,
       commissionDestination: commissionDestination || 'keep',
       charityChoiceId,
+      commissionRate,
       totalRaised: '0',
       totalReferrals: 0,
       clicks: 0,

@@ -8,6 +8,7 @@ import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Navbar from "@/components/layout/Navbar";
+import { needsEmojiFallback } from "@/lib/utils/campaign-emojis";
 
 const INVALID_COVER_IMAGE_TOKENS = new Set([
   "",
@@ -108,10 +109,23 @@ export async function generateMetadata({
   };
 
   const normalizedCoverImageUrl = normalizeCoverImageUrl(campaignData.coverImageUrl);
-  const proxiedCoverImageUrl = toProxiedOgImage(normalizedCoverImageUrl);
+  // Don't use placeholder/emoji cover as og:image — crawlers would get 404 or non-image.
+  const useCoverAsOg =
+    normalizedCoverImageUrl &&
+    !needsEmojiFallback(campaignData.coverImageUrl ?? undefined);
+  const proxiedCoverImageUrl = useCoverAsOg
+    ? toProxiedOgImage(normalizedCoverImageUrl)
+    : null;
 
-  // Put cover first (when available) but keep deterministic fallbacks for crawlers that can't fetch it.
+  // Put generated OG image first so every campaign has a working thumbnail even when
+  // the cover image is missing, placeholder, or fails to load on R2.
   const images = [
+    {
+      url: campaignOgImageUrl,
+      width: 1200,
+      height: 630,
+      alt: campaignData.title,
+    },
     ...(proxiedCoverImageUrl
       ? [
           {
@@ -122,12 +136,6 @@ export async function generateMetadata({
           },
         ]
       : []),
-    {
-      url: campaignOgImageUrl,
-      width: 1200,
-      height: 630,
-      alt: campaignData.title,
-    },
     {
       url: fallbackOgImageUrl,
       width: 1200,
@@ -150,7 +158,7 @@ export async function generateMetadata({
     goalAmount > 0 ? Math.round((currentAmount / goalAmount) * 100) : 0;
 
   const twitterImages = proxiedCoverImageUrl
-    ? [proxiedCoverImageUrl]
+    ? [`${baseUrl}/campaign/${slug}/twitter-image`, proxiedCoverImageUrl]
     : [`${baseUrl}/campaign/${slug}/twitter-image`];
 
   return {

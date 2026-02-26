@@ -774,6 +774,7 @@ export default function CreateCampaignPage() {
                     <input
                       type="number"
                       max={10}
+                      min={1}
                       value={formData.chainerCommissionRate}
                       onChange={(e) => {
                         const value = e.target.value;

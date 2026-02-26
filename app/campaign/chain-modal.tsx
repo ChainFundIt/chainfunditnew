@@ -28,6 +28,7 @@ import { useChain } from "@/hooks/use-chain";
 import { useAuth } from "@/hooks/use-auth";
 import { useCharities } from "@/hooks/use-charities";
 import { toast } from "sonner";
+import { triggerPlatformReviewPrompt } from "@/lib/utils/review-prompt";
 
 interface Campaign {
   id: string;
@@ -156,6 +157,8 @@ const ChainModal: React.FC<ChainModalProps> = ({
         setReferralCode(result.data.referralCode);
         setStep("success");
         toast.success("Campaign chained successfully!");
+
+        triggerPlatformReviewPrompt({ reason: "campaign_chained" });
         
         // Track chain creation
         trackChainer("chain_created", {
