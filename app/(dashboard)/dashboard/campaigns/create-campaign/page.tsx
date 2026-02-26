@@ -1320,8 +1320,8 @@ export default function CreateCampaignPage() {
               Having your campaign chained means you can allow others, who may
               be interested in earning a commission to help promote your
               campaign, potentially increasing donations. The ambassador
-              commission rate must be a valid percentage between 0% and 10% of
-              campaign proceeds.
+              commission rate must be a valid percentage between 1% and 10% of each
+              donation proceeds.
             </p>
           </div>
         </div>

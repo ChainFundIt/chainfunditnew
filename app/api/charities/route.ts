@@ -175,23 +175,23 @@ export async function GET(request: NextRequest) {
     }));
 
     const merged = [...allCharities, ...mappedCampaigns];
-    const direction = sortOrder === 'desc' ? -1 : 1;
+    const sortMultiplier = sortOrder === 'desc' ? -1 : 1;
     merged.sort((a: any, b: any) => {
       if (sortBy === 'created') {
         return (
           (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) *
-          direction
+          sortMultiplier
         );
       }
       if (sortBy === 'donations') {
         return (
-          (Number(a.totalReceived || 0) - Number(b.totalReceived || 0)) * direction
+          (Number(a.totalReceived || 0) - Number(b.totalReceived || 0)) * sortMultiplier
         );
       }
       const left = String(a.name || '').toLowerCase();
       const right = String(b.name || '').toLowerCase();
-      if (left < right) return -1 * direction;
-      if (left > right) return 1 * direction;
+      if (left < right) return -1 * sortMultiplier;
+      if (left > right) return 1 * sortMultiplier;
       return 0;
     });
 
