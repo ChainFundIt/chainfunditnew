@@ -92,12 +92,13 @@ export async function shouldNotifyUserOfDonation(
 }
 
 /**
- * Format donation notification message based on whether it's a large donation
+ * Format donation notification message based on whether it's a large or recurring donation
  */
 export function formatDonationNotificationMessage(
   amount: number | string,
   currency: string,
-  isLargeDonation: boolean
+  isLargeDonation: boolean,
+  recurringPeriod?: 'monthly' | 'quarterly' | 'yearly'
 ): { title: string; message: string } {
   // Parse and format the amount
   const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
@@ -111,16 +112,26 @@ export function formatDonationNotificationMessage(
     currency === 'GBP' ? '£' :
     currency === 'EUR' ? '€' : '$';
 
+  const amountPhrase = `${currencySymbol}${formattedAmount} ${currency}`;
+
   if (isLargeDonation) {
     return {
       title: '🎉 Large Donation Received!',
-      message: `You received a large donation of ${currencySymbol}${formattedAmount} ${currency}! Thank you for your campaign!`,
+      message: `You received a large donation of ${amountPhrase}! Thank you for your campaign!`,
+    };
+  }
+
+  if (recurringPeriod) {
+    const periodLabel = recurringPeriod === 'monthly' ? 'Monthly' : recurringPeriod === 'quarterly' ? 'Quarterly' : 'Yearly';
+    return {
+      title: `${periodLabel} donation received!`,
+      message: `You received a ${periodLabel.toLowerCase()} donation of ${amountPhrase}. Thank you for your campaign!`,
     };
   }
 
   return {
     title: 'New Donation Received!',
-    message: `You received a donation of ${currencySymbol}${formattedAmount} ${currency}. Thank you for your campaign!`,
+    message: `You received a donation of ${amountPhrase}. Thank you for your campaign!`,
   };
 }
 

@@ -55,11 +55,24 @@ async function createSuccessfulDonationNotification(donationId: string, campaign
       return;
     }
 
-    // Format notification message based on whether it's a large donation
+    // Check if this donation is from a recurring payment (for copy: "Monthly donation" not "New donation")
+    let recurringPeriod: 'monthly' | 'quarterly' | 'yearly' | undefined;
+    const paymentLink = await db
+      .select({ period: recurringDonations.period })
+      .from(recurringDonationPayments)
+      .innerJoin(recurringDonations, eq(recurringDonationPayments.recurringDonationId, recurringDonations.id))
+      .where(eq(recurringDonationPayments.donationId, donationId))
+      .limit(1);
+    if (paymentLink.length && ['monthly', 'quarterly', 'yearly'].includes(paymentLink[0].period)) {
+      recurringPeriod = paymentLink[0].period as 'monthly' | 'quarterly' | 'yearly';
+    }
+
+    // Format notification message based on whether it's a large or recurring donation
     const { title, message } = formatDonationNotificationMessage(
       donation[0].amount,
       donation[0].currency,
-      notificationCheck.isLargeDonation
+      notificationCheck.isLargeDonation,
+      recurringPeriod
     );
 
     // Create in-app notification for campaign creator
@@ -268,11 +281,19 @@ async function handlePaymentSuccess(paymentIntent: any) {
   }
 }
 
-// Handle subscription payment success
+// Handle subscription payment success (idempotent)
 async function handleSubscriptionPaymentSuccess(invoice: Stripe.Invoice) {
   try {
     const subscriptionId = invoice.subscription as string;
     if (!subscriptionId) return;
+
+    // Idempotency: skip if we already processed this invoice
+    const existing = await db
+      .select({ id: recurringDonationPayments.id })
+      .from(recurringDonationPayments)
+      .where(eq(recurringDonationPayments.stripeInvoiceId, invoice.id))
+      .limit(1);
+    if (existing.length > 0) return;
 
     // Find recurring donation by Stripe subscription ID
     const recurringDonation = await db.query.recurringDonations.findFirst({
@@ -301,6 +322,18 @@ async function handleSubscriptionPaymentSuccess(invoice: Stripe.Invoice) {
 
       // Update subscription after successful payment
       await updateSubscriptionAfterPayment(recurringDonation.id, result.donationId, true);
+
+      // Store Stripe ids for idempotency and debugging
+      await db
+        .update(recurringDonationPayments)
+        .set({
+          stripeInvoiceId: invoice.id,
+          stripePaymentIntentId: typeof invoice.payment_intent === 'string' ? invoice.payment_intent : null,
+        })
+        .where(and(
+          eq(recurringDonationPayments.recurringDonationId, recurringDonation.id),
+          eq(recurringDonationPayments.donationId, result.donationId)
+        ));
 
       // Create notification and send email
       await createSuccessfulDonationNotification(result.donationId, recurringDonation.campaignId);
