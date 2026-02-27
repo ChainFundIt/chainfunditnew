@@ -8,16 +8,6 @@ import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Navbar from "@/components/layout/Navbar";
-import { needsEmojiFallback } from "@/lib/utils/campaign-emojis";
-
-const INVALID_COVER_IMAGE_TOKENS = new Set([
-  "",
-  "undefined",
-  "null",
-  "about:blank",
-  "n/a",
-  "na",
-]);
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -61,64 +51,9 @@ export async function generateMetadata({
   // This avoids relying on social crawlers to fetch R2/CDN URLs directly.
   const campaignOgImageUrl = `${baseUrl}/campaign/${slug}/opengraph-image`;
 
-  const r2BaseUrl =
-    process.env.R2_PUBLIC_ACCESS_KEY ||
-    // Fallback used elsewhere in the codebase (`components/ui/r2-image.tsx`)
-    "https://pub-bc49c704eeac4df0a625097110e79d09.r2.dev";
-
-  const normalizeCoverImageUrl = (url: string | null | undefined): string | null => {
-    if (!url) return null;
-    let u = url.trim();
-    if (!u) return null;
-
-    const normalized = u.toLowerCase();
-    if (INVALID_COVER_IMAGE_TOKENS.has(normalized)) {
-      return null;
-    }
-
-    // Fix common broken uploads: "undefined/<file>" should be served from R2 base URL.
-    if (u.startsWith("undefined/")) {
-      u = `${r2BaseUrl.replace(/\/$/, "")}/${u.replace(/^undefined\//, "")}`;
-    }
-
-    // If it's a relative URL, make it absolute.
-    if (!u.startsWith("http://") && !u.startsWith("https://")) {
-      u = u.startsWith("/") ? `${baseUrl}${u}` : `${baseUrl}/${u}`;
-    }
-
-    return u;
-  };
-
-  const toProxiedOgImage = (absoluteUrl: string | null): string | null => {
-    if (!absoluteUrl) return null;
-    // Avoid double-proxying.
-    if (absoluteUrl.includes("/api/images?url=")) return absoluteUrl;
-
-    // Proxy external images through our domain so social crawlers can reliably fetch them.
-    // (Some crawlers struggle with redirects/CDNs/CORS; the proxy returns a clean 200 image.)
-    if (!absoluteUrl.startsWith(baseUrl)) {
-      return `${baseUrl}/api/images?url=${encodeURIComponent(absoluteUrl)}`;
-    }
-
-    // Still proxy known R2/public-bucket URLs, even if baseUrl differs.
-    if (absoluteUrl.includes("r2.dev") || absoluteUrl.includes("pub-")) {
-      return `${baseUrl}/api/images?url=${encodeURIComponent(absoluteUrl)}`;
-    }
-
-    return absoluteUrl;
-  };
-
-  const normalizedCoverImageUrl = normalizeCoverImageUrl(campaignData.coverImageUrl);
-  // Don't use placeholder/emoji cover as og:image — crawlers would get 404 or non-image.
-  const useCoverAsOg =
-    normalizedCoverImageUrl &&
-    !needsEmojiFallback(campaignData.coverImageUrl ?? undefined);
-  const proxiedCoverImageUrl = useCoverAsOg
-    ? toProxiedOgImage(normalizedCoverImageUrl)
-    : null;
-
-  // Put generated OG image first so every campaign has a working thumbnail even when
-  // the cover image is missing, placeholder, or fails to load on R2.
+  // Use only short, deterministic image URLs in metadata. Long proxied URLs
+  // (e.g. /api/images?url=...) get truncated by crawlers/meta (e.g. ~255 chars),
+  // producing invalid URLs and broken thumbnails. So we only output generated routes.
   const images = [
     {
       url: campaignOgImageUrl,
@@ -126,16 +61,6 @@ export async function generateMetadata({
       height: 630,
       alt: campaignData.title,
     },
-    ...(proxiedCoverImageUrl
-      ? [
-          {
-            url: proxiedCoverImageUrl,
-            width: 1200,
-            height: 630,
-            alt: campaignData.title,
-          },
-        ]
-      : []),
     {
       url: fallbackOgImageUrl,
       width: 1200,
@@ -157,9 +82,7 @@ export async function generateMetadata({
   const progress =
     goalAmount > 0 ? Math.round((currentAmount / goalAmount) * 100) : 0;
 
-  const twitterImages = proxiedCoverImageUrl
-    ? [`${baseUrl}/campaign/${slug}/twitter-image`, proxiedCoverImageUrl]
-    : [`${baseUrl}/campaign/${slug}/twitter-image`];
+  const twitterImages = [`${baseUrl}/campaign/${slug}/twitter-image`];
 
   return {
     title: `${campaignData.title} | Chainfundit`,

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useShortenLink } from "@/hooks/use-shorten-link";
 import Link from "next/link";
 import { getFullCampaignUrl } from "@/lib/utils/campaign-url";
+import { Whatsapp } from "iconsax-reactjs";
 
 interface Campaign {
   id: string;
@@ -111,11 +112,9 @@ const ShareModal: React.FC<ShareModalProps> = ({ open, onOpenChange, campaign })
           {/* Campaign Link */}
           <div>
             <div className="flex items-center space-x-2">
-              <Input
-                value={campaignUrl}
-                readOnly
-                className="flex-1 text-2xl text-[#104901] font-medium bg-[#E5ECDE] border-none shadow-none"
-              />
+              <p className="text-2xl text-[#104901] font-medium">
+                {window.location.origin}/c/${campaign?.slug}
+              </p>
               <Button
                 onClick={handleCopyLink}
                 disabled={!campaignUrl}
@@ -135,7 +134,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ open, onOpenChange, campaign })
               </h3>
               <div className="flex space-x-5">
                 <Button variant="ghost" onClick={() => handleShare("whatsapp")}>
-                  <MessageCircle strokeWidth={1.5} color="#104901" size={32} />
+                  <Whatsapp strokeWidth={1.5} color="#104901" size={32} />
                 </Button>
                 <Button variant="ghost" onClick={() => handleShare("facebook")}>
                   <Facebook strokeWidth={1.5} color="#104901" size={32} />
