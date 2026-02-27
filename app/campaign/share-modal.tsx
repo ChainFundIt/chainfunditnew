@@ -30,7 +30,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ open, onOpenChange, campaign })
   useEffect(() => {
     if (campaign && open) {
       const longUrl = getFullCampaignUrl(campaign);
-      
+
       // If campaign already has a short URL, use it
       if (campaign.shortUrl) {
         setCampaignUrl(campaign.shortUrl);
@@ -67,7 +67,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ open, onOpenChange, campaign })
       case "linkedin":
         shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(campaignUrl)}`;
         break;
-        case "whatsapp":
+      case "whatsapp":
         shareUrl = `https://wa.me/?text=${encodeURIComponent(shareText)} ${encodeURIComponent(campaignUrl)}`;
         break;
       case "instagram":
@@ -139,10 +139,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ open, onOpenChange, campaign })
                 <Button variant="ghost" onClick={() => handleShare("facebook")}>
                   <Facebook strokeWidth={1.5} color="#104901" size={32} />
                 </Button>
-                <Button variant="ghost" onClick={() => handleShare("instagram")}>
-                  <Instagram strokeWidth={1.5} color="#104901" size={32} />
-                </Button>
-                    <Button variant="ghost" onClick={() => handleShare("twitter")}>
+                <Button variant="ghost" onClick={() => handleShare("twitter")}>
                   <Twitter strokeWidth={1.5} color="#104901" size={32} />
                 </Button>
                 <Button variant="ghost" onClick={() => handleShare("linkedin")}>
