@@ -113,7 +113,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ open, onOpenChange, campaign })
           <div>
             <div className="flex items-center space-x-2">
               <p className="text-2xl text-[#104901] font-medium">
-                {window.location.origin}/c/${campaign?.slug}
+                {campaignUrl}
               </p>
               <Button
                 onClick={handleCopyLink}
