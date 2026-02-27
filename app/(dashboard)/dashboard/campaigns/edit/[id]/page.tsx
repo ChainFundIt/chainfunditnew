@@ -691,7 +691,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
               type="button"
               disabled={saving}
               onClick={handleConfirmCommissionChange}
-              className="bg-[#104109] text-white hover:bg-[#0d3a01] rounded-xl"
+              className="bg-[#104109] text-white rounded-xl"
             >
               {saving ? (
                 <>

@@ -29,6 +29,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useCharities } from "@/hooks/use-charities";
 import { toast } from "sonner";
 import { triggerPlatformReviewPrompt } from "@/lib/utils/review-prompt";
+import { Whatsapp } from "iconsax-reactjs";
 
 interface Campaign {
   id: string;
@@ -208,6 +209,9 @@ const ChainModal: React.FC<ChainModalProps> = ({
   };
 
   if (!open) return null;
+
+  const shareText = `Check out this campaign: ${campaign?.title}`;
+  const shareUrl = `${window.location.origin}/c/${referralCode}`;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -554,9 +558,7 @@ const ChainModal: React.FC<ChainModalProps> = ({
                 </Label>
                 <div className="flex space-x-5">
                   <Link
-                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-                      `${window.location.origin}/c/${referralCode}`
-                    )}`}
+                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
                     target="_blank"
                     className="text-[#5F8555]"
                     onClick={(e) => !referralCode && e.preventDefault()}
@@ -564,19 +566,15 @@ const ChainModal: React.FC<ChainModalProps> = ({
                     <Facebook size={32} color="#104901" strokeWidth={1.5} />
                   </Link>
                   <Link
-                    href={`https://www.instagram.com/sharer/sharer.php?u=${encodeURIComponent(
-                      `${window.location.origin}/c/${referralCode}`
-                    )}`}
+                    href={`https://wa.me/?text=${encodeURIComponent(shareText)} ${encodeURIComponent(shareUrl)}`}
                     target="_blank"
                     className="text-[#104901]"
                     onClick={(e) => !referralCode && e.preventDefault()}
                   >
-                    <Instagram size={32} color="#104901" strokeWidth={1.5} />
+                    <Whatsapp size={32} color="#104901" strokeWidth={1.5} />
                   </Link>
                   <Link
-                    href={`https://www.twitter.com/sharer/sharer.php?u=${encodeURIComponent(
-                      `${window.location.origin}/c/${referralCode}`
-                    )}`}
+                    href={`https://www.twitter.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
                     target="_blank"
                     className="text-[#104901]"
                     onClick={(e) => !referralCode && e.preventDefault()}
@@ -584,9 +582,7 @@ const ChainModal: React.FC<ChainModalProps> = ({
                     <Twitter size={32} color="#104901" strokeWidth={1.5} />
                   </Link>
                   <Link
-                    href={`https://www.linkedin.com/sharer/sharer.php?u=${encodeURIComponent(
-                      `${window.location.origin}/c/${referralCode}`
-                    )}`}
+                    href={`https://www.linkedin.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
                     target="_blank"
                     className="text-[#104901]"
                     onClick={(e) => !referralCode && e.preventDefault()}
