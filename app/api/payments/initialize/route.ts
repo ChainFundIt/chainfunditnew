@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { donations } from "@/lib/schema/donations";
 import { campaigns } from "@/lib/schema/campaigns";
 import { users } from "@/lib/schema/users";
+import { chainers } from "@/lib/schema/chainers";
 import { eq } from "drizzle-orm";
 import { createStripePaymentIntent } from "@/lib/payments/stripe";
 import { initializePaystackPayment } from "@/lib/payments/paystack";
@@ -26,6 +27,7 @@ export async function POST(request: NextRequest) {
       email,
       donorName,
       donorPhone,
+      chainerId: bodyChainerId,
       simulate = false, // For testing purposes
     } = body;
 
@@ -145,6 +147,19 @@ export async function POST(request: NextRequest) {
 
     const campaign = campaignValidation.campaign;
 
+    // Resolve chainer's referral code for payment metadata (when donation comes through a chainer link)
+    let chainerReferralCode: string | null = null;
+    if (bodyChainerId && typeof bodyChainerId === "string") {
+      const [chainerRow] = await db
+        .select({ referralCode: chainers.referralCode, campaignId: chainers.campaignId })
+        .from(chainers)
+        .where(eq(chainers.id, bodyChainerId))
+        .limit(1);
+      if (chainerRow?.referralCode && chainerRow.campaignId === campaignId) {
+        chainerReferralCode = chainerRow.referralCode;
+      }
+    }
+
     // Check minimum donation amount
     const minDonation = parseFloat(campaign.minimumDonation);
     if (amount < minDonation) {
@@ -162,7 +177,7 @@ export async function POST(request: NextRequest) {
       : (normalizedDonorName || user.fullName || "Guest Donor");
     const donationDonorEmail = normalizedEmail || user.email || null;
 
-    // Create donation record
+    // Create donation record (include chainerId when donation comes through a chainer's link)
     const newDonation = await db
       .insert(donations)
       .values({
@@ -177,6 +192,7 @@ export async function POST(request: NextRequest) {
         donorName: donationDonorName,
         donorEmail: donationDonorEmail,
         donorPhone: normalizedDonorPhone || null,
+        chainerId: bodyChainerId && typeof bodyChainerId === "string" ? bodyChainerId : null,
       })
       .returning();
 
@@ -198,16 +214,19 @@ export async function POST(request: NextRequest) {
       }
 
       try {
+        const stripeMetadata: Record<string, string> = {
+          donationId,
+          campaignId,
+          donorEmail: (donationDonorEmail || user.email || "") as string,
+          donorName: donationDonorName || "",
+          campaignTitle: campaign.title,
+        };
+        if (chainerReferralCode) stripeMetadata.chain_code = chainerReferralCode;
+
         const paymentIntent = await createStripePaymentIntent(
           amount,
           currency,
-          {
-            donationId,
-            campaignId,
-            donorEmail: (donationDonorEmail || user.email || "") as string,
-            donorName: donationDonorName || "",
-            campaignTitle: campaign.title,
-          }
+          stripeMetadata
         );
 
         paymentResult = {
@@ -250,45 +269,33 @@ export async function POST(request: NextRequest) {
     } else if (paymentProvider === "paystack") {
       try {
         // Structure metadata with custom_fields for Paystack Dashboard display
+        const paystackCustomFields: Array<{ display_name: string; variable_name: string; value: string }> = [
+          { display_name: "Campaign Title", variable_name: "campaign_title", value: campaign.title },
+          { display_name: "Campaign Slug", variable_name: "campaign_slug", value: campaign.slug },
+          { display_name: "Campaign ID", variable_name: "campaign_id", value: campaignId },
+          { display_name: "Donation ID", variable_name: "donation_id", value: donationId },
+          ...(campaign.description ? [{
+            display_name: "Campaign Description",
+            variable_name: "campaign_description",
+            value: campaign.description.length > 200 ? campaign.description.substring(0, 200) + "..." : campaign.description,
+          }] : []),
+          ...(campaign.goalAmount ? [{
+            display_name: "Campaign Goal",
+            variable_name: "campaign_goal",
+            value: `${campaign.currency} ${campaign.goalAmount}`,
+          }] : []),
+        ];
+        if (chainerReferralCode) {
+          paystackCustomFields.push(
+            { display_name: "Chain Code", variable_name: "chain_code", value: chainerReferralCode }
+          );
+        }
         const campaignMetadata = {
           donationId,
           campaignId,
           donorName: donationDonorName || "",
           donorEmail: donationDonorEmail || user.email!,
-          custom_fields: [
-            {
-              display_name: "Campaign Title",
-              variable_name: "campaign_title",
-              value: campaign.title,
-            },
-            {
-              display_name: "Campaign Slug",
-              variable_name: "campaign_slug",
-              value: campaign.slug,
-            },
-            {
-              display_name: "Campaign ID",
-              variable_name: "campaign_id",
-              value: campaignId,
-            },
-            {
-              display_name: "Donation ID",
-              variable_name: "donation_id",
-              value: donationId,
-            },
-            ...(campaign.description ? [{
-              display_name: "Campaign Description",
-              variable_name: "campaign_description",
-              value: campaign.description.length > 200 
-                ? campaign.description.substring(0, 200) + "..."
-                : campaign.description,
-            }] : []),
-            ...(campaign.goalAmount ? [{
-              display_name: "Campaign Goal",
-              variable_name: "campaign_goal",
-              value: `${campaign.currency} ${campaign.goalAmount}`,
-            }] : []),
-          ],
+          custom_fields: paystackCustomFields,
         };
 
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;

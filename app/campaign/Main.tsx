@@ -666,8 +666,8 @@ const Main = ({ campaignSlug }: MainProps) => {
                     key={img}
                     onClick={() => setSelectedImage(idx)}
                     className={`relative flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === idx
-                        ? "border-[#104901] ring-2 ring-offset-2"
-                        : "border-gray-200 hover:border-gray-300"
+                      ? "border-[#104901] ring-2 ring-offset-2"
+                      : "border-gray-200 hover:border-gray-300"
                       }`}
                   >
                     {needsEmojiFallback(img) ? (
@@ -735,8 +735,8 @@ const Main = ({ campaignSlug }: MainProps) => {
                 <button
                   onClick={() => setActiveTab("our-story")}
                   className={`flex-1 px-6 py-4 text-base font-medium transition-colors ${activeTab === "our-story"
-                      ? "border-b-2 bg-[#F0F9EC]"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    ? "border-b-2 bg-[#F0F9EC]"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                     }`}
                   style={
                     activeTab === "our-story"
@@ -749,8 +749,8 @@ const Main = ({ campaignSlug }: MainProps) => {
                 <button
                   onClick={() => setActiveTab("updates")}
                   className={`flex-1 px-6 py-4 text-base font-medium transition-colors relative ${activeTab === "updates"
-                      ? "border-b-2 bg-[#F0F9EC]"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    ? "border-b-2 bg-[#F0F9EC]"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                     }`}
                   style={
                     activeTab === "updates"
@@ -771,8 +771,8 @@ const Main = ({ campaignSlug }: MainProps) => {
                 <button
                   onClick={() => setActiveTab("documents")}
                   className={`flex-1 px-6 py-4 text-base font-medium transition-colors relative ${activeTab === "documents"
-                      ? "border-b-2 bg-[#F0F9EC]"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    ? "border-b-2 bg-[#F0F9EC]"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                     }`}
                   style={
                     activeTab === "documents"
@@ -1102,6 +1102,17 @@ const Main = ({ campaignSlug }: MainProps) => {
                 )}
               </div>
 
+              {/* Verified Text */}
+              {campaignData.isVerified && (
+                <div className="border-t border-gray-200 py-6">
+                  <p className="text-sm text-gray-600 mb-3">This campaign has been reviewed and verified by ChainFundIt.</p>
+                  <p className="text-sm text-gray-600">This means our team and/or ambassadors have conducted a level of due diligence to confirm the authenticity of this campaign and, to the best of our ability, are satisfied that it is genuine. </p>
+                  <br />
+                  <p className="text-sm text-gray-600">   For added accountability, the campaign organiser has agreed that all funds raised will be paid directly by ChainFundIt to the relevant institution (e.g., hospital, school, landlord, or other verified service provider), not to the individual directly.
+                    We remain committed to transparency, trust, and protecting our donor community.</p>
+                </div>
+              )}
+
               {/* Organizer Info */}
               <div className="pt-6 border-t border-gray-200">
                 <p className="text-sm text-gray-600 mb-3">ORGANIZER</p>
@@ -1129,10 +1140,10 @@ const Main = ({ campaignSlug }: MainProps) => {
                   </div>
                   <div>
                     <p className=" text-gray-900">{campaignData.creatorName}</p>
-                    <div className="flex items-center gap-1 text-sm text-gray-600">
+                    {/* <div className="flex items-center gap-1 text-sm text-gray-600">
                       <Clock className="w-3 h-3" />
                       <span>Response time: 1 day</span>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </div>

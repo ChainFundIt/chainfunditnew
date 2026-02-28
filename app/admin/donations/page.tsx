@@ -71,6 +71,7 @@ interface Donation {
   paymentMethod: string;
   chainerId?: string;
   chainerName?: string;
+  chainerReferralCode?: string | null;
   createdAt: string;
   processedAt?: string;
   transactionId: string;
@@ -134,6 +135,7 @@ interface DonationDetails {
   chainerInfo?: {
     id: string;
     userId: string;
+    referralCode?: string | null;
     totalReferrals: number;
     totalRaised: number;
     commissionEarned: number;
@@ -175,6 +177,8 @@ export default function DonationsPage() {
   const [selectedDonationDetails, setSelectedDonationDetails] =
     useState<DonationDetails | null>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
+  const [attributeChainerCode, setAttributeChainerCode] = useState("");
+  const [attributeChainerLoading, setAttributeChainerLoading] = useState(false);
 
   useEffect(() => {
     fetchDonations();
@@ -338,6 +342,7 @@ export default function DonationsPage() {
   const fetchDonationDetails = async (donationId: string) => {
     setSelectedDonationId(donationId);
     setSelectedDonationDetails(null);
+    setAttributeChainerCode("");
     setDetailsLoading(true);
     try {
       const response = await fetch(`/api/admin/donations/${donationId}`);
@@ -349,6 +354,35 @@ export default function DonationsPage() {
       toast.error("Failed to load donation details");
     } finally {
       setDetailsLoading(false);
+    }
+  };
+
+  const handleAttributeChainer = async () => {
+    if (!selectedDonationId || !attributeChainerCode.trim()) {
+      toast.error("Enter the chainer's referral code");
+      return;
+    }
+    setAttributeChainerLoading(true);
+    try {
+      const response = await fetch(`/api/admin/donations/${selectedDonationId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "attribute_chainer", referralCode: attributeChainerCode.trim() }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to attribute donation");
+      }
+      toast.success("Donation attributed to chainer");
+      setAttributeChainerCode("");
+      fetchDonationDetails(selectedDonationId);
+      fetchDonations();
+      fetchStats();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to attribute donation";
+      toast.error(message);
+    } finally {
+      setAttributeChainerLoading(false);
     }
   };
 
@@ -716,14 +750,23 @@ export default function DonationsPage() {
                           {getStatusBadge(donation.paymentStatus)}
                         </TableCell>
                         <TableCell>
-                          {donation.chainerName ? (
+                          {donation.chainerName || donation.chainerReferralCode ? (
                             <div>
-                              <div className="font-medium">
-                                {donation.chainerName}
-                              </div>
+                              {donation.chainerName && (
+                                <div className="font-medium">
+                                  {donation.chainerName}
+                                </div>
+                              )}
                               <div className="text-sm text-gray-500">
-                                Referred
+                                {donation.chainerReferralCode ? (
+                                  <>Chain: <code className="bg-gray-100 px-1 rounded">{donation.chainerReferralCode}</code></>
+                                ) : (
+                                  "Referred"
+                                )}
                               </div>
+                              {donation.chainerReferralCode && !donation.chainerName && (
+                                <div className="text-xs text-gray-400">Via chainer link</div>
+                              )}
                             </div>
                           ) : (
                             <span className="text-gray-400">Direct</span>
@@ -959,9 +1002,7 @@ export default function DonationsPage() {
                                   : donation.donorName}
                               </div>
                               <div className="text-xs text-gray-500">
-                                {donation.isAnonymous
-                                  ? "Hidden"
-                                  : donation.donorEmail}
+                                {donation.donorEmail}
                               </div>
                             </div>
                           </td>
@@ -1135,6 +1176,16 @@ export default function DonationsPage() {
                     <h3 className="text-sm font-semibold">Chained</h3>
                     {selectedDonationDetails.chainerInfo ? (
                       <>
+                        {selectedDonationDetails.chainerInfo.referralCode && (
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Chain code</span>
+                            <span>
+                              <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                                {selectedDonationDetails.chainerInfo.referralCode}
+                              </code>
+                            </span>
+                          </div>
+                        )}
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-muted-foreground">Name</span>
                           <span>
@@ -1173,9 +1224,33 @@ export default function DonationsPage() {
                         </div>
                       </>
                     ) : (
-                      <p className="text-sm text-muted-foreground">
-                        Direct donation
-                      </p>
+                      <>
+                        <p className="text-sm text-muted-foreground">
+                          Direct donation
+                        </p>
+                        {process.env.NODE_ENV === "development" && (
+                          <div className="mt-3 pt-3 border-t space-y-2">
+                            <p className="text-xs font-medium text-muted-foreground">
+                              Attribute to chainer (dev only)
+                            </p>
+                            <div className="flex gap-2">
+                              <Input
+                                placeholder="Referral code"
+                                value={attributeChainerCode}
+                                onChange={(e) => setAttributeChainerCode(e.target.value)}
+                                className="max-w-[180px]"
+                              />
+                              <Button
+                                size="sm"
+                                onClick={handleAttributeChainer}
+                                disabled={attributeChainerLoading || !attributeChainerCode.trim()}
+                              >
+                                {attributeChainerLoading ? "Saving…" : "Attribute"}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>

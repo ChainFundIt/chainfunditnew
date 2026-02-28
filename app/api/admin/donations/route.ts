@@ -92,16 +92,21 @@ export async function GET(request: NextRequest) {
 
     const donationsWithChainerNames = await Promise.all(
       uniqueDonationsList.map(async (donation) => {
-        let chainerName = null;
+        let chainerName: string | null = null;
+        let chainerReferralCode: string | null = null;
         if (donation.chainerId) {
-          const [chainerUser] = await db
-            .select({ fullName: users.fullName })
+          const [chainerRow] = await db
+            .select({
+              fullName: users.fullName,
+              referralCode: chainers.referralCode,
+            })
             .from(chainers)
             .leftJoin(users, eq(chainers.userId, users.id))
             .where(eq(chainers.id, donation.chainerId))
             .limit(1);
-          
-          chainerName = chainerUser?.fullName || null;
+
+          chainerName = chainerRow?.fullName || null;
+          chainerReferralCode = chainerRow?.referralCode || null;
         }
 
         return {
@@ -112,6 +117,7 @@ export async function GET(request: NextRequest) {
           donorName: donation.isAnonymous ? 'Anonymous' : (donation.donorName || donation.donorUserName || 'Unknown'),
           donorEmail: donation.isAnonymous ? null : (donation.donorEmail || donation.donorUserEmail || null),
           chainerName,
+          chainerReferralCode,
         };
       })
     );

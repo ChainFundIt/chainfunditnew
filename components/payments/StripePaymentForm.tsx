@@ -236,7 +236,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
         </div>
       </div>
 
-      {/* Apple Pay Button (shows in Safari when domain is verified in Stripe Dashboard) */}
+      {/* Apple Pay Button (shows in Safari when available) */}
       <div>
         <StripeApplePayButton
           amount={amount}
@@ -245,6 +245,9 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           onSuccess={onSuccess}
           onError={onError}
         />
+        <p className="text-xs text-gray-500 mt-1">
+          Apple Pay shows in Safari when available. Not showing? Check console for &quot;[Apple Pay]&quot; and set <code>NEXT_PUBLIC_STRIPE_ACCOUNT_COUNTRY</code> (e.g. GB or US).
+        </p>
         <div className="relative my-4">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-300"></div>
