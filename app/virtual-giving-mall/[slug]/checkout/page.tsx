@@ -96,16 +96,7 @@ function CheckoutForm({ donationId }: { donationId: string }) {
           <p>Available: {applePayAvailable ? 'Yes' : 'No'}</p>
           {!applePayAvailable && (
             <p className="text-amber-800 mt-2">
-              To see Apple Pay: use Safari, add a card in Wallet, and verify your domain in{' '}
-              <a
-                href="https://dashboard.stripe.com/settings/payment_methods"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-              >
-                Stripe Dashboard → Payment methods → Apple Pay
-              </a>
-              . Domain verification is separate from Paystack.
+              To see Apple Pay: use Safari, add a card in Wallet, and set <code>NEXT_PUBLIC_STRIPE_ACCOUNT_COUNTRY</code> to your Stripe account country (e.g. GB or US). Check the browser console for &quot;[Apple Pay]&quot; or &quot;[Checkout]&quot; for details.
             </p>
           )}
           {process.env.NODE_ENV === 'development' && (

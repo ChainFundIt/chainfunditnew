@@ -3,6 +3,69 @@ import { db } from '@/lib/db';
 import { donations, users, campaigns, chainers } from '@/lib/schema';
 import { eq, and, count, desc, sql } from 'drizzle-orm';
 import { updateCampaignAmount } from '@/lib/utils/campaign-amount';
+import { calculateAndDistributeCommissions } from '@/lib/utils/commission-calculation';
+import { getStripePaymentIntent } from '@/lib/payments/stripe';
+import { verifyPaystackPayment } from '@/lib/payments/paystack';
+
+/**
+ * If donation has no chainerId but the payment provider has chain_code in metadata,
+ * attribute the donation to that chainer automatically.
+ */
+async function tryAttributeDonationFromProvider(donationId: string): Promise<{ attributed: boolean; chainerId?: string }> {
+  const [row] = await db
+    .select({
+      campaignId: donations.campaignId,
+      paymentMethod: donations.paymentMethod,
+      paymentIntentId: donations.paymentIntentId,
+      chainerId: donations.chainerId,
+    })
+    .from(donations)
+    .where(eq(donations.id, donationId))
+    .limit(1);
+
+  if (!row || row.chainerId || !row.paymentIntentId) return { attributed: false };
+
+  let chainCode: string | null = null;
+
+  if (row.paymentMethod === 'stripe') {
+    try {
+      const pi = await getStripePaymentIntent(row.paymentIntentId);
+      const raw = pi.metadata?.chain_code;
+      if (raw && typeof raw === 'string') chainCode = raw;
+    } catch {
+      // ignore
+    }
+  } else if (row.paymentMethod === 'paystack') {
+    try {
+      const verification = await verifyPaystackPayment(row.paymentIntentId);
+      const meta = verification?.data?.metadata as Record<string, unknown> | undefined;
+      if (meta?.custom_fields && Array.isArray(meta.custom_fields)) {
+        const field = (meta.custom_fields as Array<{ variable_name?: string; value?: unknown }>).find(
+          (f) => f.variable_name === 'chain_code'
+        );
+        if (field?.value != null) chainCode = String(field.value);
+      }
+      if (!chainCode && meta?.chain_code != null) chainCode = String(meta.chain_code);
+    } catch {
+      // ignore
+    }
+  }
+
+  if (!chainCode) return { attributed: false };
+
+  const chainerRows = await db
+    .select({ id: chainers.id })
+    .from(chainers)
+    .where(and(eq(chainers.referralCode, chainCode), eq(chainers.campaignId, row.campaignId)))
+    .limit(1);
+
+  if (!chainerRows.length) return { attributed: false };
+  const chainerId = chainerRows[0].id;
+
+  await db.update(donations).set({ chainerId }).where(eq(donations.id, donationId));
+  await calculateAndDistributeCommissions(donationId);
+  return { attributed: true, chainerId };
+}
 
 /**
  * GET /api/admin/donations/[id]
@@ -50,6 +113,14 @@ export async function GET(
       );
     }
 
+    // Auto-attribute to chainer from payment provider metadata when possible (e.g. chain_code stored on Stripe/Paystack)
+    if (!donation[0].chainerId && donation[0].paymentIntentId) {
+      const attr = await tryAttributeDonationFromProvider(donationId);
+      if (attr.attributed && attr.chainerId) {
+        donation[0].chainerId = attr.chainerId;
+      }
+    }
+
     // Get chainer info if applicable
     let chainerInfo = null;
     if (donation[0].chainerId) {
@@ -57,6 +128,7 @@ export async function GET(
         .select({
           id: chainers.id,
           userId: chainers.userId,
+          referralCode: chainers.referralCode,
           totalReferrals: chainers.totalReferrals,
           totalRaised: chainers.totalRaised,
           commissionEarned: chainers.commissionEarned,
@@ -66,7 +138,7 @@ export async function GET(
         .leftJoin(users, eq(chainers.userId, users.id))
         .where(eq(chainers.id, donation[0].chainerId))
         .limit(1);
-      
+
       chainerInfo = chainerData;
     }
 
@@ -272,6 +344,54 @@ export async function PATCH(
           .where(eq(donations.id, donationId))
           .returning();
         break;
+
+      case 'attribute_chainer': {
+        if (process.env.NODE_ENV !== 'development') {
+          return NextResponse.json(
+            { error: 'Manual attribute is only available in development' },
+            { status: 403 }
+          );
+        }
+        const { referralCode } = updateData;
+        if (!referralCode || typeof referralCode !== 'string') {
+          return NextResponse.json(
+            { error: 'referralCode is required to attribute donation to a chainer' },
+            { status: 400 }
+          );
+        }
+        if (existingDonation.chainerId) {
+          return NextResponse.json(
+            { error: 'Donation is already attributed to a chainer' },
+            { status: 400 }
+          );
+        }
+        const [chainer] = await db
+          .select()
+          .from(chainers)
+          .where(and(
+            eq(chainers.referralCode, referralCode.trim()),
+            eq(chainers.campaignId, existingDonation.campaignId)
+          ))
+          .limit(1);
+        if (!chainer) {
+          return NextResponse.json(
+            { error: 'Chainer not found for this campaign with that referral code' },
+            { status: 404 }
+          );
+        }
+        updatedDonation = await db
+          .update(donations)
+          .set({ chainerId: chainer.id })
+          .where(eq(donations.id, donationId))
+          .returning();
+        if (updatedDonation[0]) {
+          await calculateAndDistributeCommissions(donationId);
+        }
+        return NextResponse.json({
+          message: 'Donation attributed to chainer successfully',
+          donation: updatedDonation[0],
+        });
+      }
 
       default:
         return NextResponse.json(

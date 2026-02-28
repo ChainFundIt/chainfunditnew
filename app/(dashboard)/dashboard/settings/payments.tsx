@@ -33,6 +33,7 @@ import {
   Mail,
   Phone,
   Globe,
+  Repeat,
 } from "lucide-react";
 import {
   Dialog,
@@ -87,6 +88,26 @@ const Payments = (props: Props) => {
   const [changeRequestReason, setChangeRequestReason] = useState("");
   const [showChangeRequest, setShowChangeRequest] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [subscriptions, setSubscriptions] = useState<Array<{
+    id: string;
+    campaignId: string;
+    campaignTitle: string | null;
+    campaignSlug: string | null;
+    amount: string;
+    currency: string;
+    period: string;
+    paymentMethod: string;
+    status: string;
+    isActive: boolean;
+    nextBillingDate: string | null;
+    totalDonations: number;
+    totalAmount: string;
+    createdAt: string;
+    cancelledAt: string | null;
+  }>>([]);
+  const [subscriptionsLoading, setSubscriptionsLoading] = useState(true);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [cancelConfirmId, setCancelConfirmId] = useState<string | null>(null);
   const [verificationData, setVerificationData] = useState<{
     accountNumber: string;
     bankCode: string;
@@ -100,6 +121,50 @@ const Payments = (props: Props) => {
 
   const handleInternationalInputChange = (field: string, value: string) => {
     setInternationalFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // Fetch recurring donations (subscriptions) on mount
+  React.useEffect(() => {
+    const fetchSubscriptions = async () => {
+      try {
+        setSubscriptionsLoading(true);
+        const res = await fetch("/api/payments/subscriptions", { credentials: "include" });
+        const data = await res.json();
+        if (data.success && Array.isArray(data.subscriptions)) {
+          setSubscriptions(data.subscriptions);
+        }
+      } catch {
+        setSubscriptions([]);
+      } finally {
+        setSubscriptionsLoading(false);
+      }
+    };
+    fetchSubscriptions();
+  }, []);
+
+  const handleCancelSubscription = async (recurringDonationId: string) => {
+    setCancellingId(recurringDonationId);
+    setCancelConfirmId(null);
+    try {
+      const res = await fetch("/api/payments/subscriptions/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ recurringDonationId, cancelImmediately: false }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to cancel");
+      toast.success(data.message || "Subscription will cancel at the end of the billing period.");
+      setSubscriptions((prev) =>
+        prev.map((s) =>
+          s.id === recurringDonationId ? { ...s, status: "cancelled", isActive: false } : s
+        )
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to cancel subscription");
+    } finally {
+      setCancellingId(null);
+    }
   };
 
   // Fetch international bank account details on mount
@@ -343,6 +408,104 @@ const Payments = (props: Props) => {
           <AlertDescription className="mb-0 mt-1 ">{error}</AlertDescription>
         </Alert>
       )}
+
+      {/* Recurring donations (subscriptions) */}
+      <Card className="border-2">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-[#104901]">
+            <Repeat className="h-5 w-5" />
+            Recurring donations
+          </CardTitle>
+          <CardDescription>
+            Manage your recurring donations. You can cancel at any time; you will not be charged again after the current period.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {subscriptionsLoading ? (
+            <div className="flex items-center gap-2 text-[#104901] py-4">
+              <Loader size="medium" />
+              <span>Loading recurring donations...</span>
+            </div>
+          ) : subscriptions.length === 0 ? (
+            <p className="text-[#6B7280] py-4">You don&apos;t have any recurring donations.</p>
+          ) : (
+            <ul className="space-y-4">
+              {subscriptions.map((sub) => (
+                <li
+                  key={sub.id}
+                  className="flex flex-wrap items-center justify-between gap-3 border border-[#e5e7eb] rounded-lg p-4 bg-[#fafafa]"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-[#104901]">
+                      {sub.campaignTitle ? (
+                        <Link
+                          href={sub.campaignSlug ? `/campaign/${sub.campaignSlug}` : `/campaign/${sub.campaignId}`}
+                          className="hover:underline"
+                        >
+                          {sub.campaignTitle}
+                        </Link>
+                      ) : (
+                        "Campaign"
+                      )}
+                    </div>
+                    <div className="text-sm text-[#6B7280] mt-1">
+                      {sub.currency} {sub.amount} / {sub.period}
+                      {sub.nextBillingDate && sub.isActive && (
+                        <span> · Next: {new Date(sub.nextBillingDate).toLocaleDateString()}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {sub.isActive ? (
+                      <>
+                        <Badge variant="outline" className="bg-green-50 text-green-700">
+                          Active
+                        </Badge>
+                        {cancelConfirmId === sub.id ? (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-[#6B7280]">Cancel?</span>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              disabled={cancellingId === sub.id}
+                              onClick={() => handleCancelSubscription(sub.id)}
+                            >
+                              {cancellingId === sub.id ? (
+                                <Loader size="small" />
+                              ) : (
+                                "Yes, cancel"
+                              )}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={cancellingId === sub.id}
+                              onClick={() => setCancelConfirmId(null)}
+                            >
+                              No
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={cancellingId !== null}
+                            onClick={() => setCancelConfirmId(sub.id)}
+                          >
+                            Cancel subscription
+                          </Button>
+                        )}
+                      </>
+                    ) : (
+                      <Badge variant="secondary">Cancelled</Badge>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Account Status Card */}
       {accountDetails && (
