@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface PublicCampaign {
   id: string;
@@ -42,21 +42,26 @@ interface PublicCampaignFilters {
   filter?: string; // Add filter parameter for frontend filtering
 }
 
-export function usePublicCampaigns() {
+export function usePublicCampaigns(initialFilters?: PublicCampaignFilters) {
   const [campaigns, setCampaigns] = useState<PublicCampaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<PublicCampaignFilters>({ 
-    limit: 100, // Fetch more campaigns to allow proper filtering
-    offset: 0 
+    limit: initialFilters?.limit ?? 100,
+    offset: initialFilters?.offset ?? 0,
+    ...(initialFilters?.status && { status: initialFilters.status }),
+    ...(initialFilters?.reason && { reason: initialFilters.reason }),
   });
+
+  const filtersRef = useRef(filters);
+  filtersRef.current = filters;
 
   const fetchCampaigns = useCallback(async (newFilters?: PublicCampaignFilters) => {
     try {
       setLoading(true);
       setError(null);
 
-      const currentFilters = newFilters || filters;
+      const currentFilters = newFilters ?? filtersRef.current;
       
       const params = new URLSearchParams();
       if (currentFilters?.status) params.append('status', currentFilters.status);
@@ -89,7 +94,7 @@ export function usePublicCampaigns() {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, []);
 
   const updateFilters = useCallback((newFilters: Partial<PublicCampaignFilters>) => {
     setFilters(prevFilters => {

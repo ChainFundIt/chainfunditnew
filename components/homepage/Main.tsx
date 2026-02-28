@@ -7,21 +7,22 @@ import { motion } from "framer-motion";
 import {
   ShieldCheck,
   Search,
-  GraduationCap,
   Stethoscope,
-  Building2,
-  Leaf,
   ShieldIcon,
   CircleCheck,
   Heart,
+  Briefcase,
+  Gift,
+  Users,
+  Activity,
+  BookOpen,
 } from "lucide-react";
 
-import { useCharities } from "@/hooks/use-charities";
+import { usePublicCampaigns } from "@/hooks/use-public-campaigns";
 
 import { Button } from "../ui/button";
 import BenefitsCarousel from "./BenefitsCarousel";
 
-// Component to show image with heart icon fallback on error
 const CharityImageWithFallback = ({ 
   src, 
   alt, 
@@ -79,6 +80,16 @@ const CharityImageWithFallback = ({
   );
 };
 
+const CAMPAIGN_REASON_FILTERS: { value: string; label: string; icon: React.ReactNode }[] = [
+  { value: "all", label: "All Causes", icon: null },
+  { value: "Business", label: "Business", icon: <Briefcase size={16} /> },
+  { value: "Charity", label: "Charity", icon: <Gift size={16} /> },
+  { value: "Community", label: "Community", icon: <Users size={16} /> },
+  { value: "Education", label: "Education", icon: <BookOpen size={16} /> },
+  { value: "Emergency", label: "Emergency", icon: <Activity size={16} /> },
+  { value: "Medical", label: "Medical", icon: <Stethoscope size={16} /> },
+];
+
 const Main = () => {
   const router = useRouter();
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
@@ -87,14 +98,24 @@ const Main = () => {
   const [loadingUsers, setLoadingUsers] = useState<boolean>(true);
 
   const {
-    charities,
-    loading: charitiesLoading,
-    error: charitiesError,
-  } = useCharities({
-    verified: true,
-    active: true,
-    limit: 12,
-  });
+    campaigns,
+    loading: campaignsLoading,
+    error: campaignsError,
+    updateFilters,
+  } = usePublicCampaigns({ status: "active", limit: 6 });
+
+  const isFirstMount = useRef(true);
+  useEffect(() => {
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
+    }
+    updateFilters({
+      status: "active",
+      limit: 6,
+      reason: selectedFilter === "all" ? undefined : selectedFilter,
+    });
+  }, [selectedFilter, updateFilters]);
 
   // Fetch total users count
   useEffect(() => {
@@ -128,69 +149,10 @@ const Main = () => {
     return `${thousands}k+`;
   };
 
-  const filteredCharities = charities.filter((charity) => {
-    const category = charity.category?.toLowerCase() ?? "";
-    const charityName = charity.name?.toLowerCase() ?? "";
-    const matchesSearch = charityName.includes(searchQuery.toLowerCase());
-
-    if (!matchesSearch) return false;
-    if (selectedFilter === "all") return true;
-
-    switch (selectedFilter) {
-      case "education":
-        return (
-          category.includes("education") ||
-          category.includes("youth") ||
-          category.includes("children")
-        );
-      case "medical":
-        return category.includes("health") || category.includes("medical");
-      case "community":
-        return (
-          category.includes("community") || category.includes("development")
-        );
-      case "nature":
-        return (
-          category.includes("environment") ||
-          category.includes("climate") ||
-          category.includes("wildlife")
-        );
-      default:
-        return true;
-    }
-  });
-
-  const displayCharities = filteredCharities.slice(0, 6);
-
-  const charitiesFilterTabs = [
-    "all",
-    "education",
-    "medical",
-    "community",
-    "nature",
-  ];
-
-  const cardDetails = displayCharities.map((charity) => {
-    const focusAreas =
-      charity.focusAreas && charity.focusAreas.length > 0
-        ? charity.focusAreas.slice(0, 4).join(", ")
-        : null;
-
-    return {
-      id: charity.id,
-      slug: charity.slug,
-      title: charity.name,
-      description:
-        charity.description ||
-        charity.mission ||
-        "Learn more about this charity's impact.",
-      image: charity.coverImage || charity.logo || null,
-      category: charity.category || "Community",
-      country: charity.country || "International",
-      focusAreas,
-      isVerified: charity.isVerified,
-    };
-  });
+  const campaignList = Array.isArray(campaigns) ? campaigns : [];
+  const displayCampaigns = [...campaignList]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 6);
 
   /* Animations */
   const fadeUp = {
@@ -204,6 +166,16 @@ const Main = () => {
     },
   };
 
+  const cardDetails = displayCampaigns.map((campaign) => {
+    return {
+        id: campaign.id,
+        slug: campaign.slug,
+      title: campaign.title,
+      description: campaign.description || "Learn more about this campaign's impact.",
+      image: campaign.coverImageUrl || null,
+      category: campaign.reason || "Community",
+    };  
+  });
   return (
     <div>
       {/* Next-Gen Fundraising Section */}
@@ -232,7 +204,7 @@ const Main = () => {
                 Make a meaningful donation today
               </div>
               <div className="font-normal text-base leading-6 text-[#78716C]">
-                Browse verified charities and find a cause that resonates with
+                Browse verified campaigns and find a cause that resonates with
                 your heart.
               </div>
             </div>
@@ -246,7 +218,7 @@ const Main = () => {
               />
               <input
                 type="text"
-                placeholder="Search charities..."
+                placeholder="Search campaigns..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="h-12 pl-10 w-full rounded-xl focus:outline-none text-[#A8A29E] bg-transparent"
@@ -262,63 +234,40 @@ const Main = () => {
             animate="visible"
             transition={{ duration: 0.7 }}
           >
-            {charitiesFilterTabs.map((item) => (
+            {CAMPAIGN_REASON_FILTERS.map((item) => (
               <button
-                key={item}
-                onClick={() => setSelectedFilter(item)}
+                key={item.value}
+                onClick={() => setSelectedFilter(item.value)}
                 className={`flex gap-2 items-center px-5 py-3 rounded-full font-bold text-sm leading-5 transition-all duration-300 ${
-                  selectedFilter === item
+                  selectedFilter === item.value
                     ? "bg-black text-white"
                     : "bg-white text-black"
                 }`}
               >
-                {item === "all" && "All Causes"}
-                {item === "education" && (
-                  <>
-                    <GraduationCap size={16} />
-                    Education
-                  </>
-                )}
-                {item === "medical" && (
-                  <>
-                    <Stethoscope size={16} />
-                    Medical
-                  </>
-                )}
-                {item === "community" && (
-                  <>
-                    <Building2 size={16} />
-                    Community
-                  </>
-                )}
-                {item === "nature" && (
-                  <>
-                    <Leaf size={16} />
-                    Nature
-                  </>
-                )}
+                {item.icon}
+                {item.label}
               </button>
             ))}
           </motion.div>
 
           {/* Loading / Error handlers */}
-          {charitiesLoading && (
+          {campaignsLoading && (
             <div className="flex items-center justify-center w-full py-16">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#104901]"></div>
               <p className="text-[#104901] text-lg ml-4 font-medium">
-                Loading Charities...
+                Loading Campaigns...
               </p>
             </div>
           )}
 
-          {charitiesError && !charitiesLoading && (
+          {campaignsError && !campaignsLoading && (
             <div className="flex flex-col items-center justify-center w-full py-16">
-              <p className="text-red-600 text-center">{charitiesError}</p>
+              <p className="text-red-600 text-center">{campaignsError}</p>
             </div>
           )}
 
           {/* Campaign Cards */}
-          {!charitiesLoading && !charitiesError && cardDetails.length > 0 && (
+          {!campaignsLoading && !campaignsError && cardDetails.length > 0 && (
             <motion.div
               key={`${selectedFilter}-${searchQuery}`}
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
@@ -334,7 +283,7 @@ const Main = () => {
                   transition={{ duration: 0.45 }}
                   className="group rounded-3xl overflow-hidden bg-white hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col h-full"
                   onClick={() =>
-                    router.push(`/virtual-giving-mall/${card.slug}`)
+                    router.push(`/campaign/${card.slug}`)
                   }
                 >
                   {/* IMAGE SECTION */}
@@ -369,12 +318,6 @@ const Main = () => {
                         {card.category}
                       </span>
                     </div>
-                    <div className="absolute flex gap-1 items-center top-4 right-4 bg-[#59AD4A] text-white px-3 py-1 rounded-full">
-                      <ShieldIcon color="white" size={12} />
-                      <span className="font-bold text-xs leading-4">
-                        Verified
-                      </span>
-                    </div>
                   </div>
 
                   {/* CONTENT SECTION */}
@@ -387,16 +330,12 @@ const Main = () => {
                             {card.category}
                           </b>
                         </p>
-
-                        {card.isVerified && (
-                          <CircleCheck size={12} color="#3B82F6" />
-                        )}
                       </div>
                       <div className="font-bold text-xl text-[#1C1917] truncate ">
                         {card.title}
                       </div>
                       <div className="font-normal text-sm text-[#78716C]">
-                        {card.description}
+                        {card.description.slice(0, 100)}...
                       </div>
                     </div>
                     <div className="flex flex-col gap-2">
@@ -408,11 +347,11 @@ const Main = () => {
                       <Button
                         onClick={(e) => {
                           e.stopPropagation();
-                          router.push(`/virtual-giving-mall/${card.slug}`);
+                          router.push(`/campaign/${card.slug}`);
                         }}
                         className="bg-white px-0 py-3 rounded-full h-auto text-[#104109] font-bold text-base leading-6 border-2 border-transparent hover:border-[#104109] transition-colors"
                       >
-                        View Charity
+                        View Campaign
                       </Button>
                     </div>
                   </div>
@@ -421,10 +360,10 @@ const Main = () => {
             </motion.div>
           )}
 
-          {!charitiesLoading && !charitiesError && cardDetails.length === 0 && (
+          {!campaignsLoading && !campaignsError && cardDetails.length === 0 && (
             <div className="flex flex-col items-center justify-center w-full py-16">
               <p className="text-[#666666] text-center">
-                No Charities available in this category.
+                No campaigns available yet. Check back soon.
               </p>
             </div>
           )}
@@ -442,7 +381,7 @@ const Main = () => {
                 onClick={() => router.push("/campaigns")}
                 className="bg-[#104109] px-8 py-4 rounded-full h-auto font-bold text-lg leading-7 border-none"
               >
-                View More Charities
+                View More Campaigns
               </Button>
             )}
           </motion.div>
