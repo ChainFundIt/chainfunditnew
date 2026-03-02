@@ -212,7 +212,7 @@ export default function ReviewSettings() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="headline">Headline (optional)</Label>
+            <Label htmlFor="headline">Headline</Label>
             <Input
               id="headline"
               value={headline}
@@ -223,7 +223,7 @@ export default function ReviewSettings() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="body">Message (optional)</Label>
+            <Label htmlFor="body">Message</Label>
             <Textarea
               id="body"
               value={body}

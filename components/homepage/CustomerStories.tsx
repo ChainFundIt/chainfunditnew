@@ -137,16 +137,13 @@ const CustomerStories = (props: Props) => {
 
                     {/* Quote */}
                     <p
-                      className={`font-medium text-lg leading-[30px] text-[#1C1917] ${
-                        review.isLoading ? "opacity-60" : ""
-                      }`}
+                      className={`font-medium text-lg leading-[30px] text-[#1C1917] ${review.isLoading ? "opacity-60" : ""
+                        }`}
                     >
-                      "
-                      {review.headline
-                        ? review.headline
-                        : review.body ?? "Great experience overall."}
-                      "
+                      {review.headline}
                     </p>
+
+                    <p>{review.body}</p>
 
                     {/* Spacer to push user info to bottom */}
                     <div className="flex-grow" />
