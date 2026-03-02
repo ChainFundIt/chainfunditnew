@@ -43,29 +43,17 @@ export async function generateMetadata({
     /\/$/,
     "",
   );
-  const fallbackOgImageUrl = `${baseUrl}/opengraph-image`;
-
   const campaignUrl = `${baseUrl}/campaign/${slug}`;
 
-  // Use a generated per-campaign OG image that overlays the cover + company logo.
-  // This avoids relying on social crawlers to fetch R2/CDN URLs directly.
-  const campaignOgImageUrl = `${baseUrl}/campaign/${slug}/opengraph-image`;
-
-  // Use only short, deterministic image URLs in metadata. Long proxied URLs
-  // (e.g. /api/images?url=...) get truncated by crawlers/meta (e.g. ~255 chars),
-  // producing invalid URLs and broken thumbnails. So we only output generated routes.
+  // Use a single static OG image so previews never fail. Dynamic ImageResponse
+  // routes (opengraph-image.tsx) can return empty on Vercel Edge; static files cannot.
+  const ogImageUrl = `${baseUrl}/og-campaign.png`;
   const images = [
     {
-      url: campaignOgImageUrl,
+      url: ogImageUrl,
       width: 1200,
       height: 630,
       alt: campaignData.title,
-    },
-    {
-      url: fallbackOgImageUrl,
-      width: 1200,
-      height: 630,
-      alt: "Chainfundit — Raise funds, support dreams",
     },
   ];
 
@@ -82,7 +70,7 @@ export async function generateMetadata({
   const progress =
     goalAmount > 0 ? Math.round((currentAmount / goalAmount) * 100) : 0;
 
-  const twitterImages = [`${baseUrl}/campaign/${slug}/twitter-image`];
+  const twitterImages = [ogImageUrl];
 
   return {
     title: `${campaignData.title} | Chainfundit`,

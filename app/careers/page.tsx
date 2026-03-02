@@ -80,11 +80,6 @@ export default async function CareersPage() {
     .where(eq(careerOpenings.isActive, true))
     .orderBy(asc(careerOpenings.sortOrder), desc(careerOpenings.createdAt));
 
-  const ambassadorStartDate = new Date("2026-01-19T00:00:00.000Z");
-  const ambassadorEndDate = new Date(ambassadorStartDate);
-  ambassadorEndDate.setUTCDate(ambassadorEndDate.getUTCDate() + 21);
-  const showAmbassadorRole = new Date() <= ambassadorEndDate;
-
   return (
     <>
       <Navbar />
@@ -193,30 +188,25 @@ export default async function CareersPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {showAmbassadorRole && (
-              <div className="rounded-[40px] border border-[#f5f5f4] bg-[#FDFBF7] p-8 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between lg:col-span-2">
-                <div className="space-y-3">
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-100 text-[#A16207] text-xs font-bold">
-                    OPEN
-                  </div>
-                  <div className="font-jakarta font-bold text-[28px] leading-[34px] text-[#1C1917]">
-                    ChainFundIt Ambassador 
-                  </div>
-                  <div className="text-[#78716c] max-w-[760px]">
-                    Meet the storytellers behind the Doing Good Series. Learn more
-                    about the role, responsibilities, and how to apply. 
-                  </div>
-                  <span className="text-[#78716c]">
-                    Closes on 13th February 2026.
-                  </span>
+            <div className="rounded-[40px] border border-[#f5f5f4] bg-[#FDFBF7] p-8 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between lg:col-span-2">
+              <div className="space-y-3">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-100 text-[#A16207] text-xs font-bold">
+                  OPEN
                 </div>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Button asChild className="bg-[#104109] p-6 rounded-full">
-                    <Link href="/doinggood">View Role</Link>
-                  </Button>
+                <div className="font-jakarta font-bold text-[28px] leading-[34px] text-[#1C1917]">
+                  ChainFundIt Ambassador
+                </div>
+                <div className="text-[#78716c] max-w-[760px]">
+                  Meet the storytellers behind the Doing Good Series. Learn more
+                  about the role, responsibilities, and how to apply.
                 </div>
               </div>
-            )}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button asChild className="bg-[#104109] p-6 rounded-full">
+                  <Link href="/doinggood">View Role</Link>
+                </Button>
+              </div>
+            </div>
 
             <div className="rounded-[40px] border border-[#f5f5f4] bg-[#FDFBF7] p-8 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between lg:col-span-2">
               <div className="space-y-3">
@@ -348,7 +338,7 @@ export default async function CareersPage() {
             })}
           </div>
 
-          {openings.length === 0 && !showAmbassadorRole && (
+          {openings.length === 0 && (
             <div className="rounded-[40px] border border-[#f5f5f4] bg-white p-10 text-center mt-8">
               <div className="font-jakarta font-bold text-[20px] text-[#1C1917] mb-2">
                 No other open positions right now
