@@ -170,6 +170,7 @@ const Main = () => {
     return {
         id: campaign.id,
         slug: campaign.slug,
+        creator: campaign.creatorName || "Unknown",
       title: campaign.title,
       description: campaign.description || "Learn more about this campaign's impact.",
       image: campaign.coverImageUrl || null,
@@ -327,7 +328,7 @@ const Main = () => {
                         <p className="font-bold text-xs text-[#A8A29E] uppercase">
                           Organized by{" "}
                           <b className="font-bold text-xs text-[#292524]">
-                            {card.category}
+                            {card.creator}
                           </b>
                         </p>
                       </div>
