@@ -43,14 +43,9 @@ function CheckoutForm({ donationId }: { donationId: string }) {
 
         const canMakePayment = await paymentRequest.canMakePayment();
         if (canMakePayment && canMakePayment.applePay) {
-          console.log('[Checkout] Apple Pay is available');
           setApplePayAvailable(true);
         } else {
-          console.log('[Checkout] Apple Pay not available:', {
-            canMakePayment,
-            userAgent: navigator.userAgent,
-            protocol: window.location.protocol,
-          });
+         
         }
       } catch (error) {
         console.error('[Checkout] Error checking Apple Pay:', error);
@@ -89,26 +84,6 @@ function CheckoutForm({ donationId }: { donationId: string }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Debug info in development */}
-      {(process.env.NODE_ENV === 'development' || !applePayAvailable) && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs space-y-1">
-          <p><strong>Apple Pay</strong></p>
-          <p>Available: {applePayAvailable ? 'Yes' : 'No'}</p>
-          {!applePayAvailable && (
-            <p className="text-amber-800 mt-2">
-              To see Apple Pay: use Safari, add a card in Wallet, and set <code>NEXT_PUBLIC_STRIPE_ACCOUNT_COUNTRY</code> to your Stripe account country (e.g. GB or US). Check the browser console for &quot;[Apple Pay]&quot; or &quot;[Checkout]&quot; for details.
-            </p>
-          )}
-          {process.env.NODE_ENV === 'development' && (
-            <>
-              <p>Stripe loaded: {stripe ? 'Yes' : 'No'}</p>
-              <p>Protocol: {window.location.protocol}</p>
-              <p>Browser: {navigator.userAgent.includes('Safari') ? 'Safari' : 'Other'}</p>
-            </>
-          )}
-        </div>
-      )}
-      
       <PaymentElement />
       
       <div className="flex items-center gap-2 text-sm text-gray-500">
