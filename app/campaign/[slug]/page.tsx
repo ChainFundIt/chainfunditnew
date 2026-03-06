@@ -45,14 +45,15 @@ export async function generateMetadata({
   );
   const campaignUrl = `${baseUrl}/campaign/${slug}`;
 
-  // Static OG image only. Relative URL so Next resolves with root layout's metadataBase.
-  // File is optimized to ~400KB 1200x630 so crawlers don't timeout (was 5MB).
+  // Short URL route serves campaign cover (resized) or static fallback. No long URLs = no truncation.
+  const ogImagePath = `/campaign/${slug}/og-img`;
   const images = [
+    { url: ogImagePath, width: 1200, height: 630, alt: campaignData.title },
     {
       url: "/og-campaign.png",
       width: 1200,
       height: 630,
-      alt: campaignData.title,
+      alt: "Chainfundit — Raise funds, support dreams",
     },
   ];
 
@@ -69,7 +70,7 @@ export async function generateMetadata({
   const progress =
     goalAmount > 0 ? Math.round((currentAmount / goalAmount) * 100) : 0;
 
-  const twitterImages = ["/og-campaign.png"];
+  const twitterImages = [ogImagePath, "/og-campaign.png"];
 
   return {
     title: `${campaignData.title} | Chainfundit`,
