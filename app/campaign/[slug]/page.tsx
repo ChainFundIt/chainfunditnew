@@ -45,12 +45,11 @@ export async function generateMetadata({
   );
   const campaignUrl = `${baseUrl}/campaign/${slug}`;
 
-  // Use a single static OG image so previews never fail. Dynamic ImageResponse
-  // routes (opengraph-image.tsx) can return empty on Vercel Edge; static files cannot.
-  const ogImageUrl = `${baseUrl}/og-campaign.png`;
+  // Static OG image only. Relative URL so Next resolves with root layout's metadataBase.
+  // File is optimized to ~400KB 1200x630 so crawlers don't timeout (was 5MB).
   const images = [
     {
-      url: ogImageUrl,
+      url: "/og-campaign.png",
       width: 1200,
       height: 630,
       alt: campaignData.title,
@@ -70,7 +69,7 @@ export async function generateMetadata({
   const progress =
     goalAmount > 0 ? Math.round((currentAmount / goalAmount) * 100) : 0;
 
-  const twitterImages = [ogImageUrl];
+  const twitterImages = ["/og-campaign.png"];
 
   return {
     title: `${campaignData.title} | Chainfundit`,

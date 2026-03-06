@@ -21,7 +21,8 @@
     "check-admin-notifications": "tsx scripts/check-admin-notifications.ts",
     "fix-undefined-urls": "tsx scripts/fix-undefined-image-urls.ts",
     "add-charity-categories": "tsx scripts/add-charity-categories.ts",
-    "update-charities-to-global": "tsx scripts/update-charities-to-global.ts"
+    "update-charities-to-global": "tsx scripts/update-charities-to-global.ts",
+    "optimize-og": "node scripts/optimize-og-campaign.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.883.0",
@@ -125,6 +126,7 @@
     "jest-environment-jsdom": "^30.0.5",
     "mkcert": "^3.2.0",
     "postcss": "^8.5.6",
+    "sharp": "^0.34.5",
     "tailwindcss": "3",
     "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",

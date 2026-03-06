@@ -58,6 +58,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { CampaignDashboardModal } from "@/components/admin/campaign-dashboard-modal";
+import { Trash } from "iconsax-reactjs";
 
 interface Campaign {
   id: string;
@@ -528,6 +529,10 @@ export default function AdminCampaignsPage() {
                     >
                       <Pause className="h-4 w-4 mr-2" />
                       Pause
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={() => handleBulkAction("delete")}>
+                      <Trash className="h-4 w-4 mr-2" />
+                      Delete Selected
                     </Button>
                     <Button
                       size="sm"
