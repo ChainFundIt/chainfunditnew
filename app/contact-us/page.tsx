@@ -31,8 +31,8 @@ const contactMethods = [
     icon: Phone,
     title: "Phone Support",
     description: "Speak directly with our support team for urgent matters",
-    contact: "+44 (0) 20 1234 5678",
-    link: "tel:+442012345678",
+    contact: "+238 090 986 009",
+    link: "tel:+238090986009",
   },
   {
     icon: MessageSquare,
