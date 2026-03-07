@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, normalizeEmail } from '@/lib/db';
 import { users, campaigns, donations } from '@/lib/schema';
-import { eq, and, sql, desc, count, sum } from 'drizzle-orm';
+import { eq, and, sql, desc, count, sum, isNull } from 'drizzle-orm';
 import { parse } from 'cookie';
 import { verifyUserJWT } from '@/lib/auth';
 
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
         creatorId: campaigns.creatorId,
       })
       .from(campaigns)
-      .where(eq(campaigns.creatorId, userId));
+      .where(and(eq(campaigns.creatorId, userId), isNull(campaigns.deletedAt)));
     
     if (debugCampaigns.length > 0) {
     } else {
@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
         eq(campaigns.id, donations.campaignId),
         eq(donations.paymentStatus, 'completed')
       ))
-      .where(eq(campaigns.creatorId, userId))
+      .where(and(eq(campaigns.creatorId, userId), isNull(campaigns.deletedAt)))
       .groupBy(
         campaigns.id,
         campaigns.slug,

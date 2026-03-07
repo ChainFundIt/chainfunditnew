@@ -37,6 +37,7 @@ export const campaigns = pgTable('campaigns', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
   closedAt: timestamp('closed_at'),
+  deletedAt: timestamp('deleted_at'), // When campaign was moved to "Recently Deleted" (admin soft delete)
   // Auto-close logic fields
   goalReachedAt: timestamp('goal_reached_at'), // When campaign first reached its goal
   autoCloseAt: timestamp('auto_close_at'), // When campaign should be auto-closed (4 weeks after goal reached)

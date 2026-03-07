@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { campaigns, users, donations } from '@/lib/schema';
-import { eq, and, or, inArray, count, sum, desc, ne, like } from 'drizzle-orm';
+import { eq, and, or, inArray, count, sum, desc, ne, like, isNull } from 'drizzle-orm';
 import { parse } from 'cookie';
 import { verifyUserJWT } from '@/lib/auth';
 import { generateSlug, generateUniqueSlug } from '@/lib/utils/slug';
@@ -31,8 +31,8 @@ export async function GET(request: NextRequest) {
     const excludeId = searchParams.get('excludeId');
 
 
-    // Build query with filters
-    const conditions: any[] = [];
+    // Build query with filters (exclude campaigns moved to Recently Deleted)
+    const conditions: any[] = [isNull(campaigns.deletedAt)];
     if (status) {
       conditions.push(eq(campaigns.status, status));
     }
@@ -287,17 +287,47 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Generate unique slug for the campaign
-    const baseSlug = generateSlug(title);
-    
+    // Truncate string fields to schema limits to avoid DB overflow (causes 500 for some users)
+    const L = {
+      title: 255,
+      subtitle: 255,
+      reason: 100,
+      fundraisingFor: 100,
+      duration: 50,
+      videoUrl: 255,
+      coverImageUrl: 255,
+      currency: 50,
+      creationRequestId: 64,
+      visibility: 20,
+    };
+    const safeStr = (s: string | null | undefined, max: number) =>
+      s == null ? null : String(s).trim().slice(0, max) || null;
+    const titleSafe = (title || '').trim().slice(0, L.title) || 'Campaign';
+    const subtitleSafe = safeStr(subtitle, L.subtitle);
+    const reasonSafe = safeStr(reason, L.reason);
+    const fundraisingForSafe = safeStr(fundraisingFor, L.fundraisingFor);
+    const durationSafe = safeStr(duration, L.duration);
+    const videoUrlSafe = safeStr(videoUrl, L.videoUrl);
+    const coverImageUrlSafe = safeStr(coverImageUrl, L.coverImageUrl);
+    const currencySafe = (currency || 'USD').trim().slice(0, L.currency);
+    const visibilitySafe = (visibility || 'public').trim().slice(0, L.visibility);
+    const creationRequestIdSafe = creationRequestId
+      ? String(creationRequestId).trim().slice(0, L.creationRequestId)
+      : null;
+
+    // Generate unique slug; never allow empty (some titles become empty after slugify)
+    let baseSlug = generateSlug(titleSafe);
+    if (!baseSlug) baseSlug = `campaign-${Date.now()}`;
+
     const isUniqueViolation = (err: unknown) => {
       const e = err as any;
       return e?.code === '23505' || (typeof e?.message === 'string' && e.message.includes('duplicate key value violates unique constraint'));
     };
 
     let newCampaign: any[] = [];
-    // Create campaign (retry on slug collisions; handle idempotency-key collisions)
-    for (let attempt = 0; attempt < 3; attempt++) {
+    let effectiveCreationRequestId: string | null = creationRequestIdSafe;
+    // Create campaign (retry on slug collisions; handle idempotency-key collisions and global creation_request_id collision)
+    for (let attempt = 0; attempt < 4; attempt++) {
       // Check for existing slugs to ensure uniqueness (include baseSlug-# variants)
       const existingSlugs = await db
         .select({ slug: campaigns.slug })
@@ -309,26 +339,26 @@ export async function POST(request: NextRequest) {
       try {
         newCampaign = await db.insert(campaigns).values({
           creatorId: userId,
-          creationRequestId,
-          title,
+          creationRequestId: effectiveCreationRequestId,
+          title: titleSafe,
           slug: uniqueSlug,
-          subtitle: subtitle || null,
+          subtitle: subtitleSafe,
           description,
-          reason: reason || null,
-          fundraisingFor: fundraisingFor || null,
-          duration: duration || null,
-          videoUrl: videoUrl || null,
-          coverImageUrl: coverImageUrl || null,
+          reason: reasonSafe,
+          fundraisingFor: fundraisingForSafe,
+          duration: durationSafe,
+          videoUrl: videoUrlSafe,
+          coverImageUrl: coverImageUrlSafe,
           galleryImages: galleryImages || null,
           documents: documents || null,
           goalAmount: goalAmountNum.toString(),
-          currency,
+          currency: currencySafe,
           minimumDonation: minimumDonationNum.toString(),
           chainerCommissionRate: isChainedBool ? commissionRateNum.toString() : '0',
           isChained: isChainedBool,
           currentAmount: '0',
           status: 'active',
-          visibility: visibility || 'public',
+          visibility: visibilitySafe,
           isActive: true,
           complianceStatus: 'approved',
           complianceSummary: null,
@@ -341,11 +371,11 @@ export async function POST(request: NextRequest) {
         break;
       } catch (err) {
         // If the idempotency key already exists (race), return the previously created campaign.
-        if (creationRequestId && isUniqueViolation(err)) {
+        if (effectiveCreationRequestId && isUniqueViolation(err)) {
           const existingByRequestId = await db
             .select()
             .from(campaigns)
-            .where(and(eq(campaigns.creatorId, userId), eq(campaigns.creationRequestId, creationRequestId)))
+            .where(and(eq(campaigns.creatorId, userId), eq(campaigns.creationRequestId, effectiveCreationRequestId)))
             .limit(1);
 
           if (existingByRequestId.length) {
@@ -354,10 +384,16 @@ export async function POST(request: NextRequest) {
               { status: 200 }
             );
           }
+          // Unique violation but not our campaign: another user has this creationRequestId (rare collision).
+          // Retry once without idempotency key so this user's campaign still gets created.
+          if (attempt === 0) {
+            effectiveCreationRequestId = null;
+            continue;
+          }
         }
 
-        // Otherwise: likely a slug collision, retry a couple times.
-        if (attempt === 2 || !isUniqueViolation(err)) throw err;
+        // Otherwise: likely a slug collision, retry with new slug.
+        if (attempt === 3 || !isUniqueViolation(err)) throw err;
       }
     }
 
@@ -371,12 +407,12 @@ export async function POST(request: NextRequest) {
       await sendCampaignCreationEmail({
         userEmail: userEmail,
         userName: user[0].fullName || user[0].email?.split('@')[0] || 'there',
-        campaignTitle: title,
+        campaignTitle: titleSafe,
         campaignSlug: campaignSlug,
         goalAmount: goalAmountNum.toString(),
-        currency,
+        currency: currencySafe,
         campaignUrl,
-        visibility: visibility || 'public',
+        visibility: visibilitySafe,
         isChained: isChainedBool,
       });
     } catch (emailError) {
@@ -392,12 +428,12 @@ export async function POST(request: NextRequest) {
       const campaignUrl = `${baseUrl}/campaign/${campaignSlug}`;
 
       await notifyAdminsOfCampaignCreated({
-        campaignTitle: title,
+        campaignTitle: titleSafe,
         campaignSlug: campaignSlug,
         goalAmount: goalAmountNum.toString(),
-        currency,
+        currency: currencySafe,
         campaignUrl,
-        visibility: visibility || 'public',
+        visibility: visibilitySafe,
         isChained: isChainedBool,
         creatorName: user[0].fullName || user[0].email?.split('@')[0] || 'Unknown',
         creatorEmail: user[0].email || 'Unknown',
@@ -412,9 +448,20 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
 
   } catch (error) {
-    console.error('Error creating campaign:', error);
+    const err = error as { code?: string; message?: string; constraint?: string };
+    console.error('Error creating campaign:', {
+      code: err?.code,
+      constraint: err?.constraint,
+      message: err?.message,
+      stack: err && typeof (err as any).stack === 'string' ? (err as any).stack : undefined,
+    });
+    // Return a user-friendly message; avoid exposing internal details
+    const isConstraint = err?.code === '23505' || err?.constraint;
+    const message = isConstraint
+      ? 'A conflict occurred (e.g. duplicate title or link). Please try again with a different title or wait a moment.'
+      : 'Something went wrong while creating your campaign. Please try again.';
     return NextResponse.json(
-      { success: false, error: 'Failed to create campaign' },
+      { success: false, error: message },
       { status: 500 }
     );
   }

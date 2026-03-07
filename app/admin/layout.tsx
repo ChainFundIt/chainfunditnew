@@ -32,6 +32,7 @@ import {
   User,
   Briefcase,
   FileText,
+  Trash2,
 } from "lucide-react";
 import { MoneyTick } from "iconsax-reactjs";
 import Image from "next/image";
@@ -60,6 +61,12 @@ const navigation = [
     name: "Chained Campaigns",
     href: "/admin/campaigns/chained",
     icon: Share,
+    current: false,
+  },
+  {
+    name: "Recently Deleted",
+    href: "/admin/campaigns/deleted",
+    icon: Trash2,
     current: false,
   },
   {

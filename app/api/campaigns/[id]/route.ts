@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { campaigns, users, donations } from '@/lib/schema';
-import { eq, and, count, sum, or } from 'drizzle-orm';
+import { eq, and, count, sum, or, isNull } from 'drizzle-orm';
 import { parse } from 'cookie';
 import { verifyUserJWT } from '@/lib/auth';
 import { toast } from 'sonner';
@@ -30,11 +30,12 @@ export async function GET(
   try {
     const { id: campaignId } = await params;
     
-    // Determine if the ID is a UUID or slug
+    // Determine if the ID is a UUID or slug (exclude campaigns moved to Recently Deleted)
     const isUUID = isValidUUID(campaignId);
-    const whereCondition = isUUID 
-      ? eq(campaigns.id, campaignId)
-      : eq(campaigns.slug, campaignId);
+    const whereCondition = and(
+      isUUID ? eq(campaigns.id, campaignId) : eq(campaigns.slug, campaignId),
+      isNull(campaigns.deletedAt)
+    );
 
     // Get authenticated user (optional for viewing)
     const userEmail = await getUserFromRequest(request);

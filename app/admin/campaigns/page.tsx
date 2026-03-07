@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -365,6 +366,12 @@ export default function AdminCampaignsPage() {
                 </p>
               </div>
               <div className="flex items-center space-x-3">
+                <Link href="/admin/campaigns/deleted">
+                  <Button variant="outline" size="sm">
+                    <Trash className="h-4 w-4 mr-2" />
+                    Recently Deleted
+                  </Button>
+                </Link>
                 <Button
                   variant="outline"
                   size="sm"
@@ -634,10 +641,10 @@ export default function AdminCampaignsPage() {
                             )}
                             <div className="flex-1 min-w-0">
                               <div className="font-medium text-gray-900 truncate">
-                                {campaign.title.slice(0, 30)}...
+                                {campaign.title.slice(0, 20)}...
                               </div>
                               <div className="text-sm text-gray-500 truncate">
-                                {campaign.description.slice(0, 30)}...
+                                {campaign.description.slice(0, 20)}...
                               </div>
                             </div>
                           </div>
@@ -645,7 +652,7 @@ export default function AdminCampaignsPage() {
                         <TableCell>
                           <div>
                             <div className="font-medium text-gray-900">
-                              {campaign.creatorName}
+                              {campaign.creatorName.slice(0,10)}
                             </div>
                             <div className="text-sm text-gray-500">
                               ID: {campaign.creatorId.slice(0, 8)}
