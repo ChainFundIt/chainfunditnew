@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { campaigns, users, donations, chainers } from '@/lib/schema';
-import { eq, like, and, desc, count, sum, sql, or } from 'drizzle-orm';
+import { eq, like, and, desc, count, sum, sql, or, isNull } from 'drizzle-orm';
 
 /**
  * GET /api/admin/campaigns
@@ -18,8 +18,8 @@ export async function GET(request: NextRequest) {
 
     const offset = (page - 1) * limit;
 
-    // Build where conditions
-    const whereConditions = [];
+    // Build where conditions (exclude campaigns moved to Recently Deleted)
+    const whereConditions = [isNull(campaigns.deletedAt)];
     
     if (search) {
       whereConditions.push(

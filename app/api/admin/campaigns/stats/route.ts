@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { campaigns, donations, chainers } from '@/lib/schema';
-import { eq, gte, count, sum, sql, desc } from 'drizzle-orm';
+import { eq, gte, count, sum, sql, desc, and, isNull } from 'drizzle-orm';
 
 /**
  * GET /api/admin/campaigns/stats
@@ -9,23 +9,29 @@ import { eq, gte, count, sum, sql, desc } from 'drizzle-orm';
  */
 export async function GET(request: NextRequest) {
   try {
+    // Exclude campaigns moved to "Recently Deleted"
+    const notDeleted = isNull(campaigns.deletedAt);
+
     // Get basic campaign counts
-    const [totalCampaigns] = await db.select({ count: count() }).from(campaigns);
-    
+    const [totalCampaigns] = await db
+      .select({ count: count() })
+      .from(campaigns)
+      .where(notDeleted);
+
     const [activeCampaigns] = await db
       .select({ count: count() })
       .from(campaigns)
-      .where(eq(campaigns.status, 'active'));
+      .where(and(notDeleted, eq(campaigns.status, 'active')));
 
     const [completedCampaigns] = await db
       .select({ count: count() })
       .from(campaigns)
-      .where(eq(campaigns.status, 'completed'));
+      .where(and(notDeleted, eq(campaigns.status, 'completed')));
 
     const [pendingReview] = await db
       .select({ count: count() })
       .from(campaigns)
-      .where(eq(campaigns.complianceStatus, 'in_review'));
+      .where(and(notDeleted, eq(campaigns.complianceStatus, 'in_review')));
 
     const reportedCampaigns = { count: 0 };
 
@@ -35,7 +41,7 @@ export async function GET(request: NextRequest) {
         total: sum(campaigns.currentAmount),
       })
       .from(campaigns)
-      .where(eq(campaigns.status, 'active'));
+      .where(and(notDeleted, eq(campaigns.status, 'active')));
 
     const totalRaisedByCurrency = await db
       .select({
@@ -43,6 +49,7 @@ export async function GET(request: NextRequest) {
         total: sum(campaigns.currentAmount),
       })
       .from(campaigns)
+      .where(notDeleted)
       .groupBy(campaigns.currency);
 
     // Get total donations
@@ -59,14 +66,18 @@ export async function GET(request: NextRequest) {
       .select({
         average: sql<number>`AVG(${campaigns.goalAmount})`,
       })
-      .from(campaigns);
+      .from(campaigns)
+      .where(notDeleted);
 
     // Calculate success rate (campaigns that reached their goal)
     const [successfulCampaigns] = await db
       .select({ count: count() })
       .from(campaigns)
       .where(
-        sql`${campaigns.currentAmount} >= ${campaigns.goalAmount}`
+        and(
+          notDeleted,
+          sql`${campaigns.currentAmount} >= ${campaigns.goalAmount}`
+        )
       );
 
     const successRate = totalCampaigns.count > 0 
@@ -80,7 +91,7 @@ export async function GET(request: NextRequest) {
         count: count(),
       })
       .from(campaigns)
-      .where(gte(campaigns.createdAt, sql`NOW() - INTERVAL '12 months'`))
+      .where(and(notDeleted, gte(campaigns.createdAt, sql`NOW() - INTERVAL '12 months'`)))
       .groupBy(sql`DATE_TRUNC('month', ${campaigns.createdAt})`)
       .orderBy(sql`DATE_TRUNC('month', ${campaigns.createdAt})`);
 
@@ -94,6 +105,7 @@ export async function GET(request: NextRequest) {
         count: count(),
       })
       .from(campaigns)
+      .where(notDeleted)
       .groupBy(campaigns.status);
 
     // Get top performing campaigns
@@ -110,6 +122,7 @@ export async function GET(request: NextRequest) {
         )`,
       })
       .from(campaigns)
+      .where(notDeleted)
       .orderBy(desc(campaigns.currentAmount))
       .limit(10);
 
@@ -126,6 +139,7 @@ export async function GET(request: NextRequest) {
         currentAmount: campaigns.currentAmount,
       })
       .from(campaigns)
+      .where(notDeleted)
       .orderBy(desc(campaigns.createdAt))
       .limit(10);
 

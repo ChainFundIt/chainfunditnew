@@ -190,6 +190,13 @@
       "when": 1770317089569,
       "tag": "0026_narrow_sharon_ventura",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1772874692578,
+      "tag": "0027_mute_sentinels",
+      "breakpoints": true
     }
   ]
 }

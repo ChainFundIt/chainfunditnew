@@ -31,15 +31,15 @@ const contactMethods = [
     icon: Phone,
     title: "Phone Support",
     description: "Speak directly with our support team for urgent matters",
-    contact: "+238 090 986 009",
-    link: "tel:+238090986009",
+    contact: "+234 809 0986 009",
+    link: "tel:+2348090986009",
   },
   {
     icon: MessageSquare,
     title: "WhatsApp Chat",
     description: "Chat with us in real-time (available 9 AM - 6 PM GMT)",
     contact: "Start Chat",
-    link: "https://wa.me/+238090986009?text=I have a question about the platform",
+    link: "https://wa.me/+2348090986009?text=I have a question about the platform",
   },
 ];
 

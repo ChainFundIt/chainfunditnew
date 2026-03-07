@@ -94,12 +94,26 @@ export async function PATCH(request: NextRequest) {
         );
 
       case 'delete':
-        // Soft delete by setting status to closed
+        // Move to "Recently Deleted" (soft delete): set deletedAt so campaign is hidden from user + main admin list
         updatedCampaigns = await db
           .update(campaigns)
           .set({ 
             ...updateData,
             status: 'closed',
+            deletedAt: new Date(),
+          })
+          .where(inArray(campaigns.id, campaignIds))
+          .returning();
+        break;
+
+      case 'restore':
+        // Restore from Recently Deleted: clear deletedAt and set status back to active
+        updatedCampaigns = await db
+          .update(campaigns)
+          .set({ 
+            ...updateData,
+            deletedAt: null,
+            status: 'active',
           })
           .where(inArray(campaigns.id, campaignIds))
           .returning();
