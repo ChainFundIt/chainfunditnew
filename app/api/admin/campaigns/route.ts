@@ -29,12 +29,11 @@ export async function GET(request: NextRequest) {
     
     if (status !== 'all') {
       if (status === 'under_review') {
-        whereConditions.push(
-          or(
-            eq(campaigns.status, 'under_review'),
-            eq(campaigns.complianceStatus, 'in_review')
-          )
+        const underReviewCond = or(
+          eq(campaigns.status, 'under_review'),
+          eq(campaigns.complianceStatus, 'in_review')
         );
+        if (underReviewCond) whereConditions.push(underReviewCond);
       } else {
         whereConditions.push(eq(campaigns.status, status as any));
       }
