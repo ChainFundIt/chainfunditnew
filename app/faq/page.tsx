@@ -426,7 +426,7 @@ export default function FAQPage() {
               </div>
 
               <div className="text-[#059669] font-bold text-base flex gap-2 items-center cursor-pointer mt-auto">
-                <Link href='tel:+234(0)8090986009'>+234 (0) 809 098 6009</Link>
+                <Link href='tel:+2348090986009'>+234 809 098 6009</Link>
                 <ArrowRight size={14} color="#059669" />
               </div>
             </div>

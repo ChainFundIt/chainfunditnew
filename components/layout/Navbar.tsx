@@ -57,6 +57,9 @@ const Navbar = (props: Props) => {
             <Link href="/about">About Us</Link>
           </li>
           <li className="font-jakarta font-medium text-[14px] leading-[20px] text-[#57534E] hover:text-[#065f46]">
+            <Link href="/events">Events</Link>
+          </li>
+          <li className="font-jakarta font-medium text-[14px] leading-[20px] text-[#57534E] hover:text-[#065f46]">
             <Link href="/faq" className="">
               FAQs
             </Link>
@@ -116,6 +119,12 @@ const Navbar = (props: Props) => {
             <li>
               <Link href="/about" onClick={() => setMenuOpen(false)}>
                 About Us
+              </Link>
+            </li>
+
+            <li>
+              <Link href="/events" onClick={() => setMenuOpen(false)}>
+                Events
               </Link>
             </li>
 

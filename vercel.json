@@ -43,6 +43,10 @@
     {
       "path": "/api/cron/process-charity-payouts",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/impact-hangout-reminders",
+      "schedule": "*/5 * * * *"
     }
   ]
 }
