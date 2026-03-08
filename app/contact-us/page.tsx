@@ -25,7 +25,7 @@ const contactMethods = [
     title: "Email Us",
     description: "Send us an email and we'll get back to you within 24 hours",
     contact: "campaigns@chainfundit.com",
-    link: "mailto:support@chainfundit.com",
+    link: "mailto:campaigns@chainfundit.com",
   },
   {
     icon: Phone,
@@ -137,7 +137,7 @@ export default function ContactUsPage() {
                   <Icon size={32} color="#059669" />
                 </div>
 
-                <div className="text-center font-bold text-xl text-[#111827] ">
+                <div className="text-center font-bold text-xl text-[#111827]">
                   {method.title}
                 </div>
 
@@ -145,10 +145,15 @@ export default function ContactUsPage() {
                   {method.description}
                 </div>
 
-                <div className="text-[#059669] font-bold text-base flex gap-2 items-center cursor-pointer mt-auto">
+                <a
+                  href={method.link}
+                  target={method.link.startsWith("http") ? "_blank" : undefined}
+                  rel={method.link.startsWith("http") ? "noopener noreferrer" : undefined}
+                  className="text-[#059669] font-bold text-base flex gap-2 items-center cursor-pointer mt-auto hover:underline focus:outline-none focus:ring-2 focus:ring-[#059669] focus:ring-offset-2 rounded"
+                >
                   {method.contact}
                   <ArrowRight size={14} color="#059669" />
-                </div>
+                </a>
               </div>
             );
           })}

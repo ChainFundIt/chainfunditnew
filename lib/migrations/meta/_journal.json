@@ -197,6 +197,27 @@
       "when": 1772874692578,
       "tag": "0027_mute_sentinels",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1772971041218,
+      "tag": "0028_striped_mindworm",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1773004452225,
+      "tag": "0029_graceful_ender_wiggin",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1773006539533,
+      "tag": "0030_young_hellcat",
+      "breakpoints": true
     }
   ]
 }
