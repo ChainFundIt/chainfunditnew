@@ -56,6 +56,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import ClientToaster from "@/components/ui/client-toaster";
+import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { useShortenLink } from "@/hooks/use-shorten-link";
 import { useFileUpload } from "@/hooks/use-upload";
@@ -129,7 +130,7 @@ export default function CreateCampaignPage() {
   const [aiInstruction, setAiInstruction] = useState("");
   const [step, setStep] = useState(1);
   const { shortenLink } = useShortenLink();
-  const { uploadFile } = useFileUpload();
+  const { uploadFile, isUploading: isUploadingCover } = useFileUpload();
   const [showAiModal, setShowAiModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showChainInfoModal, setShowChainInfoModal] = useState(false);
@@ -823,13 +824,18 @@ export default function CreateCampaignPage() {
                           accept="image/*"
                           onChange={(e) => {
                             if (e.target.files?.[0]) {
-                              uploadFile(e.target.files[0], "imageUpload").then(
-                                (result) => {
-                                  if (result?.url) {
-                                    handleCoverImageUpload(result.url);
+                              uploadFile(e.target.files[0], "imageUpload")
+                                .then((result) => {
+                                  const url = result?.url ?? (result as any)?.data?.url;
+                                  if (url) {
+                                    handleCoverImageUpload(url);
+                                  } else {
+                                    toast.error("Upload succeeded but no image URL was returned. Please try again.");
                                   }
-                                }
-                              );
+                                })
+                                .catch(() => {
+                                  toast.error("Cover image upload failed. Please try again.");
+                                });
                             }
                           }}
                           className="hidden"
@@ -839,7 +845,7 @@ export default function CreateCampaignPage() {
                           htmlFor="cover-image-input"
                           className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white hover:bg-gray-100 text-[#104109] px-6 py-2 rounded-lg font-semibold cursor-pointer transition-colors shadow-lg"
                         >
-                          Choose New
+                          {isUploadingCover ? "Uploading..." : "Choose New"}
                         </label>
                       </div>
                     ) : (
@@ -849,13 +855,18 @@ export default function CreateCampaignPage() {
                           accept="image/*"
                           onChange={(e) => {
                             if (e.target.files?.[0]) {
-                              uploadFile(e.target.files[0], "imageUpload").then(
-                                (result) => {
-                                  if (result?.url) {
-                                    handleCoverImageUpload(result.url);
+                              uploadFile(e.target.files[0], "imageUpload")
+                                .then((result) => {
+                                  const url = result?.url ?? (result as any)?.data?.url;
+                                  if (url) {
+                                    handleCoverImageUpload(url);
+                                  } else {
+                                    toast.error("Upload succeeded but no image URL was returned. Please try again.");
                                   }
-                                }
-                              );
+                                })
+                                .catch(() => {
+                                  toast.error("Cover image upload failed. Please try again.");
+                                });
                             }
                           }}
                           className="hidden"
@@ -863,7 +874,7 @@ export default function CreateCampaignPage() {
                         />
                         <label
                           htmlFor="cover-image-input"
-                          className="flex flex-col items-center gap-4 cursor-pointer"
+                          className={`flex flex-col items-center gap-4 cursor-pointer ${isUploadingCover ? "pointer-events-none opacity-70" : ""}`}
                         >
                           <div className="bg-[#E5ECDE] p-4 rounded-full">
                             <UploadIcon
@@ -873,10 +884,10 @@ export default function CreateCampaignPage() {
                           </div>
                           <div className="text-center">
                             <p className="text-lg font-semibold text-[#104109]">
-                              Upload Cover Image
+                              {isUploadingCover ? "Uploading..." : "Upload Cover Image"}
                             </p>
                             <p className="text-sm text-[#999]">
-                              Drag and drop your image here, or click to browse
+                              {isUploadingCover ? "Please wait..." : "Drag and drop your image here, or click to browse"}
                             </p>
                             <p className="text-xs text-[#B3B3B3] mt-1">
                               Recommended size: 1200x400px

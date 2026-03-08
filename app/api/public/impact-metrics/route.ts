@@ -7,6 +7,7 @@ import { campaigns } from "@/lib/schema/campaigns";
 import { users } from "@/lib/schema/users";
 import { fetchExchangeRate, getCurrencyRate } from "@/lib/utils/currency-conversion";
 
+export const dynamic = "force-dynamic";
 export const revalidate = 300; // 5 minutes
 
 type ImpactMetricsResponse = {
