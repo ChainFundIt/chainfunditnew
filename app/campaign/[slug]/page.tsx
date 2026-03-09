@@ -45,8 +45,10 @@ export async function generateMetadata({
   );
   const campaignUrl = `${baseUrl}/campaign/${slug}`;
 
-  // Short URL route serves campaign cover (resized) or static fallback. No long URLs = no truncation.
-  const ogImagePath = `/campaign/${slug}/og-img`;
+  // Use the route-specific Open Graph image so crawlers consistently
+  // pick up the campaign cover instead of the site-wide fallback.
+  const ogImagePath = `/campaign/${slug}/opengraph-image`;
+  const twitterImagePath = `/campaign/${slug}/twitter-image`;
   const images = [
     { url: ogImagePath, width: 1200, height: 630, alt: campaignData.title },
     {
@@ -70,7 +72,7 @@ export async function generateMetadata({
   const progress =
     goalAmount > 0 ? Math.round((currentAmount / goalAmount) * 100) : 0;
 
-  const twitterImages = [ogImagePath, "/og-campaign.png"];
+  const twitterImages = [twitterImagePath, "/og-campaign.png"];
 
   return {
     title: `${campaignData.title} | Chainfundit`,
