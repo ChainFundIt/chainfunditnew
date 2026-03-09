@@ -80,10 +80,13 @@ interface Payout {
     | "approved"
     | "rejected"
     | "paid"
+    | "completed"
     | "failed"
     | "processing";
-  requestDate: string;
+  requestDate?: string;
+  createdAt?: string;
   approvedDate?: string;
+  processedAt?: string;
   paidDate?: string;
   paymentMethod: string;
   bankDetails: {
@@ -1149,7 +1152,7 @@ export default function PayoutsPage() {
                       <SelectItem value="pending">Pending</SelectItem>
                       <SelectItem value="approved">Approved</SelectItem>
                       <SelectItem value="processing">Processing</SelectItem>
-                      <SelectItem value="paid">Paid</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
                       <SelectItem value="rejected">Rejected</SelectItem>
                       <SelectItem value="failed">Failed</SelectItem>
                     </SelectContent>
@@ -1252,7 +1255,7 @@ export default function PayoutsPage() {
                                   {payout.paymentMethod}
                                 </div>
                                 <div className="text-sm text-gray-500">
-                                  {payout.bankDetails.bankName}
+                                  {payout.bankDetails?.bankName}
                                 </div>
                               </div>
                             </TableCell>
@@ -1262,7 +1265,10 @@ export default function PayoutsPage() {
                             <TableCell>
                               <div className="text-sm text-gray-500">
                                 {new Date(
-                                  payout.requestDate
+                                  payout.processedAt ??
+                                    payout.createdAt ??
+                                    payout.requestDate ??
+                                    ""
                                 ).toLocaleDateString()}
                               </div>
                             </TableCell>
