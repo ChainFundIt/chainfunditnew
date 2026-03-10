@@ -258,15 +258,32 @@ function ImpactHangoutRegisterContent() {
             transition={{ duration: 0.5 }}
           >
             <CheckCircle2 className="mx-auto h-16 w-16 text-brand-green-dark mb-6" />
-            <h1 className="font-jakarta text-2xl md:text-3xl font-bold text-brand-green-dark mb-4">
+            <h1 className="text-2xl md:text-3xl font-bold text-brand-green-dark mb-4">
               You&apos;re registered!
             </h1>
-            <p className="text-gray-700 text-lg mb-6">
+            <p className="text-gray-700 text-lg mb-4 text-justify max-w-lg mx-auto">
               We&apos;ll send you your personalised fundraising link and next
               steps by email. Get ready to turn your table into impact.
             </p>
+            <div className="bg-gray-50 rounded-xl p-5 mb-6 max-w-md mx-auto text-left">
+              <h2 className="font-semibold text-gray-900 mb-3">What happens next</h2>
+              <ul className="space-y-2 text-gray-700 text-sm text-justify">
+                <li className="flex gap-2">
+                  <span className="font-bold text-brand-green-dark">1.</span>
+                  We&apos;ve sent your unique fundraising page link to your email.
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-bold text-brand-green-dark">2.</span>
+                  Share your page with friends and family so they can donate.
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-bold text-brand-green-dark">3.</span>
+                  Host your hangout and watch your goal grow.
+                </li>
+              </ul>
+            </div>
             {completedRegistrationSlug && (
-              <p className="text-gray-700 text-sm mb-6">
+              <p className="text-gray-700 text-sm mb-4 text-justify">
                 Your fundraising page:{" "}
                 <Link
                   href={`/events/${encodeURIComponent(completedRegistrationSlug)}`}
@@ -278,18 +295,18 @@ function ImpactHangoutRegisterContent() {
               </p>
             )}
             {optedOutOfPayment && (
-              <p className="text-gray-600 text-sm mb-6">
+              <p className="text-gray-600 text-sm mb-6 text-justify max-w-lg mx-auto">
                 When you&apos;re ready, complete your kickstart payment from your
                 page or the link we sent you to start raising.
               </p>
             )}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="rounded-none" asChild>
+              <Button size="lg" className="h-12 rounded-full" asChild>
                 <Link href={completedRegistrationSlug ? `/events/${encodeURIComponent(completedRegistrationSlug)}` : "/events"}>
                   {completedRegistrationSlug ? "Go to my page" : "Back to Impact Hangout"}
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="rounded-none" asChild>
+              <Button size="lg" variant="outline" className="h-12 rounded-full" asChild>
                 <Link href="/campaigns">Browse campaigns</Link>
               </Button>
             </div>
@@ -310,7 +327,7 @@ function ImpactHangoutRegisterContent() {
           className="object-cover"
           sizes="100vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/60" />
+        <div className="absolute inset-0 bg-gradient-to-b from-brand-green-dark/70 via-brand-green-dark/50 to-brand-green-dark/40" />
       </div>
 
       <div className="relative z-10">
@@ -335,7 +352,7 @@ function ImpactHangoutRegisterContent() {
                   You have an active hangout: <strong>{existingHangout.hangoutName}</strong>. Reach your goal before creating another.
                 </p>
                 <div className="flex items-center gap-2 shrink-0">
-                  <Button size="sm" variant="outline" className="rounded-none h-8" asChild>
+                  <Button size="sm" variant="outline" className="rounded-full h-8" asChild>
                     <Link href={`/events/${encodeURIComponent(existingHangout.slug)}`}>
                       View my page
                     </Link>
@@ -351,6 +368,12 @@ function ImpactHangoutRegisterContent() {
                 </div>
               </div>
             )}
+            {/* Intro line (King's Trust style: "Sign up today and we'll keep you updated") */}
+            <div className="px-6 pt-5 pb-1 md:px-8">
+              <p className="text-gray-600 text-sm text-justify">
+                Sign up today and we&apos;ll create your personal fundraising page and send you the link by email.
+              </p>
+            </div>
             {/* Step progress */}
             <div className="flex border-b border-gray-200 bg-gray-50/80">
               <div
@@ -390,9 +413,12 @@ function ImpactHangoutRegisterContent() {
                     transition={{ duration: 0.25 }}
                     className="space-y-6"
                   >
-                    <h1 className="font-jakarta text-xl md:text-2xl font-bold text-brand-green-dark">
+                    <h1 className="text-xl md:text-2xl font-bold text-brand-green-dark">
                       Register to host an Impact Hangout
                     </h1>
+                    <p className="text-gray-600 text-sm text-justify">
+                      Sign up to host your own Impact Hangout. We need a few details about you and your event so we can create your fundraising page.
+                    </p>
 
                     {/* Who are you hosting with? */}
                     <div className="space-y-3">
@@ -529,7 +555,7 @@ function ImpactHangoutRegisterContent() {
                       <p className="text-sm font-medium text-gray-800">
                         Let&apos;s stay in touch
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 text-justify">
                         We&apos;d love to keep you informed about The Impact Hangout,
                         other ways to support causes, and updates from ChainFundIt.
                       </p>
@@ -548,7 +574,7 @@ function ImpactHangoutRegisterContent() {
                         />
                         <Label
                           htmlFor="receiveUpdates"
-                          className="font-normal cursor-pointer text-sm text-gray-700"
+                          className="font-normal cursor-pointer text-sm text-gray-700 text-justify"
                         >
                           I&apos;m happy to hear from ChainFundIt by email about
                           our work and ways to support.
@@ -585,7 +611,7 @@ function ImpactHangoutRegisterContent() {
                         />
                         <Label
                           htmlFor="termsAccepted"
-                          className="font-normal cursor-pointer text-sm text-gray-700"
+                          className="font-normal cursor-pointer text-sm text-gray-700 text-justify"
                         >
                           I agree to the{" "}
                           <Link
@@ -602,7 +628,7 @@ function ImpactHangoutRegisterContent() {
 
                     {/* Photo consent (optional) */}
                     <div className="space-y-2 rounded-xl bg-gray-50/80 p-4">
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 text-justify">
                         We may use photos from Impact Hangouts for promotion. Are you
                         happy for ChainFundIt to use photos you share (e.g. on social
                         media) for this?
@@ -644,7 +670,7 @@ function ImpactHangoutRegisterContent() {
                     <Button
                       type="submit"
                       size="lg"
-                      className="w-full rounded-none font-semibold"
+                      className="w-full h-12 rounded-full font-semibold"
                       disabled={!step1Valid}
                     >
                       Next step <ArrowRight className="ml-2 h-4 w-4" />
@@ -661,9 +687,12 @@ function ImpactHangoutRegisterContent() {
                     transition={{ duration: 0.25 }}
                     className="space-y-6"
                   >
-                    <h1 className="font-jakarta text-xl md:text-2xl font-bold text-brand-green-dark">
+                    <h1 className="text-xl md:text-2xl font-bold text-brand-green-dark">
                       Your event & goal
                     </h1>
+                    <p className="text-gray-600 text-sm text-justify">
+                      Tell us about your hangout and how much you&apos;d like to raise. Your page will show this so supporters know what they&apos;re contributing to.
+                    </p>
 
                     <div className="space-y-2">
                       <Label>What kind of event will you be hosting? *</Label>
@@ -739,7 +768,7 @@ function ImpactHangoutRegisterContent() {
                         type="button"
                         variant="outline"
                         size="lg"
-                        className="rounded-none flex-1"
+                        className="h-12 rounded-full flex-1"
                         onClick={() => {
                           setStep(1);
                           setError(null);
@@ -751,7 +780,7 @@ function ImpactHangoutRegisterContent() {
                       <Button
                         type="submit"
                         size="lg"
-                        className="flex-1 rounded-none font-semibold"
+                        className="h-12 flex-1 rounded-full font-semibold"
                         disabled={loading || !form.eventType || !form.hangoutName.trim() || !form.fundraisingGoal.trim()}
                       >
                         {loading ? "Submitting..." : "Next step"}
@@ -769,18 +798,12 @@ function ImpactHangoutRegisterContent() {
                     transition={{ duration: 0.25 }}
                     className="space-y-6"
                   >
-                    <h1 className="font-jakarta text-xl md:text-2xl font-bold text-brand-green-dark">
+                    <h1 className="text-xl md:text-2xl font-bold text-brand-green-dark">
                       Be the First to Give
                     </h1>
-                    <p className="text-gray-700 text-sm">
+                    <p className="text-gray-700 text-sm text-justify">
                       Starting your fundraiser with a personal donation helps build
-                      momentum and encourages others to contribute.
-                    </p>
-                    <p className="text-gray-700 text-sm">
-                      Every donation brings your goal closer.
-                    </p>
-                    <p className="text-gray-700 text-sm">
-                      Make the first gift and inspire others to join you.
+                      momentum and encourages others to contribute. Every donation brings your goal closer. Make the first gift and inspire others to join you.
                     </p>
                     <p className="text-gray-800 font-medium">
                       Choose an amount to get your fundraiser started.
@@ -798,7 +821,7 @@ function ImpactHangoutRegisterContent() {
                                 : "border-gray-200 bg-white"
                               }`}
                           >
-                            <p className="text-sm text-gray-700">
+                            <p className="text-sm text-gray-700 text-justify">
                               <span className="font-semibold text-brand-green-dark">
                                 {opt.label}
                                 {opt.amount === 15_000 && (
@@ -908,7 +931,7 @@ function ImpactHangoutRegisterContent() {
                         type="button"
                         variant="outline"
                         size="lg"
-                        className="rounded-none flex-1"
+                        className="h-12 rounded-full flex-1"
                         onClick={() => {
                           setStep(2);
                           setError(null);
@@ -919,7 +942,7 @@ function ImpactHangoutRegisterContent() {
                       <Button
                         type="button"
                         size="lg"
-                        className="flex-1 rounded-none font-semibold"
+                        className="h-12 flex-1 rounded-full font-semibold"
                         disabled={paymentLoading || !registrationId}
                         onClick={handlePay}
                       >
@@ -960,7 +983,7 @@ export default function ImpactHangoutRegisterPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-gray-500 font-jakarta">Loading...</p>
+        <p className="text-gray-500">Loading...</p>
       </div>
     }>
       <ImpactHangoutRegisterContent />

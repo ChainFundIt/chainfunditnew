@@ -24,5 +24,5 @@ export default function EventsLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return <div className="font-source">{children}</div>;
 }

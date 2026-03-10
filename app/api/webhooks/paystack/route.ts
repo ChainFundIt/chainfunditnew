@@ -596,16 +596,93 @@ async function handleRecurringChargeFailed(
 /**
  * Handle successful transfer (payout)
  */
+async function resolvePayoutTarget(data: {
+  reference?: string;
+  transferCode?: string;
+  metadata?: {
+    payoutId?: string;
+    type?: 'campaign' | 'commission';
+  };
+}): Promise<{ payoutId: string; payoutType: 'campaign' | 'commission' } | null> {
+  const metadataPayoutId = data.metadata?.payoutId;
+  const metadataPayoutType = data.metadata?.type;
+
+  if (
+    metadataPayoutId &&
+    (metadataPayoutType === 'campaign' || metadataPayoutType === 'commission')
+  ) {
+    return {
+      payoutId: metadataPayoutId,
+      payoutType: metadataPayoutType,
+    };
+  }
+
+  if (data.transferCode) {
+    const [campaignMatch] = await db
+      .select({ id: campaignPayouts.id })
+      .from(campaignPayouts)
+      .where(eq(campaignPayouts.transactionId, data.transferCode))
+      .limit(1);
+
+    if (campaignMatch) {
+      return { payoutId: campaignMatch.id, payoutType: 'campaign' };
+    }
+
+    const [commissionMatch] = await db
+      .select({ id: commissionPayouts.id })
+      .from(commissionPayouts)
+      .where(eq(commissionPayouts.transactionId, data.transferCode))
+      .limit(1);
+
+    if (commissionMatch) {
+      return { payoutId: commissionMatch.id, payoutType: 'commission' };
+    }
+  }
+
+  if (data.reference) {
+    const [campaignMatch] = await db
+      .select({ id: campaignPayouts.id })
+      .from(campaignPayouts)
+      .where(eq(campaignPayouts.reference, data.reference))
+      .limit(1);
+
+    if (campaignMatch) {
+      return { payoutId: campaignMatch.id, payoutType: 'campaign' };
+    }
+
+    const [commissionMatch] = await db
+      .select({ id: commissionPayouts.id })
+      .from(commissionPayouts)
+      .where(eq(commissionPayouts.id, data.reference))
+      .limit(1);
+
+    if (commissionMatch) {
+      return { payoutId: commissionMatch.id, payoutType: 'commission' };
+    }
+  }
+
+  return null;
+}
+
 async function handleTransferSuccess(data: any) {
   try {
     const reference = data.reference; // Our payout reference
     const transferCode = data.transfer_code; // Paystack transfer code (the actual transfer ID)
-    const payoutId = data.metadata?.payoutId;
-    const payoutType = data.metadata?.type; // 'campaign' | 'commission'
+    const resolvedPayout = await resolvePayoutTarget({
+      reference,
+      transferCode,
+      metadata: data.metadata,
+    });
 
-    if (!payoutId) {
+    if (!resolvedPayout) {
+      console.warn('Unable to resolve payout for Paystack transfer success', {
+        reference,
+        transferCode,
+      });
       return;
     }
+
+    const { payoutId, payoutType } = resolvedPayout;
 
     // Use transfer_code (the actual Paystack transfer ID) instead of reference
     // transfer_code is what we need to verify the transfer later
@@ -622,7 +699,7 @@ async function handleTransferSuccess(data: any) {
           processedAt: new Date(),
           updatedAt: new Date(),
         })
-        .where(eq(campaignPayouts.reference, reference));
+        .where(eq(campaignPayouts.id, payoutId));
 
       console.log(`✅ Campaign payout ${payoutId} completed with transfer code: ${transferCode || reference}`);
     } else if (payoutType === 'commission') {
@@ -650,13 +727,22 @@ async function handleTransferFailed(data: any) {
   try {
     const reference = data.reference; // Our payout reference
     const transferCode = data.transfer_code; // Paystack transfer code (the actual transfer ID)
-    const payoutId = data.metadata?.payoutId;
-    const payoutType = data.metadata?.type;
+    const resolvedPayout = await resolvePayoutTarget({
+      reference,
+      transferCode,
+      metadata: data.metadata,
+    });
     const failureReason = data.failure_reason || data.reason || 'Transfer failed';
 
-    if (!payoutId) {
+    if (!resolvedPayout) {
+      console.warn('Unable to resolve payout for Paystack transfer failure', {
+        reference,
+        transferCode,
+      });
       return;
     }
+
+    const { payoutId, payoutType } = resolvedPayout;
 
     // Use transfer_code (the actual Paystack transfer ID) instead of reference
     const transactionId = transferCode || reference;
@@ -670,7 +756,7 @@ async function handleTransferFailed(data: any) {
           failureReason,
           updatedAt: new Date(),
         })
-        .where(eq(campaignPayouts.reference, reference));
+        .where(eq(campaignPayouts.id, payoutId));
 
       console.log(`❌ Campaign payout ${payoutId} failed: ${failureReason}`);
     } else if (payoutType === 'commission') {
@@ -698,12 +784,21 @@ async function handleTransferReversed(data: any) {
   try {
     const reference = data.reference; // Our payout reference
     const transferCode = data.transfer_code; // Paystack transfer code (the actual transfer ID)
-    const payoutId = data.metadata?.payoutId;
-    const payoutType = data.metadata?.type;
+    const resolvedPayout = await resolvePayoutTarget({
+      reference,
+      transferCode,
+      metadata: data.metadata,
+    });
 
-    if (!payoutId) {
+    if (!resolvedPayout) {
+      console.warn('Unable to resolve payout for Paystack transfer reversal', {
+        reference,
+        transferCode,
+      });
       return;
     }
+
+    const { payoutId, payoutType } = resolvedPayout;
 
     // Use transfer_code (the actual Paystack transfer ID) instead of reference
     const transactionId = transferCode || reference;
@@ -717,7 +812,7 @@ async function handleTransferReversed(data: any) {
           failureReason: 'Transfer reversed',
           updatedAt: new Date(),
         })
-        .where(eq(campaignPayouts.reference, reference));
+        .where(eq(campaignPayouts.id, payoutId));
 
       console.log(`⚠️ Campaign payout ${payoutId} reversed`);
     } else if (payoutType === 'commission') {
