@@ -17,6 +17,12 @@
   display: none; /* Chrome, Safari and Opera */
 }
 
+/* Justified text for body copy (accessibility / ADHD-friendly reading) */
+.text-justify {
+  text-align: justify;
+  text-justify: inter-word;
+}
+
 /* Line clamp utilities */
 .line-clamp-1 {
   overflow: hidden;

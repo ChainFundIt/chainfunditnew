@@ -65,6 +65,14 @@ export default function HangoutEventPage() {
   const [donateEmail, setDonateEmail] = useState("");
   const [donateLoading, setDonateLoading] = useState(false);
   const [donateError, setDonateError] = useState<string | null>(null);
+  const [recentDonors, setRecentDonors] = useState<{ name: string; amount: number }[]>([]);
+
+  useEffect(() => {
+    fetch("/api/events/impact-hangout/recent-donors")
+      .then((r) => (r.ok ? r.json() : { donors: [] }))
+      .then((data) => setRecentDonors(data?.donors ?? []))
+      .catch(() => setRecentDonors([]));
+  }, []);
 
   useEffect(() => {
     if (searchParams.get("donation") === "success") {
@@ -187,7 +195,7 @@ export default function HangoutEventPage() {
       <div className="min-h-screen bg-white">
         <Navbar />
         <div className="container mx-auto px-4 py-24 flex flex-col items-center justify-center min-h-[50vh]">
-          <p className="text-gray-500 font-jakarta">Loading your hangout...</p>
+          <p className="text-gray-500">Loading your hangout...</p>
         </div>
         <Footer />
       </div>
@@ -199,10 +207,10 @@ export default function HangoutEventPage() {
       <div className="min-h-screen bg-white">
         <Navbar />
         <div className="container mx-auto px-4 py-24 flex flex-col items-center justify-center min-h-[50vh] text-center">
-          <p className="text-gray-700 font-jakarta mb-4">
+          <p className="text-gray-700 mb-4">
             {error === "Hangout not found" ? "This Impact Hangout could not be found." : error}
           </p>
-          <Button className="rounded-none" asChild>
+          <Button className="rounded-full" asChild>
             <Link href="/events">
               <ArrowLeft className="mr-2 h-4 w-4" /> Back to Impact Hangout
             </Link>
@@ -230,7 +238,7 @@ export default function HangoutEventPage() {
             sizes="100vw"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-brand-green-dark/80 via-brand-green-dark/60 to-transparent" />
         </div>
 
         <div className="relative z-10 container mx-auto px-4 pt-8 pb-12 md:pt-12 md:pb-16">
@@ -241,10 +249,10 @@ export default function HangoutEventPage() {
             <ArrowLeft className="h-4 w-4" /> Back to Impact Hangout
           </Link>
 
-          <h1 className="font-jakarta text-2xl md:text-4xl font-bold text-white mb-2 drop-shadow-md">
+          <h1 className="text-2xl md:text-4xl font-bold text-white mb-2 drop-shadow-md">
             {hangout.hangoutName}
           </h1>
-          <p className="text-white/90 font-jakarta text-lg mb-6">
+          <p className="text-white/90 text-lg mb-6">
             Hosted by {hangout.hostName}
           </p>
 
@@ -266,16 +274,28 @@ export default function HangoutEventPage() {
       </div>
 
       <div className="container mx-auto px-4 -mt-6 relative z-20 pb-20">
+        {recentDonors.length > 0 && (
+          <div className="max-w-2xl mx-auto mb-4 overflow-hidden rounded-full bg-white/95 backdrop-blur-sm border border-gray-200 py-2.5 px-4 shadow-sm">
+            <p className="text-sm text-gray-700 font-medium text-center">
+              {recentDonors[0].name} just donated ₦{recentDonors[0].amount.toLocaleString()}
+              {recentDonors.length > 1 && (
+                <span className="text-gray-600">
+                  {" "}· {recentDonors[1].name} donated ₦{recentDonors[1].amount.toLocaleString()}
+                </span>
+              )}
+            </p>
+          </div>
+        )}
         {donationSuccess && (
           <div className="max-w-2xl mx-auto mb-4 flex items-center gap-3 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-xl">
             <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" />
-            <p className="text-sm font-medium">Thank you for your donation. Every contribution helps reach the goal.</p>
+            <p className="text-sm font-medium text-justify">Thank you for your donation. Every contribution helps reach the goal.</p>
           </div>
         )}
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden max-w-2xl mx-auto">
           <div className="p-6 md:p-8">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-              <h2 className="font-jakarta text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold text-gray-900">
                 Fundraising progress
               </h2>
               <div className="flex items-center gap-2">
@@ -283,7 +303,7 @@ export default function HangoutEventPage() {
                   <DialogTrigger asChild>
                     <Button
                       size="lg"
-                      className="rounded-none gap-2 bg-brand-green-dark font-semibold"
+                      className="h-12 rounded-full gap-2 bg-brand-green-dark font-semibold"
                     >
                       <Heart className="h-4 w-4" />
                       Donate
@@ -291,11 +311,11 @@ export default function HangoutEventPage() {
                   </DialogTrigger>
                   <DialogContent className="rounded-xl max-w-md" onClick={(e) => e.stopPropagation()}>
                     <DialogHeader>
-                      <DialogTitle className="font-jakarta">Support this hangout</DialogTitle>
+                      <DialogTitle>Support this hangout</DialogTitle>
                     </DialogHeader>
                     <form onSubmit={handleDonateSubmit} className="space-y-4 mt-2">
                       <div>
-                        <Label className="font-jakarta text-sm font-medium">Amount (₦)</Label>
+                        <Label className="text-sm font-medium">Amount (₦)</Label>
                         <div className="flex flex-wrap gap-2 mt-2">
                           {DONATE_AMOUNTS.map((a) => (
                             <button
@@ -325,7 +345,7 @@ export default function HangoutEventPage() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="donate-email" className="font-jakarta text-sm font-medium">Your email</Label>
+                        <Label htmlFor="donate-email" className="text-sm font-medium">Your email</Label>
                         <Input
                           id="donate-email"
                           type="email"
@@ -342,7 +362,7 @@ export default function HangoutEventPage() {
                       <Button
                         type="submit"
                         size="lg"
-                        className="w-full rounded-none bg-brand-green-dark"
+                        className="w-full rounded-full bg-brand-green-dark"
                         disabled={donateLoading}
                       >
                         {donateLoading ? "Redirecting to payment..." : `Donate ₦${getDonateAmount().toLocaleString()}`}
@@ -353,8 +373,8 @@ export default function HangoutEventPage() {
                 <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
-                    size="sm"
-                    className="rounded-none gap-2 bg-brand-green-dark"
+                    size="lg"
+                    className="h-12 rounded-full gap-2 bg-brand-green-dark"
                   >
                     <Share2 className="h-4 w-4" />
                     Share my page
@@ -422,12 +442,13 @@ export default function HangoutEventPage() {
             </div>
 
             <div className="mt-8 pt-6 border-t border-gray-100">
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-600 text-sm text-justify">
                 Share this page with friends and family so they can support your
                 Impact Hangout. Every donation brings your goal closer.
               </p>
               <Button
-                className="mt-4 rounded-none w-full sm:w-auto gap-2 bg-brand-green-dark"
+                size="lg"
+                className="mt-4 h-12 rounded-full w-full sm:w-auto gap-2 bg-brand-green-dark"
                 asChild
               >
                 <Link href="/events">

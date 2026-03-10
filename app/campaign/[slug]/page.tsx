@@ -47,32 +47,14 @@ export async function generateMetadata({
 
   // Use the route-specific Open Graph image so crawlers consistently
   // pick up the campaign cover instead of the site-wide fallback.
-  const ogImagePath = `/campaign/${slug}/opengraph-image`;
-  const twitterImagePath = `/campaign/${slug}/twitter-image`;
-  const images = [
-    { url: ogImagePath, width: 1200, height: 630, alt: campaignData.title },
-    {
-      url: "/og-campaign.png",
-      width: 1200,
-      height: 630,
-      alt: "Chainfundit — Raise funds, support dreams",
-    },
-  ];
+  const ogImageUrl = `${baseUrl}/campaign/${slug}/opengraph-image`;
+  const twitterImageUrl = `${baseUrl}/campaign/${slug}/twitter-image`;
 
   const description =
     campaignData.subtitle ||
     (campaignData.description
       ? campaignData.description.substring(0, 160).replace(/\n/g, " ").trim()
       : "Support this campaign on Chainfundit");
-
-  // Format goal amount for display
-  const goalAmount = parseFloat(campaignData.goalAmount || "0");
-  const currency = campaignData.currency || "USD";
-  const currentAmount = parseFloat(campaignData.currentAmount || "0");
-  const progress =
-    goalAmount > 0 ? Math.round((currentAmount / goalAmount) * 100) : 0;
-
-  const twitterImages = [twitterImagePath, "/og-campaign.png"];
 
   return {
     title: `${campaignData.title} | Chainfundit`,
@@ -82,7 +64,16 @@ export async function generateMetadata({
       description: description,
       url: campaignUrl,
       siteName: "Chainfundit",
-      images: images,
+      images: [
+        {
+          url: ogImageUrl,
+          secureUrl: ogImageUrl,
+          type: "image/png",
+          width: 1200,
+          height: 630,
+          alt: campaignData.title,
+        },
+      ],
       locale: "en_US",
       type: "website",
     },
@@ -90,7 +81,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: campaignData.title,
       description: description,
-      images: twitterImages,
+      images: [twitterImageUrl],
     },
     alternates: {
       canonical: campaignUrl,
