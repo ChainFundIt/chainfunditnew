@@ -45,10 +45,10 @@ export async function generateMetadata({
   );
   const campaignUrl = `${baseUrl}/campaign/${slug}`;
 
-  // Use the route-specific Open Graph image so crawlers consistently
-  // pick up the campaign cover instead of the site-wide fallback.
-  const ogImageUrl = `${baseUrl}/campaign/${slug}/opengraph-image`;
-  const twitterImageUrl = `${baseUrl}/campaign/${slug}/twitter-image`;
+  // Use the optimized image route for social crawlers.
+  // It serves a compressed PNG and falls back internally if needed.
+  const ogImageUrl = `${baseUrl}/campaign/${slug}/og-img`;
+  const twitterImageUrl = ogImageUrl;
 
   const description =
     campaignData.subtitle ||
