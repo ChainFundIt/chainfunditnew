@@ -15,7 +15,6 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   DollarSign,
-  CreditCard,
   Building2,
   Clock,
   CheckCircle,
@@ -84,8 +83,6 @@ export function PayoutDetailsModal({
   isProcessing = false,
 }: PayoutDetailsModalProps) {
   const [banks, setBanks] = useState<any[]>([]);
-  const [stripeOnboardingUrl, setStripeOnboardingUrl] = useState<string | null>(null);
-  const [checkingStripe, setCheckingStripe] = useState(false);
   const router = useRouter();
 
   // Fetch banks when modal opens
@@ -103,52 +100,6 @@ export function PayoutDetailsModal({
         }
       };
       fetchBanks();
-      
-      // Check Stripe Connect status if using Stripe (only for legacy NGN payouts)
-      // For foreign currencies, we use bank accounts instead
-      const isForeignCurrency = campaign.currencyCode !== 'NGN';
-      if (campaign.payoutProvider === 'stripe' && !isForeignCurrency) {
-        checkStripeAccountStatus();
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, campaign.payoutProvider]);
-
-  const checkStripeAccountStatus = async () => {
-    if (userProfile?.stripeAccountReady) {
-      return; // Already ready
-    }
-
-    setCheckingStripe(true);
-    try {
-      if (!userProfile?.stripeAccountId) {
-        // No account yet - create one
-        const response = await fetch('/api/stripe-connect/create-account', {
-          method: 'POST',
-        });
-        const result = await response.json();
-        if (result.success && result.onboardingUrl) {
-          setStripeOnboardingUrl(result.onboardingUrl);
-        }
-      } else {
-        // Check if account needs onboarding
-        const response = await fetch('/api/stripe-connect/account-link');
-        const result = await response.json();
-        if (result.success && !result.ready && result.onboardingUrl) {
-          setStripeOnboardingUrl(result.onboardingUrl);
-        }
-      }
-    } catch (error) {
-      console.error('Error checking Stripe account:', error);
-    } finally {
-      setCheckingStripe(false);
-    }
-  };
-
-  // Reset state when modal closes
-  useEffect(() => {
-    if (!isOpen) {
-    setStripeOnboardingUrl(null);
     }
   }, [isOpen]);
 
@@ -164,11 +115,11 @@ export function PayoutDetailsModal({
     let providerFee = 0;
     let fixedFee = 0;
     
-    if (campaign.payoutProvider === "stripe") {
-      providerFee = chainfunditFee * 0.025; // 2.5% of chainfundit fee
-      fixedFee = 0.3; // $0.30
-    } else if (campaign.payoutProvider === "paystack") {
+    if (campaign.payoutProvider === "paystack") {
       providerFee = chainfunditFee * 0.01; // 1% of chainfundit fee
+      fixedFee = 0;
+    } else if (campaign.payoutProvider === "paypal") {
+      providerFee = chainfunditFee * 0.02;
       fixedFee = 0;
     }
     
@@ -279,8 +230,8 @@ export function PayoutDetailsModal({
               <div className="flex justify-between">
                 <span className="text-gray-600">Provider:</span>
                 <div className="flex items-center gap-2">
-                  {campaign.payoutProvider === "stripe" ? (
-                    <CreditCard className="h-4 w-4 text-blue-600" />
+                  {campaign.payoutProvider === "paypal" ? (
+                    <Send className="h-4 w-4 text-[#0070BA]" />
                   ) : (
                     <Building2 className="h-4 w-4 text-green-600" />
                   )}
@@ -352,11 +303,44 @@ export function PayoutDetailsModal({
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Building2 className="h-5 w-5" />
-                {campaign.currencyCode !== 'NGN' ? 'International Bank Account' : 'Bank Account'}
+                {campaign.payoutProvider === 'paypal'
+                  ? 'PayPal Account'
+                  : campaign.currencyCode !== 'NGN'
+                    ? 'International Bank Account'
+                    : 'Bank Account'}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {(() => {
+                if (campaign.payoutProvider === 'paypal') {
+                  return (
+                    <div className="space-y-3">
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-blue-600" />
+                          <Badge variant="default" className="bg-blue-100 text-blue-800">
+                            PayPal payout
+                          </Badge>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-xs text-gray-500">PayPal Email</span>
+                        <div className="flex items-center gap-1 mt-1">
+                          <span className="font-medium text-sm">{userProfile?.email || "N/A"}</span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-5 w-5 p-0"
+                            onClick={() => copyToClipboard(userProfile?.email || "", "PayPal email")}
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
                 const isForeignCurrency = campaign.currencyCode !== 'NGN';
                 const isVerified = isForeignCurrency 
                   ? userProfile?.internationalAccountVerified 
@@ -515,9 +499,9 @@ export function PayoutDetailsModal({
                 isProcessing ||
                 !campaign.payoutProvider ||
                 userProfile?.accountChangeRequested ||
+                (campaign.payoutProvider === 'paypal' && !userProfile?.email) ||
                 (campaign.payoutProvider === 'paystack' && !userProfile?.accountVerified) ||
-                (campaign.payoutProvider === 'stripe' && campaign.currencyCode !== 'NGN' && !userProfile?.internationalAccountVerified) ||
-                (campaign.payoutProvider === 'stripe' && campaign.currencyCode === 'NGN' && !userProfile?.stripeAccountReady)
+                (campaign.payoutProvider === 'stripe')
               }
             >
               <>
@@ -527,68 +511,16 @@ export function PayoutDetailsModal({
             </Button>
           </div>
 
-          {/* Stripe Connect Account Required (only for legacy NGN payouts) */}
-          {campaign.payoutProvider === 'stripe' && campaign.currencyCode === 'NGN' && !userProfile?.stripeAccountReady && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <CreditCard className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                <div className="flex-1">
-                  <p className="font-medium text-blue-900 mb-1">Stripe Account Required</p>
-                  <p className="text-sm text-blue-800 mb-3">
-                    You need to link your Stripe account to receive payouts via Stripe Connect.
-                  </p>
-                  {stripeOnboardingUrl ? (
-                    <Button
-                      onClick={() => window.open(stripeOnboardingUrl, '_blank')}
-                      size="sm"
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Link Stripe Account
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={checkStripeAccountStatus}
-                      size="sm"
-                      disabled={checkingStripe}
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      {checkingStripe ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Checking...
-                        </>
-                      ) : (
-                        'Set Up Stripe Account'
-                      )}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* International Bank Account Required for Foreign Currencies */}
-          {campaign.payoutProvider === 'stripe' && campaign.currencyCode !== 'NGN' && !userProfile?.internationalAccountVerified && (
+          {/* Stripe no longer supported (legacy campaigns) */}
+          {campaign.payoutProvider === 'stripe' && (
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
               <div className="flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
                 <div className="flex-1">
-                  <p className="font-medium text-amber-900 mb-1">International Bank Account Required</p>
-                  <p className="text-sm text-amber-800 mb-3">
-                    You need to add and verify your international bank account details to receive payouts in {campaign.currencyCode}.
+                  <p className="font-medium text-amber-900 mb-1">Stripe no longer supported</p>
+                  <p className="text-sm text-amber-800">
+                    Stripe payouts are no longer available. Please contact support to update your payout method to PayPal or Paystack.
                   </p>
-                  <Button
-                    onClick={() => {
-                      onClose();
-                      router.push("/dashboard/settings");
-                    }}
-                    size="sm"
-                    className="bg-amber-600 hover:bg-amber-700"
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Add Bank Account
-                  </Button>
                 </div>
               </div>
             </div>

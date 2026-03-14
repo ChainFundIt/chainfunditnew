@@ -3,23 +3,20 @@ import { recurringDonations, recurringDonationPayments } from '@/lib/schema/recu
 import { donations } from '@/lib/schema/donations';
 import { campaigns } from '@/lib/schema/campaigns';
 import { eq, and } from 'drizzle-orm';
-import { 
-  createOrRetrieveStripeCustomer,
-  createStripeSubscription,
-} from '@/lib/payments/stripe-subscriptions';
 import {
   createOrRetrievePaystackCustomer,
   createPaystackPlan,
   createPaystackSubscription,
 } from '@/lib/payments/paystack-subscriptions';
 import { initializePaystackPayment } from '@/lib/payments/paystack';
+import { createPayPalSubscription, getPayPalApprovalUrl } from '@/lib/payments/paypal';
 import {
   calculateNextBillingDate,
   getBillingDay,
   normalizePeriod,
   isRecurringPeriod,
 } from '@/lib/utils/recurring-donations';
-import type { SubscriptionPeriod } from '@/lib/payments/stripe-subscriptions';
+import type { SubscriptionPeriod } from '@/lib/utils/recurring-donations';
 
 /**
  * Create a recurring donation subscription
@@ -31,13 +28,19 @@ export async function createRecurringDonationSubscription(data: {
   amount: number;
   currency: string;
   period: string;
-  paymentMethod: 'stripe' | 'paystack';
+  paymentMethod: 'paystack' | 'paypal';
   donorEmail: string;
   donorName?: string;
   message?: string;
   isAnonymous?: boolean;
   authorizationCode?: string; // For Paystack
-}): Promise<{ subscription: any; clientSecret?: string; authorizationUrl?: string }> {
+}): Promise<{
+  subscription: any;
+  clientSecret?: string;
+  authorizationUrl?: string;
+  approvalUrl?: string;
+  providerSubscriptionId?: string;
+}> {
   const normalizedPeriod = normalizePeriod(data.period) as SubscriptionPeriod;
   
   if (!isRecurringPeriod(data.period)) {
@@ -50,6 +53,7 @@ export async function createRecurringDonationSubscription(data: {
 
   const isPaystackWithoutAuthorization =
     data.paymentMethod === 'paystack' && !data.authorizationCode;
+  const isPaypalPendingApproval = data.paymentMethod === 'paypal';
 
   const subscriptionRecord = await db.insert(recurringDonations).values({
     campaignId: data.campaignId,
@@ -63,51 +67,14 @@ export async function createRecurringDonationSubscription(data: {
     billingDay: billingDay,
     message: data.message,
     isAnonymous: data.isAnonymous || false,
-    status: isPaystackWithoutAuthorization ? 'pending' : 'active',
-    isActive: !isPaystackWithoutAuthorization,
+    status: isPaystackWithoutAuthorization || isPaypalPendingApproval ? 'pending' : 'active',
+    isActive: !isPaystackWithoutAuthorization && !isPaypalPendingApproval,
   }).returning();
 
   const subscription = subscriptionRecord[0];
 
   // Create subscription with payment provider
-  if (data.paymentMethod === 'stripe') {
-    // Create or retrieve Stripe customer
-    const customer = await createOrRetrieveStripeCustomer(
-      data.donorEmail,
-      data.donorName,
-      {
-        recurringDonationId: subscription.id,
-        campaignId: data.campaignId,
-      }
-    );
-
-    // Create Stripe subscription
-    const stripeSubscription = await createStripeSubscription(
-      customer.id,
-      data.amount,
-      data.currency,
-      normalizedPeriod,
-      {
-        recurringDonationId: subscription.id,
-        campaignId: data.campaignId,
-        donorId: data.donorId,
-      }
-    );
-
-    // Update subscription record with Stripe IDs
-    await db
-      .update(recurringDonations)
-      .set({
-        stripeSubscriptionId: stripeSubscription.id,
-        stripeCustomerId: customer.id,
-      })
-      .where(eq(recurringDonations.id, subscription.id));
-
-    return {
-      subscription,
-      clientSecret: (stripeSubscription.latest_invoice as any)?.payment_intent?.client_secret,
-    };
-  } else if (data.paymentMethod === 'paystack') {
+  if (data.paymentMethod === 'paystack') {
     // Fetch campaign details for metadata
     const campaign = await db.query.campaigns.findFirst({
       where: eq(campaigns.id, data.campaignId),
@@ -263,6 +230,48 @@ export async function createRecurringDonationSubscription(data: {
         authorizationUrl: paystackInit.data.authorization_url,
       };
     }
+  } else if (data.paymentMethod === 'paypal') {
+    const campaign = await db.query.campaigns.findFirst({
+      where: eq(campaigns.id, data.campaignId),
+      columns: { slug: true, title: true },
+    });
+
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+    const returnUrl = baseUrl
+      ? `${baseUrl}/api/payments/paypal/subscriptions/callback`
+      : undefined;
+    const cancelUrl = baseUrl && campaign?.slug
+      ? `${baseUrl}/campaign/${campaign.slug}`
+      : baseUrl;
+
+    if (!returnUrl || !cancelUrl) {
+      throw new Error('NEXT_PUBLIC_APP_URL is required for PayPal recurring donations');
+    }
+
+    const paypalSubscription = await createPayPalSubscription({
+      recurringDonationId: subscription.id,
+      campaignTitle: campaign?.title || `Campaign ${data.campaignId}`,
+      amount: data.amount,
+      currency: data.currency,
+      period: normalizedPeriod,
+      donorEmail: data.donorEmail,
+      returnUrl,
+      cancelUrl,
+    });
+
+    await db
+      .update(recurringDonations)
+      .set({
+        stripeSubscriptionId: paypalSubscription.id,
+      })
+      .where(eq(recurringDonations.id, subscription.id));
+
+    return {
+      subscription,
+      approvalUrl: getPayPalApprovalUrl(paypalSubscription) || undefined,
+      authorizationUrl: getPayPalApprovalUrl(paypalSubscription) || undefined,
+      providerSubscriptionId: paypalSubscription.id,
+    };
   }
 
   throw new Error('Unsupported payment method');

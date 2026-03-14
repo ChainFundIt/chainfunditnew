@@ -171,6 +171,7 @@ export default function HangoutEventPage() {
           slug: pageSlug,
           amountInNaira: amount,
           donorEmail: donateEmail.trim(),
+          paymentProvider: "paystack",
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -355,6 +356,9 @@ export default function HangoutEventPage() {
                           onChange={(e) => setDonateEmail(e.target.value)}
                           className="mt-1 rounded-lg"
                         />
+                      </div>
+                      <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                        Event donations are currently charged in NGN, so this flow uses Paystack automatically.
                       </div>
                       {donateError && (
                         <p className="text-sm text-red-600">{donateError}</p>

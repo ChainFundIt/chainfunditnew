@@ -179,7 +179,7 @@ export default function ImpactHangoutPage() {
               >
                 <Button
                   size="lg"
-                  className="h-12 min-w-[200px] bg-white text-brand-green-dark hover:bg-white/90 hover:text-brand-green-dark border-2 border-white text-base px-6 rounded-full font-semibold shadow-lg"
+                  className="px-8 py-4 min-w-[200px] h-12 bg-white text-brand-green-dark hover:bg-white/90 hover:text-brand-green-dark border-2 border-white text-base rounded-full font-semibold shadow-lg"
                   asChild
                 >
                   <Link href="/events/register" className="inline-flex items-center justify-center gap-2">
@@ -198,7 +198,7 @@ export default function ImpactHangoutPage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="h-12 min-w-[160px] border-2 border-white text-white hover:bg-white/10 hover:text-white text-base px-6 rounded-full font-semibold"
+                  className="px-8 py-4 min-w-[160px] h-12 border-2 border-white text-white hover:bg-white/10 hover:text-white text-base rounded-full font-semibold"
                   asChild
                 >
                   <Link href="/campaigns">Support a cause</Link>
@@ -216,7 +216,7 @@ export default function ImpactHangoutPage() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-10 rounded-full border-white text-white hover:bg-white/10 hover:text-white"
+                  className="px-4 py-2 rounded-full border-white text-white hover:bg-white/10 hover:text-white"
                   asChild
                 >
                   <Link href={`/events/${encodeURIComponent(myHangouts[0].slug)}`} className="inline-flex items-center gap-2">
@@ -237,7 +237,7 @@ export default function ImpactHangoutPage() {
                     size="sm"
                     variant="outline"
                     disabled={accessSending || accessSent}
-                    className="h-10 rounded-full border-white text-white hover:bg-white/10 hover:text-white px-5"
+                    className="px-4 py-2 rounded-full border-white text-white hover:bg-white/10 hover:text-white"
                   >
                     {accessSent ? "Check your email" : accessSending ? "Sending…" : "Send me the link"}
                   </Button>
@@ -290,7 +290,7 @@ export default function ImpactHangoutPage() {
                 same time.
               </motion.p>
               <motion.div variants={fadeInUp} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button size="lg" className="rounded-full" asChild>
+                <Button size="lg" className="px-8 py-4 h-12 text-base font-semibold rounded-full" asChild>
                   <Link href="/events/register">
                     Register to host <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
@@ -484,7 +484,7 @@ export default function ImpactHangoutPage() {
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.98 }}
           >
-            <Button size="lg" className="rounded-full" asChild>
+            <Button size="lg" className="px-8 py-4 h-12 text-base font-semibold rounded-full" asChild>
               <Link href="/events/register">
                 Register now <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
@@ -695,7 +695,7 @@ export default function ImpactHangoutPage() {
             ))}
           </ul>
           <motion.div className="mt-8" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}>
-            <Button size="lg" className="rounded-full" asChild>
+            <Button size="lg" className="px-8 py-4 h-12 text-base font-semibold rounded-full" asChild>
               <Link href="/events/register">
                 Register to host <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
@@ -748,7 +748,7 @@ export default function ImpactHangoutPage() {
             <motion.div variants={fadeInUp} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
               <Button
                 size="lg"
-                className="bg-white text-brand-green-dark hover:bg-white/90 border-2 border-white rounded-full font-semibold"
+                className="px-8 py-4 h-12 bg-white text-brand-green-dark hover:bg-white/90 border-2 border-white rounded-full font-semibold"
                 asChild
               >
                 <Link href="/events/register" className="inline-flex items-center">
@@ -760,7 +760,7 @@ export default function ImpactHangoutPage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="border-2 border-white text-white hover:bg-white/10 hover:text-white rounded-full"
+                className="px-8 py-4 h-12 border-2 border-white text-white hover:bg-white/10 hover:text-white rounded-full"
                 asChild
               >
                 <Link href="/campaigns">Support a cause</Link>

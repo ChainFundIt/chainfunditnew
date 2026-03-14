@@ -1,7 +1,6 @@
 import { db } from '@/lib/db';
 import { campaignPayouts, commissionPayouts, users, campaigns } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
-import { createStripePayout, isStripeAccountReadyForPayouts } from './stripe';
 import { initiatePaystackTransfer, createPaystackRecipient, verifyPaystackTransfer } from './paystack';
 import { getPayoutProvider } from './payout-config';
 import { sendPayoutApprovalEmail, sendPayoutCompletionEmail, sendPayoutFailureEmail } from './payout-email';
@@ -47,7 +46,8 @@ export async function processCampaignCreatorPayout(
     }
 
     // Determine payout provider based on currency
-    const provider = getPayoutProvider(payout.currency);
+    const provider = (payout.payoutProvider as 'paystack' | 'paypal' | undefined)
+      || getPayoutProvider(payout.currency);
     if (!provider) {
       return {
         success: false,
@@ -67,10 +67,10 @@ export async function processCampaignCreatorPayout(
 
     let result: PayoutProcessingResult;
 
-    if (provider === 'stripe') {
-      result = await processStripePayout(payout, 'campaign');
-    } else if (provider === 'paystack') {
+    if (provider === 'paystack') {
       result = await processPaystackPayout(payout, 'campaign');
+    } else if (provider === 'paypal') {
+      result = await processPayPalPayout(payout, 'campaign');
     } else {
       return {
         success: false,
@@ -222,10 +222,10 @@ export async function processAmbassadorPayout(
 
     let result: PayoutProcessingResult;
 
-    if (provider === 'stripe') {
-      result = await processStripePayout(payout, 'ambassador');
-    } else if (provider === 'paystack') {
+    if (provider === 'paystack') {
       result = await processPaystackPayout(payout, 'ambassador');
+    } else if (provider === 'paypal') {
+      result = await processPayPalPayout(payout, 'ambassador');
     } else {
       return {
         success: false,
@@ -266,201 +266,97 @@ export async function processAmbassadorPayout(
 }
 
 /**
- * Process payout using Stripe
- * For foreign currencies, uses bank account details instead of Stripe Connect
+ * Process payout using PayPal
  */
-async function processStripePayout(
+async function processPayPalPayout(
   payout: any,
   type: 'campaign' | 'ambassador'
 ): Promise<PayoutProcessingResult> {
   try {
-    const { 
-      createStripePayout, 
-      isStripeAccountReadyForPayouts,
-      createStripeExternalBankAccount,
-      createStripePayoutToExternalAccount
-    } = await import('@/lib/payments/stripe');
+    const { createPayPalPayout } = await import('./paypal');
     const { db } = await import('@/lib/db');
-    const { users } = await import('@/lib/schema');
+    const { users, chainers } = await import('@/lib/schema');
     const { eq } = await import('drizzle-orm');
 
     const amount = parseFloat(type === 'campaign' ? payout.netAmount : payout.amount);
     const currency = type === 'campaign' ? payout.currency : (payout.currency || 'USD');
-    
-    if (type === 'campaign') {
-      const userId = payout.userId || payout.user?.id;
-      if (!userId) {
-        return {
-          success: false,
-          error: 'User ID not found in payout',
-          status: 'failed',
-        };
-      }
 
-      const user = await db
-        .select({
-          stripeAccountId: users.stripeAccountId,
-          stripeAccountReady: users.stripeAccountReady,
-          // International bank account fields
-          internationalBankAccountNumber: users.internationalBankAccountNumber,
-          internationalBankRoutingNumber: users.internationalBankRoutingNumber,
-          internationalBankSwiftBic: users.internationalBankSwiftBic,
-          internationalBankCountry: users.internationalBankCountry,
-          internationalBankName: users.internationalBankName,
-          internationalAccountName: users.internationalAccountName,
-          internationalAccountVerified: users.internationalAccountVerified,
-        })
-        .from(users)
-        .where(eq(users.id, userId))
-        .limit(1);
-
-      if (!user.length) {
-        return {
-          success: false,
-          error: 'User not found',
-          status: 'failed',
-        };
-      }
-
-      // Check if currency is foreign (not NGN) - use bank account details
-      const isForeignCurrency = currency !== 'NGN';
-      
-      if (isForeignCurrency) {
-        // For foreign currencies, use bank account details
-        if (!user[0].internationalAccountVerified) {
-          return {
-            success: false,
-            error: 'International bank account not verified. Please add and verify your bank account details.',
-            status: 'failed',
-          };
-        }
-
-        if (!user[0].internationalBankAccountNumber || !user[0].internationalBankCountry) {
-          return {
-            success: false,
-            error: 'International bank account details incomplete',
-            status: 'failed',
-          };
-        }
-
-        // Determine if account number is IBAN (starts with country code)
-        const accountNumber = user[0].internationalBankAccountNumber!;
-        const isIban = /^[A-Z]{2}[0-9]{2}/.test(accountNumber);
-        
-        // Create external bank account in Stripe
-        const externalAccount = await createStripeExternalBankAccount({
-          accountNumber: accountNumber,
-          routingNumber: user[0].internationalBankCountry === 'US' ? (user[0].internationalBankRoutingNumber || undefined) : undefined,
-          sortCode: user[0].internationalBankCountry === 'GB' ? accountNumber.substring(0, 6) : undefined, // Extract sort code from UK account
-          iban: isIban ? accountNumber : undefined,
-          swiftBic: user[0].internationalBankSwiftBic || undefined,
-          country: user[0].internationalBankCountry!,
-          accountHolderName: user[0].internationalAccountName || payout.user?.fullName || 'User',
-          currency: currency.toLowerCase(),
-        });
-
-        // Create payout to external bank account
-        const stripePayout = await createStripePayoutToExternalAccount(
-          amount,
-          currency,
-          externalAccount.id,
-          `Payout for campaign: ${payout.id}`,
-          {
-            payoutId: payout.id,
-            type: 'campaign',
-            reference: payout.reference || payout.id,
-            campaignId: payout.campaignId,
-          }
-        );
-
-        // Validate that payout was created and has an ID
-        if (!stripePayout || !stripePayout.id) {
-          return {
-            success: false,
-            error: 'Stripe payout created but no payout ID returned',
-            status: 'failed',
-          };
-        }
-
-        // Stripe payouts are asynchronous - they start as 'pending' and can fail later
-        // Mark as 'processing' and let webhook mark as 'completed' when it actually succeeds
-        // Check if payout status indicates it will succeed
-        const payoutStatus = stripePayout.status; // 'pending', 'in_transit', 'paid', 'failed', 'canceled'
-        
-        if (payoutStatus === 'failed' || payoutStatus === 'canceled') {
-          return {
-            success: false,
-            error: `Stripe payout ${payoutStatus}: ${stripePayout.failure_message || 'Payout failed'}`,
-            status: 'failed',
-          };
-        }
-
-        return {
-          success: true,
-          transactionId: stripePayout.id,
-          status: 'processing', // Changed from 'completed' - webhook will mark as completed when transfer succeeds
-        };
-      } else {
-        // For NGN, fall back to old Stripe Connect flow (though this shouldn't happen as NGN uses Paystack)
-        // This is kept for backward compatibility
-        if (!user[0].stripeAccountId) {
-          return {
-            success: false,
-            error: 'User has not linked a Stripe Connect account',
-            status: 'failed',
-          };
-        }
-
-        const isReady = await isStripeAccountReadyForPayouts(user[0].stripeAccountId);
-        if (!isReady) {
-          return {
-            success: false,
-            error: 'Stripe Connect account is not ready for payouts. Please complete onboarding.',
-            status: 'failed',
-          };
-        }
-
-        const transfer = await createStripePayout(
-          amount,
-          currency,
-          user[0].stripeAccountId,
-          `Payout for ${type === 'campaign' ? 'campaign' : 'commission'}: ${payout.id}`,
-          {
-            payoutId: payout.id,
-            type,
-            reference: payout.reference || payout.id,
-            campaignId: type === 'campaign' ? payout.campaignId : undefined,
-          }
-        );
-
-        // Validate that transfer was created and has an ID
-        if (!transfer || !transfer.id) {
-          return {
-            success: false,
-            error: 'Stripe transfer created but no transfer ID returned',
-            status: 'failed',
-          };
-        }
-
-        // Stripe transfers are asynchronous - mark as 'processing' and let webhook mark as 'completed'
-        return {
-          success: true,
-          transactionId: transfer.id,
-          status: 'processing', // Changed from 'completed' - webhook will mark as completed when transfer succeeds
-        };
-      }
-    } else {
+    if (isNaN(amount) || amount <= 0) {
       return {
         success: false,
-        error: 'Ambassador Stripe payouts not yet implemented',
+        error: 'Invalid payout amount',
         status: 'failed',
       };
     }
+
+    let receiverEmail: string | null = null;
+    let recipientName = payout.user?.fullName || 'User';
+
+    if (type === 'campaign') {
+      receiverEmail = payout.user?.email || null;
+    } else {
+      const [chainer] = await db
+        .select({
+          userId: chainers.userId,
+        })
+        .from(chainers)
+        .where(eq(chainers.id, payout.chainerId))
+        .limit(1);
+
+      if (!chainer) {
+        return {
+          success: false,
+          error: 'Chainer not found for ambassador payout',
+          status: 'failed',
+        };
+      }
+
+      const [user] = await db
+        .select({
+          email: users.email,
+          fullName: users.fullName,
+        })
+        .from(users)
+        .where(eq(users.id, chainer.userId))
+        .limit(1);
+
+      receiverEmail = user?.email || null;
+      recipientName = user?.fullName || recipientName;
+    }
+
+    if (!receiverEmail) {
+      return {
+        success: false,
+        error: 'A PayPal payout email is required',
+        status: 'failed',
+      };
+    }
+
+    const senderItemId = `${type === 'campaign' ? 'campaign' : 'ambassador'}:${payout.id}`;
+    const paypalPayout = await createPayPalPayout({
+      senderItemId,
+      receiverEmail,
+      amount,
+      currency,
+      note: `ChainFundit payout for ${recipientName}`,
+      emailSubject: 'Your ChainFundit payout is on the way',
+    });
+
+    const status = paypalPayout.payoutItemStatus === 'SUCCESS' ? 'completed' : 'processing';
+
+    return {
+      success: true,
+      transactionId:
+        paypalPayout.transactionId ||
+        paypalPayout.payoutItemId ||
+        paypalPayout.batchId,
+      status,
+    };
   } catch (error) {
-    console.error('Error processing Stripe payout:', error);
+    console.error('Error processing PayPal payout:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Stripe payout failed',
+      error: error instanceof Error ? error.message : 'PayPal payout failed',
       status: 'failed',
     };
   }
@@ -668,7 +564,7 @@ export async function sendPayoutApprovalNotification(
       currency: payout.currency,
       netAmount: parseFloat(payout.netAmount || payout.amount),
       fees: parseFloat(payout.fees || '0'),
-      payoutProvider: payout.payoutProvider || 'stripe',
+      payoutProvider: payout.payoutProvider || 'paypal',
       processingTime: payout.currency === 'NGN' ? '1-3 business days' : '2-7 business days',
       payoutId: payout.id,
       bankDetails: payout.accountName ? {

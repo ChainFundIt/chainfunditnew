@@ -49,10 +49,7 @@ const getPaystackVerification = async () => {
   return verifyPaystackPayment;
 };
 
-const getStripeVerification = async () => {
-  const { getStripePaymentIntent } = await import('../lib/payments/stripe');
-  return getStripePaymentIntent;
-};
+// Stripe no longer supported - stripe donations are treated as unverifiable
 
 interface ProblematicDonation {
   donationId: string;
@@ -92,14 +89,7 @@ async function verifyDonationPayment(
         return { verified: false, error: `Paystack status: ${status}`, issue: 'not_found' };
       }
     } else if (donation.paymentMethod === 'stripe') {
-      const getStripePaymentIntent = await getStripeVerification();
-      const paymentIntent = await getStripePaymentIntent(donation.paymentIntentId);
-      
-      if (paymentIntent.status === 'succeeded') {
-        return { verified: true };
-      } else {
-        return { verified: false, error: `Stripe status: ${paymentIntent.status}`, issue: 'not_found' };
-      }
+      return { verified: false, error: 'Stripe is no longer supported; cannot verify', issue: 'not_found' };
     } else {
       return { verified: false, error: `Unknown payment method: ${donation.paymentMethod}`, issue: 'not_found' };
     }

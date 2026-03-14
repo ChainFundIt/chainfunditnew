@@ -86,7 +86,7 @@ export interface AnalyticsParams {
   is_anonymous?: boolean;
 
   // Payment related
-  payment_method?: "stripe" | "paystack" | "other";
+  payment_method?: "stripe" | "paystack" | "paypal" | "other";
   payment_intent_id?: string;
   transaction_id?: string;
 
@@ -206,7 +206,7 @@ export function trackDonation(
     amount: number;
     currency: string;
     is_anonymous?: boolean;
-    payment_method?: "stripe" | "paystack";
+    payment_method?: "stripe" | "paystack" | "paypal";
   }
 ) {
   track(eventName, {

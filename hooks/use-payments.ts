@@ -5,7 +5,7 @@ interface Payment {
   amount: number;
   currency: string;
   paymentStatus: 'completed' | 'pending' | 'failed';
-  paymentProvider: 'stripe' | 'paystack';
+  paymentProvider: 'paystack' | 'paypal';
   transactionId?: string;
   message?: string;
   isAnonymous: boolean;

@@ -1,5 +1,6 @@
 import { addMonths, addYears, addDays, startOfDay, isBefore, isAfter } from 'date-fns';
-import type { SubscriptionPeriod } from '@/lib/payments/stripe-subscriptions';
+
+export type SubscriptionPeriod = 'monthly' | 'quarterly' | 'yearly';
 
 /**
  * Calculate next billing date based on period

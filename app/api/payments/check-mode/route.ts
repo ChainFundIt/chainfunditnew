@@ -10,27 +10,13 @@ export async function GET(request: NextRequest) {
     const status = getPaymentModeStatus();
     
     // Determine overall mode
-    const isAnyTestMode = status.stripe.isTestMode || status.paystack.isTestMode;
+    const isAnyTestMode =
+      status.paystack.isTestMode || status.paypal.isTestMode;
     
     return NextResponse.json({
       success: true,
       overallMode: isAnyTestMode ? 'test' : 'live',
       isTestMode: isAnyTestMode,
-      stripe: {
-        secretKey: {
-          mode: status.stripe.secretKeyMode,
-          isSet: status.stripe.secretKeyMode !== 'missing',
-          prefix: status.stripe.secretKeyMode === 'test' ? 'sk_test_' : 
-                  status.stripe.secretKeyMode === 'live' ? 'sk_live_' : 'unknown',
-        },
-        publishableKey: {
-          mode: status.stripe.publishableKeyMode,
-          isSet: status.stripe.publishableKeyMode !== 'missing',
-          prefix: status.stripe.publishableKeyMode === 'test' ? 'pk_test_' : 
-                  status.stripe.publishableKeyMode === 'live' ? 'pk_live_' : 'unknown',
-        },
-        isTestMode: status.stripe.isTestMode,
-      },
       paystack: {
         secretKey: {
           mode: status.paystack.secretKeyMode,
@@ -45,6 +31,25 @@ export async function GET(request: NextRequest) {
                   status.paystack.publicKeyMode === 'live' ? 'pk_live_' : 'unknown',
         },
         isTestMode: status.paystack.isTestMode,
+      },
+      paypal: {
+        clientId: {
+          mode: status.paypal.clientMode,
+          isSet: status.paypal.clientMode !== 'missing',
+        },
+        publicClientId: {
+          mode: status.paypal.publicClientMode,
+          isSet: status.paypal.publicClientMode !== 'missing',
+        },
+        clientSecret: {
+          mode: status.paypal.secretMode,
+          isSet: status.paypal.secretMode !== 'missing',
+        },
+        environment: {
+          mode: status.paypal.environmentMode,
+          isSet: status.paypal.environmentMode !== 'missing',
+        },
+        isTestMode: status.paypal.isTestMode,
       },
       recommendations: generateRecommendations(status),
     });
@@ -62,34 +67,7 @@ export async function GET(request: NextRequest) {
 
 function generateRecommendations(status: ReturnType<typeof getPaymentModeStatus>): string[] {
   const recommendations: string[] = [];
-  
-  // Stripe recommendations
-  if (status.stripe.secretKeyMode === 'test' || status.stripe.publishableKeyMode === 'test') {
-    recommendations.push('Stripe is in TEST mode. To switch to production:');
-    recommendations.push('  - Replace STRIPE_SECRET_KEY with a key starting with "sk_live_"');
-    recommendations.push('  - Replace NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY with a key starting with "pk_live_"');
-  }
-  
-  if (status.stripe.secretKeyMode === 'missing') {
-    recommendations.push('STRIPE_SECRET_KEY is missing');
-  }
-  
-  if (status.stripe.publishableKeyMode === 'missing') {
-    recommendations.push('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is missing');
-    recommendations.push('  ⚠️ IMPORTANT: NEXT_PUBLIC_ variables must be set at BUILD TIME');
-    recommendations.push('  - For Vercel: Add the variable in Project Settings > Environment Variables');
-    recommendations.push('  - For other platforms: Ensure the variable is set before running `npm run build`');
-    recommendations.push('  - After adding the variable, you MUST rebuild/redeploy your application');
-  }
-  
-  if (status.stripe.secretKeyMode === 'live' && status.stripe.publishableKeyMode === 'test') {
-    recommendations.push('⚠️ Stripe secret key is LIVE but publishable key is TEST - they must match!');
-  }
-  
-  if (status.stripe.secretKeyMode === 'test' && status.stripe.publishableKeyMode === 'live') {
-    recommendations.push('⚠️ Stripe secret key is TEST but publishable key is LIVE - they must match!');
-  }
-  
+
   // Paystack recommendations
   if (status.paystack.secretKeyMode === 'test' || status.paystack.publicKeyMode === 'test') {
     recommendations.push('Paystack is in TEST mode. To switch to production:');
@@ -111,6 +89,25 @@ function generateRecommendations(status: ReturnType<typeof getPaymentModeStatus>
   
   if (status.paystack.secretKeyMode === 'test' && status.paystack.publicKeyMode === 'live') {
     recommendations.push('⚠️ Paystack secret key is TEST but public key is LIVE - they must match!');
+  }
+
+  // PayPal recommendations
+  if (status.paypal.clientMode === 'missing') {
+    recommendations.push('PAYPAL_CLIENT_ID is missing');
+  }
+
+  if (status.paypal.publicClientMode === 'missing') {
+    recommendations.push('NEXT_PUBLIC_PAYPAL_CLIENT_ID is missing');
+  }
+
+  if (status.paypal.secretMode === 'missing') {
+    recommendations.push('PAYPAL_CLIENT_SECRET is missing');
+  }
+
+  if (status.paypal.environmentMode === 'missing') {
+    recommendations.push('PAYPAL_ENVIRONMENT is missing (defaults to sandbox if omitted)');
+  } else if (status.paypal.environmentMode === 'test') {
+    recommendations.push('PayPal is in TEST mode. Set PAYPAL_ENVIRONMENT=live to use production credentials.');
   }
   
   if (recommendations.length === 0) {

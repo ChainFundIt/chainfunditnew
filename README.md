@@ -223,7 +223,7 @@ Set these in `.env.local` before running migrations.
 - ✅ Analytics dashboard
 
 ### Phase 4: Advanced Features (Ongoing)
-- ✅ Payment integration (Stripe, Paystack)
+- ✅ Payment integration (PayPal, Paystack)
 - ✅ Multi-currency support
 - AI writing assistance
 - Advanced analytics

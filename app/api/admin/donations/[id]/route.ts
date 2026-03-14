@@ -4,7 +4,6 @@ import { donations, users, campaigns, chainers } from '@/lib/schema';
 import { eq, and, count, desc, sql } from 'drizzle-orm';
 import { updateCampaignAmount } from '@/lib/utils/campaign-amount';
 import { calculateAndDistributeCommissions } from '@/lib/utils/commission-calculation';
-import { getStripePaymentIntent } from '@/lib/payments/stripe';
 import { verifyPaystackPayment } from '@/lib/payments/paystack';
 
 /**
@@ -27,15 +26,7 @@ async function tryAttributeDonationFromProvider(donationId: string): Promise<{ a
 
   let chainCode: string | null = null;
 
-  if (row.paymentMethod === 'stripe') {
-    try {
-      const pi = await getStripePaymentIntent(row.paymentIntentId);
-      const raw = pi.metadata?.chain_code;
-      if (raw && typeof raw === 'string') chainCode = raw;
-    } catch {
-      // ignore
-    }
-  } else if (row.paymentMethod === 'paystack') {
+  if (row.paymentMethod === 'paystack') {
     try {
       const verification = await verifyPaystackPayment(row.paymentIntentId);
       const meta = verification?.data?.metadata as Record<string, unknown> | undefined;
@@ -49,6 +40,8 @@ async function tryAttributeDonationFromProvider(donationId: string): Promise<{ a
     } catch {
       // ignore
     }
+  } else if (row.paymentMethod === 'paypal') {
+    // PayPal does not store chain_code in the same way; skip attribution
   }
 
   if (!chainCode) return { attributed: false };

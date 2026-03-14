@@ -1,20 +1,3 @@
-import Stripe from 'stripe';
-
-// Stripe Configuration - Lazy initialization to avoid build-time issues
-let stripeInstance: Stripe | null = null;
-
-export function getStripe(): Stripe {
-  if (!stripeInstance) {
-    if (!process.env.STRIPE_SECRET_KEY) {
-      throw new Error('STRIPE_SECRET_KEY environment variable is required');
-    }
-    stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2024-06-20',
-    });
-  }
-  return stripeInstance;
-}
-
 // Paystack Configuration
 export const paystackConfig = {
   secretKey: process.env.PAYSTACK_SECRET_KEY!,
@@ -23,28 +6,23 @@ export const paystackConfig = {
 };
 
 // Payment Provider Types
-export type PaymentProvider = 'stripe' | 'paystack';
+export type PaymentProvider = 'paystack' | 'paypal';
 
 // Currency support by provider
 export const CURRENCY_SUPPORT: Record<PaymentProvider, string[]> = {
-  stripe: ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'CHF', 'JPY', 'SGD', 'HKD', 'NZD'],
   paystack: ['NGN', 'USD', 'GHS', 'ZAR', 'KES'],
+  paypal: ['USD', 'EUR', 'GBP', 'CAD', 'AUD'],
 };
 
 // Preferred provider for each currency (for intelligent routing)
 export const PREFERRED_PROVIDER: Record<string, PaymentProvider> = {
-  // International currencies → Stripe
-  'USD': 'stripe',
-  'EUR': 'stripe', 
-  'GBP': 'stripe',
-  'CAD': 'stripe',
-  'AUD': 'stripe',
-  'CHF': 'stripe',
-  'JPY': 'stripe',
-  'SGD': 'stripe',
-  'HKD': 'stripe',
-  'NZD': 'stripe',
-  
+  // International currencies → PayPal
+  'USD': 'paypal',
+  'EUR': 'paypal',
+  'GBP': 'paypal',
+  'CAD': 'paypal',
+  'AUD': 'paypal',
+
   // African currencies → Paystack
   'NGN': 'paystack',
   'GHS': 'paystack',
@@ -54,22 +32,22 @@ export const PREFERRED_PROVIDER: Record<string, PaymentProvider> = {
 
 // Provider descriptions for UI
 export const PROVIDER_DESCRIPTIONS: Record<PaymentProvider, string> = {
-  stripe: 'Credit/Debit Card, Apple Pay, Google Pay',
   paystack: 'Bank Transfer, Card, USSD',
+  paypal: 'PayPal balance, cards, and linked payment methods',
 };
 
 // Get supported payment providers for a currency
 export function getSupportedProviders(currency: string): PaymentProvider[] {
   const providers: PaymentProvider[] = [];
-  
-  if (CURRENCY_SUPPORT.stripe.includes(currency)) {
-    providers.push('stripe');
-  }
-  
+
   if (CURRENCY_SUPPORT.paystack.includes(currency)) {
     providers.push('paystack');
   }
-  
+
+  if (CURRENCY_SUPPORT.paypal.includes(currency)) {
+    providers.push('paypal');
+  }
+
   return providers;
 }
 
@@ -86,17 +64,11 @@ export function getIntelligentProviders(currency: string): {
   const primary = getPreferredProvider(currency);
   const allSupported = getSupportedProviders(currency);
   const alternatives = allSupported.filter(provider => provider !== primary);
-  
+
   return {
     primary,
     alternatives
   };
-}
-
-// Check if a Stripe key is a test key
-export function isStripeTestKey(key: string | undefined): boolean {
-  if (!key) return false;
-  return key.startsWith('sk_test_') || key.startsWith('pk_test_');
 }
 
 // Check if a Paystack key is a test key
@@ -105,36 +77,33 @@ export function isPaystackTestKey(key: string | undefined): boolean {
   return key.startsWith('sk_test_') || key.startsWith('pk_test_');
 }
 
+// Check if a PayPal environment is sandbox
+export function isPayPalSandbox(environment: string | undefined): boolean {
+  if (!environment) return true;
+  return environment.toLowerCase() !== 'live';
+}
+
 // Get payment mode status
 export function getPaymentModeStatus(): {
-  stripe: {
-    secretKeyMode: 'test' | 'live' | 'missing' | 'unknown';
-    publishableKeyMode: 'test' | 'live' | 'missing' | 'unknown';
-    isTestMode: boolean;
-  };
   paystack: {
     secretKeyMode: 'test' | 'live' | 'missing' | 'unknown';
     publicKeyMode: 'test' | 'live' | 'missing' | 'unknown';
     isTestMode: boolean;
   };
+  paypal: {
+    clientMode: 'test' | 'live' | 'missing' | 'unknown';
+    publicClientMode: 'test' | 'live' | 'missing' | 'unknown';
+    secretMode: 'test' | 'live' | 'missing' | 'unknown';
+    environmentMode: 'test' | 'live' | 'missing' | 'unknown';
+    isTestMode: boolean;
+  };
 } {
-  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
   const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY;
   const paystackPublicKey = process.env.PAYSTACK_PUBLIC_KEY;
-
-  const getStripeSecretMode = (): 'test' | 'live' | 'missing' | 'unknown' => {
-    if (!stripeSecretKey) return 'missing';
-    if (stripeSecretKey.startsWith('sk_test_')) return 'test';
-    if (stripeSecretKey.startsWith('sk_live_')) return 'live';
-    return 'unknown';
-  };
-
-  const getStripePublishableMode = (): 'test' | 'live' | 'missing' | 'unknown' => {
-    const secretMode = getStripeSecretMode();
-    if (secretMode === 'test') return 'test';
-    if (secretMode === 'live') return 'live';
-    return 'missing';
-  };
+  const paypalClientId = process.env.PAYPAL_CLIENT_ID;
+  const paypalPublicClientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
+  const paypalClientSecret = process.env.PAYPAL_CLIENT_SECRET;
+  const paypalEnvironment = process.env.PAYPAL_ENVIRONMENT;
 
   const getPaystackSecretMode = (): 'test' | 'live' | 'missing' | 'unknown' => {
     if (!paystackSecretKey) return 'missing';
@@ -150,21 +119,36 @@ export function getPaymentModeStatus(): {
     return 'missing';
   };
 
-  const stripeSecretMode = getStripeSecretMode();
-  const stripePublishableMode = getStripePublishableMode();
   const paystackSecretMode = getPaystackSecretMode();
   const paystackPublicMode = getPaystackPublicMode();
+  const getPayPalCredentialMode = (
+    value: string | undefined
+  ): 'test' | 'live' | 'missing' | 'unknown' => {
+    if (!value) return 'missing';
+    return isPayPalSandbox(paypalEnvironment) ? 'test' : 'live';
+  };
+  const paypalClientMode = getPayPalCredentialMode(paypalClientId);
+  const paypalPublicClientMode = getPayPalCredentialMode(paypalPublicClientId);
+  const paypalSecretMode = getPayPalCredentialMode(paypalClientSecret);
+  const paypalEnvironmentMode: 'test' | 'live' | 'missing' | 'unknown' =
+    !paypalEnvironment ? 'missing' : isPayPalSandbox(paypalEnvironment) ? 'test' : 'live';
 
   return {
-    stripe: {
-      secretKeyMode: stripeSecretMode,
-      publishableKeyMode: stripePublishableMode,
-      isTestMode: stripeSecretMode === 'test' || stripePublishableMode === 'test',
-    },
     paystack: {
       secretKeyMode: paystackSecretMode,
       publicKeyMode: paystackPublicMode,
       isTestMode: paystackSecretMode === 'test' || paystackPublicMode === 'test',
+    },
+    paypal: {
+      clientMode: paypalClientMode,
+      publicClientMode: paypalPublicClientMode,
+      secretMode: paypalSecretMode,
+      environmentMode: paypalEnvironmentMode,
+      isTestMode:
+        paypalClientMode === 'test' ||
+        paypalPublicClientMode === 'test' ||
+        paypalSecretMode === 'test' ||
+        paypalEnvironmentMode === 'test',
     },
   };
 }
@@ -172,15 +156,23 @@ export function getPaymentModeStatus(): {
 // Environment validation
 export function validatePaymentConfig() {
   const errors: string[] = [];
-  
-  if (!process.env.STRIPE_SECRET_KEY) {
-    errors.push('Missing STRIPE_SECRET_KEY environment variable');
-  }
-  
+
   if (!process.env.PAYSTACK_SECRET_KEY) {
     errors.push('Missing PAYSTACK_SECRET_KEY environment variable');
   }
-  
+
+  if (!process.env.PAYPAL_CLIENT_ID) {
+    errors.push('Missing PAYPAL_CLIENT_ID environment variable');
+  }
+
+  if (!process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID) {
+    errors.push('Missing NEXT_PUBLIC_PAYPAL_CLIENT_ID environment variable');
+  }
+
+  if (!process.env.PAYPAL_CLIENT_SECRET) {
+    errors.push('Missing PAYPAL_CLIENT_SECRET environment variable');
+  }
+
   if (errors.length > 0) {
     throw new Error(`Payment configuration errors:\n${errors.join('\n')}`);
   }

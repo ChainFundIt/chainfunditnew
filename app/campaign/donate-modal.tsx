@@ -25,12 +25,18 @@ import { getCurrencyCode } from "@/lib/utils/currency";
 import Link from "next/link";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import StripePaymentForm from "@/components/payments/StripePaymentForm";
+import { PayPalOrderButtons } from "@/components/payments/paypal-order-buttons";
+import { PayPalSubscriptionButtons } from "@/components/payments/paypal-subscription-buttons";
 import Image from "next/image";
 import { trackDonation, track } from "@/lib/analytics";
 import { useShortenLink } from "@/hooks/use-shorten-link";
 import { getFullCampaignUrl } from "@/lib/utils/campaign-url";
 import { triggerPlatformReviewPrompt } from "@/lib/utils/review-prompt";
+
+const PROVIDER_LABELS: Record<PaymentProvider, string> = {
+  paystack: "Paystack",
+  paypal: "PayPal",
+};
 
 interface Campaign {
   id: string;
@@ -58,7 +64,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
   referralChainer,
 }) => {
   const promptedForReviewRef = useRef(false);
-  const [step, setStep] = useState<"donate" | "payment" | "stripe-payment" | "thankyou">("donate");
+  const [step, setStep] = useState<"donate" | "payment" | "thankyou">("donate");
   const [period, setPeriod] = useState("one-time");
   const [amount, setAmount] = useState("");
   const [selectedCurrency, setSelectedCurrency] = useState("");
@@ -68,16 +74,10 @@ const DonateModal: React.FC<DonateModalProps> = ({
   const [anonymous, setAnonymous] = useState(false);
   const [emailError, setEmailError] = useState(""); 
   const [comments, setComments] = useState("");
-  const [paymentProvider, setPaymentProvider] = useState<PaymentProvider>("stripe");
+  const [paymentProvider, setPaymentProvider] = useState<PaymentProvider>("paypal");
   const [supportedProviders, setSupportedProviders] = useState<PaymentProvider[]>([]);
   const [linkCopied, setLinkCopied] = useState(false);
   const [campaignShareUrl, setCampaignShareUrl] = useState("");
-  const [stripePaymentData, setStripePaymentData] = useState<{
-    clientSecret: string;
-    donationId: string;
-    amount: number;
-    currency: string;
-  } | null>(null);
   
   const { loading: donationLoading, error: donationError, initializeDonation } = useDonations();
   const { shortenLink, isLoading: isShorteningLink } = useShortenLink();
@@ -127,13 +127,38 @@ const DonateModal: React.FC<DonateModalProps> = ({
     const currencyCode = getCurrencyCode(effectiveCurrency);
     const { primary, alternatives } = getIntelligentProviders(currencyCode);
     const allProviders = primary ? [primary, ...alternatives] : alternatives;
-
     setSupportedProviders(allProviders);
 
     if (allProviders.length > 0 && !allProviders.includes(paymentProvider)) {
-      setPaymentProvider(primary || allProviders[0]);
+      setPaymentProvider(allProviders[0]);
     }
-  }, [campaign, open, selectedCurrency, paymentProvider]);
+  }, [campaign, open, period, selectedCurrency, paymentProvider]);
+
+  const currentCurrencyCode = getCurrencyCode(selectedCurrency || campaign?.currency || "USD");
+  const isRecurringDonation = period !== "one-time";
+  const isEmbeddedPayPalFlow =
+    paymentProvider === "paypal" && currentCurrencyCode !== "NGN";
+
+  const buildDonationPayload = () => {
+    if (!campaign || !amount) {
+      throw new Error("Campaign and amount are required");
+    }
+
+    const amountNum = parseFloat(amount);
+
+    return {
+      campaignId: campaign.id,
+      amount: amountNum,
+      currency: currentCurrencyCode,
+      paymentProvider,
+      message: comments,
+      isAnonymous: anonymous,
+      email: email || undefined,
+      donorName: !anonymous ? fullName || undefined : undefined,
+      donorPhone: !anonymous ? phone || undefined : undefined,
+      chainerId: referralChainer?.id || null,
+    };
+  };
 
   // Prompt for a platform review right after a successful donation flow reaches "thankyou"
   // (covers Stripe success callback + Paystack redirect thank-you state).
@@ -210,19 +235,20 @@ const DonateModal: React.FC<DonateModalProps> = ({
     }
 
     try {
-      const currencyCode = getCurrencyCode(selectedCurrency);
-      const isRecurring = period !== 'one-time';
-
       track("payment_initiated", {
         campaign_id: campaign.id,
         donation_amount: amountNum,
-        donation_currency: currencyCode,
+        donation_currency: currentCurrencyCode,
         payment_method: paymentProvider,
         is_anonymous: anonymous,
         period: period,
       });
 
-      if (isRecurring) {
+      if (isEmbeddedPayPalFlow) {
+        return;
+      }
+
+      if (isRecurringDonation) {
         const subscriptionResponse = await fetch('/api/payments/subscriptions/initialize', {
           method: 'POST',
           headers: {
@@ -232,7 +258,7 @@ const DonateModal: React.FC<DonateModalProps> = ({
           body: JSON.stringify({
             campaignId: campaign.id,
             amount: amountNum,
-            currency: currencyCode,
+            currency: currentCurrencyCode,
             paymentProvider,
             period: period,
             message: comments,
@@ -259,16 +285,8 @@ const DonateModal: React.FC<DonateModalProps> = ({
         }
 
         if (subscriptionResult?.success) {
-          if (subscriptionResult.provider === 'paystack' && subscriptionResult.authorizationUrl) {
+          if ((subscriptionResult.provider === 'paystack' || subscriptionResult.provider === 'paypal') && subscriptionResult.authorizationUrl) {
             window.location.href = subscriptionResult.authorizationUrl;
-          } else if (subscriptionResult.provider === 'stripe' && subscriptionResult.clientSecret) {
-            setStripePaymentData({
-              clientSecret: subscriptionResult.clientSecret,
-              donationId: subscriptionResult.subscriptionId,
-              amount: amountNum,
-              currency: currencyCode,
-            });
-            setStep("stripe-payment");
           } else {
             toast.success("Recurring donation subscription created successfully!");
             setStep("thankyou");
@@ -279,38 +297,19 @@ const DonateModal: React.FC<DonateModalProps> = ({
         return;
       }
 
-      const donationData = {
-        campaignId: campaign.id,
-        amount: amountNum,
-        currency: currencyCode,
-        paymentProvider,
-        message: comments,
-        isAnonymous: anonymous,
-        email: email || undefined,
-        donorName: !anonymous ? (fullName || undefined) : undefined,
-        donorPhone: !anonymous ? (phone || undefined) : undefined,
-        chainerId: referralChainer?.id || null,
-      };
+      const donationData = buildDonationPayload();
 
       const result = await initializeDonation(donationData, false);
 
       if (result && result.success) {
         if (result.provider === 'paystack' && result.authorization_url) {
           window.location.href = result.authorization_url;
-        } else if (result.provider === 'stripe' && result.clientSecret && result.donationId) {
-          setStripePaymentData({
-            clientSecret: result.clientSecret,
-            donationId: result.donationId,
-            amount: amountNum,
-            currency: currencyCode,
-          });
-          setStep("stripe-payment");
         }
       } else if (result && !result.success) {
         trackDonation("donation_failed", {
           campaign_id: campaign.id,
           amount: amountNum,
-          currency: currencyCode,
+          currency: currentCurrencyCode,
           payment_method: paymentProvider,
         });
         toast.error(result.error || "Donation failed. Please try again.");
@@ -321,29 +320,138 @@ const DonateModal: React.FC<DonateModalProps> = ({
     }
   };
 
-  const handleStripePaymentSuccess = () => {
-    if (campaign && stripePaymentData) {
-      trackDonation("donation_completed", {
-        donation_id: stripePaymentData.donationId,
-        campaign_id: campaign.id,
-        amount: stripePaymentData.amount,
-        currency: stripePaymentData.currency,
-        payment_method: "stripe",
-        is_anonymous: anonymous,
-      });
+  const handlePayPalOrderCreate = async () => {
+    const donationData = buildDonationPayload();
+    const result = await initializeDonation(donationData, false);
+
+    if (!result.success || !result.orderId) {
+      throw new Error(result.error || "Failed to initialize PayPal checkout.");
     }
+
+    return {
+      orderId: result.orderId,
+      donationId: result.donationId,
+    };
+  };
+
+  const handlePayPalOrderCapture = async (orderId: string) => {
+    if (!campaign || !amount) {
+      throw new Error("Campaign and amount are required");
+    }
+
+    const response = await fetch("/api/payments/paypal/capture", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ orderId }),
+    });
+
+    const result = await response.json().catch(() => null);
+    if (!response.ok || !result?.success) {
+      throw new Error(result?.error || "Failed to capture PayPal payment.");
+    }
+
+    trackDonation("donation_completed", {
+      donation_id: result.donationId,
+      campaign_id: campaign.id,
+      amount: parseFloat(amount),
+      currency: currentCurrencyCode,
+      payment_method: "paypal",
+      is_anonymous: anonymous,
+    });
+
+    toast.success("Donation completed successfully!");
     setStep("thankyou");
   };
 
-  const handleStripePaymentError = (error: string) => {
-    toast.error(error);
-    setStep("payment");
-    setStripePaymentData(null);
+  const handlePayPalOrderCancel = async (donationId?: string) => {
+    if (!donationId) return;
+
+    await fetch("/api/payments/paypal/cancel", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ donationId }),
+    }).catch(() => null);
   };
 
-  const handleStripePaymentCancel = () => {
-    setStep("payment");
-    setStripePaymentData(null);
+  const handlePayPalSubscriptionCreate = async () => {
+    if (!campaign || !amount) {
+      throw new Error("Campaign and amount are required");
+    }
+
+    const amountNum = parseFloat(amount);
+    const subscriptionResponse = await fetch("/api/payments/subscriptions/initialize", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({
+        campaignId: campaign.id,
+        amount: amountNum,
+        currency: currentCurrencyCode,
+        paymentProvider: "paypal",
+        period,
+        message: comments,
+        isAnonymous: anonymous,
+        email: email || undefined,
+        donorName: !anonymous ? fullName || undefined : undefined,
+        donorPhone: !anonymous ? phone || undefined : undefined,
+        chainerId: referralChainer?.id || null,
+      }),
+    });
+
+    const result = await subscriptionResponse.json().catch(() => null);
+    if (!subscriptionResponse.ok || !result?.success || !result?.providerSubscriptionId) {
+      throw new Error(result?.error || "Failed to initialize PayPal subscription.");
+    }
+
+    return {
+      paypalSubscriptionId: result.providerSubscriptionId,
+      recurringDonationId: result.subscriptionId,
+    };
+  };
+
+  const handlePayPalSubscriptionConfirm = async (
+    paypalSubscriptionId: string,
+    recurringDonationId?: string
+  ) => {
+    const response = await fetch("/api/payments/paypal/subscriptions/confirm", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        paypalSubscriptionId,
+        recurringDonationId,
+      }),
+    });
+
+    const result = await response.json().catch(() => null);
+    if (!response.ok || !result?.success) {
+      throw new Error(result?.error || "Failed to confirm PayPal subscription.");
+    }
+
+    toast.success("Recurring donation subscription created successfully!");
+    setStep("thankyou");
+  };
+
+  const handlePayPalSubscriptionCancel = async (recurringDonationId?: string) => {
+    if (!recurringDonationId) return;
+
+    await fetch("/api/payments/subscriptions/cancel", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        recurringDonationId,
+        cancelImmediately: true,
+      }),
+    }).catch(() => null);
   };
 
   const handleClose = () => {
@@ -356,7 +464,6 @@ const DonateModal: React.FC<DonateModalProps> = ({
     setAnonymous(false);
     setComments("");
     setLinkCopied(false);
-    setStripePaymentData(null);
     onOpenChange(false);
   };
 
@@ -442,7 +549,6 @@ const DonateModal: React.FC<DonateModalProps> = ({
             <h2 className="text-3xl font-medium text-[#5F8555]">
               {step === "donate" && "Make a donation"}
               {step === "payment" && "Choose Payment Method"}
-              {step === "stripe-payment" && "Complete Payment"}
               {step === "thankyou" && "Thank you for your donation!"}
             </h2>
             <p className="text-base font-normal text-[#5F8555] mt-1">
@@ -450,8 +556,6 @@ const DonateModal: React.FC<DonateModalProps> = ({
                 "Select a period and a payment channel to complete your donation."}
               {step === "payment" &&
                 "Select your preferred payment provider to complete the donation."}
-              {step === "stripe-payment" &&
-                "Enter your card details to complete the donation securely."}
               {step === "thankyou" &&
                 "We are glad you supported this campaign."}
             </p>
@@ -882,11 +986,15 @@ const DonateModal: React.FC<DonateModalProps> = ({
                           }`}
                           onClick={() => setPaymentProvider(provider)}
                         >
-                          {provider === "stripe" && <Image src='/icons/stripe.png' alt='Stripe' width={16} height={16}/>}
                           {provider === "paystack" && <Image src='/icons/paystack.png' alt='Paystack' width={16} height={16}/>}
+                          {provider === "paypal" && (
+                            <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[#0070BA] px-1.5 text-[10px] font-bold text-white">
+                              P
+                            </span>
+                          )}
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
-                              <div className="font-semibold capitalize">{provider}</div>
+                              <div className="font-semibold">{PROVIDER_LABELS[provider]}</div>
                               {isRecommended && (
                                 <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
                                   Recommended
@@ -925,35 +1033,49 @@ const DonateModal: React.FC<DonateModalProps> = ({
                 >
                   Back
                 </Button>
-                <Button
-                  onClick={handlePayment}
-                  disabled={donationLoading}
-                  variant="default"
-                  className="flex-1 h-12 bg-[#104901] text-white hover:bg-[#104901] hover:text-white flex items-center justify-center gap-2 rounded-full"
-                >
-                  {donationLoading ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  ) : (
-                    <>
-                      Pay Now <HandCoins size={20} />
-                    </>
-                  )}
-                </Button>
+                {!isEmbeddedPayPalFlow && (
+                  <Button
+                    onClick={handlePayment}
+                    disabled={donationLoading}
+                    variant="default"
+                    className="flex-1 h-12 bg-[#104901] text-white hover:bg-[#104901] hover:text-white flex items-center justify-center gap-2 rounded-full"
+                  >
+                    {donationLoading ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    ) : (
+                      <>
+                        Pay Now <HandCoins size={20} />
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
-            </div>
-          )}
-
-          {step === "stripe-payment" && stripePaymentData && (
-            <div className="space-y-6">
-              <StripePaymentForm
-                clientSecret={stripePaymentData.clientSecret}
-                amount={stripePaymentData.amount}
-                currency={stripePaymentData.currency}
-                donationId={stripePaymentData.donationId}
-                onSuccess={handleStripePaymentSuccess}
-                onError={handleStripePaymentError}
-                onCancel={handleStripePaymentCancel}
-              />
+              {isEmbeddedPayPalFlow && (
+                <div className="rounded-2xl border border-[#C0BFC4] bg-white p-4">
+                  <p className="mb-3 text-sm text-[#5F8555]">
+                    {isRecurringDonation
+                      ? "Complete your recurring donation with PayPal below."
+                      : "Complete your donation with PayPal below."}
+                  </p>
+                  {isRecurringDonation ? (
+                    <PayPalSubscriptionButtons
+                      currency={currentCurrencyCode}
+                      createSubscriptionRequest={handlePayPalSubscriptionCreate}
+                      confirmSubscriptionRequest={handlePayPalSubscriptionConfirm}
+                      cancelSubscriptionRequest={handlePayPalSubscriptionCancel}
+                      onError={(message) => toast.error(message)}
+                    />
+                  ) : (
+                    <PayPalOrderButtons
+                      currency={currentCurrencyCode}
+                      createOrderRequest={handlePayPalOrderCreate}
+                      captureOrderRequest={handlePayPalOrderCapture}
+                      cancelOrderRequest={handlePayPalOrderCancel}
+                      onError={(message) => toast.error(message)}
+                    />
+                  )}
+                </div>
+              )}
             </div>
           )}
 

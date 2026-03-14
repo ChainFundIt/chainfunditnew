@@ -14,20 +14,22 @@ function PaymentCallbackContent() {
   useEffect(() => {
     const reference = searchParams.get('reference');
     const trxref = searchParams.get('trxref'); // Paystack uses this too
+    const token = searchParams.get('token'); // PayPal order id
 
-    const actualReference = reference || trxref;
+    const actualReference = reference || trxref || token;
 
     if (actualReference) {
-      verifyPayment(actualReference);
+      const method = token ? 'paypal' : 'paystack';
+      verifyPayment(actualReference, method);
     } else {
       setStatus('failed');
     }
   }, [searchParams]); 
 
-  const verifyPayment = async (reference: string) => {
+  const verifyPayment = async (reference: string, method: 'paystack' | 'paypal') => {
     try {
       const response = await fetch(
-        `/api/charities/verify-payment?reference=${reference}&method=paystack`
+        `/api/charities/verify-payment?reference=${reference}&method=${method}`
       );
       
       const data = await response.json();

@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyPaystackPayment } from '@/lib/payments/paystack';
-import { getStripePaymentIntent } from '@/lib/payments/stripe';
+import { capturePayPalOrder } from '@/lib/payments/paypal';
 import { db } from '@/lib/db';
 import { charityDonations } from '@/lib/schema/charities';
 import { eq } from 'drizzle-orm';
+import { completeCharityDonation } from '@/lib/payments/charity-donation-processing';
 
 /**
- * GET /api/charities/verify-payment?reference={reference}&method={stripe|paystack}
+ * GET /api/charities/verify-payment?reference={reference}&method={stripe|paystack|paypal}
  * Verify payment status
  */
 export async function GET(request: NextRequest) {
@@ -46,21 +47,46 @@ export async function GET(request: NextRequest) {
         });
       }
     } else if (method === 'stripe') {
-      // Verify Stripe payment
-      const paymentIntent = await getStripePaymentIntent(reference);
-
+      return NextResponse.json({
+        success: false,
+        status: 'unsupported',
+        message: 'Stripe is no longer supported. Please use PayPal or Paystack.',
+      });
+    } else if (method === 'paypal') {
       const donation = await db.query.charityDonations.findFirst({
         where: eq(charityDonations.paymentIntentId, reference),
       });
 
+      if (!donation) {
+        return NextResponse.json(
+          { error: 'Donation not found' },
+          { status: 404 }
+        );
+      }
+
+      const capture = await capturePayPalOrder(reference);
+      if (capture.status !== 'COMPLETED') {
+        return NextResponse.json({
+          success: false,
+          status: capture.status?.toLowerCase?.() || 'failed',
+          donation,
+          message: 'Payment not completed',
+        });
+      }
+
+      const completed = await completeCharityDonation({
+        donationId: donation.id,
+        paymentReference: reference,
+      });
+
       return NextResponse.json({
-        success: paymentIntent.status === 'succeeded',
-        status: paymentIntent.status,
-        donation,
-        message:
-          paymentIntent.status === 'succeeded'
-            ? 'Payment verified successfully'
-            : 'Payment not completed',
+        success: true,
+        status: 'completed',
+        donation: {
+          ...donation,
+          id: completed.donationId,
+        },
+        message: 'Payment verified successfully',
       });
     } else {
       return NextResponse.json(

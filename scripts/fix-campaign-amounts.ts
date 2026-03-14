@@ -55,10 +55,7 @@ const getPaystackVerification = async () => {
   return verifyPaystackPayment;
 };
 
-const getStripeVerification = async () => {
-  const { getStripePaymentIntent } = await import('../lib/payments/stripe');
-  return getStripePaymentIntent;
-};
+// Stripe no longer supported
 
 // Compute total raised in campaign currency (same logic as lib/utils/campaign-amount.ts)
 async function getCampaignTotalInCampaignCurrency(campaignId: string): Promise<number> {
@@ -166,14 +163,7 @@ async function verifyDonationPayment(
         return { verified: false, error: `Paystack status: ${status}` };
       }
     } else if (donation.paymentMethod === 'stripe') {
-      const getStripePaymentIntent = await getStripeVerification();
-      const paymentIntent = await getStripePaymentIntent(donation.paymentIntentId);
-      
-      if (paymentIntent.status === 'succeeded') {
-        return { verified: true, warning: isTestPayment ? 'Test payment' : undefined };
-      } else {
-        return { verified: false, error: `Stripe status: ${paymentIntent.status}` };
-      }
+      return { verified: false, error: 'Stripe is no longer supported; cannot verify' };
     } else {
       return { verified: false, error: `Unknown payment method: ${donation.paymentMethod}` };
     }

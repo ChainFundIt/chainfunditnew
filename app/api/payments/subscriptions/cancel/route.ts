@@ -4,8 +4,8 @@ import { db } from '@/lib/db';
 import { users } from '@/lib/schema/users';
 import { recurringDonations } from '@/lib/schema/recurring-donations';
 import { eq } from 'drizzle-orm';
-import { cancelStripeSubscription } from '@/lib/payments/stripe-subscriptions';
 import { cancelPaystackSubscription } from '@/lib/payments/paystack-subscriptions';
+import { cancelPayPalSubscription } from '@/lib/payments/paypal';
 
 /**
  * POST /api/payments/subscriptions/cancel
@@ -55,10 +55,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (subscription.paymentMethod === 'stripe' && subscription.stripeSubscriptionId) {
-      await cancelStripeSubscription(subscription.stripeSubscriptionId, cancelImmediately);
+    if (subscription.paymentMethod === 'stripe') {
+      // Stripe no longer supported - just mark as cancelled in DB
     } else if (subscription.paymentMethod === 'paystack' && subscription.paystackSubscriptionId) {
       await cancelPaystackSubscription(subscription.paystackSubscriptionId);
+    } else if (subscription.paymentMethod === 'paypal' && subscription.stripeSubscriptionId) {
+      await cancelPayPalSubscription(subscription.stripeSubscriptionId);
     } else {
       return NextResponse.json(
         { success: false, error: 'No payment provider subscription to cancel' },

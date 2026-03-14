@@ -670,7 +670,7 @@ function ImpactHangoutRegisterContent() {
                     <Button
                       type="submit"
                       size="lg"
-                      className="w-full h-12 rounded-full font-semibold"
+                      className="w-full h-12 py-4 rounded-full font-semibold"
                       disabled={!step1Valid}
                     >
                       Next step <ArrowRight className="ml-2 h-4 w-4" />

@@ -123,6 +123,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       subscriptionId: result.subscription.id,
+      providerSubscriptionId: result.providerSubscriptionId,
       clientSecret: result.clientSecret,
       authorizationUrl: result.authorizationUrl,
       provider: paymentProvider,

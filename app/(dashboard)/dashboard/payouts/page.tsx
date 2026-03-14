@@ -444,6 +444,12 @@ const PayoutsPage = () => {
             height={16}
           />
         );
+      case "paypal":
+        return (
+          <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[#0070BA] px-1.5 text-[10px] font-bold text-white">
+            P
+          </span>
+        );
       default:
         return <DollarSign className="h-5 w-5" />;
     }
@@ -522,12 +528,12 @@ const PayoutsPage = () => {
     }, 0);
     const chainerCommissions = Math.min(rawChainerCommissions, baseAmount);
     const chainfunditFee = baseAmount * 0.05;
-    const providerFee = campaign.payoutProvider === "stripe" 
-      ? chainfunditFee * 0.025 
-      : campaign.payoutProvider === "paystack" 
+    const providerFee = campaign.payoutProvider === "paystack" 
       ? chainfunditFee * 0.01 
+      : campaign.payoutProvider === "paypal"
+      ? chainfunditFee * 0.02
       : 0;
-    const fixedFee = campaign.payoutProvider === "stripe" ? 0.3 : 0;
+    const fixedFee = 0;
     const totalFees = (chainfunditFee - providerFee) + fixedFee;
     const netAmount = Math.max(baseAmount - totalFees - chainerCommissions, 0);
     const baseAmountInNGN = campaign.availableAmountInNGN || 0;

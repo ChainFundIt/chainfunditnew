@@ -1,7 +1,6 @@
 import { db } from "@/lib/db";
 import { campaignPayouts } from "@/lib/schema";
 import { eq, and, inArray } from "drizzle-orm";
-import { getStripeConnectAccount, getStripePaymentIntent } from "./stripe";
 import { verifyPaystackPayment } from "./paystack";
 
 /**
@@ -35,48 +34,10 @@ export async function reconcilePayoutStatus(payoutId: string) {
     let shouldUpdate = false;
 
     if (payout.payoutProvider === "stripe") {
-      try {
-        // For Stripe, check transfer or payout status
-        // Note: This is a simplified check - in production, you'd want to check both transfers and payouts
-        const { stripe } = await import("./stripe");
-
-        // Try to retrieve as transfer first
-        try {
-          const transfer = await stripe.transfers.retrieve(
-            payout.transactionId
-          );
-          // Stripe Transfer objects don't have a status property
-          // They only have a 'reversed' boolean property
-          providerStatus = transfer.reversed
-            ? "failed"
-            : "completed"; // If not reversed, transfer is completed
-          shouldUpdate = providerStatus !== payout.status;
-        } catch {
-          // If not a transfer, try as payout
-          try {
-            const stripePayoutObj = await stripe.payouts.retrieve(
-              payout.transactionId
-            );
-            providerStatus =
-              stripePayoutObj.status === "paid"
-                ? "completed"
-                : stripePayoutObj.status === "failed"
-                  ? "failed"
-                  : stripePayoutObj.status === "canceled"
-                    ? "failed"
-                    : "processing";
-            shouldUpdate = providerStatus !== payout.status;
-          } catch {
-            return { success: false, error: "Transaction not found in Stripe" };
-          }
-        }
-      } catch (error) {
-        console.error("Error reconciling Stripe payout:", error);
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : "Unknown error",
-        };
-      }
+      return {
+        success: false,
+        error: "Stripe is no longer supported. Reconciliation for Stripe payouts is unavailable.",
+      };
     } else if (payout.payoutProvider === "paystack") {
       try {
         const transfer = await verifyPaystackPayment(payout.transactionId);

@@ -145,11 +145,14 @@ const PayoutHistoryPage = () => {
 
   const getProviderIcon = (provider?: string) => {
     if (!provider) return null;
-    return provider === 'stripe' ? (
-      <CreditCard className="h-4 w-4 text-blue-600" />
-    ) : (
-      <Building2 className="h-4 w-4 text-green-600" />
-    );
+    if (provider === 'paypal') {
+      return (
+        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[#0070BA] px-1.5 text-[10px] font-bold text-white">
+          P
+        </span>
+      );
+    }
+    return <Building2 className="h-4 w-4 text-green-600" />;
   };
 
   if (loading) {

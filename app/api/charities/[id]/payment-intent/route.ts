@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { charities, charityDonations } from '@/lib/schema/charities';
 import { eq } from 'drizzle-orm';
-import { createStripePaymentIntent } from '@/lib/payments/stripe';
 import { initializePaystackPayment } from '@/lib/payments/paystack';
+import { createPayPalOrder, getPayPalApprovalUrl } from '@/lib/payments/paypal';
+import { getSupportedProviders } from '@/lib/payments/config';
 
 /**
  * POST /api/charities/[id]/payment-intent
@@ -25,6 +26,7 @@ export async function POST(
       message,
       isAnonymous,
       donationId,
+      paymentMethod: requestedPaymentMethod,
     } = body;
 
     // Verify charity exists and is active
@@ -46,9 +48,21 @@ export async function POST(
       );
     }
 
-    // Determine payment method based on currency
-    const isNigerian = currency === 'NGN';
-    const paymentMethod = isNigerian ? 'paystack' : 'stripe';
+    const supportedProviders = getSupportedProviders(currency);
+    const paymentMethod =
+      typeof requestedPaymentMethod === 'string' &&
+      supportedProviders.includes(requestedPaymentMethod as any)
+        ? requestedPaymentMethod
+        : currency === 'NGN'
+          ? 'paystack'
+          : 'paypal';
+
+    if (!supportedProviders.includes(paymentMethod as any)) {
+      return NextResponse.json(
+        { error: `${paymentMethod} does not support ${currency}` },
+        { status: 400 }
+      );
+    }
 
     // Create or update donation record
     let donation;
@@ -84,7 +98,7 @@ export async function POST(
     }
 
     // Create payment intent based on currency
-    if (isNigerian) {
+    if (paymentMethod === 'paystack') {
       // Use Paystack for Nigerian Naira
       const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL}/charities/${charity.slug}/payment-callback`;
       
@@ -141,36 +155,47 @@ export async function POST(
         reference: paystackResponse.data.reference,
         donationId: donation.id,
       });
-    } else {
-      // Use Stripe for other currencies
-      const paymentIntent = await createStripePaymentIntent(
-        parseFloat(amount),
+    } else if (paymentMethod === 'paypal') {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
+      const returnUrl = `${baseUrl}/virtual-giving-mall/${charity.slug}/payment-callback`;
+      const cancelUrl = `${baseUrl}/virtual-giving-mall/${charity.slug}`;
+      const order = await createPayPalOrder({
+        amount: parseFloat(amount),
         currency,
-        {
-          donationId: donation.id,
-          charityId: charity.id,
-          charityName: charity.name,
-          donorEmail,
-          donorName: isAnonymous ? 'Anonymous' : donorName || 'Anonymous',
-        }
-      );
+        donationId: donation.id,
+        campaignTitle: charity.name,
+        donorEmail,
+        returnUrl,
+        cancelUrl,
+        customId: charity.slug,
+        description: `Donation to ${charity.name}`,
+      });
 
-      // Update donation with Stripe payment intent ID
+      const approvalUrl = getPayPalApprovalUrl(order);
+      if (!approvalUrl) {
+        throw new Error('PayPal approval URL missing');
+      }
+
       await db
         .update(charityDonations)
         .set({
-          paymentIntentId: paymentIntent.id,
+          paymentIntentId: order.id,
           updatedAt: new Date(),
         })
         .where(eq(charityDonations.id, donation.id));
 
       return NextResponse.json({
-        paymentMethod: 'stripe',
-        clientSecret: paymentIntent.client_secret,
-        paymentIntentId: paymentIntent.id,
+        paymentMethod: 'paypal',
+        approvalUrl,
+        orderId: order.id,
         donationId: donation.id,
       });
     }
+
+    return NextResponse.json(
+      { error: `Unsupported payment method: ${paymentMethod}` },
+      { status: 400 }
+    );
   } catch (error: any) {
     console.error('Error creating payment intent:', error);
     return NextResponse.json(

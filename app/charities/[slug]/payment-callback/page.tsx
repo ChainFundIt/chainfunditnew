@@ -15,19 +15,20 @@ function PaymentCallbackContent() {
     const reference = searchParams.get('reference');
     const trxref = searchParams.get('trxref'); // Paystack uses this too
     const payment_intent = searchParams.get('payment_intent'); // Stripe uses this
+    const token = searchParams.get('token'); // PayPal uses this
 
-    const actualReference = reference || trxref || payment_intent;
+    const actualReference = reference || trxref || payment_intent || token;
 
     if (actualReference) {
       // Determine payment method based on reference format
-      const method = payment_intent ? 'stripe' : 'paystack';
+      const method = payment_intent ? 'stripe' : token ? 'paypal' : 'paystack';
       verifyPayment(actualReference, method);
     } else {
       setStatus('failed');
     }
   }, [searchParams]); 
 
-  const verifyPayment = async (reference: string, method: 'stripe' | 'paystack') => {
+  const verifyPayment = async (reference: string, method: 'stripe' | 'paystack' | 'paypal') => {
     try {
       const response = await fetch(
         `/api/charities/verify-payment?reference=${reference}&method=${method}`

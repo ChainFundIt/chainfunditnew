@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     if (!verificationFile) {
       console.warn(
         'Apple Pay domain verification file not found in environment variables. ' +
-        'Please download the file from Stripe/Paystack dashboard and set it in your .env file.'
+        'Please download the file from your payment provider dashboard (e.g. Paystack) and set it in your .env file.'
       );
       
       return new NextResponse(

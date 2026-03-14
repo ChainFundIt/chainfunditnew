@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { impactHangoutRegistrations } from "@/lib/schema";
 import { verifyPaystackPayment } from "@/lib/payments/paystack";
+import { capturePayPalOrder } from "@/lib/payments/paypal";
 import { eq, sql } from "drizzle-orm";
 import { sendImpactHangoutMilestoneEmail } from "@/lib/notifications/impact-hangout-emails";
 
@@ -20,6 +21,93 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const reference = searchParams.get("reference");
+    const token = searchParams.get("token");
+
+    if (token) {
+      const capture = await capturePayPalOrder(token);
+      if (capture.status !== "COMPLETED") {
+        return NextResponse.redirect(
+          `${baseUrl}/events?donation=failed&error=paypal_capture_incomplete`
+        );
+      }
+
+      const customId = capture.purchase_units?.[0]?.custom_id || "";
+      const [hangoutSlug = "", amountRaw = "0"] = customId.split("|");
+      const amountNgn = parseInt(amountRaw, 10);
+
+      if (!hangoutSlug || !Number.isFinite(amountNgn) || amountNgn <= 0) {
+        return NextResponse.redirect(
+          `${baseUrl}/events?donation=failed&error=invalid_paypal_metadata`
+        );
+      }
+
+      const slugLower = String(hangoutSlug).trim().toLowerCase();
+      const [row] = await db
+        .select()
+        .from(impactHangoutRegistrations)
+        .where(sql`LOWER(TRIM(${impactHangoutRegistrations.slug})) = ${slugLower}`)
+        .limit(1);
+
+      if (!row) {
+        return NextResponse.redirect(
+          `${baseUrl}/events?donation=failed&error=hangout_not_found`
+        );
+      }
+
+      const currentTotal =
+        row.totalRaisedNgn ??
+        (row.paymentStatus === "completed" && row.commitmentAmountNgn != null
+          ? row.commitmentAmountNgn
+          : 0);
+      const newTotal = currentTotal + amountNgn;
+
+      await db
+        .update(impactHangoutRegistrations)
+        .set({ totalRaisedNgn: newTotal })
+        .where(eq(impactHangoutRegistrations.id, row.id));
+
+      const [updated] = await db
+        .select()
+        .from(impactHangoutRegistrations)
+        .where(eq(impactHangoutRegistrations.id, row.id))
+        .limit(1);
+
+      if (updated) {
+        const goal = updated.fundraisingGoalNgn ?? 0;
+        const amountRaised = updated.totalRaisedNgn ?? newTotal;
+        const progressPercent =
+          goal > 0 ? Math.min(100, Math.round((amountRaised / goal) * 100)) : 0;
+        const pageUrl = updated.slug
+          ? `${baseUrl}/events/${encodeURIComponent(updated.slug)}`
+          : `${baseUrl}/events`;
+
+        for (const p of MILESTONES) {
+          if (progressPercent < p) continue;
+          const col = MILESTONE_COLUMNS[p];
+          const alreadySent = updated[col];
+          if (alreadySent) continue;
+          const sent = await sendImpactHangoutMilestoneEmail({
+            to: updated.email,
+            hostName: updated.fullName,
+            hangoutName: updated.hangoutName ?? "Impact Hangout",
+            milestonePercent: p,
+            amountRaisedNgn: amountRaised,
+            goalNgn: goal,
+            pageUrl,
+          });
+          if (sent && !sent.error) {
+            await db
+              .update(impactHangoutRegistrations)
+              .set({ [col]: new Date() })
+              .where(eq(impactHangoutRegistrations.id, row.id));
+          }
+        }
+      }
+
+      return NextResponse.redirect(
+        `${baseUrl}/events/${encodeURIComponent(row.slug ?? hangoutSlug)}?donation=success`
+      );
+    }
 
     if (!reference) {
       return NextResponse.redirect(
