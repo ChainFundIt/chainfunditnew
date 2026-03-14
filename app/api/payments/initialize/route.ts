@@ -6,8 +6,8 @@ import { campaigns } from "@/lib/schema/campaigns";
 import { users } from "@/lib/schema/users";
 import { chainers } from "@/lib/schema/chainers";
 import { eq } from "drizzle-orm";
-import { createStripePaymentIntent } from "@/lib/payments/stripe";
 import { initializePaystackPayment } from "@/lib/payments/paystack";
+import { createPayPalOrder, getPayPalApprovalUrl } from "@/lib/payments/paypal";
 import { getSupportedProviders } from "@/lib/payments/config";
 import {
   validateCampaignForDonations,
@@ -176,6 +176,7 @@ export async function POST(request: NextRequest) {
       ? null
       : (normalizedDonorName || user.fullName || "Guest Donor");
     const donationDonorEmail = normalizedEmail || user.email || null;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
 
     // Create donation record (include chainerId when donation comes through a chainer's link)
     const newDonation = await db
@@ -201,72 +202,7 @@ export async function POST(request: NextRequest) {
     // Initialize payment based on provider
     let paymentResult;
 
-    if (paymentProvider === "stripe") {
-      if (!process.env.STRIPE_SECRET_KEY) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Stripe is not properly configured. Please contact support.",
-            details: "STRIPE_SECRET_KEY is missing",
-          },
-          { status: 500 }
-        );
-      }
-
-      try {
-        const stripeMetadata: Record<string, string> = {
-          donationId,
-          campaignId,
-          donorEmail: (donationDonorEmail || user.email || "") as string,
-          donorName: donationDonorName || "",
-          campaignTitle: campaign.title,
-        };
-        if (chainerReferralCode) stripeMetadata.chain_code = chainerReferralCode;
-
-        const paymentIntent = await createStripePaymentIntent(
-          amount,
-          currency,
-          stripeMetadata
-        );
-
-        paymentResult = {
-          success: true,
-          clientSecret: paymentIntent.client_secret,
-          paymentIntentId: paymentIntent.id,
-        };
-
-        if (paymentResult.success) {
-          // Update donation with payment intent ID
-          await db
-            .update(donations)
-            .set({ paymentIntentId: paymentResult.paymentIntentId })
-            .where(eq(donations.id, donationId));
-
-          return NextResponse.json({
-            success: true,
-            provider: "stripe",
-            clientSecret: paymentResult.clientSecret,
-            donationId,
-            paymentIntentId: paymentResult.paymentIntentId,
-          });
-        }
-      } catch (stripeError: any) {
-        console.error("Stripe payment intent creation failed:", stripeError);
-
-        await db.delete(donations).where(eq(donations.id, donationId));
-
-        return NextResponse.json(
-          {
-            success: false,
-            error:
-              "Failed to initialize Stripe payment. Please ensure Stripe is properly configured.",
-            details: stripeError.message || "Unknown Stripe error",
-            code: stripeError.code || "STRIPE_ERROR",
-          },
-          { status: 500 }
-        );
-      }
-    } else if (paymentProvider === "paystack") {
+    if (paymentProvider === "paystack") {
       try {
         // Structure metadata with custom_fields for Paystack Dashboard display
         const paystackCustomFields: Array<{ display_name: string; variable_name: string; value: string }> = [
@@ -298,7 +234,6 @@ export async function POST(request: NextRequest) {
           custom_fields: paystackCustomFields,
         };
 
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
         const callbackUrl = new URL(
           "/api/payments/paystack/callback",
           appUrl
@@ -348,6 +283,55 @@ export async function POST(request: NextRequest) {
               "Failed to initialize Paystack payment. Please ensure Paystack is properly configured.",
             details: paystackError.message || "Unknown Paystack error",
             code: paystackError.code || "PAYSTACK_ERROR",
+          },
+          { status: 500 }
+        );
+      }
+    } else if (paymentProvider === "paypal") {
+      try {
+        const returnUrl = new URL("/api/payments/paypal/callback", appUrl);
+        const cancelUrl = new URL("/api/payments/paypal/cancel", appUrl);
+        cancelUrl.searchParams.set("donationId", donationId);
+
+        const order = await createPayPalOrder({
+          amount,
+          currency,
+          donationId,
+          campaignTitle: campaign.title,
+          donorEmail: donationDonorEmail || user.email || null,
+          returnUrl: returnUrl.toString(),
+          cancelUrl: cancelUrl.toString(),
+        });
+
+        const approvalUrl = getPayPalApprovalUrl(order);
+        if (!approvalUrl) {
+          throw new Error("PayPal approval URL was not returned");
+        }
+
+        await db
+          .update(donations)
+          .set({ paymentIntentId: order.id })
+          .where(eq(donations.id, donationId));
+
+        return NextResponse.json({
+          success: true,
+          provider: "paypal",
+          donationId,
+          orderId: order.id,
+          approvalUrl,
+        });
+      } catch (paypalError: any) {
+        console.error("PayPal order creation failed:", paypalError);
+
+        await db.delete(donations).where(eq(donations.id, donationId));
+
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Failed to initialize PayPal payment. Please ensure PayPal is properly configured.",
+            details: paypalError.message || "Unknown PayPal error",
+            code: paypalError.code || "PAYPAL_ERROR",
           },
           { status: 500 }
         );

@@ -12,7 +12,9 @@ const R2_BASE =
   "https://pub-bc49c704eeac4df0a625097110e79d09.r2.dev";
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
-const MAX_BYTES = 400 * 1024;
+const MAX_BYTES = 350 * 1024;
+const JPEG_QUALITY = 76;
+const JPEG_QUALITY_FALLBACK = 64;
 
 function normalizeCoverUrl(url: string | null | undefined): string | null {
   if (!url || !url.trim()) return null;
@@ -59,20 +61,30 @@ export async function GET(
 
     const buf = Buffer.from(await res.arrayBuffer());
 
-    const optimized = await sharp(buf)
-      .resize(OG_WIDTH, OG_HEIGHT, { fit: "cover" })
-      .png({ compressionLevel: 9 })
-      .toBuffer();
+    const encodeJpeg = async (quality: number) =>
+      sharp(buf, { sequentialRead: true })
+        .resize(OG_WIDTH, OG_HEIGHT, {
+          fit: "cover",
+          position: "attention",
+          withoutEnlargement: true,
+        })
+        .jpeg({
+          quality,
+          mozjpeg: true,
+          progressive: false,
+        })
+        .toBuffer();
 
+    const optimized = await encodeJpeg(JPEG_QUALITY);
     const body =
       optimized.length > MAX_BYTES
-        ? await sharp(optimized).png({ compressionLevel: 9, palette: true }).toBuffer()
+        ? await encodeJpeg(JPEG_QUALITY_FALLBACK)
         : optimized;
 
     return new NextResponse(body, {
       status: 200,
       headers: {
-        "Content-Type": "image/png",
+        "Content-Type": "image/jpeg",
         "Cache-Control": "public, max-age=86400, s-maxage=86400",
       },
     });

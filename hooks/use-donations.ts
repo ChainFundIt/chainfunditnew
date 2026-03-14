@@ -11,6 +11,7 @@ export interface DonationData {
   email?: string;
   donorName?: string;
   donorPhone?: string;
+  chainerId?: string | null;
 }
 
 export interface DonationResult {
@@ -23,6 +24,9 @@ export interface DonationResult {
   // Paystack specific
   authorization_url?: string;
   reference?: string;
+  // PayPal specific
+  approvalUrl?: string;
+  orderId?: string;
   // Error
   error?: string;
 }
@@ -147,10 +151,11 @@ export function useDonations() {
     }
 
     // For Stripe, you would typically handle the client-side payment confirmation here
-    // For Paystack, redirect to the authorization URL
+    // For redirect-based providers, send the donor to the approval page
     if (result.provider === 'paystack' && result.authorization_url) {
-      // In a real app, you might want to open this in a popup or redirect
       window.location.href = result.authorization_url;
+    } else if (result.provider === 'paypal' && result.approvalUrl) {
+      window.location.href = result.approvalUrl;
     }
 
     return result;

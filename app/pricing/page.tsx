@@ -407,12 +407,12 @@ export default function PricingPage() {
             <section className="w-1/2 space-y-5">
               <p className="text-lg text-[#104901]">
                 Safe and secure fundraising is our top priority. That’s why we
-                partner with industry-leading payment processors like Stripe and
+                partner with industry-leading payment processors like PayPal and
                 Paystack to accept and deliver your donations. The transaction
                 fee is automatically deducted from each donation. It covers the
                 costs of debit charges, to safely deliver your donations, and
                 helps us offer more ways to donate—through Bank transfers, Card
-                debits, Stripe, and Paystack.
+                debits, PayPal, and Paystack.
               </p>
               <section className="flex gap-4 items-center">
                 <Image

@@ -13,6 +13,7 @@ import {
   getPayoutProvider,
   getPayoutConfig,
   isPayoutSupported,
+  getSupportedPayoutProviders,
 } from "@/lib/payments/payout-config";
 import { getCurrencyCode } from "@/lib/utils/currency";
 import {
@@ -365,6 +366,21 @@ export async function POST(request: NextRequest) {
       );
     }
     const requestedAmount = normalizeAmount(amount);
+    const currencyCode = getCurrencyCode(currency);
+    const supportedPayoutProviders = getSupportedPayoutProviders(currencyCode);
+
+    if (!supportedPayoutProviders.includes(payoutProvider)) {
+      return NextResponse.json(
+        { error: `${payoutProvider} does not support ${currencyCode} payouts` },
+        { status: 400 }
+      );
+    }
+    if (payoutProvider === "stripe") {
+      return NextResponse.json(
+        { error: "Stripe is no longer supported. Please use PayPal or Paystack for payouts." },
+        { status: 400 }
+      );
+    }
 
     // Validate campaign ownership
     const campaignLookupStart = Date.now();
@@ -407,7 +423,6 @@ export async function POST(request: NextRequest) {
         )
       );
 
-    const currencyCode = getCurrencyCode(currency);
     let totalRaised = 0;
     let totalRaisedInNGN = 0;
 
@@ -501,35 +516,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (payoutProvider === "stripe") {
-      // For foreign currencies, validate international bank account details
-      if (isForeignCurrency) {
-        if (!user.internationalAccountVerified) {
-          console.error("International bank account not verified for Stripe payout");
-          return NextResponse.json(
-            { error: "International bank account not verified. Please add and verify your bank account details." },
-            { status: 400 }
-          );
-        }
-        if (!user.internationalBankAccountNumber || !user.internationalBankCountry) {
-          console.error("International bank account details incomplete:", { 
-            accountNumber: !!user.internationalBankAccountNumber, 
-            country: !!user.internationalBankCountry 
-          });
-          return NextResponse.json(
-            { error: "International bank account details incomplete" },
-            { status: 400 }
-          );
-        }
-      } else {
-        // For NGN with Stripe (shouldn't happen, but kept for backward compatibility)
-        if (!user.stripeAccountId || !user.stripeAccountReady) {
-          console.error("Stripe Connect account not linked or incomplete");
-          return NextResponse.json(
-            { error: "Stripe Connect account not linked or incomplete" },
-            { status: 400 }
-          );
-        }
+    if (payoutProvider === "paypal") {
+      if (!user.email) {
+        return NextResponse.json(
+          { error: "A verified account email is required for PayPal payouts" },
+          { status: 400 }
+        );
       }
     }
 
@@ -600,11 +592,11 @@ export async function POST(request: NextRequest) {
     let providerFee = 0;
     let fixedFee = 0;
     
-    if (payoutProvider === "stripe") {
-      providerFee = chainfunditFee * 0.025; // 2.5% of ChainFundIt fee
-      fixedFee = 0.3; // $0.30
-    } else if (payoutProvider === "paystack") {
+    if (payoutProvider === "paystack") {
       providerFee = chainfunditFee * 0.01; // 1% of ChainFundIt fee (simplified from frontend)
+      fixedFee = 0;
+    } else if (payoutProvider === "paypal") {
+      providerFee = chainfunditFee * 0.02;
       fixedFee = 0;
     } else {
       // Default fallback
@@ -650,10 +642,26 @@ export async function POST(request: NextRequest) {
           payoutProvider,
           reference: `CP-${Date.now()}-${campaignId.substring(0, 8)}`,
           // Store bank details based on currency
-          bankName: isForeignCurrency ? (user.internationalBankName || null) : (user.bankName || null),
-          accountNumber: isForeignCurrency ? (user.internationalBankAccountNumber || null) : (user.accountNumber || null),
-          accountName: isForeignCurrency ? (user.internationalAccountName || null) : (user.accountName || null),
-          bankCode: isForeignCurrency ? null : (user.bankCode || null),
+          bankName: payoutProvider === "paypal"
+            ? "PayPal"
+            : isForeignCurrency
+              ? (user.internationalBankName || null)
+              : (user.bankName || null),
+          accountNumber: payoutProvider === "paypal"
+            ? (user.email || null)
+            : isForeignCurrency
+              ? (user.internationalBankAccountNumber || null)
+              : (user.accountNumber || null),
+          accountName: payoutProvider === "paypal"
+            ? (user.fullName || user.email || null)
+            : isForeignCurrency
+              ? (user.internationalAccountName || null)
+              : (user.accountName || null),
+          bankCode: payoutProvider === "paypal"
+            ? null
+            : isForeignCurrency
+              ? null
+              : (user.bankCode || null),
         })
         .returning()
     );
@@ -670,9 +678,9 @@ export async function POST(request: NextRequest) {
         netAmount,
         fees,
         estimatedDelivery:
-          payoutProvider === "stripe"
-            ? "2-7 business days"
-            : "1-3 business days",
+          payoutProvider === "paypal"
+              ? "Minutes to 1 business day"
+              : "1-3 business days",
         message: `Payout of ${currency} ${requestedAmount} initiated via ${payoutProvider}`,
       },
     };
@@ -689,15 +697,21 @@ export async function POST(request: NextRequest) {
       payoutId: String(saved.id),
       requestDate: new Date(),
       bankDetails: {
-        accountName: isForeignCurrency 
-          ? (user.internationalAccountName || "") 
-          : (user.accountName || ""),
-        accountNumber: isForeignCurrency 
-          ? (user.internationalBankAccountNumber || "") 
-          : (user.accountNumber || ""),
-        bankName: isForeignCurrency 
-          ? (user.internationalBankName || "") 
-          : (user.bankName || ""),
+        accountName: payoutProvider === "paypal"
+          ? (user.fullName || user.email || "")
+          : isForeignCurrency
+            ? (user.internationalAccountName || "")
+            : (user.accountName || ""),
+        accountNumber: payoutProvider === "paypal"
+          ? (user.email || "")
+          : isForeignCurrency
+            ? (user.internationalBankAccountNumber || "")
+            : (user.accountNumber || ""),
+        bankName: payoutProvider === "paypal"
+          ? "PayPal"
+          : isForeignCurrency
+            ? (user.internationalBankName || "")
+            : (user.bankName || ""),
       },
     }).catch((notificationError) => {
       console.error("Error sending admin notifications:", notificationError);
@@ -714,18 +728,27 @@ export async function POST(request: NextRequest) {
       netAmount,
       fees,
       payoutProvider,
-      processingTime: payoutProvider === "stripe" ? "2-7 business days" : "1-3 business days",
+      processingTime:
+        payoutProvider === "paypal"
+            ? "Minutes to 1 business day"
+            : "1-3 business days",
       payoutId: String(saved.id),
       bankDetails: {
-        accountName: isForeignCurrency 
-          ? (user.internationalAccountName || "") 
-          : (user.accountName || ""),
-        accountNumber: isForeignCurrency 
-          ? (user.internationalBankAccountNumber || "") 
-          : (user.accountNumber || ""),
-        bankName: isForeignCurrency 
-          ? (user.internationalBankName || "") 
-          : (user.bankName || ""),
+        accountName: payoutProvider === "paypal"
+          ? (user.fullName || user.email || "")
+          : isForeignCurrency
+            ? (user.internationalAccountName || "")
+            : (user.accountName || ""),
+        accountNumber: payoutProvider === "paypal"
+          ? (user.email || "")
+          : isForeignCurrency
+            ? (user.internationalBankAccountNumber || "")
+            : (user.accountNumber || ""),
+        bankName: payoutProvider === "paypal"
+          ? "PayPal"
+          : isForeignCurrency
+            ? (user.internationalBankName || "")
+            : (user.bankName || ""),
       },
     }).catch((emailError) => {
       console.error("Error sending confirmation email:", emailError);

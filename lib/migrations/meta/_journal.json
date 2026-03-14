@@ -218,6 +218,13 @@
       "when": 1773006539533,
       "tag": "0030_young_hellcat",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1773503333980,
+      "tag": "0031_cooing_black_tarantula",
+      "breakpoints": true
     }
   ]
 }

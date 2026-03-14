@@ -29,6 +29,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { useGeolocationCurrency } from "@/hooks/use-geolocation-currency";
+import { getSupportedProviders } from "@/lib/payments/config";
+import { PayPalOrderButtons } from "@/components/payments/paypal-order-buttons";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import Image from "next/image";
@@ -85,12 +87,20 @@ export default function CharityDetailPage() {
   const [donorEmail, setDonorEmail] = useState("");
   const [message, setMessage] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("stripe");
+  const [paymentMethod, setPaymentMethod] = useState("paypal");
 
   // Get preset amounts based on user's currency
   const presetAmounts = locationInfo
     ? getPresetAmounts(locationInfo.currency.code)
     : ["25", "50", "100", "250", "500", "1000"];
+  const currencyCode = locationInfo?.currency.code || "USD";
+  const supportedPaymentMethods = getSupportedProviders(currencyCode);
+
+  useEffect(() => {
+    if (!supportedPaymentMethods.includes(paymentMethod as any) && supportedPaymentMethods.length > 0) {
+      setPaymentMethod(supportedPaymentMethods[0]);
+    }
+  }, [paymentMethod, supportedPaymentMethods]);
 
   useEffect(() => {
     if (slug) {
@@ -118,6 +128,9 @@ export default function CharityDetailPage() {
 
   const handleDonate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (paymentMethod === "paypal") {
+      return;
+    }
 
     const donationAmount = amount === "custom" ? customAmount : amount;
 
@@ -134,7 +147,7 @@ export default function CharityDetailPage() {
     setDonating(true);
 
     try {
-      const currency = locationInfo?.currency.code || "USD";
+      const currency = currencyCode;
 
       // Create payment intent
       const response = await fetch(
@@ -151,6 +164,7 @@ export default function CharityDetailPage() {
             donorEmail,
             message,
             isAnonymous,
+            paymentMethod,
           }),
         }
       );
@@ -163,22 +177,56 @@ export default function CharityDetailPage() {
 
       // Handle payment based on method
       if (data.paymentMethod === "paystack") {
-        // Redirect to Paystack payment page
         toast.success("Redirecting to payment...");
         window.location.href = data.authorizationUrl;
-      } else if (data.paymentMethod === "stripe") {
-        // Store client secret for Stripe Elements
-        toast.success("Redirecting to payment...");
-
-        // Redirect to Stripe payment page with client secret
-        const stripeUrl = `/virtual-giving-mall/${charity?.slug}/checkout?client_secret=${data.clientSecret}&donation_id=${data.donationId}`;
-        window.location.href = stripeUrl;
       }
     } catch (error: any) {
       console.error("Error creating donation:", error);
       toast.error(error.message || "Failed to process donation");
       setDonating(false);
     }
+  };
+
+  const createPayPalOrder = async () => {
+    const donationAmount = amount === "custom" ? customAmount : amount;
+    const response = await fetch(`/api/charities/${charity?.id}/payment-intent`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        amount: donationAmount,
+        currency: currencyCode,
+        donorName: isAnonymous ? "Anonymous" : donorName,
+        donorEmail,
+        message,
+        isAnonymous,
+        paymentMethod: "paypal",
+      }),
+    });
+
+    const data = await response.json().catch(() => null);
+    if (!response.ok || !data?.orderId) {
+      throw new Error(data?.error || "Failed to initialize PayPal donation.");
+    }
+
+    return {
+      orderId: data.orderId,
+      donationId: data.donationId,
+    };
+  };
+
+  const capturePayPalOrder = async (orderId: string) => {
+    const response = await fetch(
+      `/api/charities/verify-payment?reference=${encodeURIComponent(orderId)}&method=paypal`
+    );
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok || !data?.success) {
+      throw new Error(data?.error || data?.message || "Failed to capture PayPal donation.");
+    }
+
+    window.location.href = `/virtual-giving-mall/${charity?.slug}/payment-success?donation_id=${data.donation?.id}`;
   };
 
   if (loading) {
@@ -598,24 +646,28 @@ export default function CharityDetailPage() {
                     value={paymentMethod}
                     onValueChange={setPaymentMethod}
                   >
-                    <div className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:border-[#59AD4A] transition cursor-pointer">
-                      <RadioGroupItem value="stripe" id="stripe" />
-                      <Label
-                        htmlFor="stripe"
-                        className="cursor-pointer text-sm text-gray-700 flex-1 m-0"
-                      >
-                        Credit/Debit Card (Stripe)
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:border-[#59AD4A] transition cursor-pointer">
-                      <RadioGroupItem value="paystack" id="paystack" />
-                      <Label
-                        htmlFor="paystack"
-                        className="cursor-pointer text-sm text-gray-700 flex-1 m-0"
-                      >
-                        Paystack
-                      </Label>
-                    </div>
+                    {supportedPaymentMethods.includes("paystack") && (
+                      <div className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:border-[#59AD4A] transition cursor-pointer">
+                        <RadioGroupItem value="paystack" id="paystack" />
+                        <Label
+                          htmlFor="paystack"
+                          className="cursor-pointer text-sm text-gray-700 flex-1 m-0"
+                        >
+                          Paystack
+                        </Label>
+                      </div>
+                    )}
+                    {supportedPaymentMethods.includes("paypal") && (
+                      <div className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:border-[#59AD4A] transition cursor-pointer">
+                        <RadioGroupItem value="paypal" id="paypal" />
+                        <Label
+                          htmlFor="paypal"
+                          className="cursor-pointer text-sm text-gray-700 flex-1 m-0"
+                        >
+                          PayPal
+                        </Label>
+                      </div>
+                    )}
                   </RadioGroup>
                 </div>
 
@@ -625,52 +677,67 @@ export default function CharityDetailPage() {
                   <span>Secure and encrypted payment</span>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={donating || !amount}
-                  className="font-plusjakarta flex items-center justify-center w-full"
-                  style={{
-                    height: "56px",
-                    padding: "16px 0",
-                    gap: "8px",
-                    borderRadius: "12px",
-                    backgroundColor:
-                      donating || !amount ? "#9CA3AF" : "#104901",
-                    color: "#FFFFFF",
-                    border: "none",
-                    cursor: donating || !amount ? "not-allowed" : "pointer",
-                    boxShadow:
-                      "0px 4px 6px -4px rgba(6, 78, 59, 0.1), 0px 10px 15px -3px rgba(6, 78, 59, 0.1)",
-                    transition: "all 0.3s ease",
-                  }}
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 20 20"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M17.5 5H12.5V2.5C12.5 2.1 12.2 1.8 11.8 1.8C11.4 1.8 11.1 2.1 11.1 2.5V5H8.9V2.5C8.9 2.1 8.6 1.8 8.2 1.8C7.8 1.8 7.5 2.1 7.5 2.5V5H2.5C1.1 5 0 6.1 0 7.5V16.5C0 18.9 1.6 20 2.5 20H17.5C18.9 20 20 18.9 20 17.5V7.5C20 6.1 18.9 5 17.5 5ZM18.3 17.5C18.3 18.1 17.9 18.5 17.3 18.5H2.7C2.1 18.5 1.7 18.1 1.7 17.5V9.2H18.3V17.5Z"
-                      fill="white"
+                {paymentMethod === "paypal" ? (
+                  <div className="rounded-xl border border-gray-200 bg-white p-3">
+                    <p className="mb-3 text-sm text-gray-600">
+                      Complete your donation with PayPal below.
+                    </p>
+                    <PayPalOrderButtons
+                      currency={currencyCode}
+                      disabled={!amount || !donorEmail}
+                      createOrderRequest={createPayPalOrder}
+                      captureOrderRequest={capturePayPalOrder}
+                      onError={(message) => toast.error(message)}
                     />
-                  </svg>
-                  <span
-                    className="font-plusjakarta"
+                  </div>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={donating || !amount}
+                    className="font-plusjakarta flex items-center justify-center w-full"
                     style={{
-                      fontFamily: "Plus Jakarta Sans",
-                      fontWeight: 700,
-                      fontSize: "16px",
-                      lineHeight: "24px",
-                      textAlign: "center",
+                      height: "56px",
+                      padding: "16px 0",
+                      gap: "8px",
+                      borderRadius: "12px",
+                      backgroundColor:
+                        donating || !amount ? "#9CA3AF" : "#104901",
+                      color: "#FFFFFF",
+                      border: "none",
+                      cursor: donating || !amount ? "not-allowed" : "pointer",
+                      boxShadow:
+                        "0px 4px 6px -4px rgba(6, 78, 59, 0.1), 0px 10px 15px -3px rgba(6, 78, 59, 0.1)",
+                      transition: "all 0.3s ease",
                     }}
                   >
-                    {donating
-                      ? "Processing..."
-                      : `Donate ${amount && amount !== "custom" ? formatAmount(amount, locationInfo?.currency.code || "USD") : customAmount ? formatAmount(customAmount, locationInfo?.currency.code || "USD") : ""}`}
-                  </span>
-                </button>
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M17.5 5H12.5V2.5C12.5 2.1 12.2 1.8 11.8 1.8C11.4 1.8 11.1 2.1 11.1 2.5V5H8.9V2.5C8.9 2.1 8.6 1.8 8.2 1.8C7.8 1.8 7.5 2.1 7.5 2.5V5H2.5C1.1 5 0 6.1 0 7.5V16.5C0 18.9 1.6 20 2.5 20H17.5C18.9 20 20 18.9 20 17.5V7.5C20 6.1 18.9 5 17.5 5ZM18.3 17.5C18.3 18.1 17.9 18.5 17.3 18.5H2.7C2.1 18.5 1.7 18.1 1.7 17.5V9.2H18.3V17.5Z"
+                        fill="white"
+                      />
+                    </svg>
+                    <span
+                      className="font-plusjakarta"
+                      style={{
+                        fontFamily: "Plus Jakarta Sans",
+                        fontWeight: 700,
+                        fontSize: "16px",
+                        lineHeight: "24px",
+                        textAlign: "center",
+                      }}
+                    >
+                      {donating
+                        ? "Processing..."
+                        : `Donate ${amount && amount !== "custom" ? formatAmount(amount, currencyCode) : customAmount ? formatAmount(customAmount, currencyCode) : ""}`}
+                    </span>
+                  </button>
+                )}
               </form>
             </div>
           </div>

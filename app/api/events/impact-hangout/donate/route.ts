@@ -13,7 +13,7 @@ const MAX_AMOUNT = 10_000_000;
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { slug, amountInNaira, donorEmail } = body || {};
+    const { slug, amountInNaira, donorEmail, paymentProvider = "paystack" } = body || {};
 
     if (!slug || typeof slug !== "string" || !slug.trim()) {
       return NextResponse.json(
@@ -54,7 +54,6 @@ export async function POST(request: NextRequest) {
     }
 
     const callbackUrl = `${baseUrl}/api/events/impact-hangout/payment-callback`;
-
     const result = await initializePaystackPayment(
       email,
       amount,
@@ -77,6 +76,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       authorizationUrl: result.data.authorization_url,
       reference: result.data.reference,
+      provider: "paystack",
+      fallbackProvider: paymentProvider === "paypal" ? "paystack" : undefined,
     });
   } catch (error) {
     console.error("Impact Hangout donate init error:", error);

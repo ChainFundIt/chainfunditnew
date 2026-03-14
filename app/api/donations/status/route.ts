@@ -4,7 +4,6 @@ import { db } from '@/lib/db';
 import { donations } from '@/lib/schema/donations';
 import { eq } from 'drizzle-orm';
 import { verifyPaystackPayment } from '@/lib/payments/paystack';
-import { getStripePaymentIntent } from '@/lib/payments/stripe';
 import { updateCampaignAmount } from '@/lib/utils/campaign-amount';
 
 // User-friendly donation status check
@@ -54,9 +53,6 @@ export async function GET(request: NextRequest) {
         if (donationData.paymentMethod === 'paystack') {
           const verification = await verifyPaystackPayment(donationData.paymentIntentId);
           providerStatus = verification.status && verification.data.status === 'success' ? 'completed' : 'failed';
-        } else if (donationData.paymentMethod === 'stripe') {
-          const paymentIntent = await getStripePaymentIntent(donationData.paymentIntentId);
-          providerStatus = paymentIntent.status === 'succeeded' ? 'completed' : 'failed';
         }
 
         // Update database if status changed
