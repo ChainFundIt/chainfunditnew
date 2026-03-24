@@ -56,7 +56,7 @@ export default function AllCampaignsPage() {
   >("newest");
   const [timeoutError, setTimeoutError] = useState(false);
 
-  const { items, loading, error, hasMore, loadMore, updateFilters } =
+  const { items, loading, error, hasMore, loadMore, updateFilters, refetch } =
     useUnifiedItems();
 
   // Geolocation and filtering
@@ -447,7 +447,7 @@ export default function AllCampaignsPage() {
                   <Button
                     onClick={() => {
                       setTimeoutError(false);
-                      loadMore();
+                      refetch();
                     }}
                     className="bg-[#5F8555] text-white"
                   >

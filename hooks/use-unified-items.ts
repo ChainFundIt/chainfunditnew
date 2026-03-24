@@ -19,23 +19,31 @@ export function useUnifiedItems() {
   const [filters, setFilters] = useState<UseUnifiedItemsFilters>({
     limit: 20,
     offset: 0,
-    type: 'all',
+    type: 'campaign',
   });
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const isMountedRef = useRef(true);
+  const requestIdRef = useRef(0);
+  const filtersRef = useRef(filters);
+  filtersRef.current = filters;
 
   // Fetch both campaigns and charities
   const fetchItems = useCallback(
-    async (reset: boolean = false) => {
+    async (
+      reset: boolean = false,
+      activeFilters: UseUnifiedItemsFilters = filtersRef.current
+    ) => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
 
-      abortControllerRef.current = new AbortController();
+      const requestController = new AbortController();
+      abortControllerRef.current = requestController;
+      const requestId = ++requestIdRef.current;
       const timeoutId = setTimeout(() => {
-        if (abortControllerRef.current) {
-          abortControllerRef.current.abort();
+        if (!requestController.signal.aborted) {
+          requestController.abort();
         }
       }, 15000);
 
@@ -43,64 +51,77 @@ export function useUnifiedItems() {
         setLoading(true);
         setError(null);
 
-        // Fetch campaigns and charities in parallel
+        const limit = activeFilters.limit || 20;
+        const offset = activeFilters.offset || 0;
+        const shouldFetchCampaigns = activeFilters.type !== "charity";
+        const shouldFetchCharities = activeFilters.type !== "campaign";
+
         const campaignsParams = new URLSearchParams();
-        if (filters.status && filters.status !== "trending") campaignsParams.append("status", filters.status);
-        if (filters.reason) campaignsParams.append("reason", filters.reason);
-        campaignsParams.append("limit", (filters.limit || 100).toString());
-        campaignsParams.append("offset", reset ? "0" : (filters.offset?.toString() || "0"));
+        if (activeFilters.status && activeFilters.status !== "trending")
+          campaignsParams.append("status", activeFilters.status);
+        if (activeFilters.reason) campaignsParams.append("reason", activeFilters.reason);
+        campaignsParams.append("limit", limit.toString());
+        campaignsParams.append("offset", offset.toString());
 
         const charitiesParams = new URLSearchParams();
-        charitiesParams.append("limit", (filters.limit || 100).toString());
+        charitiesParams.append("limit", limit.toString());
         charitiesParams.append("active", "true");
         charitiesParams.append("verified", "true");
-        if (filters.category) charitiesParams.append("category", filters.category);
+        if (activeFilters.category)
+          charitiesParams.append("category", activeFilters.category);
 
         const [campaignsResponse, charitiesResponse] = await Promise.all([
-          fetch(`/api/campaigns?${campaignsParams.toString()}`, {
-            signal: abortControllerRef.current.signal,
-          }),
-          fetch(`/api/charities?${charitiesParams.toString()}`),
+          shouldFetchCampaigns
+            ? fetch(`/api/campaigns?${campaignsParams.toString()}`, {
+                signal: requestController.signal,
+              })
+            : Promise.resolve(null),
+          shouldFetchCharities
+            ? fetch(`/api/charities?${charitiesParams.toString()}`, {
+                signal: requestController.signal,
+              })
+            : Promise.resolve(null),
         ]);
 
-        clearTimeout(timeoutId);
-
-        if (!campaignsResponse.ok) {
+        if (campaignsResponse && !campaignsResponse.ok) {
           throw new Error(`Failed to fetch campaigns: ${campaignsResponse.status}`);
         }
-
-        const campaignsData = await campaignsResponse.json();
-        const charitiesData = await charitiesResponse.json();
-
-        if (!isMountedRef.current) return;
-
-        const campaigns = Array.isArray(campaignsData.data) ? campaignsData.data : [];
-        const charities = Array.isArray(charitiesData.charities) ? charitiesData.charities : [];
-        
-        // Merge campaigns and charities
-        const mergedItems = mergeAndSort(campaigns, charities);
-        
-        // Apply type filter
-        let filteredItems = mergedItems;
-        if (filters.type === 'campaign') {
-          filteredItems = mergedItems.filter(item => item.type === 'campaign');
-        } else if (filters.type === 'charity') {
-          filteredItems = mergedItems.filter(item => item.type === 'charity');
+        if (charitiesResponse && !charitiesResponse.ok) {
+          throw new Error(`Failed to fetch charities: ${charitiesResponse.status}`);
         }
 
-        // Apply pagination
-        const paginatedItems = filteredItems.slice(
-          filters.offset || 0,
-          (filters.offset || 0) + (filters.limit || 20)
-        );
+        const campaignsData = campaignsResponse ? await campaignsResponse.json() : null;
+        const charitiesData = charitiesResponse ? await charitiesResponse.json() : null;
+
+        if (!isMountedRef.current || requestId !== requestIdRef.current) return;
+
+        const campaigns = Array.isArray(campaignsData?.data) ? campaignsData.data : [];
+        const charities = Array.isArray(charitiesData?.charities) ? charitiesData.charities : [];
+        
+        const mergedItems = mergeAndSort(campaigns, charities);
 
         if (reset) {
-          setItems(paginatedItems);
+          setItems(mergedItems);
         } else {
-          setItems(prev => [...prev, ...paginatedItems]);
+          setItems((prev) => {
+            const combined = [...prev, ...mergedItems];
+            const seen = new Set<string>();
+            return combined.filter((item) => {
+              const key = `${item.type}-${item.id}`;
+              if (seen.has(key)) return false;
+              seen.add(key);
+              return true;
+            });
+          });
         }
 
-        setHasMore(paginatedItems.length === (filters.limit || 20));
+        if (activeFilters.type === "campaign") {
+          setHasMore(campaigns.length === limit);
+        } else if (activeFilters.type === "charity") {
+          setHasMore(charities.length === limit);
+        } else {
+          setHasMore(campaigns.length === limit || charities.length === limit);
+        }
         setError(null);
       } catch (err: any) {
         if (err.name === 'AbortError') {
@@ -108,21 +129,23 @@ export function useUnifiedItems() {
           return;
         }
         console.error('Error fetching items:', err);
-        if (isMountedRef.current) {
+        if (isMountedRef.current && requestId === requestIdRef.current) {
           setError(err.message || 'Failed to fetch items');
         }
       } finally {
-        if (isMountedRef.current) {
+        clearTimeout(timeoutId);
+        if (isMountedRef.current && requestId === requestIdRef.current) {
           setLoading(false);
         }
       }
     },
-    [filters]
+    []
   );
 
   // Fetch when filters change
   useEffect(() => {
-    fetchItems(true);
+    const isReset = (filters.offset || 0) === 0;
+    fetchItems(isReset, filters);
   }, [filters, fetchItems]);
 
   useEffect(() => {
@@ -144,16 +167,29 @@ export function useUnifiedItems() {
   }, [loading, hasMore]);
 
   const updateFilters = useCallback((newFilters: Partial<UseUnifiedItemsFilters>) => {
-    setFilters(prev => ({
-      ...prev,
-      ...newFilters,
-      offset: 0, // Reset offset when filters change
-    }));
+    setFilters((prev) => {
+      const next = {
+        ...prev,
+        ...newFilters,
+        offset: 0, // Reset offset when filters change
+      };
+
+      const unchanged =
+        prev.status === next.status &&
+        prev.reason === next.reason &&
+        prev.category === next.category &&
+        prev.type === next.type &&
+        prev.limit === next.limit &&
+        prev.offset === next.offset;
+
+      return unchanged ? prev : next;
+    });
   }, []);
 
   const refetch = useCallback(() => {
-    fetchItems(true);
-  }, [fetchItems]);
+    const nextFilters = { ...filtersRef.current, offset: 0 };
+    setFilters(nextFilters);
+  }, []);
 
   return {
     items,
