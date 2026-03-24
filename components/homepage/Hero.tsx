@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
@@ -13,13 +13,123 @@ import {
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { usePublicCampaigns } from "@/hooks/use-public-campaigns";
 import "@/components/layout/animations.css";
+
+type HeroSlide = {
+  id: string;
+  imageUrl: string;
+  label: string;
+  title: string;
+  progress: number;
+};
 
 const Hero = () => {
   const router = useRouter();
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   const { ref: leftRef, isInView: leftInView } = useScrollAnimation();
   const { ref: rightRef, isInView: rightInView } = useScrollAnimation();
+  const {
+    campaigns: allCampaigns,
+    loading: loadingAllCampaigns,
+    error: allCampaignsError,
+  } = usePublicCampaigns({ limit: 12 });
+  const {
+    campaigns: completedCampaigns,
+    loading: loadingCompletedCampaigns,
+    error: completedCampaignsError,
+  } = usePublicCampaigns({ status: "completed", limit: 12 });
+
+  const fallbackSlide: HeroSlide = {
+    id: "default-hero-campaign",
+    imageUrl: "/images/story-2.png",
+    label: "Urgent Cause",
+    title: "Hearing aids for Bolu",
+    progress: 100,
+  };
+
+  const mergedCampaigns = useMemo(() => {
+    const combined = [...(allCampaigns || []), ...(completedCampaigns || [])];
+    const uniqueById = new Map(combined.map((campaign) => [campaign.id, campaign]));
+    return Array.from(uniqueById.values());
+  }, [allCampaigns, completedCampaigns]);
+
+  const filteredCampaignSlides = useMemo(() => {
+    if (!Array.isArray(mergedCampaigns)) {
+      return [];
+    }
+
+    return mergedCampaigns
+      .map((campaign) => {
+        const goalAmount = Number(campaign.goalAmount) || 0;
+        const currentAmount = Number(campaign.currentAmount) || 0;
+        const fallbackProgress =
+          goalAmount > 0 ? Math.round((currentAmount / goalAmount) * 100) : 0;
+        const progress = Math.min(
+          100,
+          campaign.stats?.progressPercentage ?? fallbackProgress,
+        );
+
+        return {
+          id: campaign.id,
+          imageUrl: campaign.coverImageUrl || "/images/story-2.png",
+          label: campaign.reason || "Urgent Cause",
+          title: campaign.title || "Featured Campaign",
+          progress,
+        };
+      })
+      .filter((campaign) => campaign.progress >= 70 && campaign.progress <= 100);
+  }, [mergedCampaigns]);
+
+  const slides = useMemo(() => {
+    return [fallbackSlide, ...filteredCampaignSlides];
+  }, [filteredCampaignSlides]);
+
+  useEffect(() => {
+    console.log("[Hero Slider] Eligible campaign slides:", {
+      fetchedAllCampaigns: Array.isArray(allCampaigns) ? allCampaigns.length : 0,
+      fetchedCompletedCampaigns: Array.isArray(completedCampaigns)
+        ? completedCampaigns.length
+        : 0,
+      mergedCampaigns: mergedCampaigns.length,
+      eligibleSlides: filteredCampaignSlides.length,
+      totalSlidesWithFallback: slides.length,
+      loadingAllCampaigns,
+      loadingCompletedCampaigns,
+      allCampaignsError,
+      completedCampaignsError,
+      titles: slides.map((slide) => slide.title),
+    });
+  }, [
+    allCampaigns,
+    completedCampaigns,
+    mergedCampaigns,
+    filteredCampaignSlides,
+    slides,
+    loadingAllCampaigns,
+    loadingCompletedCampaigns,
+    allCampaignsError,
+    completedCampaignsError,
+  ]);
+
+  useEffect(() => {
+    if (slides.length <= 1) {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, [slides.length]);
+
+  useEffect(() => {
+    if (currentSlide > slides.length - 1) {
+      setCurrentSlide(0);
+    }
+  }, [currentSlide, slides.length]);
 
   return (
     <div className="font-jakarta flex items-center justify-center bg-[var(--color-background)] py-20 px-4">
@@ -112,37 +222,61 @@ const Hero = () => {
             rightInView ? "animate-slide-in-right" : "opacity-0"
           }`}
         >
-          <div className="relative rounded-3xl overflow-hidden">
-            {/* Main Image */}
-            <Image
-              src="/images/story-2.png"
-              alt="Featured Campaign"
-              width={500}
-              height={400}
-              priority
-              className="md:w-[35rem] w-full object-cover"
-            />
-            {/* Overlay Card */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[90%] bg-white rounded-2xl shadow-xl px-4 py-3">
-              <div className="flex items-center justify-between mb-1">
-                <p className=" font-regular text-xs text-[#666]">
-                  <b>Urgent Cause</b>
-                </p>
-                <span className="text-xs font-semibold text-[#F97316] bg-[#F97316]/10 px-2 py-1 rounded-full whitespace-nowrap">
-                  100% Funded
-                </span>
-              </div>
-              <h4 className=" font-bold text-base md:text-lg text-black">
-                Hearing aids for Bolu
-              </h4>
-              {/* Progress bar */}
-              <div className="w-full h-2 bg-[#E5E5E5] rounded-full overflow-hidden mt-2">
-                <div
-                  className="h-full bg-[#13C870] rounded-full"
-                  style={{ width: "100%" }}
-                ></div>
+          <div className="md:w-[35rem] w-full">
+            <div className="relative rounded-3xl overflow-hidden">
+              <div
+                className="flex transition-transform duration-700 ease-out"
+                style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+              >
+                {slides.map((slide, index) => (
+                  <div key={slide.id} className="relative min-w-full rounded-3xl overflow-hidden">
+                    <Image
+                      src={slide.imageUrl}
+                      alt={slide.title}
+                      width={500}
+                      height={400}
+                      priority={index === 0}
+                      className="md:w-[35rem] w-full object-cover"
+                    />
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[90%] bg-white rounded-2xl shadow-xl px-4 py-3">
+                      <div className="flex items-center justify-between mb-1 gap-3">
+                        <p className="font-regular text-xs text-[#666]">
+                          <b>{slide.label}</b>
+                        </p>
+                        <span className="text-xs font-semibold text-[#F97316] bg-[#F97316]/10 px-2 py-1 rounded-full whitespace-nowrap">
+                          {slide.progress}% Funded
+                        </span>
+                      </div>
+                      <h4 className="font-bold text-base md:text-lg text-black line-clamp-1">
+                        {slide.title}
+                      </h4>
+                      <div className="w-full h-2 bg-[#E5E5E5] rounded-full overflow-hidden mt-2">
+                        <div
+                          className="h-full bg-[#13C870] rounded-full transition-all duration-700"
+                          style={{ width: `${slide.progress}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
+
+            {slides.length > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-4">
+                {slides.map((slide, index) => (
+                  <button
+                    key={`${slide.id}-dot`}
+                    type="button"
+                    aria-label={`Go to campaign slide ${index + 1}`}
+                    onClick={() => setCurrentSlide(index)}
+                    className={`h-2 rounded-full transition-all ${
+                      currentSlide === index ? "w-6 bg-[#104109]" : "w-2 bg-[#D6D3D1]"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
