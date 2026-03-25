@@ -13,7 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
-import { usePublicCampaigns } from "@/hooks/use-public-campaigns";
 import "@/components/layout/animations.css";
 
 type HeroSlide = {
@@ -27,19 +26,10 @@ type HeroSlide = {
 const Hero = () => {
   const router = useRouter();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [campaignSlides, setCampaignSlides] = useState<HeroSlide[]>([]);
 
   const { ref: leftRef, isInView: leftInView } = useScrollAnimation();
   const { ref: rightRef, isInView: rightInView } = useScrollAnimation();
-  const {
-    campaigns: allCampaigns,
-    loading: loadingAllCampaigns,
-    error: allCampaignsError,
-  } = usePublicCampaigns({ limit: 12 });
-  const {
-    campaigns: completedCampaigns,
-    loading: loadingCompletedCampaigns,
-    error: completedCampaignsError,
-  } = usePublicCampaigns({ status: "completed", limit: 12 });
 
   const fallbackSlide: HeroSlide = {
     id: "default-hero-campaign",
@@ -49,69 +39,46 @@ const Hero = () => {
     progress: 100,
   };
 
-  const mergedCampaigns = useMemo(() => {
-    const combined = [...(allCampaigns || []), ...(completedCampaigns || [])];
-    const uniqueById = new Map(combined.map((campaign) => [campaign.id, campaign]));
-    return Array.from(uniqueById.values());
-  }, [allCampaigns, completedCampaigns]);
+  useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
 
-  const filteredCampaignSlides = useMemo(() => {
-    if (!Array.isArray(mergedCampaigns)) {
-      return [];
-    }
-
-    return mergedCampaigns
-      .map((campaign) => {
-        const goalAmount = Number(campaign.goalAmount) || 0;
-        const currentAmount = Number(campaign.currentAmount) || 0;
-        const fallbackProgress =
-          goalAmount > 0 ? Math.round((currentAmount / goalAmount) * 100) : 0;
-        const progress = Math.min(
-          100,
-          campaign.stats?.progressPercentage ?? fallbackProgress,
+    const fetchHeroCampaigns = async () => {
+      try {
+        const response = await fetch(
+          "/api/public/hero-campaigns?minProgress=70&maxProgress=100&sourceLimit=300&take=10",
+          {
+            signal: controller.signal,
+          },
         );
+        if (!response.ok) {
+          return;
+        }
 
-        return {
-          id: campaign.id,
-          imageUrl: campaign.coverImageUrl || "/images/story-2.png",
-          label: campaign.reason || "Urgent Cause",
-          title: campaign.title || "Featured Campaign",
-          progress,
-        };
-      })
-      .filter((campaign) => campaign.progress >= 70 && campaign.progress <= 100);
-  }, [mergedCampaigns]);
+        const payload = await response.json();
+        if (!isMounted || !payload?.success || !Array.isArray(payload?.data)) {
+          return;
+        }
+        setCampaignSlides(payload.data);
+      } catch {
+        // Keep fallback slide if request fails.
+      }
+    };
+
+    fetchHeroCampaigns();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, []);
 
   const slides = useMemo(() => {
-    return [fallbackSlide, ...filteredCampaignSlides];
-  }, [filteredCampaignSlides]);
-
-  useEffect(() => {
-    console.log("[Hero Slider] Eligible campaign slides:", {
-      fetchedAllCampaigns: Array.isArray(allCampaigns) ? allCampaigns.length : 0,
-      fetchedCompletedCampaigns: Array.isArray(completedCampaigns)
-        ? completedCampaigns.length
-        : 0,
-      mergedCampaigns: mergedCampaigns.length,
-      eligibleSlides: filteredCampaignSlides.length,
-      totalSlidesWithFallback: slides.length,
-      loadingAllCampaigns,
-      loadingCompletedCampaigns,
-      allCampaignsError,
-      completedCampaignsError,
-      titles: slides.map((slide) => slide.title),
-    });
-  }, [
-    allCampaigns,
-    completedCampaigns,
-    mergedCampaigns,
-    filteredCampaignSlides,
-    slides,
-    loadingAllCampaigns,
-    loadingCompletedCampaigns,
-    allCampaignsError,
-    completedCampaignsError,
-  ]);
+    const uniqueById = new Map(
+      [fallbackSlide, ...campaignSlides].map((slide) => [slide.id, slide]),
+    );
+    return Array.from(uniqueById.values());
+  }, [campaignSlides]);
 
   useEffect(() => {
     if (slides.length <= 1) {
@@ -137,9 +104,8 @@ const Hero = () => {
         {/* Left Section */}
         <div
           ref={leftRef}
-          className={`flex flex-col gap-8 md:w-[35rem] w-full text-left transition-all duration-500 ${
-            leftInView ? "animate-slide-in-left" : "opacity-0"
-          }`}
+          className={`flex flex-col gap-8 md:w-[35rem] w-full text-left transition-all duration-500 ${leftInView ? "animate-slide-in-left" : "opacity-0"
+            }`}
         >
           {/* Badge */}
           <div className="flex py-2 px-4 gap-2 rounded-full bg-white items-center w-fit mb-2">
@@ -218,9 +184,8 @@ const Hero = () => {
         {/* Right Section - Image */}
         <div
           ref={rightRef}
-          className={`transition-all duration-500 ${
-            rightInView ? "animate-slide-in-right" : "opacity-0"
-          }`}
+          className={`transition-all duration-500 ${rightInView ? "animate-slide-in-right" : "opacity-0"
+            }`}
         >
           <div className="md:w-[35rem] w-full">
             <div className="relative rounded-3xl overflow-hidden">
@@ -270,9 +235,8 @@ const Hero = () => {
                     type="button"
                     aria-label={`Go to campaign slide ${index + 1}`}
                     onClick={() => setCurrentSlide(index)}
-                    className={`h-2 rounded-full transition-all ${
-                      currentSlide === index ? "w-6 bg-[#104109]" : "w-2 bg-[#D6D3D1]"
-                    }`}
+                    className={`h-2 rounded-full transition-all ${currentSlide === index ? "w-6 bg-[#104109]" : "w-2 bg-[#D6D3D1]"
+                      }`}
                   />
                 ))}
               </div>
