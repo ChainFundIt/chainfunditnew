@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import { Geist, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import PerformanceMonitor from "@/components/performance/PerformanceMonitor";
 import ClientToaster from "@/components/ui/client-toaster";
@@ -11,11 +11,6 @@ import PlatformReviewPrompt from "@/components/reviews/PlatformReviewPrompt";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
   subsets: ["latin"],
 });
 
@@ -111,9 +106,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${jakarta.variable}`}
-      >
+      <body className={`${geistSans.variable} ${jakarta.variable}`}>
         <div className="app-root">
           {children}
           <StartCampaignFab />

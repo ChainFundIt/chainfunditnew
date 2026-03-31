@@ -96,12 +96,12 @@ export default function ImpactHangoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="font-jakarta min-h-screen bg-[var(--color-background)] text-[#1C1917]">
       <Navbar />
 
       {/* Modal: access link email sent */}
       <Dialog open={showAccessSentModal} onOpenChange={setShowAccessSentModal}>
-        <DialogContent className="rounded-2xl max-w-md text-center sm:text-left">
+        <DialogContent className="rounded-3xl max-w-md text-center sm:text-left border-none">
           <DialogHeader>
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600 sm:mx-0">
               <Mail className="h-6 w-6" />
@@ -130,7 +130,7 @@ export default function ImpactHangoutPage() {
             priority
             sizes="100vw"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#104109]/85 via-[#104109]/55 to-[#104109]/45" />
         </div>
         <div className="relative z-10 container mx-auto px-4 max-w-4xl text-center text-white">
           {recentDonors.length > 0 && (
@@ -179,7 +179,7 @@ export default function ImpactHangoutPage() {
               >
                 <Button
                   size="lg"
-                  className="px-8 py-4 min-w-[200px] h-12 bg-white text-brand-green-dark hover:bg-white/90 hover:text-brand-green-dark border-2 border-white text-base rounded-full font-semibold shadow-lg"
+                  className="px-8 py-4 min-w-[200px] h-12 bg-white text-[#104109] hover:bg-white/90 hover:text-[#104109] border-2 border-white text-base rounded-full font-bold shadow-lg"
                   asChild
                 >
                   <Link href="/events/register" className="inline-flex items-center justify-center gap-2">
@@ -198,7 +198,7 @@ export default function ImpactHangoutPage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="px-8 py-4 min-w-[160px] h-12 border-2 border-white text-white hover:bg-white/10 hover:text-white text-base rounded-full font-semibold"
+                  className="px-8 py-4 min-w-[200px] h-12 border-2 border-white text-white hover:bg-white/10 hover:text-white text-base rounded-full font-bold"
                   asChild
                 >
                   <Link href="/campaigns">Support a cause</Link>
@@ -260,20 +260,20 @@ export default function ImpactHangoutPage() {
               variants={stagger}
             >
               <motion.h2
-                className="text-2xl md:text-4xl font-bold text-brand-green-dark mb-6"
+                className="text-3xl md:text-5xl font-extrabold text-[#104109] mb-6 leading-tight"
                 variants={fadeInUp}
               >
                 What is the Impact Hangout?
               </motion.h2>
               <motion.p
-                className="text-gray-700 text-lg leading-relaxed mb-4 text-justify"
+                className="text-[#57534E] text-lg leading-relaxed mb-4 text-justify"
                 variants={fadeInUp}
               >
                 This month, we&apos;re inviting people across the country to turn
                 simple gatherings into moments of impact.
               </motion.p>
               <motion.p
-                className="text-gray-700 text-lg leading-relaxed mb-4 text-justify"
+                className="text-[#57534E] text-lg leading-relaxed mb-4 text-justify"
                 variants={fadeInUp}
               >
                 It could be a relaxed breakfast with friends, an evening
@@ -282,7 +282,7 @@ export default function ImpactHangoutPage() {
                 where real change begins.
               </motion.p>
               <motion.p
-                className="text-gray-700 text-lg leading-relaxed mb-8 text-justify"
+                className="text-[#57534E] text-lg leading-relaxed mb-8 text-justify"
                 variants={fadeInUp}
               >
                 The Impact Hangout is all about bringing people together — not
@@ -290,7 +290,7 @@ export default function ImpactHangoutPage() {
                 same time.
               </motion.p>
               <motion.div variants={fadeInUp} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button size="lg" className="px-8 py-4 h-12 text-base font-semibold rounded-full" asChild>
+                <Button size="lg" className="px-8 py-4 h-12 text-base font-bold rounded-full bg-[#104109] " asChild>
                   <Link href="/events/register">
                     Register to host <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
@@ -298,7 +298,7 @@ export default function ImpactHangoutPage() {
               </motion.div>
             </motion.div>
             <motion.div
-              className="order-1 md:order-2 relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl"
+              className="order-1 md:order-2 relative aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl"
               initial={{ opacity: 0, x: 24 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, margin: "-80px" }}
@@ -327,7 +327,7 @@ export default function ImpactHangoutPage() {
             className="object-cover"
             sizes="100vw"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-green-900/40 via-green-700/35 to-green-500/35" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#104109]/65 via-[#104109]/45 to-[#10B981]/35" />
         </div>
         <motion.div
           className="relative z-10 w-full max-w-full pl-4 md:pl-8 pr-4 md:pr-8 ml-0 mr-auto text-white text-left"
@@ -386,10 +386,10 @@ export default function ImpactHangoutPage() {
       </section>
 
       {/* How It Works — steps with event6 as side accent */}
-      <section className="relative py-20 md:py-28 bg-gradient-to-b from-amber-50/40 to-white">
+      <section className="relative py-20 md:py-28 bg-gradient-to-b from-[#F5F7F3] to-[var(--color-background)]">
         <div className="container mx-auto px-4 max-w-6xl">
           <motion.h2
-            className="text-2xl md:text-4xl font-bold text-brand-green-dark mb-12"
+            className="text-3xl md:text-5xl font-extrabold text-[#104109] mb-12 leading-tight"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -450,19 +450,19 @@ export default function ImpactHangoutPage() {
               ].map((item) => (
                 <motion.li
                   key={item.step}
-                  className="flex gap-4 p-4 rounded-xl bg-white/80 backdrop-blur-sm border border-white shadow-sm"
+                  className="flex gap-4 p-4 rounded-2xl bg-white/90 backdrop-blur-sm border border-[#E7E5E4] shadow-sm"
                   variants={fadeInUp}
                   whileHover={{ x: 6, boxShadow: "0 10px 40px -10px rgba(16, 73, 1, 0.2)" }}
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 >
-                  <span className="flex-shrink-0 w-11 h-11 rounded-full bg-brand-green-dark text-white font-bold flex items-center justify-center">
+                  <span className="flex-shrink-0 w-11 h-11 rounded-full bg-[#104109] text-white font-bold flex items-center justify-center">
                     {item.step}
                   </span>
                   <div>
-                    <h3 className="font-semibold text-lg text-gray-900 mb-1">
+                    <h3 className="font-semibold text-lg text-[#1C1917] mb-1">
                       {item.title}
                     </h3>
-                    <p className="text-gray-700 text-base text-justify">{item.text}</p>
+                    <p className="text-[#57534E] text-base text-justify">{item.text}</p>
                     {/* {item.icons && (
                       <div className="flex gap-3 mt-2 text-brand-green-dark">
                         <GraduationCap className="h-5 w-5" />
@@ -484,7 +484,7 @@ export default function ImpactHangoutPage() {
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.98 }}
           >
-            <Button size="lg" className="px-8 py-4 h-12 text-base font-semibold rounded-full" asChild>
+            <Button size="lg" className="px-8 py-4 h-12 text-base font-bold rounded-full bg-[#104109] " asChild>
               <Link href="/events/register">
                 Register now <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
@@ -514,21 +514,21 @@ export default function ImpactHangoutPage() {
             viewport={{ once: true }}
             variants={stagger}
           >
-            <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-white/80 p-8 md:p-10">
+            <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl border border-white/80 p-8 md:p-10">
               <motion.h2
-                className="text-2xl md:text-4xl font-bold text-brand-green-dark mb-6"
+                className="text-3xl md:text-5xl font-extrabold text-[#104109] mb-6 leading-tight"
                 variants={fadeInUp}
               >
                 Where Do the Donations Go?
               </motion.h2>
               <motion.p
-                className="text-gray-700 text-lg leading-relaxed mb-4 text-justify"
+                className="text-[#57534E] text-lg leading-relaxed mb-4 text-justify"
                 variants={fadeInUp}
               >
                 Transparency matters.
               </motion.p>
               <motion.p
-                className="text-gray-700 text-lg leading-relaxed mb-6 text-justify"
+                className="text-[#57534E] text-lg leading-relaxed mb-6 text-justify"
                 variants={fadeInUp}
               >
                 All campaigns featured in the Impact Hangout are verified through
@@ -537,7 +537,7 @@ export default function ImpactHangoutPage() {
                 providers.
               </motion.p>
               <motion.p
-                className="text-gray-700 text-lg mb-4"
+                className="text-[#57534E] text-lg mb-4"
                 variants={fadeInUp}
               >
                 This approach ensures:
@@ -552,7 +552,7 @@ export default function ImpactHangoutPage() {
                       whileHover={{ x: 4 }}
                       transition={{ type: "spring", stiffness: 400, damping: 25 }}
                     >
-                      <Check className="h-5 w-5 text-brand-green-dark flex-shrink-0" />
+                      <Check className="h-5 w-5 text-[#104109] flex-shrink-0" />
                       {item}
                     </motion.li>
                   )
@@ -564,7 +564,7 @@ export default function ImpactHangoutPage() {
 
         {/* Who Can Host? — green overlay only over this block */}
         <div className="relative z-10 min-h-[480px] flex items-center py-20">
-          <div className="absolute inset-0 bg-brand-green-dark/88 backdrop-blur-[2px]" />
+          <div className="absolute inset-0 bg-[#104109]/88 backdrop-blur-[2px]" />
           <motion.div
             className="relative z-10 container mx-auto px-4 max-w-3xl"
             initial="initial"
@@ -616,7 +616,7 @@ export default function ImpactHangoutPage() {
       </section>
 
       {/* When Can I Host? — clean card with staggered lines */}
-      <section className="py-20 md:py-24 bg-gray-50">
+      <section className="py-20 md:py-24 bg-[#F8F9F7]">
         <motion.div
           className="container mx-auto px-4 max-w-3xl"
           initial="initial"
@@ -625,27 +625,27 @@ export default function ImpactHangoutPage() {
           variants={stagger}
         >
           <motion.h2
-            className="text-2xl md:text-4xl font-bold text-brand-green-dark mb-6"
+            className="text-3xl md:text-5xl font-extrabold text-[#104109] mb-6 leading-tight"
             variants={fadeInUp}
           >
             When Can I Host?
           </motion.h2>
           <motion.p
-            className="text-gray-700 text-lg leading-relaxed mb-4 text-justify"
+            className="text-[#57534E] text-lg leading-relaxed mb-4 text-justify"
             variants={fadeInUp}
           >
             The campaign runs all year round, but you can host whenever it
             works for you.
           </motion.p>
           <motion.p
-            className="text-gray-700 text-lg leading-relaxed mb-4 text-justify"
+            className="text-[#57534E] text-lg leading-relaxed mb-4 text-justify"
             variants={fadeInUp}
           >
             Morning or evening. Breakfast or dinner. Small circle or larger
             group.
           </motion.p>
           <motion.p
-            className="text-gray-700 text-lg leading-relaxed text-justify"
+            className="text-[#57534E] text-lg leading-relaxed text-justify"
             variants={fadeInUp}
           >
             What matters most isn&apos;t how elaborate the gathering is — it&apos;s
@@ -655,10 +655,10 @@ export default function ImpactHangoutPage() {
       </section>
 
       {/* Get ready for your Impact Hangout */}
-      <section className="py-20 md:py-24 bg-white border-t border-gray-100">
+      <section className="py-20 md:py-24 bg-white border-t border-[#E7E5E4]">
         <div className="container mx-auto px-4 max-w-3xl">
           <motion.h2
-            className="text-2xl md:text-4xl font-bold text-brand-green-dark mb-6"
+            className="text-3xl md:text-5xl font-extrabold text-[#104109] mb-6 leading-tight"
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -666,7 +666,7 @@ export default function ImpactHangoutPage() {
             Get ready for your Impact Hangout
           </motion.h2>
           <motion.p
-            className="text-gray-700 text-lg leading-relaxed mb-6 text-justify"
+            className="text-[#57534E] text-lg leading-relaxed mb-6 text-justify"
             initial={{ opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -675,7 +675,7 @@ export default function ImpactHangoutPage() {
             fundraising page with guests so they can donate before, during, or after
             your hangout. Every Naira raised goes to your chosen cause.
           </motion.p>
-          <ul className="space-y-2 text-gray-700">
+          <ul className="space-y-2 text-[#57534E]">
             {[
               "Share your page link with friends and family",
               "Add your hangout to the calendar and send reminders",
@@ -689,13 +689,13 @@ export default function ImpactHangoutPage() {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.05 }}
               >
-                <Check className="h-5 w-5 text-brand-green-dark flex-shrink-0" />
+                <Check className="h-5 w-5 text-[#104109] flex-shrink-0" />
                 {item}
               </motion.li>
             ))}
           </ul>
           <motion.div className="mt-8" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}>
-            <Button size="lg" className="px-8 py-4 h-12 text-base font-semibold rounded-full" asChild>
+            <Button size="lg" className="px-8 py-4 h-12 text-base font-bold rounded-full bg-[#104109] " asChild>
               <Link href="/events/register">
                 Register to host <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
@@ -714,7 +714,7 @@ export default function ImpactHangoutPage() {
             className="object-cover"
             sizes="100vw"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-brand-green-dark/95 via-brand-green-dark/80 to-brand-green-dark/70" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#104109]/95 via-[#104109]/80 to-[#104109]/70" />
         </div>
         <motion.div
           className="relative z-10 container mx-auto px-4 max-w-3xl text-white"
@@ -748,7 +748,7 @@ export default function ImpactHangoutPage() {
             <motion.div variants={fadeInUp} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
               <Button
                 size="lg"
-                className="px-8 py-4 h-12 bg-white text-brand-green-dark hover:bg-white/90 border-2 border-white rounded-full font-semibold"
+                className="px-8 py-4 h-12 min-w-[200px] bg-white text-[#104109] hover:bg-white/90 border-2 border-white rounded-full font-bold"
                 asChild
               >
                 <Link href="/events/register" className="inline-flex items-center">
@@ -760,7 +760,7 @@ export default function ImpactHangoutPage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="px-8 py-4 h-12 border-2 border-white text-white hover:bg-white/10 hover:text-white rounded-full"
+                className="px-8 py-4 h-12 min-w-[200px] border-2 border-white text-white hover:bg-white/10 hover:text-white rounded-full font-bold"
                 asChild
               >
                 <Link href="/campaigns">Support a cause</Link>
@@ -771,7 +771,7 @@ export default function ImpactHangoutPage() {
       </section>
 
       {/* Featured Campaigns — staggered list */}
-      <section className="py-20 md:py-24 bg-white border-t border-gray-100">
+      <section className="py-20 md:py-24 bg-white border-t border-[#E7E5E4]">
         <motion.div
           className="container mx-auto px-4 max-w-3xl"
           initial="initial"
@@ -780,13 +780,13 @@ export default function ImpactHangoutPage() {
           variants={stagger}
         >
           <motion.h2
-            className="text-2xl md:text-4xl font-bold text-brand-green-dark mb-6"
+            className="text-3xl md:text-5xl font-extrabold text-[#104109] mb-6 leading-tight"
             variants={fadeInUp}
           >
             Featured Campaigns
           </motion.h2>
           <motion.p
-            className="text-gray-700 mb-8 text-justify"
+            className="text-[#57534E] mb-8 text-justify"
             variants={fadeInUp}
           >
             Support verified causes on ChainFundIt. Every Naira goes to the
@@ -804,7 +804,7 @@ export default function ImpactHangoutPage() {
                   href={campaign.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-between gap-4 p-4 rounded-xl border border-gray-200 hover:border-brand-green-dark hover:bg-green-50/50 transition-colors text-brand-green-dark font-medium group"
+                  className="flex items-center justify-between gap-4 p-4 rounded-2xl border border-[#E7E5E4] hover:border-[#104109] hover:bg-[#F3F8F2] transition-colors text-[#104109] font-medium group"
                 >
                   {campaign.label}
                   <ArrowRight className="h-5 w-5 flex-shrink-0 group-hover:translate-x-1 transition-transform" />
