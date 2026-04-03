@@ -44,6 +44,7 @@ import {
   MapPin,
   Flag,
   Shield,
+  ShieldOff,
   Play,
   Pause,
 } from "lucide-react";
@@ -77,6 +78,7 @@ interface Campaign {
   createdAt: string;
   updatedAt: string;
   isVerified: boolean;
+  verifiedPendingAt?: string | null;
   hasReports: boolean;
   reportCount: number;
   donationCount: number;
@@ -208,7 +210,7 @@ export default function AdminCampaignsPage() {
         close: "closed",
         pause: "paused",
         resume: "resumed",
-        verify: "verified",
+        verify: "marked for verification (pending creator acceptance)",
         unverify: "unverified",
         update: "updated",
       };
@@ -668,6 +670,12 @@ export default function AdminCampaignsPage() {
                                 Verified
                               </Badge>
                             )}
+                            {campaign.verifiedPendingAt &&
+                              !campaign.isVerified && (
+                                <Badge className="bg-amber-100 text-amber-900">
+                                  Awaiting creator
+                                </Badge>
+                              )}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -778,17 +786,32 @@ export default function AdminCampaignsPage() {
                                 <BsFillStopFill className="h-4 w-4 text-red-600" />
                               </Button>
                             )}
-                            {!campaign.isVerified && (
+                            {!campaign.isVerified &&
+                              !campaign.verifiedPendingAt && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleCampaignAction(campaign, "verify");
+                                  }}
+                                  title="Offer verified campaign (creator must accept)"
+                                >
+                                  <Shield className="h-4 w-4 text-green-600" />
+                                </Button>
+                              )}
+                            {(campaign.isVerified ||
+                              campaign.verifiedPendingAt) && (
                               <Button
                                 size="sm"
                                 variant="ghost"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleCampaignAction(campaign, "verify");
+                                  handleCampaignAction(campaign, "unverify");
                                 }}
-                                title="Verify campaign"
+                                title="Remove verified / pending verification"
                               >
-                                <Shield className="h-4 w-4 text-green-600" />
+                                <ShieldOff className="h-4 w-4 text-gray-600" />
                               </Button>
                             )}
                           </div>

@@ -69,6 +69,8 @@ export async function GET(
         chainerCommissionRate: campaigns.chainerCommissionRate,
         isChained: campaigns.isChained,
         isVerified: campaigns.isVerified,
+        verifiedPendingAt: campaigns.verifiedPendingAt,
+        verifiedRulesAcceptedAt: campaigns.verifiedRulesAcceptedAt,
         currentAmount: campaigns.currentAmount,
         status: campaigns.status,
         visibility: campaigns.visibility,

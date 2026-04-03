@@ -57,6 +57,8 @@ interface Campaign {
   currency: string;
   status: string;
   isActive: boolean;
+  isVerified?: boolean;
+  verifiedPendingAt?: string | null;
   coverImageUrl: string;
   progressPercentage: number;
   donationCount: number;
@@ -430,6 +432,9 @@ export default function DashboardPage() {
                               description={data.description}
                               status={data.status}
                               fundRaisingFor={data.fundraisingFor || "Charity"}
+                              verificationPending={Boolean(
+                                data.verifiedPendingAt && !data.isVerified
+                              )}
                             />
                           </div>
                         );

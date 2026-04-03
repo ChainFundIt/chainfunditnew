@@ -53,6 +53,9 @@ const PastCampaigns = ({ campaigns }: Props) => {
       <div className=" flex md:justify-start justify-center">
         <div className="flex md:flex-row flex-col flex-wrap w-fit justify-center  gap-4">
           {campaigns.map((data, index) => {
+            const verificationPending = Boolean(
+              data.verifiedPendingAt && !data.isVerified
+            );
             return (
               <div key={index}>
                 <CampaignInfo
@@ -70,6 +73,7 @@ const PastCampaigns = ({ campaigns }: Props) => {
                   description={data.description}
                   status={convertCampaignStatus(getCampaignStatus(data).status)}
                   fundRaisingFor={data.fundraisingFor || "Charity"}
+                  verificationPending={verificationPending}
                 />
               </div>
             );

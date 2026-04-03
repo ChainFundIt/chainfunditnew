@@ -225,6 +225,20 @@
       "when": 1773503333980,
       "tag": "0031_cooing_black_tarantula",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1773504333980,
+      "tag": "0032_campaign_verification_acceptance",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1775251444247,
+      "tag": "0033_giant_sauron",
+      "breakpoints": true
     }
   ]
 }

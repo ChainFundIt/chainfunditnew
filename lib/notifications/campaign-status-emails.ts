@@ -9,6 +9,79 @@ interface CampaignStatusEmailData {
   campaignUrl?: string;
 }
 
+interface CampaignVerificationPendingEmailData extends CampaignStatusEmailData {
+  rulesPageUrl: string;
+}
+
+/** Sent when an admin marks a campaign for verification; creator must accept rules before the badge is active. */
+export async function sendCampaignVerificationPendingEmail(
+  data: CampaignVerificationPendingEmailData
+) {
+  try {
+    const subject =
+      "Action required: complete verified campaign agreement — ChainFundIt";
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%); color: white; padding: 28px 24px; text-align: center; border-radius: 12px 12px 0 0; }
+            .logo-img { max-width: 160px; height: auto; margin-bottom: 12px; }
+            .content { background: #ffffff; padding: 28px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px; }
+            .info-box { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 16px; margin: 20px 0; }
+            .cta-button { display: inline-block; margin: 24px auto; padding: 14px 28px; background: #1d4ed8; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; }
+            .footer { text-align: center; padding: 16px; color: #6b7280; font-size: 14px; }
+            p { margin-bottom: 14px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Verification pending</h1>
+              <p>One quick step to activate your verified badge</p>
+            </div>
+            <div class="content">
+              <p>Hi ${data.userName},</p>
+              <p>Great news: <strong>${data.campaignTitle}</strong> has been selected for a <strong>verified</strong> campaign on ChainFundIt.</p>
+              <div class="info-box">
+                <strong>Your verified badge is not active yet.</strong>
+                <p>Please read the verified campaign rules and confirm your agreement. Until you do, your campaign will show as <em>pending verification</em> on your dashboard.</p>
+              </div>
+              <p>Use the button below to review the rules and complete this step.</p>
+              <div style="text-align:center;">
+                <a href="${data.rulesPageUrl}" style="background-color: #1d4ed8; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; padding: 14px 28px; display: inline-block; margin: 24px auto;" class="cta-button">Review rules and accept</a>
+              </div>
+              ${data.campaignUrl ? `<p style="font-size:14px;color:#6b7280;">Or <a href="${data.campaignUrl}">view your campaign</a>.</p>` : ""}
+              <p>Thank you,<br /><strong>The ChainFundIt Team</strong></p>
+            </div>
+            <div class="footer">
+              <p><a href="https://www.chainfundit.com">www.chainfundit.com</a></p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    if (!process.env.RESEND_API_KEY) {
+      console.error("RESEND_API_KEY is not configured");
+      return null;
+    }
+
+    return await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || "notifications@chainfundit.com",
+      to: data.userEmail,
+      subject,
+      html,
+    });
+  } catch (error) {
+    console.error("Error sending verification pending email:", error);
+    return null;
+  }
+}
+
 export async function sendCampaignHoldEmail(
   data: CampaignStatusEmailData
 ) {
