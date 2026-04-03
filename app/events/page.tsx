@@ -11,14 +11,13 @@ import { motion } from "framer-motion";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
   ArrowRight,
   GraduationCap,
-  HeartPulse,
-  UtensilsCrossed,
   Check,
   Users,
   Church,
@@ -63,6 +62,7 @@ export default function ImpactHangoutPage() {
   const [accessSending, setAccessSending] = useState(false);
   const [accessSent, setAccessSent] = useState(false);
   const [showAccessSentModal, setShowAccessSentModal] = useState(false);
+  const [showAccessModal, setShowAccessModal] = useState(false);
 
   useEffect(() => {
     fetch("/api/events/impact-hangout/me", { credentials: "include" })
@@ -89,6 +89,7 @@ export default function ImpactHangoutPage() {
         body: JSON.stringify({ email: accessEmail.trim() }),
       });
       setAccessSent(true);
+      setShowAccessModal(false);
       setShowAccessSentModal(true);
     } finally {
       setAccessSending(false);
@@ -116,6 +117,58 @@ export default function ImpactHangoutPage() {
           <p className="text-gray-500 text-xs text-justify">
             If you don&apos;t see it, check your spam folder.
           </p>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: request access link by email */}
+      <Dialog
+        open={showAccessModal}
+        onOpenChange={(open) => {
+          setShowAccessModal(open);
+          if (!open) setAccessSent(false);
+        }}
+      >
+        <DialogContent className="rounded-3xl max-w-md border-none sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Already registered?</DialogTitle>
+            <DialogDescription className="text-left text-[#57534E]">
+              Enter the email you used to register and we&apos;ll send you a link to your Impact Hangout page.
+            </DialogDescription>
+          </DialogHeader>
+          {myHangouts !== null && myHangouts.length > 0 && (
+            <Button
+              className="w-full rounded-full bg-[#104109] hover:bg-[#0d3607] p-8 h-auto text-base font-bold"
+              asChild
+            >
+              <Link href={`/events/${encodeURIComponent(myHangouts[0].slug)}`} className="inline-flex items-center justify-center gap-2">
+                <LogIn className="h-4 w-4" /> View my hangout
+              </Link>
+            </Button>
+          )}
+          <form onSubmit={handleSendAccessLink} className="space-y-4">
+            <div>
+              <label htmlFor="access-email-modal" className="sr-only">
+                Email
+              </label>
+              <Input
+                id="access-email-modal"
+                type="email"
+                placeholder="Your email"
+                value={accessEmail}
+                onChange={(e) => setAccessEmail(e.target.value)}
+                className="h-12 rounded-full border-[#E7E5E4] bg-white text-[#1C1917] placeholder:text-[#78716C]"
+                autoComplete="email"
+                required
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full rounded-full bg-[#104109] hover:bg-[#0d3607] p-8 h-auto text-base font-bold"
+              disabled={accessSending || accessSent}
+            >
+              {accessSent ? "Check your email" : accessSending ? "Sending…" : "Send me the link"}
+            </Button>
+          </form>
         </DialogContent>
       </Dialog>
 
@@ -167,82 +220,40 @@ export default function ImpactHangoutPage() {
             This month, we&apos;re inviting people across the country to turn
             simple gatherings into moments of impact.
           </motion.p>
-          <div className="flex flex-col items-center gap-5">
-            <div className="flex flex-wrap items-stretch justify-center gap-3">
-              <motion.div
-                className="flex"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Button
-                  size="lg"
-                  className="px-8 py-4 min-w-[200px] h-12 bg-white text-[#104109] hover:bg-white/90 hover:text-[#104109] border-2 border-white text-base rounded-full font-bold shadow-lg"
-                  asChild
-                >
-                  <Link href="/events/register" className="inline-flex items-center justify-center gap-2">
-                    Host an Impact Hangout <ArrowRight className="h-5 w-5" />
-                  </Link>
-                </Button>
-              </motion.div>
-              <motion.div
-                className="flex"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.25 }}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="px-8 py-4 min-w-[200px] h-12 border-2 border-white text-white hover:bg-white/10 hover:text-white text-base rounded-full font-bold"
-                  asChild
-                >
-                  <Link href="/campaigns">Support a cause</Link>
-                </Button>
-              </motion.div>
-            </div>
+          <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-4">
             <motion.div
-              className="flex flex-wrap items-center justify-center gap-3"
+              className="flex"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Button
+                size="lg"
+                className="p-8 min-w-[200px] h-12 bg-white text-[#104109] hover:bg-white/90 hover:text-[#104109] border-2 border-white text-base rounded-full font-bold shadow-lg"
+                asChild
+              >
+                <Link href="/events/register" className="inline-flex items-center justify-center gap-2">
+                  Host an Impact Hangout <ArrowRight className="h-5 w-5" />
+                </Link>
+              </Button>
+            </motion.div>
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
             >
-              <p className="text-white/90 text-sm">Already registered?</p>
-              {myHangouts !== null && myHangouts.length > 0 ? (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="px-4 py-2 rounded-full border-white text-white hover:bg-white/10 hover:text-white"
-                  asChild
-                >
-                  <Link href={`/events/${encodeURIComponent(myHangouts[0].slug)}`} className="inline-flex items-center gap-2">
-                    <LogIn className="h-4 w-4" /> View my hangout
-                  </Link>
-                </Button>
-              ) : (
-                <form onSubmit={handleSendAccessLink} className="flex flex-wrap items-center justify-center gap-2">
-                  <Input
-                    type="email"
-                    placeholder="Your email"
-                    value={accessEmail}
-                    onChange={(e) => setAccessEmail(e.target.value)}
-                    className="h-10 w-[220px] rounded-full border-white/80 bg-white/10 text-white placeholder:text-white/70 focus:ring-white"
-                  />
-                  <Button
-                    type="submit"
-                    size="sm"
-                    variant="outline"
-                    disabled={accessSending || accessSent}
-                    className="px-4 py-2 rounded-full border-white text-white hover:bg-white/10 hover:text-white"
-                  >
-                    {accessSent ? "Check your email" : accessSending ? "Sending…" : "Send me the link"}
-                  </Button>
-                </form>
-              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setAccessSent(false);
+                  setShowAccessModal(true);
+                }}
+                className="text-white/90 text-sm font-semibold underline-offset-4 hover:underline hover:text-white"
+              >
+                Already registered?
+              </button>
             </motion.div>
           </div>
         </div>
@@ -251,58 +262,65 @@ export default function ImpactHangoutPage() {
       {/* What Is — split: text + Nigerian spread image, staggered text */}
       <section className="relative py-20 md:py-28 overflow-hidden">
         <div className="container mx-auto px-4 max-w-6xl">
-          <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
+          <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center overflow-x-clip">
             <motion.div
-              className="order-2 md:order-1"
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true, margin: "-80px" }}
-              variants={stagger}
+              className="order-2 md:order-1 relative z-10 min-h-0"
+              initial={{ opacity: 0.9, x: "22%", y: 16, scale: 0.96 }}
+              whileInView={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+              viewport={{ once: true, amount: 0.28, margin: "-10% 0px -10% 0px" }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.06 }}
             >
-              <motion.h2
-                className="text-3xl md:text-5xl font-extrabold text-[#104109] mb-6 leading-tight"
-                variants={fadeInUp}
+              <motion.div
+                initial="initial"
+                whileInView="animate"
+                viewport={{ once: true, margin: "-80px" }}
+                variants={stagger}
               >
-                What is the Impact Hangout?
-              </motion.h2>
-              <motion.p
-                className="text-[#57534E] text-lg leading-relaxed mb-4 text-justify"
-                variants={fadeInUp}
-              >
-                This month, we&apos;re inviting people across the country to turn
-                simple gatherings into moments of impact.
-              </motion.p>
-              <motion.p
-                className="text-[#57534E] text-lg leading-relaxed mb-4 text-justify"
-                variants={fadeInUp}
-              >
-                It could be a relaxed breakfast with friends, an evening
-                hangout with small chops and suya, a campus meetup, or even an
-                office meal. Whatever the setting, your table can become a place
-                where real change begins.
-              </motion.p>
-              <motion.p
-                className="text-[#57534E] text-lg leading-relaxed mb-8 text-justify"
-                variants={fadeInUp}
-              >
-                The Impact Hangout is all about bringing people together — not
-                just to eat and connect, but to support meaningful causes at the
-                same time.
-              </motion.p>
-              <motion.div variants={fadeInUp} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button size="lg" className="px-8 py-4 h-12 text-base font-bold rounded-full bg-[#104109] " asChild>
-                  <Link href="/events/register">
-                    Register to host <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
+                <motion.h2
+                  className="text-3xl md:text-5xl font-extrabold text-[#104109] mb-6 leading-tight"
+                  variants={fadeInUp}
+                >
+                  What is the Impact Hangout?
+                </motion.h2>
+                <motion.p
+                  className="text-[#57534E] text-lg leading-relaxed mb-4 text-justify"
+                  variants={fadeInUp}
+                >
+                  This month, we&apos;re inviting people across the country to turn
+                  simple gatherings into moments of impact.
+                </motion.p>
+                <motion.p
+                  className="text-[#57534E] text-lg leading-relaxed mb-4 text-justify"
+                  variants={fadeInUp}
+                >
+                  It could be a relaxed breakfast with friends, an evening
+                  hangout with small chops and suya, a campus meetup, or even an
+                  office meal. Whatever the setting, your table can become a place
+                  where real change begins.
+                </motion.p>
+                <motion.p
+                  className="text-[#57534E] text-lg leading-relaxed mb-8 text-justify"
+                  variants={fadeInUp}
+                >
+                  The Impact Hangout is all about bringing people together — not
+                  just to eat and connect, but to support meaningful causes at the
+                  same time.
+                </motion.p>
+                <motion.div variants={fadeInUp} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button size="lg" className="px-8 py-4 h-auto min-h-12 text-base font-bold rounded-full bg-[#104109] hover:bg-[#0d3607]" asChild>
+                    <Link href="/events/register">
+                      Register to host <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                </motion.div>
               </motion.div>
             </motion.div>
             <motion.div
-              className="order-1 md:order-2 relative aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl"
-              initial={{ opacity: 0, x: 24 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.5 }}
+              className="order-1 md:order-2 relative z-20 aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl"
+              initial={{ opacity: 0.9, x: "-14%", y: 16, scale: 0.94 }}
+              whileInView={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+              viewport={{ once: true, amount: 0.28, margin: "-10% 0px -10% 0px" }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
               whileHover={{ scale: 1.02 }}
             >
               <Image
@@ -318,17 +336,8 @@ export default function ImpactHangoutPage() {
       </section>
 
       {/* Why Host — full-bleed snacks/fabric background + staggered + hover, text left */}
-      <section className="relative min-h-[520px] md:min-h-[560px] flex items-start py-20 overflow-hidden">
-        <div className="absolute inset-0">
-          <Image
-            src="/images/events/event2.png"
-            alt=""
-            fill
-            className="object-cover"
-            sizes="100vw"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#104109]/65 via-[#104109]/45 to-[#10B981]/35" />
-        </div>
+      <section className="bg-[#59AD4A] relative min-h-[520px] md:min-h-[560px] flex items-start py-20 overflow-hidden">
+
         <motion.div
           className="relative z-10 w-full max-w-full pl-4 md:pl-8 pr-4 md:pr-8 ml-0 mr-auto text-white text-left"
           initial="initial"
@@ -397,13 +406,13 @@ export default function ImpactHangoutPage() {
           >
             How It Works
           </motion.h2>
-          <div className="grid md:grid-cols-5 md:h-[540px] gap-10 items-stretch">
+          <div className="grid md:grid-cols-5 md:h-[540px] gap-10 items-stretch overflow-x-clip">
             <motion.div
-              className="md:col-span-2 relative h-full rounded-2xl overflow-hidden hidden md:block"
-              initial={{ opacity: 0, scale: 0.98 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
+              className="md:col-span-2 relative z-20 h-full min-h-[280px] rounded-2xl overflow-hidden hidden md:block shadow-lg"
+              initial={{ opacity: 0.9, x: "22%", scale: 0.94 }}
+              whileInView={{ opacity: 1, x: 0, scale: 1 }}
+              viewport={{ once: true, amount: 0.28, margin: "-10% 0px -10% 0px" }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
             >
               <Image
                 src="/images/events/event6.png"
@@ -413,67 +422,67 @@ export default function ImpactHangoutPage() {
                 sizes="(max-width: 768px) 0, 40vw (max-height: 768px) 0, 40vw"
               />
             </motion.div>
-            <motion.ol
-              className="md:col-span-3 h-full flex flex-col justify-between space-y-6"
-              variants={stagger}
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true, margin: "-60px" }}
+            <motion.div
+              className="relative z-10 md:col-span-3 h-full min-h-0"
+              initial={{ opacity: 0.9, x: "-14%", y: 16, scale: 0.96 }}
+              whileInView={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+              viewport={{ once: true, amount: 0.28, margin: "-10% 0px -10% 0px" }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.06 }}
             >
-              {[
-                {
-                  step: 1,
-                  title: "Register",
-                  text: "Create your Impact Hangout page and get your personal fundraising link.",
-                },
-                {
-                  step: 2,
-                  title: "Choose a Cause",
-                  text: "Select one of the verified causes to support: Education Access Fund, Medical Emergency Support, or Community Relief Fund.",
-                  icons: true,
-                },
-                {
-                  step: 3,
-                  title: "Host Your Hangout",
-                  text: "Invite your friends, colleagues, or community. Serve breakfast, dinner, or snacks — whatever fits your vibe.",
-                },
-                {
-                  step: 4,
-                  title: "Encourage Donations",
-                  text: "Instead of gifts, invite your guests to support the cause by donating through your link.",
-                },
-                {
-                  step: 5,
-                  title: "Watch the Impact Grow",
-                  text: "Track donations and see the difference your gathering is making in real time.",
-                },
-              ].map((item) => (
-                <motion.li
-                  key={item.step}
-                  className="flex gap-4 p-4 rounded-2xl bg-white/90 backdrop-blur-sm border border-[#E7E5E4] shadow-sm"
-                  variants={fadeInUp}
-                  whileHover={{ x: 6, boxShadow: "0 10px 40px -10px rgba(16, 73, 1, 0.2)" }}
-                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                >
-                  <span className="flex-shrink-0 w-11 h-11 rounded-full bg-[#104109] text-white font-bold flex items-center justify-center">
-                    {item.step}
-                  </span>
-                  <div>
-                    <h3 className="font-semibold text-lg text-[#1C1917] mb-1">
-                      {item.title}
-                    </h3>
-                    <p className="text-[#57534E] text-base text-justify">{item.text}</p>
-                    {/* {item.icons && (
-                      <div className="flex gap-3 mt-2 text-brand-green-dark">
-                        <GraduationCap className="h-5 w-5" />
-                        <HeartPulse className="h-5 w-5" />
-                        <UtensilsCrossed className="h-5 w-5" />
-                      </div>
-                    )} */}
-                  </div>
-                </motion.li>
-              ))}
-            </motion.ol>
+              <motion.ol
+                className="h-full flex flex-col justify-between space-y-6"
+                variants={stagger}
+                initial="initial"
+                whileInView="animate"
+                viewport={{ once: true, amount: 0.28, margin: "-10% 0px -10% 0px" }}
+              >
+                {[
+                  {
+                    step: 1,
+                    title: "Register",
+                    text: "Create your Impact Hangout page and get your personal fundraising link.",
+                  },
+                  {
+                    step: 2,
+                    title: "Choose a Cause",
+                    text: "Select one of the verified causes to support: Education Access Fund, Medical Emergency Support, or Community Relief Fund.",
+                  },
+                  {
+                    step: 3,
+                    title: "Host Your Hangout",
+                    text: "Invite your friends, colleagues, or community. Serve breakfast, dinner, or snacks — whatever fits your vibe.",
+                  },
+                  {
+                    step: 4,
+                    title: "Encourage Donations",
+                    text: "Instead of gifts, invite your guests to support the cause by donating through your link.",
+                  },
+                  {
+                    step: 5,
+                    title: "Watch the Impact Grow",
+                    text: "Track donations and see the difference your gathering is making in real time.",
+                  },
+                ].map((item) => (
+                  <motion.li
+                    key={item.step}
+                    className="flex gap-4 p-4 rounded-2xl bg-white/90 backdrop-blur-sm border border-[#E7E5E4] shadow-sm"
+                    variants={fadeInUp}
+                    whileHover={{ x: 6, boxShadow: "0 10px 40px -10px rgba(16, 73, 1, 0.2)" }}
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  >
+                    <span className="flex-shrink-0 w-11 h-11 rounded-full bg-[#104109] text-white font-bold flex items-center justify-center">
+                      {item.step}
+                    </span>
+                    <div>
+                      <h3 className="font-semibold text-lg text-[#1C1917] mb-1">
+                        {item.title}
+                      </h3>
+                      <p className="text-[#57534E] text-base text-justify">{item.text}</p>
+                    </div>
+                  </motion.li>
+                ))}
+              </motion.ol>
+            </motion.div>
           </div>
           <motion.div
             className="mt-24"
@@ -484,7 +493,7 @@ export default function ImpactHangoutPage() {
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.98 }}
           >
-            <Button size="lg" className="px-8 py-4 h-12 text-base font-bold rounded-full bg-[#104109] " asChild>
+            <Button size="lg" className="px-8 py-4 h-auto min-h-12 text-base font-bold rounded-full bg-[#104109] hover:bg-[#0d3607]" asChild>
               <Link href="/events/register">
                 Register now <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
@@ -655,7 +664,7 @@ export default function ImpactHangoutPage() {
       </section>
 
       {/* Get ready for your Impact Hangout */}
-      <section className="py-20 md:py-24 bg-white border-t border-[#E7E5E4]">
+      <section className="py-20 md:py-24 bg-[#FFCF55] border-t border-[#E7E5E4]">
         <div className="container mx-auto px-4 max-w-3xl">
           <motion.h2
             className="text-3xl md:text-5xl font-extrabold text-[#104109] mb-6 leading-tight"
@@ -695,7 +704,7 @@ export default function ImpactHangoutPage() {
             ))}
           </ul>
           <motion.div className="mt-8" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}>
-            <Button size="lg" className="px-8 py-4 h-12 text-base font-bold rounded-full bg-[#104109] " asChild>
+            <Button size="lg" className="px-8 py-4 h-auto min-h-12 text-base font-bold rounded-full bg-[#104109] hover:bg-[#0d3607]" asChild>
               <Link href="/events/register">
                 Register to host <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
@@ -748,7 +757,7 @@ export default function ImpactHangoutPage() {
             <motion.div variants={fadeInUp} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
               <Button
                 size="lg"
-                className="px-8 py-4 h-12 min-w-[200px] bg-white text-[#104109] hover:bg-white/90 border-2 border-white rounded-full font-bold"
+                className="p-8 h-12 min-w-[200px] bg-white text-[#104109] hover:bg-white/90 border-2 border-white rounded-full font-bold"
                 asChild
               >
                 <Link href="/events/register" className="inline-flex items-center">
@@ -756,16 +765,16 @@ export default function ImpactHangoutPage() {
                 </Link>
               </Button>
             </motion.div>
-            <motion.div variants={fadeInUp} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
+            {/* <motion.div variants={fadeInUp} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
               <Button
                 size="lg"
                 variant="outline"
-                className="px-8 py-4 h-12 min-w-[200px] border-2 border-white text-white hover:bg-white/10 hover:text-white rounded-full font-bold"
+                className="p-8 h-12 min-w-[200px] border-2 border-white text-white hover:bg-white/10 hover:text-white rounded-full font-bold"
                 asChild
               >
                 <Link href="/campaigns">Support a cause</Link>
               </Button>
-            </motion.div>
+            </motion.div> */}
           </div>
         </motion.div>
       </section>

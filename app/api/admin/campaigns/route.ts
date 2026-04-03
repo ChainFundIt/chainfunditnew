@@ -59,6 +59,7 @@ export async function GET(request: NextRequest) {
         currency: campaigns.currency,
         status: campaigns.status,
         isVerified: campaigns.isVerified,
+        verifiedPendingAt: campaigns.verifiedPendingAt,
         complianceStatus: campaigns.complianceStatus,
         createdAt: campaigns.createdAt,
         updatedAt: campaigns.updatedAt,

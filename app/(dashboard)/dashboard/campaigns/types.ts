@@ -19,6 +19,9 @@ export type Campaign = {
   currentAmount: number;
   status: string;
   isActive: boolean;
+  isVerified?: boolean;
+  verifiedPendingAt?: string | null;
+  verifiedRulesAcceptedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   closedAt: string;

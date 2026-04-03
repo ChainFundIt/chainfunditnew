@@ -26,6 +26,8 @@ export type CampaignInfoProps = {
   description: string;
   status: string;
   showEdit?: boolean;
+  /** Admin offered verified status; creator must accept rules before the badge shows publicly. */
+  verificationPending?: boolean;
 };
 
 export const CampaignInfo = ({
@@ -41,6 +43,7 @@ export const CampaignInfo = ({
   description,
   status,
   showEdit = false,
+  verificationPending = false,
 }: CampaignInfoProps) => {
   const router = useRouter();
   const imageExist = !needsEmojiFallback(imageUrl);
@@ -70,6 +73,14 @@ export const CampaignInfo = ({
             {capitalizeFirstLetter(status)}
           </div>
         </div>
+
+        {verificationPending && (
+          <div className="absolute bottom-[10px] left-[10px] right-[10px] flex justify-center">
+            <div className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold leading-tight border border-amber-200 shadow-sm">
+              Pending verification
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="p-[18px] flex flex-col justify-between h-full">

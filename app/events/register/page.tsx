@@ -306,9 +306,6 @@ function ImpactHangoutRegisterContent() {
                   {completedRegistrationSlug ? "Go to my page" : "Back to Impact Hangout"}
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="h-12 rounded-full" asChild>
-                <Link href="/campaigns">Browse campaigns</Link>
-              </Button>
             </div>
           </motion.div>
         </div>
@@ -332,7 +329,7 @@ function ImpactHangoutRegisterContent() {
 
       <div className="relative z-10">
         <Navbar />
-        <div className="container mx-auto px-4 pt-24 pb-20 max-w-xl">
+        <div className="container mx-auto flex flex-col justify-center px-4 pt-24 pb-20">
           <Link
             href="/events"
             className="inline-flex items-center gap-2 text-white font-medium hover:text-white/90 mb-6"
@@ -341,7 +338,7 @@ function ImpactHangoutRegisterContent() {
           </Link>
 
           <motion.div
-            className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 overflow-hidden"
+            className="w-full max-w-full overflow-hidden rounded-2xl border border-white/20 bg-white/95 shadow-2xl backdrop-blur-md md:max-w-[min(100%,60vw)]"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
@@ -465,7 +462,7 @@ function ImpactHangoutRegisterContent() {
                           onChange={(e) =>
                             setForm((f) => ({ ...f, firstName: e.target.value }))
                           }
-                          className="rounded-lg border-gray-300 focus:ring-2 focus:ring-brand-green-dark"
+                          className="rounded-lg h-12 border-gray-300 focus:ring-2 focus:ring-brand-green-dark"
                         />
                       </div>
                       <div className="space-y-2">
@@ -478,7 +475,7 @@ function ImpactHangoutRegisterContent() {
                           onChange={(e) =>
                             setForm((f) => ({ ...f, lastName: e.target.value }))
                           }
-                          className="rounded-lg border-gray-300 focus:ring-2 focus:ring-brand-green-dark"
+                          className="rounded-lg h-12 border-gray-300 focus:ring-2 focus:ring-brand-green-dark"
                         />
                       </div>
                     </div>
@@ -493,7 +490,7 @@ function ImpactHangoutRegisterContent() {
                         onChange={(e) =>
                           setForm((f) => ({ ...f, email: e.target.value }))
                         }
-                        className="rounded-lg border-gray-300 focus:ring-2 focus:ring-brand-green-dark"
+                        className="rounded-lg h-12 border-gray-300 focus:ring-2 focus:ring-brand-green-dark"
                       />
                     </div>
                     <div className="space-y-2">
@@ -506,7 +503,7 @@ function ImpactHangoutRegisterContent() {
                         onChange={(e) =>
                           setForm((f) => ({ ...f, phone: e.target.value }))
                         }
-                        className="rounded-lg border-gray-300 focus:ring-2 focus:ring-brand-green-dark"
+                        className="rounded-lg h-12 border-gray-300 focus:ring-2 focus:ring-brand-green-dark"
                       />
                     </div>
                     <div className="space-y-2">
@@ -517,7 +514,7 @@ function ImpactHangoutRegisterContent() {
                           setForm((f) => ({ ...f, plannedWhen: v }))
                         }
                       >
-                        <SelectTrigger className="rounded-lg border-gray-300 focus:ring-2 focus:ring-brand-green-dark">
+                        <SelectTrigger className="rounded-lg h-12 border-gray-300 focus:ring-2 focus:ring-brand-green-dark">
                           <SelectValue placeholder="Select..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -537,7 +534,7 @@ function ImpactHangoutRegisterContent() {
                           setForm((f) => ({ ...f, cause: v }))
                         }
                       >
-                        <SelectTrigger className="rounded-lg border-gray-300 focus:ring-2 focus:ring-brand-green-dark">
+                        <SelectTrigger className="rounded-lg h-12 border-gray-300 focus:ring-2 focus:ring-brand-green-dark">
                           <SelectValue placeholder="Select..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -702,7 +699,7 @@ function ImpactHangoutRegisterContent() {
                           setForm((f) => ({ ...f, eventType: v }))
                         }
                       >
-                        <SelectTrigger className="rounded-lg border-gray-300 focus:ring-2 focus:ring-brand-green-dark">
+                        <SelectTrigger className="rounded-lg h-12 border-gray-300 focus:ring-2 focus:ring-brand-green-dark">
                           <SelectValue placeholder="Select..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -724,7 +721,7 @@ function ImpactHangoutRegisterContent() {
                         onChange={(e) =>
                           setForm((f) => ({ ...f, hangoutName: e.target.value }))
                         }
-                        className="rounded-lg border-gray-300 focus:ring-2 focus:ring-brand-green-dark"
+                        className="rounded-lg h-12 border-gray-300 focus:ring-2 focus:ring-brand-green-dark"
                       />
                     </div>
 
@@ -742,7 +739,7 @@ function ImpactHangoutRegisterContent() {
                             fundraisingGoal: e.target.value.replace(/\D/g, ""),
                           }))
                         }
-                        className="rounded-lg border-gray-300 focus:ring-2 focus:ring-brand-green-dark"
+                        className="rounded-lg h-12 border-gray-300 focus:ring-2 focus:ring-brand-green-dark"
                       />
                       <p className="text-xs text-gray-500">
                         How much would you like to raise in total?
@@ -886,7 +883,7 @@ function ImpactHangoutRegisterContent() {
                                   : parseInt(raw, 10) || 10_000,
                             }));
                           }}
-                          className="rounded-lg border-gray-300 focus:ring-2 focus:ring-brand-green-dark"
+                          className="rounded-lg h-12 border-gray-300 focus:ring-2 focus:ring-brand-green-dark"
                         />
                       </div>
                     </div>

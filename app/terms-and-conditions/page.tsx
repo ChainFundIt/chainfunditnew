@@ -30,7 +30,7 @@ const tableOfContents = [
   { id: "f1-prohibited", label: "F.1. Prohibited Campaigns" },
   { id: "g-ambassadors", label: "G. Chain Ambassadors" },
   { id: "h-suspension", label: "H. Account Suspension" },
-  { id: "i-liability", label: "I. Liability & Risk" },
+  { id: "i-liability", label: "I. Liability, Risk & Platform Discretion" },
   { id: "j-changes", label: "J. Changes & Legal Terms" },
 ];
 
@@ -234,34 +234,115 @@ const sections = [
       {
         subtitle: "",
         text: (
-          <ul className="list-disc list-inside space-y-2">
-            <li>
-              Donations are <strong>gifts</strong>, not payments for goods or
-              services. Donors should not expect anything in return.
-            </li>
-            <li>
-              Donations are <strong>non-refundable</strong>, except where
-              required by law or under ChainFundIt's refund review process
-              (e.g., proven fraud or mistake).
-            </li>
-            <li>
-              ChainFundIt may refund a donation, redirect it to another
-              campaign, or withhold it if the original campaign cannot receive
-              the funds.
-            </li>
-            <li>
-              Currency conversions may involve delays, fees, and exchange rate
-              fluctuations.
-            </li>
-            <li>
-              ChainFundIt does not guarantee that donation receipts are
-              tax-deductible in your jurisdiction. Consult a tax advisor.
-            </li>
-            <li>
-              Donors may choose to remain anonymous. In such cases, Organisers
-              will not receive the donor's identity.
-            </li>
-          </ul>
+          <div className="space-y-6">
+            <ul className="list-disc list-inside space-y-2">
+              <li>
+                Donations made via the platform are <strong>gifts</strong>, and
+                donors will not receive anything in return (i.e. not a
+                purchase).
+              </li>
+              <li>
+                Once funds are allocated to a campaign, donors cannot typically
+                cancel or retract them (subject to error/refund policies and the
+                provisions below).
+              </li>
+            </ul>
+
+            <div>
+              <h3 className="font-semibold text-base mb-3">
+                Refunds, Campaign Status & Exceptional Circumstances
+              </h3>
+              <p className="mb-3">
+                In limited circumstances, including but not limited to fraud,
+                misrepresentation, or where a campaign cannot proceed as
+                intended, ChainFundIt may investigate and take appropriate
+                action.
+              </p>
+              <p className="mb-2">
+                Where ChainFundIt determines, acting reasonably, that a campaign
+                may be fraudulent, misleading, or in breach of these Terms:
+              </p>
+              <ul className="list-disc list-inside space-y-2 mb-4 ml-4">
+                <li>
+                  The campaign may be suspended, removed, or marked as inactive
+                </li>
+                <li>Funds may be withheld pending investigation</li>
+              </ul>
+              <p className="mb-3">
+                Where a campaign is marked as inactive, this status will be
+                reflected on the campaign page.
+              </p>
+              <p className="mb-3">
+                In such cases, donors may request a refund within{" "}
+                <strong>28 days</strong> of the campaign being marked as inactive
+                on the platform, subject to deduction of applicable payment
+                processing fees and platform charges.
+              </p>
+              <p className="mb-3">
+                Donors are responsible for monitoring campaign updates and
+                campaign status on the platform. ChainFundIt is not obligated to
+                notify individual donors of such changes.
+              </p>
+              <p>
+                After this 28-day period, ChainFundIt reserves the right to
+                reallocate any remaining funds to similar verified campaigns or
+                causes on the platform, in a manner consistent with the original
+                intent of the donation where reasonably possible.
+              </p>
+            </div>
+
+            <hr className="border-gray-200" />
+
+            <div>
+              <h3 className="font-semibold text-base mb-3">
+                Inability to Fulfil Campaign Purpose
+              </h3>
+              <p className="mb-2">
+                A campaign may be considered unable to proceed or fulfil its
+                intended purpose where:
+              </p>
+              <ul className="list-disc list-inside space-y-2 mb-4 ml-4">
+                <li>The beneficiary is deceased</li>
+                <li>
+                  The required treatment, service, or objective is no longer
+                  needed or possible
+                </li>
+                <li>
+                  The total funds required for the stated purpose cannot be
+                  met, and the organiser is unable to demonstrate that the
+                  remaining balance has been secured from other sources
+                </li>
+                <li>
+                  The organiser fails to provide sufficient documentation or
+                  verification required for disbursement
+                </li>
+                <li>
+                  Any other circumstance arises that prevents the funds from
+                  being applied to the stated purpose
+                </li>
+              </ul>
+              <p>
+                In such cases, ChainFundIt may determine, acting reasonably and
+                in good faith, the appropriate use of the funds, including
+                refunds or reallocation in accordance with these Terms.
+              </p>
+            </div>
+
+            <ul className="list-disc list-inside space-y-2 pt-2">
+              <li>
+                Currency conversions may involve delays, fees, and exchange rate
+                fluctuations.
+              </li>
+              <li>
+                ChainFundIt does not guarantee that donation receipts are
+                tax-deductible in your jurisdiction. Consult a tax advisor.
+              </li>
+              <li>
+                Donors may choose to remain anonymous. In such cases, Organisers
+                will not receive the donor&apos;s identity.
+              </li>
+            </ul>
+          </div>
         ),
       },
     ],
@@ -271,6 +352,67 @@ const sections = [
     title: "F. Campaign Organisers",
     icon: Briefcase,
     content: [
+      {
+        subtitle: "Verified Campaigns & Disbursement Conditions",
+        text: (
+          <div className="space-y-4 mb-4">
+            <p className="mb-2">For campaigns designated as &quot;Verified&quot;:</p>
+            <ul className="list-disc list-inside space-y-2 ml-4">
+              <li>
+                Funds raised on the platform will only be disbursed directly to
+                the relevant institution (including but not limited to
+                hospitals, schools, landlords, or other verified service
+                providers)
+              </li>
+              <li>
+                Funds will not be released directly to the campaign organiser or
+                beneficiary
+              </li>
+            </ul>
+            <p className="mt-4 mb-2">
+              Where the total amount raised is insufficient to meet the
+              required cost of the stated purpose:
+            </p>
+            <ul className="list-disc list-inside space-y-2 ml-4">
+              <li>
+                ChainFundIt reserves the right to withhold disbursement until
+                the campaign organiser provides satisfactory evidence that the
+                remaining balance required has been secured from other sources
+              </li>
+            </ul>
+            <p className="mt-4 mb-2">
+              If such evidence is not provided within a reasonable timeframe:
+            </p>
+            <ul className="list-disc list-inside space-y-2 ml-4">
+              <li>
+                The campaign may be marked as inactive, and the provisions
+                relating to refunds and/or reallocation of funds shall apply
+              </li>
+            </ul>
+            <p className="mt-4">
+              ChainFundIt shall not be obligated to release funds where doing so
+              would not reasonably achieve the stated purpose of the campaign.
+            </p>
+          </div>
+        ),
+      },
+      {
+        subtitle: "Cooperation & Investigations",
+        text: (
+          <div className="mb-4">
+            <p className="mb-2">Campaign organisers agree to:</p>
+            <ul className="list-disc list-inside space-y-2 ml-4 mb-3">
+              <li>Provide accurate and complete information</li>
+              <li>Cooperate with any verification or compliance checks</li>
+              <li>Provide supporting documentation upon request</li>
+            </ul>
+            <p>
+              Failure to comply may result in suspension, withholding of funds,
+              or campaign removal.
+            </p>
+          </div>
+        ),
+      },
       {
         subtitle: "",
         text: (
@@ -507,13 +649,21 @@ const sections = [
   },
   {
     id: "i-liability",
-    title: "I. Liability, Risk & Fund Protection",
+    title: "I. Liability, Risk & Platform Discretion",
     icon: Shield,
     content: [
       {
         subtitle: "",
         text: (
           <>
+            <p className="mb-4">
+              ChainFundIt reserves the right to take such actions as it
+              reasonably deems necessary to protect donors, maintain platform
+              integrity, and ensure funds are used appropriately. This
+              includes, but is not limited to, suspending campaigns, marking
+              campaigns as inactive, withholding funds, issuing refunds, or
+              reallocating funds in accordance with these Terms.
+            </p>
             <ul className="list-disc list-inside space-y-2 mb-4">
               <li>
                 You are responsible for losses caused to ChainFundIt by your
@@ -540,11 +690,6 @@ const sections = [
               <li>
                 <strong>No interest will be paid</strong> to users on held
                 funds.
-              </li>
-              <li>
-                ChainFundIt reserves the right to{" "}
-                <strong>withhold, freeze, or refund</strong> donations during
-                dispute or investigation.
               </li>
               <li>
                 You may not use the platform for any{" "}

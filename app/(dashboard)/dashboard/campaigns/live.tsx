@@ -42,6 +42,10 @@ const LiveCampaigns = ({ campaigns }: Props) => {
       <div className=" flex md:justify-start justify-center">
         <div className="flex md:flex-row flex-col flex-wrap w-fit justify-center  gap-4">
           {transformedCampaigns.map((data, index) => {
+            const c = campaigns[index];
+            const verificationPending = Boolean(
+              c?.verifiedPendingAt && !c?.isVerified
+            );
             return (
               <div key={index}>
                 <CampaignInfo
@@ -60,6 +64,7 @@ const LiveCampaigns = ({ campaigns }: Props) => {
                   status={data.status}
                   fundRaisingFor={data.fundraisingFor || "Charity"}
                   showEdit={true}
+                  verificationPending={verificationPending}
                 />
               </div>
             );

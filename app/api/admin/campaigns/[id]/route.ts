@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { campaigns, users, donations, chainers } from '@/lib/schema';
+import { campaigns, users, donations, chainers, notifications } from '@/lib/schema';
 import {
   sendCampaignHoldEmail,
   sendCampaignReactivatedEmail,
-  sendCampaignVerifiedEmail,
+  sendCampaignVerificationPendingEmail,
 } from '@/lib/notifications/campaign-status-emails';
 import { eq, and, count, sum, desc } from 'drizzle-orm';
 
@@ -174,6 +174,7 @@ export async function PATCH(
       : baseUrl;
 
     let updatedCampaign;
+    let skipVerificationPendingOutreach = false;
 
     switch (action) {
       case 'hold':
@@ -238,21 +239,29 @@ export async function PATCH(
         break;
 
       case 'verify':
-        updatedCampaign = await db
-          .update(campaigns)
-          .set({ 
-            isVerified: true,
-            updatedAt: new Date(),
-          })
-          .where(eq(campaigns.id, campaignId))
-          .returning();
+        if (existingCampaign.isVerified || existingCampaign.verifiedPendingAt) {
+          updatedCampaign = [existingCampaign];
+          skipVerificationPendingOutreach = true;
+        } else {
+          updatedCampaign = await db
+            .update(campaigns)
+            .set({
+              isVerified: false,
+              verifiedPendingAt: new Date(),
+              updatedAt: new Date(),
+            })
+            .where(eq(campaigns.id, campaignId))
+            .returning();
+        }
         break;
 
       case 'unverify':
         updatedCampaign = await db
           .update(campaigns)
-          .set({ 
+          .set({
             isVerified: false,
+            verifiedPendingAt: null,
+            verifiedRulesAcceptedAt: null,
             updatedAt: new Date(),
           })
           .where(eq(campaigns.id, campaignId))
@@ -297,16 +306,37 @@ export async function PATCH(
           });
         }
 
-        if (action === 'verify') {
-          await sendCampaignVerifiedEmail({
+        if (action === 'verify' && !skipVerificationPendingOutreach) {
+          const rulesPageUrl = `${baseUrl}/dashboard/campaigns/verified-campaign?campaignId=${campaignId}`;
+          await sendCampaignVerificationPendingEmail({
             userEmail: creatorEmail,
             userName: creatorName,
             campaignTitle: existingCampaign.title,
             campaignUrl,
+            rulesPageUrl,
           });
         }
       } catch (emailError) {
         console.error('Failed to send campaign status email:', emailError);
+      }
+    }
+
+    if (action === 'verify' && !skipVerificationPendingOutreach) {
+      try {
+        await db.insert(notifications).values({
+          userId: existingCampaign.creatorId,
+          type: 'campaign_verification_pending',
+          title: 'Complete verification for your campaign',
+          message: `Your campaign "${existingCampaign.title}" is pending verification. Review and accept the verified campaign rules to activate your verified badge.`,
+          metadata: JSON.stringify({
+            campaignId,
+            slug: existingCampaign.slug,
+            rulesPath: `/dashboard/campaigns/verified-campaign?campaignId=${campaignId}`,
+          }),
+          createdAt: new Date(),
+        });
+      } catch (notifyErr) {
+        console.error('Failed to create verification pending notification:', notifyErr);
       }
     }
 
