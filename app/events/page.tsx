@@ -40,6 +40,103 @@ const CAMPAIGN_LINKS = [
   },
 ];
 
+/** Four-step “how to host” cards (layout inspired by charity fundraising pages; ChainFundIt copy). */
+const HOW_HOST_CARDS = [
+  {
+    image: "/images/events/event5.png",
+    alt: "Shared meal spread",
+    title: "Register to host",
+    before: "",
+    linkLabel: "Sign up today",
+    linkHref: "/events/register",
+    after: " and we'll keep you updated with everything you need — from fundraising tips to hosting ideas.",
+  },
+  {
+    image: "/images/events/event6.png",
+    alt: "Community breakfast table",
+    title: "Plan your event",
+    before: "Set a date, choose your venue, and start spreading the word. We have lots of ",
+    linkLabel: "free resources",
+    linkHref: "/fundraising-tips",
+    after: " to help make your hangout a success.",
+  },
+  {
+    image: "/images/events/event1.png",
+    alt: "Hosts around a table",
+    title: "Host your hangout",
+    before: "Serve your favourite meal and encourage your guests to ",
+    linkLabel: "make a donation",
+    linkHref: "/events",
+    after: " through your fundraising page.",
+  },
+  {
+    image: "/images/events/event7.png",
+    alt: "Smiling host with food",
+    title: "Support real impact",
+    before: "",
+    linkLabel: "",
+    linkHref: "",
+    after:
+      "Every naira raised helps verified causes on ChainFundIt — education, medical support, and community relief.",
+  },
+] as const;
+
+type ResourceDownload = { title: string; image: string; alt: string; href: string };
+
+const RESOURCES_AT_HOME: ResourceDownload[] = [
+  {
+    title: "Host checklist",
+    image: "/images/events/event2.png",
+    alt: "Planning notes and meal ideas",
+    href: "/fundraising-tips",
+  },
+  {
+    title: "Food & table ideas",
+    image: "/images/events/event5.png",
+    alt: "Food spread inspiration",
+    href: "/fundraising-ideas",
+  },
+  {
+    title: "Social assets",
+    image: "/images/events/event7.png",
+    alt: "Share graphics inspiration",
+    href: "/how-it-works",
+  },
+  {
+    title: "Virtual call tips",
+    image: "/images/events/event3.png",
+    alt: "Gathering at home",
+    href: "/faq",
+  },
+];
+
+const RESOURCES_AT_WORK: ResourceDownload[] = [
+  {
+    title: "Team invite wording",
+    image: "/images/events/event4.png",
+    alt: "Colleagues at a table",
+    href: "/fundraising-tips",
+  },
+  {
+    title: "Office poster ideas",
+    image: "/images/events/event6.png",
+    alt: "Breakfast spread for work",
+    href: "/how-it-works",
+  },
+  {
+    title: "Social assets",
+    image: "/images/events/event1.png",
+    alt: "Community meal",
+    href: "/join-the-chain-reaction",
+  },
+  {
+    title: "Catering & timing",
+    image: "/images/events/event5.png",
+    alt: "Shared dishes",
+    href: "/contact-us",
+  },
+];
+
 const fadeInUp = {
   initial: { opacity: 0, y: 24 },
   animate: { opacity: 1, y: 0 },
@@ -54,6 +151,51 @@ const stagger = {
 
 type MyHangout = { slug: string; hangoutName: string; paymentStatus: string };
 type RecentDonor = { name: string; amount: number };
+
+function ResourceGridBlock({
+  heading,
+  items,
+  className = "",
+}: {
+  heading: string;
+  items: ResourceDownload[];
+  className?: string;
+}) {
+  return (
+    <div className={className}>
+      <h3 className="font-jakarta mb-6 text-xl font-black uppercase tracking-tight text-[#0a0a0a] md:text-2xl">
+        {heading}
+      </h3>
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+        {items.map((item) => (
+          <article
+            key={item.title}
+            className="flex flex-col rounded-2xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden"
+          >
+            <div className="relative aspect-square w-full sm:aspect-[4/3]">
+              <Image
+                src={item.image}
+                alt={item.alt}
+                fill
+                className="object-cover"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+              />
+            </div>
+            <div className="flex flex-1 flex-col gap-4 p-4 md:p-5">
+              <h4 className="font-bold text-[#0a0a0a]">{item.title}</h4>
+              <Button
+                asChild
+                className="h-auto w-fit min-w-[5rem] rounded-full border-0 bg-[#104109] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#104109]"
+              >
+                <Link href={item.href}>View</Link>
+              </Button>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function ImpactHangoutPage() {
   const [myHangouts, setMyHangouts] = useState<MyHangout[] | null>(null);
@@ -394,111 +536,57 @@ export default function ImpactHangoutPage() {
         </motion.div>
       </section>
 
-      {/* How It Works — steps with event6 as side accent */}
-      <section className="relative py-20 md:py-28 bg-gradient-to-b from-[#F5F7F3] to-[var(--color-background)]">
-        <div className="container mx-auto px-4 max-w-6xl">
+      {/* How do I host — full-bleed band + four white cards (reference layout) */}
+      <section className="relative bg-[#104109] py-16 md:py-24">
+        <div className="container mx-auto max-w-7xl px-4 md:px-6">
           <motion.h2
-            className="text-3xl md:text-5xl font-extrabold text-[#104109] mb-12 leading-tight"
-            initial={{ opacity: 0, y: 20 }}
+            className="font-jakarta mb-10 text-center text-3xl font-black uppercase leading-[1.1] tracking-tight text-white sm:text-4xl md:mb-12 md:text-5xl"
+            initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
+            transition={{ duration: 0.45 }}
           >
-            How It Works
+            How do I host an Impact Hangout?
           </motion.h2>
-          <div className="grid md:grid-cols-5 md:h-[540px] gap-10 items-stretch overflow-x-clip">
-            <motion.div
-              className="md:col-span-2 relative z-20 h-full min-h-[280px] rounded-2xl overflow-hidden hidden md:block shadow-lg"
-              initial={{ opacity: 0.9, x: "22%", scale: 0.94 }}
-              whileInView={{ opacity: 1, x: 0, scale: 1 }}
-              viewport={{ once: true, amount: 0.28, margin: "-10% 0px -10% 0px" }}
-              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <Image
-                src="/images/events/event6.png"
-                alt="Food spread - rice, plantains, community meal"
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 0, 40vw (max-height: 768px) 0, 40vw"
-              />
-            </motion.div>
-            <motion.div
-              className="relative z-10 md:col-span-3 h-full min-h-0"
-              initial={{ opacity: 0.9, x: "-14%", y: 16, scale: 0.96 }}
-              whileInView={{ opacity: 1, x: 0, y: 0, scale: 1 }}
-              viewport={{ once: true, amount: 0.28, margin: "-10% 0px -10% 0px" }}
-              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.06 }}
-            >
-              <motion.ol
-                className="h-full flex flex-col justify-between space-y-6"
-                variants={stagger}
-                initial="initial"
-                whileInView="animate"
-                viewport={{ once: true, amount: 0.28, margin: "-10% 0px -10% 0px" }}
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+            {HOW_HOST_CARDS.map((card, i) => (
+              <motion.article
+                key={card.title}
+                className="flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white shadow-md"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.06 }}
               >
-                {[
-                  {
-                    step: 1,
-                    title: "Register",
-                    text: "Create your Impact Hangout page and get your personal fundraising link.",
-                  },
-                  {
-                    step: 2,
-                    title: "Choose a Cause",
-                    text: "Select one of the verified causes to support: Education Access Fund, Medical Emergency Support, or Community Relief Fund.",
-                  },
-                  {
-                    step: 3,
-                    title: "Host Your Hangout",
-                    text: "Invite your friends, colleagues, or community. Serve breakfast, dinner, or snacks — whatever fits your vibe.",
-                  },
-                  {
-                    step: 4,
-                    title: "Encourage Donations",
-                    text: "Instead of gifts, invite your guests to support the cause by donating through your link.",
-                  },
-                  {
-                    step: 5,
-                    title: "Watch the Impact Grow",
-                    text: "Track donations and see the difference your gathering is making in real time.",
-                  },
-                ].map((item) => (
-                  <motion.li
-                    key={item.step}
-                    className="flex gap-4 p-4 rounded-2xl bg-white/90 backdrop-blur-sm border border-[#E7E5E4] shadow-sm"
-                    variants={fadeInUp}
-                    whileHover={{ x: 6, boxShadow: "0 10px 40px -10px rgba(16, 73, 1, 0.2)" }}
-                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                  >
-                    <span className="flex-shrink-0 w-11 h-11 rounded-full bg-[#104109] text-white font-bold flex items-center justify-center">
-                      {item.step}
-                    </span>
-                    <div>
-                      <h3 className="font-semibold text-lg text-[#1C1917] mb-1">
-                        {item.title}
-                      </h3>
-                      <p className="text-[#57534E] text-base text-justify">{item.text}</p>
-                    </div>
-                  </motion.li>
-                ))}
-              </motion.ol>
-            </motion.div>
+                <div className="relative aspect-[4/3] w-full shrink-0">
+                  <Image
+                    src={card.image}
+                    alt={card.alt}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                  />
+                </div>
+                <div className="flex flex-1 flex-col gap-3 p-4 md:p-5">
+                  <h3 className="font-jakarta text-lg font-black uppercase tracking-tight text-[#0a0a0a] md:text-xl">
+                    {card.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed text-neutral-700">
+                    {card.before}
+                    {card.linkLabel && card.linkHref ? (
+                      <Link
+                        href={card.linkHref}
+                        className="font-bold text-[#104109] underline decoration-2 underline-offset-2"
+                      >
+                        {card.linkLabel}
+                      </Link>
+                    ) : null}
+                    {card.after}
+                  </p>
+                </div>
+              </motion.article>
+            ))}
           </div>
-          <motion.div
-            className="mt-24"
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4 }}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <Button size="lg" className="px-8 py-4 h-auto min-h-12 text-base font-bold rounded-full bg-[#104109] hover:bg-[#0d3607]" asChild>
-              <Link href="/events/register">
-                Register now <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </motion.div>
         </div>
       </section>
 
@@ -663,48 +751,53 @@ export default function ImpactHangoutPage() {
         </motion.div>
       </section>
 
-      {/* Get ready for your Impact Hangout */}
-      <section className="py-20 md:py-24 bg-[#FFCF55] border-t border-[#E7E5E4]">
-        <div className="container mx-auto px-4 max-w-3xl">
-          <motion.h2
-            className="text-3xl md:text-5xl font-extrabold text-[#104109] mb-6 leading-tight"
+      {/* Get ready — centred intro + resource grids (reference layout) */}
+      <section className="border-t border-neutral-200 bg-white py-16 md:py-24">
+        <div className="container mx-auto max-w-7xl px-4 md:px-6">
+          <motion.header
+            className="mx-auto mb-14 max-w-3xl text-center md:mb-16"
+            initial={{ opacity: 0, y: 14 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.45 }}
+          >
+            <h2 className="font-jakarta text-3xl font-black uppercase tracking-tight text-[#0a0a0a] md:text-4xl lg:text-5xl">
+              Get ready for your Impact Hangout
+            </h2>
+            <p className="mt-4 text-base text-neutral-600 md:text-lg">
+              Explore our free guides and ideas to help make your hangout a success.
+            </p>
+          </motion.header>
+
+          <motion.div
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.45 }}
           >
-            Get ready for your Impact Hangout
-          </motion.h2>
-          <motion.p
-            className="text-[#57534E] text-lg leading-relaxed mb-6 text-justify"
-            initial={{ opacity: 0, y: 12 }}
+            <ResourceGridBlock heading="I'm hosting at home:" items={RESOURCES_AT_HOME} />
+          </motion.div>
+          <motion.div
+            className="mt-16 md:mt-20"
+            initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.45, delay: 0.05 }}
           >
-            Set a date, choose your venue, and start spreading the word. Share your
-            fundraising page with guests so they can donate before, during, or after
-            your hangout. Every Naira raised goes to your chosen cause.
-          </motion.p>
-          <ul className="space-y-2 text-[#57534E]">
-            {[
-              "Share your page link with friends and family",
-              "Add your hangout to the calendar and send reminders",
-              "On the day, enjoy the gathering and encourage donations",
-            ].map((item, i) => (
-              <motion.li
-                key={i}
-                className="flex items-center gap-2 text-justify"
-                initial={{ opacity: 0, x: -8 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-              >
-                <Check className="h-5 w-5 text-[#104109] flex-shrink-0" />
-                {item}
-              </motion.li>
-            ))}
-          </ul>
-          <motion.div className="mt-8" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}>
-            <Button size="lg" className="px-8 py-4 h-auto min-h-12 text-base font-bold rounded-full bg-[#104109] hover:bg-[#0d3607]" asChild>
+            <ResourceGridBlock heading="I'm hosting at work:" items={RESOURCES_AT_WORK} />
+          </motion.div>
+
+          <motion.div
+            className="mt-12 flex justify-center md:mt-14"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+          >
+            <Button
+              size="lg"
+              className="h-auto min-h-12 rounded-full bg-[#104109] px-8 py-4 text-base font-bold text-white hover:bg-[#104109]"
+              asChild
+            >
               <Link href="/events/register">
                 Register to host <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
