@@ -316,7 +316,7 @@ function ImpactHangoutRegisterContent() {
 
   return (
     <div className="min-h-screen relative">
-      <div className="absolute inset-0">
+      {/* <div className="absolute inset-0">
         <Image
           src="/images/events/event2.png"
           alt=""
@@ -325,11 +325,11 @@ function ImpactHangoutRegisterContent() {
           sizes="100vw"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-brand-green-dark/70 via-brand-green-dark/50 to-brand-green-dark/40" />
-      </div>
+      </div> */}
 
       <div className="relative z-10">
         <Navbar />
-        <div className="container mx-auto flex flex-col justify-center px-4 pt-24 pb-20">
+        <div className="container mx-auto flex flex-col justify-center items-center px-4 pt-24 pb-20">
           <Link
             href="/events"
             className="inline-flex items-center gap-2 text-white font-medium hover:text-white/90 mb-6"
@@ -338,7 +338,7 @@ function ImpactHangoutRegisterContent() {
           </Link>
 
           <motion.div
-            className="w-full max-w-full overflow-hidden rounded-2xl border border-white/20 bg-white/95 shadow-2xl backdrop-blur-md md:max-w-[min(100%,60vw)]"
+            className="w-full max-w-full overflow-hidden rounded-2xl border border-white/20 bg-white/95 backdrop-blur-md md:max-w-[min(100%,60vw)]"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
