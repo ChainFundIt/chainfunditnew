@@ -185,7 +185,7 @@ function ResourceGridBlock({
               <h4 className="font-bold text-[#0a0a0a]">{item.title}</h4>
               <Button
                 asChild
-                className="h-auto w-fit min-w-[5rem] rounded-full border-0 bg-[#104109] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#104109]"
+                className="h-auto w-fit min-w-[5rem] rounded-full border-0 bg-[#104109] px-5 py-2.5 text-sm font-semibold text-white"
               >
                 <Link href={item.href}>View</Link>
               </Button>
@@ -279,7 +279,7 @@ export default function ImpactHangoutPage() {
           </DialogHeader>
           {myHangouts !== null && myHangouts.length > 0 && (
             <Button
-              className="w-full rounded-full bg-[#104109] hover:bg-[#0d3607] p-8 h-auto text-base font-bold"
+              className="w-full rounded-full bg-[#104109]  p-8 h-auto text-base font-bold"
               asChild
             >
               <Link href={`/events/${encodeURIComponent(myHangouts[0].slug)}`} className="inline-flex items-center justify-center gap-2">
@@ -305,7 +305,7 @@ export default function ImpactHangoutPage() {
             </div>
             <Button
               type="submit"
-              className="w-full rounded-full bg-[#104109] hover:bg-[#0d3607] p-8 h-auto text-base font-bold"
+              className="w-full rounded-full bg-[#104109]  p-8 h-auto text-base font-bold"
               disabled={accessSending || accessSent}
             >
               {accessSent ? "Check your email" : accessSending ? "Sending…" : "Send me the link"}
@@ -449,7 +449,7 @@ export default function ImpactHangoutPage() {
                   same time.
                 </motion.p>
                 <motion.div variants={fadeInUp} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button size="lg" className="px-8 py-4 h-auto min-h-12 text-base font-bold rounded-full bg-[#104109] hover:bg-[#0d3607]" asChild>
+                  <Button size="lg" className="px-8 py-4 h-auto min-h-12 text-base font-bold rounded-full bg-[#104109] " asChild>
                     <Link href="/events/register">
                       Register to host <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
@@ -537,7 +537,7 @@ export default function ImpactHangoutPage() {
       </section>
 
       {/* How do I host — full-bleed band + four white cards (reference layout) */}
-      <section className="relative bg-[#104109] py-16 md:py-24">
+      <section className="relative bg-[#FFCF55] py-16 md:py-24">
         <div className="container mx-auto max-w-7xl px-4 md:px-6">
           <motion.h2
             className="font-jakarta mb-10 text-center text-3xl font-black uppercase leading-[1.1] tracking-tight text-white sm:text-4xl md:mb-12 md:text-5xl"
@@ -558,32 +558,34 @@ export default function ImpactHangoutPage() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: i * 0.06 }}
               >
-                <div className="relative aspect-[4/3] w-full shrink-0">
-                  <Image
-                    src={card.image}
-                    alt={card.alt}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                  />
-                </div>
-                <div className="flex flex-1 flex-col gap-3 p-4 md:p-5">
-                  <h3 className="font-jakarta text-lg font-black uppercase tracking-tight text-[#0a0a0a] md:text-xl">
-                    {card.title}
-                  </h3>
-                  <p className="text-sm leading-relaxed text-neutral-700">
-                    {card.before}
-                    {card.linkLabel && card.linkHref ? (
-                      <Link
-                        href={card.linkHref}
-                        className="font-bold text-[#104109] underline decoration-2 underline-offset-2"
-                      >
-                        {card.linkLabel}
-                      </Link>
-                    ) : null}
-                    {card.after}
-                  </p>
-                </div>
+                <Link href={card.linkHref}>
+                  <div className="relative aspect-[4/3] w-full shrink-0">
+                    <Image
+                      src={card.image}
+                      alt={card.alt}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    />
+                  </div>
+                  <div className="flex flex-1 flex-col gap-3 p-4 md:p-5">
+                    <h3 className="font-jakarta text-lg font-black uppercase tracking-tight text-[#0a0a0a] md:text-xl">
+                      {card.title}
+                    </h3>
+                    <p className="text-sm leading-relaxed text-neutral-700">
+                      {card.before}
+                      {card.linkLabel && card.linkHref ? (
+                        <Link
+                          href={card.linkHref}
+                          className="font-bold text-neutral-700"
+                        >
+                          {card.linkLabel}
+                        </Link>
+                      ) : null}
+                      {card.after}
+                    </p>
+                  </div>
+                </Link>
               </motion.article>
             ))}
           </div>
@@ -795,7 +797,7 @@ export default function ImpactHangoutPage() {
           >
             <Button
               size="lg"
-              className="h-auto min-h-12 rounded-full bg-[#104109] px-8 py-4 text-base font-bold text-white hover:bg-[#104109]"
+              className="h-auto min-h-12 rounded-full bg-[#104109] px-8 py-4 text-base font-bold text-white"
               asChild
             >
               <Link href="/events/register">
