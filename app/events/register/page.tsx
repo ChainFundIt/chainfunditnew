@@ -7,6 +7,7 @@ import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -66,6 +67,17 @@ function ImpactHangoutRegisterContent() {
     eventType: "",
     hangoutName: "",
     fundraisingGoal: "",
+    shortPitch: "",
+    story: "",
+    eventDate: "",
+    eventEndDate: "",
+    timezone: "Africa/Lagos",
+    locationType: "",
+    venueName: "",
+    venueAddress: "",
+    meetingLink: "",
+    impactTiersText: "",
+    faqsText: "",
     kickstartAmount: 10_000,
     customAmountInput: "10000",
   });
@@ -150,6 +162,32 @@ function ImpactHangoutRegisterContent() {
       setError(null);
       setLoading(true);
       try {
+        const parsedImpactTiers = form.impactTiersText
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .map((line) => {
+            const [amountRaw, ...impactParts] = line.split(":");
+            const amountNgn = parseInt((amountRaw || "").replace(/\D/g, ""), 10);
+            const impact = impactParts.join(":").trim();
+            if (!Number.isFinite(amountNgn) || amountNgn <= 0 || !impact) return null;
+            return { amountNgn, impact };
+          })
+          .filter((item): item is { amountNgn: number; impact: string } => Boolean(item));
+
+        const parsedFaqs = form.faqsText
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .map((line) => {
+            const [questionRaw, ...answerParts] = line.split("?");
+            const question = questionRaw?.trim();
+            const answer = answerParts.join("?").trim();
+            if (!question || !answer) return null;
+            return { question: `${question}?`, answer };
+          })
+          .filter((item): item is { question: string; answer: string } => Boolean(item));
+
         const goalNgn = form.fundraisingGoal.trim()
           ? parseInt(form.fundraisingGoal.replace(/\D/g, ""), 10)
           : undefined;
@@ -167,6 +205,17 @@ function ImpactHangoutRegisterContent() {
             eventType: form.eventType || undefined,
             hangoutName: form.hangoutName.trim() || undefined,
             fundraisingGoalNgn: Number.isFinite(goalNgn) && goalNgn !== undefined && goalNgn > 0 ? goalNgn : undefined,
+            shortPitch: form.shortPitch.trim() || undefined,
+            story: form.story.trim() || undefined,
+            eventDate: form.eventDate || undefined,
+            eventEndDate: form.eventEndDate || undefined,
+            timezone: form.timezone || undefined,
+            locationType: form.locationType || undefined,
+            venueName: form.venueName.trim() || undefined,
+            venueAddress: form.venueAddress.trim() || undefined,
+            meetingLink: form.meetingLink.trim() || undefined,
+            impactTiers: parsedImpactTiers.length > 0 ? parsedImpactTiers : undefined,
+            faqs: parsedFaqs.length > 0 ? parsedFaqs : undefined,
           }),
         });
         const data = await res.json().catch(() => ({}));
@@ -746,6 +795,163 @@ function ImpactHangoutRegisterContent() {
                       </p>
                     </div>
 
+                    <div className="space-y-2">
+                      <Label htmlFor="shortPitch">Short pitch *</Label>
+                      <Input
+                        id="shortPitch"
+                        placeholder="A one-line summary of your hangout and who it helps"
+                        value={form.shortPitch}
+                        onChange={(e) =>
+                          setForm((f) => ({ ...f, shortPitch: e.target.value }))
+                        }
+                        className="rounded-lg h-12 border-gray-300 focus:ring-2 focus:ring-brand-green-dark"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="story">Host story *</Label>
+                      <Textarea
+                        id="story"
+                        placeholder="Share why this cause matters and how funds will be used..."
+                        value={form.story}
+                        onChange={(e) =>
+                          setForm((f) => ({ ...f, story: e.target.value }))
+                        }
+                        className="rounded-lg min-h-[120px] border-gray-300 focus-visible:ring-2 focus-visible:ring-brand-green-dark"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="eventDate">Event start date/time *</Label>
+                        <Input
+                          id="eventDate"
+                          type="datetime-local"
+                          value={form.eventDate}
+                          onChange={(e) =>
+                            setForm((f) => ({ ...f, eventDate: e.target.value }))
+                          }
+                          className="rounded-lg h-12 border-gray-300 focus:ring-2 focus:ring-brand-green-dark"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="eventEndDate">Event end date/time (optional)</Label>
+                        <Input
+                          id="eventEndDate"
+                          type="datetime-local"
+                          value={form.eventEndDate}
+                          onChange={(e) =>
+                            setForm((f) => ({ ...f, eventEndDate: e.target.value }))
+                          }
+                          className="rounded-lg h-12 border-gray-300 focus:ring-2 focus:ring-brand-green-dark"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Location type *</Label>
+                        <Select
+                          value={form.locationType || undefined}
+                          onValueChange={(v) =>
+                            setForm((f) => ({ ...f, locationType: v }))
+                          }
+                        >
+                          <SelectTrigger className="rounded-lg h-12 border-gray-300 focus:ring-2 focus:ring-brand-green-dark">
+                            <SelectValue placeholder="Select..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="in_person">In-person</SelectItem>
+                            <SelectItem value="virtual">Virtual</SelectItem>
+                            <SelectItem value="hybrid">Hybrid</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="timezone">Timezone</Label>
+                        <Input
+                          id="timezone"
+                          placeholder="Africa/Lagos"
+                          value={form.timezone}
+                          onChange={(e) =>
+                            setForm((f) => ({ ...f, timezone: e.target.value }))
+                          }
+                          required
+                          className="rounded-lg h-12 border-gray-300 focus:ring-2 focus:ring-brand-green-dark"
+                        />
+                      </div>
+                    </div>
+
+                    {(form.locationType === "in_person" || form.locationType === "hybrid") && (
+                      <div className="space-y-2">
+                        <Label htmlFor="venueName">Venue name *</Label>
+                        <Input
+                          id="venueName"
+                          placeholder="e.g. Civic Innovation Hub"
+                          value={form.venueName}
+                          onChange={(e) =>
+                            setForm((f) => ({ ...f, venueName: e.target.value }))
+                          }
+                          className="rounded-lg h-12 border-gray-300 focus:ring-2 focus:ring-brand-green-dark"
+                        />
+                      </div>
+                    )}
+
+                    {(form.locationType === "virtual" || form.locationType === "hybrid") && (
+                      <div className="space-y-2">
+                        <Label htmlFor="meetingLink">Meeting link *</Label>
+                        <Input
+                          id="meetingLink"
+                          type="url"
+                          placeholder="https://..."
+                          value={form.meetingLink}
+                          onChange={(e) =>
+                            setForm((f) => ({ ...f, meetingLink: e.target.value }))
+                          }
+                          className="rounded-lg h-12 border-gray-300 focus:ring-2 focus:ring-brand-green-dark"
+                        />
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label htmlFor="venueAddress">Venue address*</Label>
+                      <Input
+                        id="venueAddress"
+                        placeholder="Street, city"
+                        value={form.venueAddress}
+                        onChange={(e) =>
+                          setForm((f) => ({ ...f, venueAddress: e.target.value }))
+                        }
+                        className="rounded-lg h-12 border-gray-300 focus:ring-2 focus:ring-brand-green-dark"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="impactTiersText">Impact tiers *</Label>
+                      <Textarea
+                        id="impactTiersText"
+                        placeholder={`One per line: amount:impact\n5000:Provides one student learning kit\n10000:Covers mentorship materials`}
+                        value={form.impactTiersText}
+                        onChange={(e) =>
+                          setForm((f) => ({ ...f, impactTiersText: e.target.value }))
+                        }
+                        className="rounded-lg min-h-[110px] border-gray-300 focus-visible:ring-2 focus-visible:ring-brand-green-dark"
+                      />
+                    </div>
+
+                    {/* <div className="space-y-2">
+                      <Label htmlFor="faqsText">FAQs (recommended)</Label>
+                      <Textarea
+                        id="faqsText"
+                        placeholder={`One per line: Question?Answer\nHow are funds used?They are tracked against your published milestones.`}
+                        value={form.faqsText}
+                        onChange={(e) =>
+                          setForm((f) => ({ ...f, faqsText: e.target.value }))
+                        }
+                        className="rounded-lg min-h-[110px] border-gray-300 focus-visible:ring-2 focus-visible:ring-brand-green-dark"
+                      />
+                    </div> */}
+
                     {error && (
                       <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg space-y-2">
                         <p>{error}</p>
@@ -778,7 +984,20 @@ function ImpactHangoutRegisterContent() {
                         type="submit"
                         size="lg"
                         className="h-12 flex-1 rounded-full font-semibold"
-                        disabled={loading || !form.eventType || !form.hangoutName.trim() || !form.fundraisingGoal.trim()}
+                        disabled={
+                          loading ||
+                          !form.eventType ||
+                          !form.hangoutName.trim() ||
+                          !form.fundraisingGoal.trim() ||
+                          !form.shortPitch.trim() ||
+                          !form.story.trim() ||
+                          !form.eventDate ||
+                          !form.locationType ||
+                          ((form.locationType === "in_person" || form.locationType === "hybrid") &&
+                            !form.venueName.trim()) ||
+                          ((form.locationType === "virtual" || form.locationType === "hybrid") &&
+                            !form.meetingLink.trim())
+                        }
                       >
                         {loading ? "Submitting..." : "Next step"}
                       </Button>

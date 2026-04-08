@@ -5,6 +5,15 @@ import { sql } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
+function safeParseJson<T>(value: string | null | undefined): T | undefined {
+  if (!value) return undefined;
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
@@ -28,6 +37,17 @@ export async function GET(
         eventType: impactHangoutRegistrations.eventType,
         cause: impactHangoutRegistrations.cause,
         fundraisingGoalNgn: impactHangoutRegistrations.fundraisingGoalNgn,
+        shortPitch: impactHangoutRegistrations.shortPitch,
+        story: impactHangoutRegistrations.story,
+        eventDate: impactHangoutRegistrations.eventDate,
+        eventEndDate: impactHangoutRegistrations.eventEndDate,
+        timezone: impactHangoutRegistrations.timezone,
+        locationType: impactHangoutRegistrations.locationType,
+        venueName: impactHangoutRegistrations.venueName,
+        venueAddress: impactHangoutRegistrations.venueAddress,
+        meetingLink: impactHangoutRegistrations.meetingLink,
+        impactTiersJson: impactHangoutRegistrations.impactTiersJson,
+        faqsJson: impactHangoutRegistrations.faqsJson,
         commitmentAmountNgn: impactHangoutRegistrations.commitmentAmountNgn,
         totalRaisedNgn: impactHangoutRegistrations.totalRaisedNgn,
         paymentStatus: impactHangoutRegistrations.paymentStatus,
@@ -54,6 +74,25 @@ export async function GET(
       hostName: row.fullName,
       eventType: row.eventType ?? undefined,
       cause: row.cause ?? undefined,
+      shortPitch: row.shortPitch ?? undefined,
+      story: row.story ?? undefined,
+      eventDate: row.eventDate ? row.eventDate.toISOString() : undefined,
+      eventEndDate: row.eventEndDate ? row.eventEndDate.toISOString() : undefined,
+      timezone: row.timezone ?? undefined,
+      locationType:
+        (row.locationType as "in_person" | "virtual" | "hybrid" | null) ??
+        undefined,
+      venueName: row.venueName ?? undefined,
+      venueAddress: row.venueAddress ?? undefined,
+      meetingLink: row.meetingLink ?? undefined,
+      impactTiers:
+        safeParseJson<Array<{ amountNgn: number; impact: string }>>(
+          row.impactTiersJson
+        ) ?? undefined,
+      faqs:
+        safeParseJson<Array<{ question: string; answer: string }>>(
+          row.faqsJson
+        ) ?? undefined,
       fundraisingGoalNgn: goal,
       amountRaisedNgn: amountRaised,
       progressPercent:
