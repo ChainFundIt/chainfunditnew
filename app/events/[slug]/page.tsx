@@ -30,6 +30,8 @@ import {
   MessageCircle,
   ArrowLeft,
   Calendar,
+  Clock3,
+  MapPin,
   Target,
   Heart,
   CheckCircle2,
@@ -49,6 +51,17 @@ type HangoutData = {
   fundraisingGoalNgn: number;
   amountRaisedNgn: number;
   progressPercent: number;
+  shortPitch?: string;
+  story?: string;
+  eventDate?: string;
+  eventEndDate?: string;
+  timezone?: string;
+  locationType?: "in_person" | "virtual" | "hybrid";
+  venueName?: string;
+  venueAddress?: string;
+  meetingLink?: string;
+  impactTiers?: { amountNgn: number; impact: string }[];
+  faqs?: { question: string; answer: string }[];
 };
 
 export default function HangoutEventPage() {
@@ -224,6 +237,28 @@ export default function HangoutEventPage() {
 
   const goalFormatted = hangout.fundraisingGoalNgn.toLocaleString();
   const raisedFormatted = hangout.amountRaisedNgn.toLocaleString();
+  const dateLabel = hangout.eventDate
+    ? new Date(hangout.eventDate).toLocaleString("en-NG", {
+        dateStyle: "medium",
+        timeStyle: "short",
+        timeZone: hangout.timezone || "Africa/Lagos",
+      })
+    : null;
+  const endDateLabel = hangout.eventEndDate
+    ? new Date(hangout.eventEndDate).toLocaleString("en-NG", {
+        dateStyle: "medium",
+        timeStyle: "short",
+        timeZone: hangout.timezone || "Africa/Lagos",
+      })
+    : null;
+  const locationLabel =
+    hangout.locationType === "virtual"
+      ? "Virtual event"
+      : hangout.locationType === "hybrid"
+        ? "Hybrid event"
+        : hangout.locationType === "in_person"
+          ? "In-person event"
+          : null;
 
   return (
     <div className="font-jakarta min-h-screen bg-[var(--color-background)] text-[#1C1917]">
@@ -357,9 +392,9 @@ export default function HangoutEventPage() {
                           className="mt-1 rounded-lg"
                         />
                       </div>
-                      <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                      {/* <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
                         Event donations are currently charged in NGN, so this flow uses Paystack automatically.
-                      </div>
+                      </div> */}
                       {donateError && (
                         <p className="text-sm text-red-600">{donateError}</p>
                       )}
@@ -444,6 +479,88 @@ export default function HangoutEventPage() {
                 {hangout.progressPercent}% of goal
               </p>
             </div>
+
+            {(hangout.shortPitch || hangout.story) && (
+              <div className="mt-8 pt-6 border-t border-[#E7E5E4] space-y-4">
+                {hangout.shortPitch && (
+                  <p className="text-[#44403C] text-base md:text-lg font-medium text-justify">
+                    {hangout.shortPitch}
+                  </p>
+                )}
+                {hangout.story && (
+                  <p className="text-[#57534E] text-sm leading-7 whitespace-pre-line text-justify">
+                    {hangout.story}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {(dateLabel ||
+              locationLabel ||
+              hangout.venueName ||
+              hangout.venueAddress ||
+              hangout.meetingLink) && (
+              <div className="mt-8 pt-6 border-t border-[#E7E5E4]">
+                <h3 className="text-base font-semibold text-[#1C1917] mb-4">Event details</h3>
+                <div className="space-y-3 text-sm text-[#57534E]">
+                  {dateLabel && (
+                    <p className="flex items-start gap-2">
+                      <Calendar className="h-4 w-4 mt-0.5 text-[#104109] shrink-0" />
+                      <span>{dateLabel}</span>
+                    </p>
+                  )}
+                  {endDateLabel && (
+                    <p className="flex items-start gap-2">
+                      <Clock3 className="h-4 w-4 mt-0.5 text-[#104109] shrink-0" />
+                      <span>Ends {endDateLabel}</span>
+                    </p>
+                  )}
+                  {locationLabel && (
+                    <p className="flex items-start gap-2">
+                      <MapPin className="h-4 w-4 mt-0.5 text-[#104109] shrink-0" />
+                      <span>{locationLabel}</span>
+                    </p>
+                  )}
+                  {hangout.venueName && (
+                    <p className="pl-6">
+                      <span className="font-medium text-[#292524]">{hangout.venueName}</span>
+                      {hangout.venueAddress ? `, ${hangout.venueAddress}` : ""}
+                    </p>
+                  )}
+                  {hangout.meetingLink && (
+                    <p className="pl-6">
+                      <a
+                        href={hangout.meetingLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[#104109] underline underline-offset-2"
+                      >
+                        Join online event
+                      </a>
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {hangout.impactTiers && hangout.impactTiers.length > 0 && (
+              <div className="mt-8 pt-6 border-t border-[#E7E5E4]">
+                <h3 className="text-base font-semibold text-[#1C1917] mb-4">How donations help</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {hangout.impactTiers.map((tier) => (
+                    <div
+                      key={`${tier.amountNgn}-${tier.impact}`}
+                      className="rounded-xl border border-[#E7E5E4] bg-[#FAFAF9] p-4"
+                    >
+                      <p className="text-[#104109] font-bold text-base">
+                        ₦{tier.amountNgn.toLocaleString()}
+                      </p>
+                      <p className="text-sm text-[#57534E] mt-1">{tier.impact}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="mt-8 pt-6 border-t border-[#E7E5E4]">
               <p className="text-[#78716C] text-sm text-justify">

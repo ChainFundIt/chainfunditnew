@@ -19,11 +19,58 @@ export async function POST(request: NextRequest) {
       eventType,
       hangoutName,
       fundraisingGoalNgn,
+      shortPitch,
+      story,
+      eventDate,
+      eventEndDate,
+      timezone,
+      locationType,
+      venueName,
+      venueAddress,
+      meetingLink,
+      impactTiers,
+      faqs,
     } = body || {};
 
     if (!fullName?.trim() || !email?.trim()) {
       return NextResponse.json(
         { error: "Name and email are required" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      !shortPitch?.trim() ||
+      !story?.trim() ||
+      !eventDate ||
+      !locationType ||
+      !["in_person", "virtual", "hybrid"].includes(String(locationType))
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Short pitch, story, event date, and location type are required.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (
+      (locationType === "in_person" || locationType === "hybrid") &&
+      !venueName?.trim()
+    ) {
+      return NextResponse.json(
+        { error: "Venue name is required for in-person or hybrid events." },
+        { status: 400 }
+      );
+    }
+
+    if (
+      (locationType === "virtual" || locationType === "hybrid") &&
+      !meetingLink?.trim()
+    ) {
+      return NextResponse.json(
+        { error: "Meeting link is required for virtual or hybrid events." },
         { status: 400 }
       );
     }
@@ -94,6 +141,21 @@ export async function POST(request: NextRequest) {
         hangoutName: hangoutName?.trim() || null,
         slug,
         fundraisingGoalNgn: goalNgn,
+        shortPitch: shortPitch?.trim() || null,
+        story: story?.trim() || null,
+        eventDate: eventDate ? new Date(eventDate) : null,
+        eventEndDate: eventEndDate ? new Date(eventEndDate) : null,
+        timezone: timezone?.trim() || null,
+        locationType: locationType?.trim() || null,
+        venueName: venueName?.trim() || null,
+        venueAddress: venueAddress?.trim() || null,
+        meetingLink: meetingLink?.trim() || null,
+        impactTiersJson:
+          Array.isArray(impactTiers) && impactTiers.length > 0
+            ? JSON.stringify(impactTiers)
+            : null,
+        faqsJson:
+          Array.isArray(faqs) && faqs.length > 0 ? JSON.stringify(faqs) : null,
         paymentStatus: "pending",
       })
       .returning();

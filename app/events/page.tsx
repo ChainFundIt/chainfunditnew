@@ -278,14 +278,10 @@ export default function ImpactHangoutPage() {
             </DialogDescription>
           </DialogHeader>
           {myHangouts !== null && myHangouts.length > 0 && (
-            <Button
-              className="w-full rounded-full bg-[#104109]  p-8 h-auto text-base font-bold"
-              asChild
-            >
-              <Link href={`/events/${encodeURIComponent(myHangouts[0].slug)}`} className="inline-flex items-center justify-center gap-2">
-                <LogIn className="h-4 w-4" /> View my hangout
-              </Link>
-            </Button>
+
+            <Link href={`/events/${encodeURIComponent(myHangouts[0].slug)}`} className="inline-flex items-center justify-center gap-2">
+              <LogIn className="h-4 w-4" /> View my hangout
+            </Link>
           )}
           <form onSubmit={handleSendAccessLink} className="space-y-4">
             <div>
@@ -305,7 +301,7 @@ export default function ImpactHangoutPage() {
             </div>
             <Button
               type="submit"
-              className="w-full rounded-full bg-[#104109]  p-8 h-auto text-base font-bold"
+              className="w-full rounded-full bg-[#104109] px-8 py-4 h-auto text-base font-bold"
               disabled={accessSending || accessSent}
             >
               {accessSent ? "Check your email" : accessSending ? "Sending…" : "Send me the link"}
