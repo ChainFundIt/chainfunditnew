@@ -47,6 +47,30 @@ export interface PaystackVerifyResponse {
   };
 }
 
+export interface PaystackCustomerResponse {
+  status: boolean;
+  message: string;
+  data: {
+    id: number;
+    customer_code: string;
+    email: string;
+  };
+}
+
+export interface PaystackDedicatedAccountResponse {
+  status: boolean;
+  message: string;
+  data: {
+    account_name: string;
+    account_number: string;
+    bank: {
+      name: string;
+    };
+    customer: number;
+    dedicated_account_id: number;
+  };
+}
+
 /**
  * Initialize a Paystack payment
  */
@@ -97,6 +121,80 @@ export async function initializePaystackPayment(
     }
     
     throw error;
+  }
+}
+
+/**
+ * Create a Paystack customer for virtual account setup
+ */
+export async function createPaystackCustomer(
+  email: string,
+  metadata?: Record<string, any>
+): Promise<PaystackCustomerResponse> {
+  validatePaystackKey();
+
+  try {
+    const response = await axios.post(
+      `${PAYSTACK_BASE_URL}/customer`,
+      {
+        email,
+        metadata,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    const errorData = error.response?.data || {};
+    const errorMessage = errorData.message || error.message || 'Unknown error';
+    console.error('Error creating Paystack customer:', {
+      status: error.response?.status,
+      message: errorMessage,
+      data: errorData,
+    });
+    throw new Error(`Failed to create Paystack customer: ${errorMessage}`);
+  }
+}
+
+/**
+ * Create a dedicated virtual account for bank transfer
+ */
+export async function createPaystackDedicatedAccount(
+  customer: number | string,
+  preferredBank: string = 'wema-bank'
+): Promise<PaystackDedicatedAccountResponse> {
+  validatePaystackKey();
+
+  try {
+    const response = await axios.post(
+      `${PAYSTACK_BASE_URL}/dedicated_account`,
+      {
+        customer,
+        preferred_bank: preferredBank,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    const errorData = error.response?.data || {};
+    const errorMessage = errorData.message || error.message || 'Unknown error';
+    console.error('Error creating Paystack dedicated account:', {
+      status: error.response?.status,
+      message: errorMessage,
+      data: errorData,
+    });
+    throw new Error(`Failed to create Paystack dedicated account: ${errorMessage}`);
   }
 }
 

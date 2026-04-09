@@ -125,6 +125,11 @@ export const donations = pgTable("donations", {
 	lastStatusUpdate: timestamp("last_status_update", { mode: 'string' }).defaultNow().notNull(),
 	providerStatus: varchar("provider_status", { length: 50 }),
 	providerError: text("provider_error"),
+	quickDonate: boolean("quick_donate").default(false).notNull(),
+	paystackCustomerCode: varchar("paystack_customer_code", { length: 100 }),
+	virtualAccountNumber: varchar("virtual_account_number", { length: 20 }),
+	virtualAccountBankName: varchar("virtual_account_bank_name", { length: 100 }),
+	virtualAccountName: varchar("virtual_account_name", { length: 255 }),
 });
 
 export const linkClicks = pgTable("link_clicks", {

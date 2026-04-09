@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db, withRetry } from '@/lib/db';
 import { campaigns, users, donations } from '@/lib/schema';
 import { eq, and, count, sum, or, isNull } from 'drizzle-orm';
 import { parse } from 'cookie';
@@ -42,68 +42,74 @@ export async function GET(
     let userId: string | null = null;
     
     if (userEmail) {
-      const user = await db.select().from(users).where(eq(users.email, userEmail)).limit(1);
+      const user = await withRetry(() =>
+        db.select().from(users).where(eq(users.email, userEmail)).limit(1)
+      );
       if (user.length) {
         userId = user[0].id;
       }
     }
 
     // Get campaign with creator details - using a more robust approach
-    let campaignData = await db
-      .select({
-        id: campaigns.id,
-        slug: campaigns.slug,
-        title: campaigns.title,
-        subtitle: campaigns.subtitle,
-        description: campaigns.description,
-        reason: campaigns.reason,
-        fundraisingFor: campaigns.fundraisingFor,
-        duration: campaigns.duration,
-        videoUrl: campaigns.videoUrl,
-        coverImageUrl: campaigns.coverImageUrl,
-        galleryImages: campaigns.galleryImages,
-        documents: campaigns.documents,
-        goalAmount: campaigns.goalAmount,
-        currency: campaigns.currency,
-        minimumDonation: campaigns.minimumDonation,
-        chainerCommissionRate: campaigns.chainerCommissionRate,
-        isChained: campaigns.isChained,
-        isVerified: campaigns.isVerified,
-        verifiedPendingAt: campaigns.verifiedPendingAt,
-        verifiedRulesAcceptedAt: campaigns.verifiedRulesAcceptedAt,
-        currentAmount: campaigns.currentAmount,
-        status: campaigns.status,
-        visibility: campaigns.visibility,
-        isActive: campaigns.isActive,
-        complianceStatus: campaigns.complianceStatus,
-        complianceSummary: campaigns.complianceSummary,
-        complianceFlags: campaigns.complianceFlags,
-        riskScore: campaigns.riskScore,
-        reviewRequired: campaigns.reviewRequired,
-        lastScreenedAt: campaigns.lastScreenedAt,
-        createdAt: campaigns.createdAt,
-        updatedAt: campaigns.updatedAt,
-        closedAt: campaigns.closedAt,
-        creatorId: campaigns.creatorId,
-        creatorName: users.fullName,
-        creatorAvatar: users.avatar,
-      })
-      .from(campaigns)
-      .leftJoin(users, eq(campaigns.creatorId, users.id))
-      .where(whereCondition)
-      .limit(1);
+    let campaignData = await withRetry(() =>
+      db
+        .select({
+          id: campaigns.id,
+          slug: campaigns.slug,
+          title: campaigns.title,
+          subtitle: campaigns.subtitle,
+          description: campaigns.description,
+          reason: campaigns.reason,
+          fundraisingFor: campaigns.fundraisingFor,
+          duration: campaigns.duration,
+          videoUrl: campaigns.videoUrl,
+          coverImageUrl: campaigns.coverImageUrl,
+          galleryImages: campaigns.galleryImages,
+          documents: campaigns.documents,
+          goalAmount: campaigns.goalAmount,
+          currency: campaigns.currency,
+          minimumDonation: campaigns.minimumDonation,
+          chainerCommissionRate: campaigns.chainerCommissionRate,
+          isChained: campaigns.isChained,
+          isVerified: campaigns.isVerified,
+          verifiedPendingAt: campaigns.verifiedPendingAt,
+          verifiedRulesAcceptedAt: campaigns.verifiedRulesAcceptedAt,
+          currentAmount: campaigns.currentAmount,
+          status: campaigns.status,
+          visibility: campaigns.visibility,
+          isActive: campaigns.isActive,
+          complianceStatus: campaigns.complianceStatus,
+          complianceSummary: campaigns.complianceSummary,
+          complianceFlags: campaigns.complianceFlags,
+          riskScore: campaigns.riskScore,
+          reviewRequired: campaigns.reviewRequired,
+          lastScreenedAt: campaigns.lastScreenedAt,
+          createdAt: campaigns.createdAt,
+          updatedAt: campaigns.updatedAt,
+          closedAt: campaigns.closedAt,
+          creatorId: campaigns.creatorId,
+          creatorName: users.fullName,
+          creatorAvatar: users.avatar,
+        })
+        .from(campaigns)
+        .leftJoin(users, eq(campaigns.creatorId, users.id))
+        .where(whereCondition)
+        .limit(1)
+    );
 
     // If JOIN didn't work or creator info is missing, fetch user info separately
     if (campaignData.length > 0 && campaignData[0].creatorId && !campaignData[0].creatorName) {
       try {
-        const userInfo = await db
-           .select({
-            fullName: users.fullName,
-            avatar: users.avatar,
-          })
-          .from(users)
-          .where(eq(users.id, campaignData[0].creatorId))
-          .limit(1);
+        const userInfo = await withRetry(() =>
+          db
+            .select({
+              fullName: users.fullName,
+              avatar: users.avatar,
+            })
+            .from(users)
+            .where(eq(users.id, campaignData[0].creatorId))
+            .limit(1)
+        );
 
         if (userInfo.length > 0) {
           // Update the campaign data with user info
@@ -132,17 +138,19 @@ export async function GET(
     // So we don't block access here - the visibility check is handled in listings
 
     // Get donation statistics
-    const donationStats = await db
-      .select({
-        totalDonations: count(donations.id),
-        totalAmount: sum(donations.amount),
-        uniqueDonors: count(donations.donorId),
-      })
-      .from(donations)
-      .where(and(
-        eq(donations.campaignId, campaign.id),
-        eq(donations.paymentStatus, 'completed')
-      ));
+    const donationStats = await withRetry(() =>
+      db
+        .select({
+          totalDonations: count(donations.id),
+          totalAmount: sum(donations.amount),
+          uniqueDonors: count(donations.donorId),
+        })
+        .from(donations)
+        .where(and(
+          eq(donations.campaignId, campaign.id),
+          eq(donations.paymentStatus, 'completed')
+        ))
+    );
 
     const stats = {
       totalDonations: Number(donationStats[0]?.totalDonations || 0),

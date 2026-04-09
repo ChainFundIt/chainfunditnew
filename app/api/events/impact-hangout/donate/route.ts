@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { impactHangoutRegistrations } from "@/lib/schema";
-import { initializePaystackPayment } from "@/lib/payments/paystack";
+import {
+  createPaystackCustomer,
+  createPaystackDedicatedAccount,
+  initializePaystackPayment,
+} from "@/lib/payments/paystack";
 import { sql } from "drizzle-orm";
 
 const baseUrl =
@@ -13,7 +17,13 @@ const MAX_AMOUNT = 10_000_000;
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { slug, amountInNaira, donorEmail, paymentProvider = "paystack" } = body || {};
+    const {
+      slug,
+      amountInNaira,
+      donorEmail,
+      paymentProvider = "paystack",
+      quickDonate = false,
+    } = body || {};
 
     if (!slug || typeof slug !== "string" || !slug.trim()) {
       return NextResponse.json(
@@ -21,10 +31,13 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const email =
+    const providedEmail =
       typeof donorEmail === "string" && donorEmail.trim()
         ? donorEmail.trim()
         : null;
+    const email = quickDonate
+      ? providedEmail ?? `quickdonor+${Date.now()}@chainfundit.app`
+      : providedEmail;
     if (!email) {
       return NextResponse.json(
         { error: "Donor email is required" },
@@ -51,6 +64,28 @@ export async function POST(request: NextRequest) {
         { error: "Hangout not found" },
         { status: 404 }
       );
+    }
+
+    if (quickDonate) {
+      const customer = await createPaystackCustomer(email, {
+        type: "donation",
+        donationMode: "quick",
+        impactHangoutSlug: row.slug ?? slug,
+        amountNgn: amount,
+      });
+
+      const dedicatedAccount = await createPaystackDedicatedAccount(customer.data.customer_code);
+
+      return NextResponse.json({
+        provider: "paystack",
+        mode: "quick",
+        virtualAccount: {
+          accountName: dedicatedAccount.data.account_name,
+          accountNumber: dedicatedAccount.data.account_number,
+          bankName: dedicatedAccount.data.bank?.name ?? "Paystack Bank",
+          amountNgn: amount,
+        },
+      });
     }
 
     const callbackUrl = `${baseUrl}/api/events/impact-hangout/payment-callback`;

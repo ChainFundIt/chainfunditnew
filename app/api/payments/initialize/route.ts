@@ -6,7 +6,11 @@ import { campaigns } from "@/lib/schema/campaigns";
 import { users } from "@/lib/schema/users";
 import { chainers } from "@/lib/schema/chainers";
 import { eq } from "drizzle-orm";
-import { initializePaystackPayment } from "@/lib/payments/paystack";
+import {
+  createPaystackCustomer,
+  createPaystackDedicatedAccount,
+  initializePaystackPayment,
+} from "@/lib/payments/paystack";
 import { createPayPalOrder, getPayPalApprovalUrl } from "@/lib/payments/paypal";
 import { getSupportedProviders } from "@/lib/payments/config";
 import {
@@ -28,6 +32,7 @@ export async function POST(request: NextRequest) {
       donorName,
       donorPhone,
       chainerId: bodyChainerId,
+      quickDonate = false,
       simulate = false, // For testing purposes
     } = body;
 
@@ -46,6 +51,19 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error: `${paymentProvider} does not support ${currency}`,
+        },
+        { status: 400 }
+      );
+    }
+
+    if (
+      quickDonate &&
+      (paymentProvider !== "paystack" || currency !== "NGN")
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Quick Donate is available for NGN Paystack donations only.",
         },
         { status: 400 }
       );
@@ -176,6 +194,9 @@ export async function POST(request: NextRequest) {
       ? null
       : (normalizedDonorName || user.fullName || "Guest Donor");
     const donationDonorEmail = normalizedEmail || user.email || null;
+    const effectiveDonationEmail =
+      donationDonorEmail ??
+      `quickdonor+${Date.now()}_${Math.random().toString(36).slice(2, 8)}@chainfundit.app`;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
 
     // Create donation record (include chainerId when donation comes through a chainer's link)
@@ -191,9 +212,10 @@ export async function POST(request: NextRequest) {
         message,
         isAnonymous: isAnonymous || false,
         donorName: donationDonorName,
-        donorEmail: donationDonorEmail,
+        donorEmail: donationDonorEmail ?? effectiveDonationEmail,
         donorPhone: normalizedDonorPhone || null,
         chainerId: bodyChainerId && typeof bodyChainerId === "string" ? bodyChainerId : null,
+        quickDonate: Boolean(quickDonate),
       })
       .returning();
 
@@ -204,6 +226,47 @@ export async function POST(request: NextRequest) {
 
     if (paymentProvider === "paystack") {
       try {
+        if (quickDonate) {
+          const customerMetadata: Record<string, any> = {
+            donationId,
+            campaignId,
+            donationMode: "quick",
+            amount,
+            currency,
+            ...(chainerReferralCode ? { chainCode: chainerReferralCode } : {}),
+          };
+          const customer = await createPaystackCustomer(
+            effectiveDonationEmail,
+            customerMetadata
+          );
+          const dedicatedAccount = await createPaystackDedicatedAccount(
+            customer.data.customer_code
+          );
+
+          await db
+            .update(donations)
+            .set({
+              paystackCustomerCode: customer.data.customer_code,
+              virtualAccountNumber: dedicatedAccount.data.account_number,
+              virtualAccountBankName: dedicatedAccount.data.bank?.name ?? null,
+              virtualAccountName: dedicatedAccount.data.account_name,
+            })
+            .where(eq(donations.id, donationId));
+
+          return NextResponse.json({
+            success: true,
+            provider: "paystack",
+            mode: "quick",
+            donationId,
+            virtualAccount: {
+              accountNumber: dedicatedAccount.data.account_number,
+              accountName: dedicatedAccount.data.account_name,
+              bankName: dedicatedAccount.data.bank?.name ?? "Paystack Bank",
+              amount,
+            },
+          });
+        }
+
         // Structure metadata with custom_fields for Paystack Dashboard display
         const paystackCustomFields: Array<{ display_name: string; variable_name: string; value: string }> = [
           { display_name: "Campaign Title", variable_name: "campaign_title", value: campaign.title },
@@ -240,7 +303,7 @@ export async function POST(request: NextRequest) {
         ).toString();
 
         const paystackResponse = await initializePaystackPayment(
-          user.email!,
+          donationDonorEmail || user.email!,
           amount,
           currency,
           campaignMetadata,

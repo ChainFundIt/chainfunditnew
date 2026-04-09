@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db, withRetry } from '@/lib/db';
 import { campaigns, users, donations } from '@/lib/schema';
 import { eq, and, or, inArray, count, sum, desc, ne, like, isNull } from 'drizzle-orm';
 import { parse } from 'cookie';
@@ -62,64 +62,68 @@ export async function GET(request: NextRequest) {
     }
     
     // Get campaigns with creator details and donation stats
-    const campaignsWithDetails = await db
-      .select({
-        id: campaigns.id,
-        slug: campaigns.slug,
-        title: campaigns.title,
-        subtitle: campaigns.subtitle,
-        description: campaigns.description,
-        reason: campaigns.reason,
-        fundraisingFor: campaigns.fundraisingFor,
-        duration: campaigns.duration,
-        videoUrl: campaigns.videoUrl,
-        coverImageUrl: campaigns.coverImageUrl,
-        galleryImages: campaigns.galleryImages,
-        documents: campaigns.documents,
-        goalAmount: campaigns.goalAmount,
-        currency: campaigns.currency,
-        minimumDonation: campaigns.minimumDonation,
-        chainerCommissionRate: campaigns.chainerCommissionRate,
-        isChained: campaigns.isChained,
-        currentAmount: campaigns.currentAmount,
-        status: campaigns.status,
-        visibility: campaigns.visibility,
-        isActive: campaigns.isActive,
-        complianceStatus: campaigns.complianceStatus,
-        complianceSummary: campaigns.complianceSummary,
-        complianceFlags: campaigns.complianceFlags,
-        riskScore: campaigns.riskScore,
-        reviewRequired: campaigns.reviewRequired,
-        lastScreenedAt: campaigns.lastScreenedAt,
-        createdAt: campaigns.createdAt,
-        updatedAt: campaigns.updatedAt,
-        closedAt: campaigns.closedAt,
-        creatorId: campaigns.creatorId,
-        creatorName: users.fullName,
-        creatorAvatar: users.avatar,
-      })
-      .from(campaigns)
-      .leftJoin(users, eq(campaigns.creatorId, users.id))
-      .where(conditions.length > 0 ? and(...conditions) : undefined)
-      .orderBy(desc(campaigns.isActive), desc(campaigns.createdAt))
-      .limit(limit)
-      .offset(offset);
+    const campaignsWithDetails = await withRetry(() =>
+      db
+        .select({
+          id: campaigns.id,
+          slug: campaigns.slug,
+          title: campaigns.title,
+          subtitle: campaigns.subtitle,
+          description: campaigns.description,
+          reason: campaigns.reason,
+          fundraisingFor: campaigns.fundraisingFor,
+          duration: campaigns.duration,
+          videoUrl: campaigns.videoUrl,
+          coverImageUrl: campaigns.coverImageUrl,
+          galleryImages: campaigns.galleryImages,
+          documents: campaigns.documents,
+          goalAmount: campaigns.goalAmount,
+          currency: campaigns.currency,
+          minimumDonation: campaigns.minimumDonation,
+          chainerCommissionRate: campaigns.chainerCommissionRate,
+          isChained: campaigns.isChained,
+          currentAmount: campaigns.currentAmount,
+          status: campaigns.status,
+          visibility: campaigns.visibility,
+          isActive: campaigns.isActive,
+          complianceStatus: campaigns.complianceStatus,
+          complianceSummary: campaigns.complianceSummary,
+          complianceFlags: campaigns.complianceFlags,
+          riskScore: campaigns.riskScore,
+          reviewRequired: campaigns.reviewRequired,
+          lastScreenedAt: campaigns.lastScreenedAt,
+          createdAt: campaigns.createdAt,
+          updatedAt: campaigns.updatedAt,
+          closedAt: campaigns.closedAt,
+          creatorId: campaigns.creatorId,
+          creatorName: users.fullName,
+          creatorAvatar: users.avatar,
+        })
+        .from(campaigns)
+        .leftJoin(users, eq(campaigns.creatorId, users.id))
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(desc(campaigns.isActive), desc(campaigns.createdAt))
+        .limit(limit)
+        .offset(offset)
+    );
 
 
     // Get donation stats for each campaign
     const campaignsWithStats = await Promise.all(
       campaignsWithDetails.map(async (campaign) => {
-        const donationStats = await db
-          .select({
-            totalDonations: count(donations.id),
-            totalAmount: sum(donations.amount),
-            uniqueDonors: count(donations.donorId),
-          })
-          .from(donations)
-          .where(and(
-            eq(donations.campaignId, campaign.id),
-            eq(donations.paymentStatus, 'completed')
-          ));
+        const donationStats = await withRetry(() =>
+          db
+            .select({
+              totalDonations: count(donations.id),
+              totalAmount: sum(donations.amount),
+              uniqueDonors: count(donations.donorId),
+            })
+            .from(donations)
+            .where(and(
+              eq(donations.campaignId, campaign.id),
+              eq(donations.paymentStatus, 'completed')
+            ))
+        );
 
         const stats = {
           totalDonations: Number(donationStats[0]?.totalDonations || 0),

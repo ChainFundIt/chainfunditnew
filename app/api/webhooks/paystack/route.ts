@@ -100,12 +100,12 @@ export async function POST(request: NextRequest) {
  */
 async function handleChargeSuccess(data: any) {
   try {
-    const donationId = data.metadata?.donationId;
+    const donationId = await resolveDonationIdFromCharge(data);
     const reference = data.reference;
     const recurringDonationId = extractRecurringDonationId(data.metadata);
 
     if (recurringDonationId) {
-      await handleRecurringChargeSuccess(data, recurringDonationId, donationId, reference);
+      await handleRecurringChargeSuccess(data, recurringDonationId, donationId ?? undefined, reference);
       return;
     }
 
@@ -290,12 +290,12 @@ async function handleCharityDonationSuccess(donationId: string, reference: strin
  */
 async function handleChargeFailed(data: any) {
   try {
-    const donationId = data.metadata?.donationId;
+    const donationId = await resolveDonationIdFromCharge(data);
     const reference = data.reference;
     const recurringDonationId = extractRecurringDonationId(data.metadata);
 
     if (recurringDonationId) {
-      await handleRecurringChargeFailed(data, recurringDonationId, donationId, reference);
+      await handleRecurringChargeFailed(data, recurringDonationId, donationId ?? undefined, reference);
       return;
     }
 
@@ -404,7 +404,7 @@ async function handleCharityDonationFailed(donationId: string, charityId: string
  */
 async function handleChargePending(data: any) {
   try {
-    const donationId = data.metadata?.donationId;
+    const donationId = await resolveDonationIdFromCharge(data);
     
     if (!donationId) {
       return;
@@ -435,6 +435,32 @@ async function handleChargePending(data: any) {
   } catch (error) {
     console.error('💥 Error handling pending charge:', error);
   }
+}
+
+async function resolveDonationIdFromCharge(data: any): Promise<string | null> {
+  const metadataDonationId = data?.metadata?.donationId;
+  if (typeof metadataDonationId === 'string' && metadataDonationId) {
+    return metadataDonationId;
+  }
+
+  const customerMetadataDonationId = data?.customer?.metadata?.donationId;
+  if (typeof customerMetadataDonationId === 'string' && customerMetadataDonationId) {
+    return customerMetadataDonationId;
+  }
+
+  const customerCode = data?.customer?.customer_code;
+  if (typeof customerCode === 'string' && customerCode) {
+    const [matchedDonation] = await db
+      .select({ id: donations.id })
+      .from(donations)
+      .where(eq(donations.paystackCustomerCode, customerCode))
+      .limit(1);
+    if (matchedDonation?.id) {
+      return matchedDonation.id;
+    }
+  }
+
+  return null;
 }
 
 function extractRecurringDonationId(metadata: any): string | null {
