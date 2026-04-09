@@ -30,6 +30,11 @@ export const donations = pgTable('donations', {
   lastStatusUpdate: timestamp('last_status_update').defaultNow().notNull(),
   providerStatus: varchar('provider_status', { length: 50 }), // Original provider status
   providerError: text('provider_error'), // Provider error message
+  quickDonate: boolean('quick_donate').default(false).notNull(),
+  paystackCustomerCode: varchar('paystack_customer_code', { length: 100 }),
+  virtualAccountNumber: varchar('virtual_account_number', { length: 20 }),
+  virtualAccountBankName: varchar('virtual_account_bank_name', { length: 100 }),
+  virtualAccountName: varchar('virtual_account_name', { length: 255 }),
 });
 
 // Relations will be defined later to avoid circular dependencies

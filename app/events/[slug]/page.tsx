@@ -78,6 +78,12 @@ export default function HangoutEventPage() {
   const [donateEmail, setDonateEmail] = useState("");
   const [donateLoading, setDonateLoading] = useState(false);
   const [donateError, setDonateError] = useState<string | null>(null);
+  const [quickDonateDetails, setQuickDonateDetails] = useState<{
+    accountName: string;
+    accountNumber: string;
+    bankName: string;
+    amountNgn: number;
+  } | null>(null);
   const [recentDonors, setRecentDonors] = useState<{ name: string; amount: number }[]>([]);
 
   useEffect(() => {
@@ -175,6 +181,7 @@ export default function HangoutEventPage() {
       return;
     }
     setDonateError(null);
+    setQuickDonateDetails(null);
     setDonateLoading(true);
     try {
       const res = await fetch("/api/events/impact-hangout/donate", {
@@ -199,6 +206,48 @@ export default function HangoutEventPage() {
       setDonateError("Something went wrong. Please try again.");
     } catch {
       setDonateError("Something went wrong. Please try again.");
+    } finally {
+      setDonateLoading(false);
+    }
+  }
+
+  async function handleQuickDonate() {
+    if (!pageSlug) return;
+    const amount = getDonateAmount();
+    if (amount < MIN_DONATE) {
+      setDonateError(`Minimum donation is ₦${MIN_DONATE.toLocaleString()}.`);
+      return;
+    }
+    setDonateError(null);
+    setDonateLoading(true);
+    try {
+      const res = await fetch("/api/events/impact-hangout/donate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          slug: pageSlug,
+          amountInNaira: amount,
+          quickDonate: true,
+          paymentProvider: "paystack",
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setDonateError(data?.error || "Could not generate quick donate account.");
+        return;
+      }
+      if (data?.virtualAccount?.accountNumber) {
+        setQuickDonateDetails({
+          accountName: data.virtualAccount.accountName,
+          accountNumber: data.virtualAccount.accountNumber,
+          bankName: data.virtualAccount.bankName,
+          amountNgn: data.virtualAccount.amountNgn ?? amount,
+        });
+        return;
+      }
+      setDonateError("Could not generate quick donate account.");
+    } catch {
+      setDonateError("Could not generate quick donate account.");
     } finally {
       setDonateLoading(false);
     }
@@ -392,12 +441,42 @@ export default function HangoutEventPage() {
                           className="mt-1 rounded-lg"
                         />
                       </div>
+                      <div className="rounded-lg border border-[#D6E7D4] bg-[#F3F8F2] px-3 py-2 text-xs text-[#2f5530]">
+                        In a hurry? Use quick donate to get a Paystack virtual account instantly and transfer without filling details.
+                      </div>
                       {/* <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
                         Event donations are currently charged in NGN, so this flow uses Paystack automatically.
                       </div> */}
+                      {quickDonateDetails && (
+                        <div className="rounded-lg border border-[#D6E7D4] bg-[#F8FBF7] p-3 space-y-1.5">
+                          <p className="text-sm font-semibold text-[#1C1917]">Quick Donate account details</p>
+                          <p className="text-sm text-[#44403C]">
+                            Bank: <span className="font-medium">{quickDonateDetails.bankName}</span>
+                          </p>
+                          <p className="text-sm text-[#44403C]">
+                            Account Number: <span className="font-semibold tracking-wide">{quickDonateDetails.accountNumber}</span>
+                          </p>
+                          <p className="text-sm text-[#44403C]">
+                            Account Name: <span className="font-medium">{quickDonateDetails.accountName}</span>
+                          </p>
+                          <p className="text-sm text-[#44403C]">
+                            Transfer Amount: <span className="font-semibold">₦{quickDonateDetails.amountNgn.toLocaleString()}</span>
+                          </p>
+                        </div>
+                      )}
                       {donateError && (
                         <p className="text-sm text-red-600">{donateError}</p>
                       )}
+                      <Button
+                        type="button"
+                        size="lg"
+                        variant="outline"
+                        className="w-full rounded-full h-11 text-sm font-semibold border-[#104109] text-[#104109]"
+                        onClick={handleQuickDonate}
+                        disabled={donateLoading}
+                      >
+                        {donateLoading ? "Preparing virtual account..." : `Quick Donate ₦${getDonateAmount().toLocaleString()}`}
+                      </Button>
                       <Button
                         type="submit"
                         size="lg"

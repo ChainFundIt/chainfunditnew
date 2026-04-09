@@ -43,6 +43,11 @@ export function generateTestDonations(campaignId: string, donorIds: string[]): T
       donorName: 'Test Donor 1',
       donorEmail: 'test-donor-1@example.com',
       donorPhone: '1234567890',
+      quickDonate: false,
+      paystackCustomerCode: null,
+      virtualAccountNumber: null,
+      virtualAccountBankName: null,
+      virtualAccountName: null,
     },
     {
       id: 'test-donation-2',
@@ -70,6 +75,11 @@ export function generateTestDonations(campaignId: string, donorIds: string[]): T
       donorName: 'Test Donor 2',
       donorEmail: 'test-donor-2@example.com',
       donorPhone: '1234567890',
+      quickDonate: false,
+      paystackCustomerCode: null,
+      virtualAccountNumber: null,
+      virtualAccountBankName: null,
+      virtualAccountName: null,
     },
     {
       id: 'test-donation-3',
@@ -97,6 +107,11 @@ export function generateTestDonations(campaignId: string, donorIds: string[]): T
       donorName: 'Test Donor 3',
       donorEmail: 'test-donor-3@example.com',
       donorPhone: '1234567890',
+      quickDonate: false,
+      paystackCustomerCode: null,
+      virtualAccountNumber: null,
+      virtualAccountBankName: null,
+      virtualAccountName: null,
     },
     
     // Pending donations
@@ -126,6 +141,11 @@ export function generateTestDonations(campaignId: string, donorIds: string[]): T
       donorName: 'Test Donor 4',
       donorEmail: 'test-donor-4@example.com',
       donorPhone: '1234567890',
+      quickDonate: false,
+      paystackCustomerCode: null,
+      virtualAccountNumber: null,
+      virtualAccountBankName: null,
+      virtualAccountName: null,
     },
     {
       id: 'test-donation-5',
@@ -153,6 +173,11 @@ export function generateTestDonations(campaignId: string, donorIds: string[]): T
       donorName: 'Test Donor 5',
       donorEmail: 'test-donor-5@example.com',
       donorPhone: '1234567890',
+      quickDonate: false,
+      paystackCustomerCode: null,
+      virtualAccountNumber: null,
+      virtualAccountBankName: null,
+      virtualAccountName: null,
     },
     
     // Failed donations
@@ -182,6 +207,11 @@ export function generateTestDonations(campaignId: string, donorIds: string[]): T
       donorName: 'Test Donor 6',
       donorEmail: 'test-donor-6@example.com',
       donorPhone: '1234567890',
+      quickDonate: false,
+      paystackCustomerCode: null,
+      virtualAccountNumber: null,
+      virtualAccountBankName: null,
+      virtualAccountName: null,
     },
     {
       id: 'test-donation-7',
@@ -209,6 +239,11 @@ export function generateTestDonations(campaignId: string, donorIds: string[]): T
       donorName: 'Test Donor 7',
       donorEmail: 'test-donor-7@example.com',
       donorPhone: '1234567890',
+      quickDonate: false,
+      paystackCustomerCode: null,
+      virtualAccountNumber: null,
+      virtualAccountBankName: null,
+      virtualAccountName: null,
     },
   ];
 }
