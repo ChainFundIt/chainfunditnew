@@ -124,8 +124,17 @@ export async function POST(request: NextRequest) {
       const accountNumber = campaign.quickDonateAccountNumber || null;
       const bankName = campaign.quickDonateBankName || null;
       const accountName = campaign.quickDonateAccountName || null;
+      const shouldRefreshLegacyAccountName =
+        typeof accountName === "string" &&
+        accountName.toUpperCase().includes("QUICKDONATE CAMPAIGN");
 
-      if (customerCode && accountNumber && bankName && accountName) {
+      if (
+        customerCode &&
+        accountNumber &&
+        bankName &&
+        accountName &&
+        !shouldRefreshLegacyAccountName
+      ) {
         return NextResponse.json({
           success: true,
           provider: "paystack",
@@ -147,12 +156,16 @@ export async function POST(request: NextRequest) {
         donationMode: "quick",
         ...(chainerReferralCode ? { chainCode: chainerReferralCode } : {}),
       };
+      const campaignNameForAccount = campaign.title
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 60);
 
       const customer = await createPaystackCustomer(
         `quickdonate+${campaignId}@chainfundit.app`,
         {
-          firstName: "Campaign",
-          lastName: "QuickDonate",
+          firstName: campaignNameForAccount || "Campaign",
+          lastName: "",
           phone: quickPhone,
         },
         customerMetadata
