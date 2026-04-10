@@ -129,6 +129,11 @@ export async function initializePaystackPayment(
  */
 export async function createPaystackCustomer(
   email: string,
+  profile?: {
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+  },
   metadata?: Record<string, any>
 ): Promise<PaystackCustomerResponse> {
   validatePaystackKey();
@@ -138,6 +143,9 @@ export async function createPaystackCustomer(
       `${PAYSTACK_BASE_URL}/customer`,
       {
         email,
+        first_name: profile?.firstName,
+        last_name: profile?.lastName,
+        phone: profile?.phone,
         metadata,
       },
       {

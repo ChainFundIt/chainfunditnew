@@ -76,14 +76,6 @@ const DonateModal: React.FC<DonateModalProps> = ({
   const [comments, setComments] = useState("");
   const [paymentProvider, setPaymentProvider] = useState<PaymentProvider>("paypal");
   const [supportedProviders, setSupportedProviders] = useState<PaymentProvider[]>([]);
-  const [quickDonateLoading, setQuickDonateLoading] = useState(false);
-  const [quickDonateError, setQuickDonateError] = useState("");
-  const [quickDonateDetails, setQuickDonateDetails] = useState<{
-    accountNumber: string;
-    accountName: string;
-    bankName: string;
-    amount: number;
-  } | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
   const [campaignShareUrl, setCampaignShareUrl] = useState("");
   
@@ -243,8 +235,6 @@ const DonateModal: React.FC<DonateModalProps> = ({
     }
 
     try {
-      setQuickDonateError("");
-      setQuickDonateDetails(null);
       track("payment_initiated", {
         campaign_id: campaign.id,
         donation_amount: amountNum,
@@ -327,68 +317,6 @@ const DonateModal: React.FC<DonateModalProps> = ({
     } catch (error) {
       console.error('Payment error:', error);
       toast.error("An error occurred while processing your donation. Please try again.");
-    }
-  };
-
-  const handleQuickDonate = async () => {
-    if (!campaign) return;
-    if (!amount || Number.isNaN(parseFloat(amount))) {
-      setQuickDonateError("Enter a valid amount to continue.");
-      return;
-    }
-
-    const amountNum = parseFloat(amount);
-    const minAmount = parseFloat(campaign.minimumDonation);
-    if (amountNum < minAmount) {
-      setQuickDonateError(`Minimum donation amount is ₦${minAmount}`);
-      return;
-    }
-
-    setQuickDonateLoading(true);
-    setQuickDonateError("");
-    setQuickDonateDetails(null);
-
-    try {
-      const response = await fetch("/api/payments/initialize", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          campaignId: campaign.id,
-          amount: amountNum,
-          currency: "NGN",
-          paymentProvider: "paystack",
-          message: comments,
-          isAnonymous: anonymous,
-          email: email || undefined,
-          donorName: !anonymous ? fullName || undefined : undefined,
-          donorPhone: !anonymous ? phone || undefined : undefined,
-          chainerId: referralChainer?.id || null,
-          quickDonate: true,
-        }),
-      });
-
-      const result = await response.json().catch(() => null);
-      if (!response.ok || !result?.success || !result?.virtualAccount) {
-        setQuickDonateError(
-          result?.error || "Could not generate quick donate account details."
-        );
-        return;
-      }
-
-      setQuickDonateDetails({
-        accountNumber: result.virtualAccount.accountNumber,
-        accountName: result.virtualAccount.accountName,
-        bankName: result.virtualAccount.bankName,
-        amount: result.virtualAccount.amount,
-      });
-    } catch (error) {
-      console.error("Quick donate error:", error);
-      setQuickDonateError("Could not generate quick donate account details.");
-    } finally {
-      setQuickDonateLoading(false);
     }
   };
 
@@ -535,9 +463,6 @@ const DonateModal: React.FC<DonateModalProps> = ({
     setPhone("");
     setAnonymous(false);
     setComments("");
-    setQuickDonateError("");
-    setQuickDonateDetails(null);
-    setQuickDonateLoading(false);
     setLinkCopied(false);
     onOpenChange(false);
   };
@@ -971,92 +896,58 @@ const DonateModal: React.FC<DonateModalProps> = ({
                 </p>
               </div>
 
-              {/* Continue / Quick Donate Buttons */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={handleDonate}
-                  className="font-plusjakarta flex items-center justify-center w-full"
+              {/* Continue Button */}
+              <button
+                type="button"
+                onClick={handleDonate}
+                className="font-plusjakarta flex items-center justify-center w-full"
+                style={{
+                  height: "56px",
+                  padding: "16px 0",
+                  gap: "8px",
+                  borderRadius: "12px",
+                  backgroundColor: "#104901",
+                  color: "#FFFFFF",
+                  border: "none",
+                  cursor: "pointer",
+                  boxShadow: "0px 4px 6px -4px rgba(6, 78, 59, 0.1), 0px 10px 15px -3px rgba(6, 78, 59, 0.1)",
+                  transition: "all 0.3s ease"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#0d3a00";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#104901";
+                }}
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M5 12H19M19 12L12 5M19 12L12 19"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span
+                  className="font-plusjakarta"
                   style={{
-                    height: "56px",
-                    padding: "16px 0",
-                    gap: "8px",
-                    borderRadius: "12px",
-                    backgroundColor: "#104901",
-                    color: "#FFFFFF",
-                    border: "none",
-                    cursor: "pointer",
-                    boxShadow: "0px 4px 6px -4px rgba(6, 78, 59, 0.1), 0px 10px 15px -3px rgba(6, 78, 59, 0.1)",
-                    transition: "all 0.3s ease"
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "#0d3a00";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "#104901";
+                    fontFamily: "Plus Jakarta Sans",
+                    fontWeight: 700,
+                    fontSize: "16px",
+                    lineHeight: "24px",
+                    textAlign: "center"
                   }}
                 >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M5 12H19M19 12L12 5M19 12L12 19"
-                      stroke="white"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <span
-                    className="font-plusjakarta"
-                    style={{
-                      fontFamily: "Plus Jakarta Sans",
-                      fontWeight: 700,
-                      fontSize: "16px",
-                      lineHeight: "24px",
-                      textAlign: "center"
-                    }}
-                  >
-                    Continue
-                  </span>
-                </button>
-                {period === "one-time" && currentCurrencyCode === "NGN" && (
-                  <Button
-                    type="button"
-                    onClick={handleQuickDonate}
-                    disabled={quickDonateLoading}
-                    variant="outline"
-                    className="w-full h-14 border-[#104901] text-[#104901] hover:bg-[#F4F8F2] rounded-xl font-semibold"
-                  >
-                    {quickDonateLoading ? "Preparing..." : "⚡️ Quick Donate"}
-                  </Button>
-                )}
-              </div>
-              {period === "one-time" && currentCurrencyCode === "NGN" && (
-                <div className="rounded-2xl border border-[#C0BFC4] bg-white p-4 space-y-3">
-                  <p className="text-sm text-[#5F8555]">
-                    Skip the form and get a Paystack virtual account instantly.
-                  </p>
-                  {quickDonateDetails && (
-                    <div className="rounded-lg border border-[#D6E7D4] bg-[#F8FBF7] p-3 space-y-1.5">
-                      <p className="text-sm font-semibold text-[#1C1917]">Quick Donate account details</p>
-                      <p className="text-sm text-[#44403C]">Bank: <span className="font-medium">{quickDonateDetails.bankName}</span></p>
-                      <p className="text-sm text-[#44403C]">Account Number: <span className="font-semibold tracking-wide">{quickDonateDetails.accountNumber}</span></p>
-                      <p className="text-sm text-[#44403C]">Account Name: <span className="font-medium">{quickDonateDetails.accountName}</span></p>
-                      <p className="text-sm text-[#44403C]">Amount: <span className="font-semibold">₦{quickDonateDetails.amount.toLocaleString()}</span></p>
-                    </div>
-                  )}
-                  {quickDonateError && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
-                      {quickDonateError}
-                    </div>
-                  )}
-                </div>
-              )}
+                  Continue
+                </span>
+              </button>
             </div>
           )}
           {step === "payment" && (

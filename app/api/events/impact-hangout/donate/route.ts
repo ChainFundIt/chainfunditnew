@@ -67,7 +67,15 @@ export async function POST(request: NextRequest) {
     }
 
     if (quickDonate) {
+      const quickEmailName = (email.split("@")[0] || "quickdonor").replace(/[^\w]/g, " ").trim();
+      const nameParts = quickEmailName.split(/\s+/).filter(Boolean);
+      const firstName = nameParts[0] || "Quick";
+      const lastName = nameParts.slice(1).join(" ") || "Donor";
       const customer = await createPaystackCustomer(email, {
+        firstName,
+        lastName,
+        phone: "08000000000",
+      }, {
         type: "donation",
         donationMode: "quick",
         impactHangoutSlug: row.slug ?? slug,
