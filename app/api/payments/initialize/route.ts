@@ -76,6 +76,115 @@ export async function POST(request: NextRequest) {
     const normalizedDonorPhone =
       (typeof donorPhone === "string" && donorPhone.trim()) ? donorPhone.trim() : undefined;
 
+    // Validate campaign can accept donations
+    const campaignValidation = await validateCampaignForDonations(campaignId);
+    if (!campaignValidation.canAcceptDonations) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            campaignValidation.reason || "Campaign cannot accept donations",
+          campaignStatus: campaignValidation.campaign?.status,
+        },
+        { status: 400 }
+      );
+    }
+    const campaign = campaignValidation.campaign;
+
+    // Resolve chainer referral code for metadata
+    let chainerReferralCode: string | null = null;
+    if (bodyChainerId && typeof bodyChainerId === "string") {
+      const [chainerRow] = await db
+        .select({ referralCode: chainers.referralCode, campaignId: chainers.campaignId })
+        .from(chainers)
+        .where(eq(chainers.id, bodyChainerId))
+        .limit(1);
+      if (chainerRow?.referralCode && chainerRow.campaignId === campaignId) {
+        chainerReferralCode = chainerRow.referralCode;
+      }
+    }
+
+    // Check minimum donation amount
+    const minDonation = parseFloat(campaign.minimumDonation);
+    if (amount < minDonation) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Minimum donation amount is ${campaign.currency} ${minDonation}`,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Quick donate uses a campaign-level virtual account (no donor profile required up front)
+    if (quickDonate) {
+      const quickPhone =
+        (normalizedDonorPhone && normalizedDonorPhone.trim()) || "08000000000";
+      const customerCode = campaign.quickDonateCustomerCode || null;
+      const accountNumber = campaign.quickDonateAccountNumber || null;
+      const bankName = campaign.quickDonateBankName || null;
+      const accountName = campaign.quickDonateAccountName || null;
+
+      if (customerCode && accountNumber && bankName && accountName) {
+        return NextResponse.json({
+          success: true,
+          provider: "paystack",
+          mode: "quick",
+          virtualAccount: {
+            accountNumber,
+            accountName,
+            bankName,
+            amount,
+            campaignName: campaign.title,
+          },
+        });
+      }
+
+      const customerMetadata: Record<string, any> = {
+        campaignId,
+        campaignSlug: campaign.slug,
+        campaignName: campaign.title,
+        donationMode: "quick",
+        ...(chainerReferralCode ? { chainCode: chainerReferralCode } : {}),
+      };
+
+      const customer = await createPaystackCustomer(
+        `quickdonate+${campaignId}@chainfundit.app`,
+        {
+          firstName: "Campaign",
+          lastName: "QuickDonate",
+          phone: quickPhone,
+        },
+        customerMetadata
+      );
+      const dedicatedAccount = await createPaystackDedicatedAccount(
+        customer.data.customer_code
+      );
+
+      await db
+        .update(campaigns)
+        .set({
+          quickDonateCustomerCode: customer.data.customer_code,
+          quickDonateAccountNumber: dedicatedAccount.data.account_number,
+          quickDonateBankName: dedicatedAccount.data.bank?.name ?? null,
+          quickDonateAccountName: dedicatedAccount.data.account_name,
+        })
+        .where(eq(campaigns.id, campaignId));
+
+      return NextResponse.json({
+        success: true,
+        provider: "paystack",
+        mode: "quick",
+        virtualAccount: {
+          accountNumber: dedicatedAccount.data.account_number,
+          accountName: dedicatedAccount.data.account_name,
+          bankName: dedicatedAccount.data.bank?.name ?? "Paystack Bank",
+          amount,
+          campaignName: campaign.title,
+        },
+      });
+    }
+
     // Get authenticated user or create/resolve guest user
     const userEmail = await getUserFromRequest(request);
     let user;
@@ -148,48 +257,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Validate campaign can accept donations
-    const campaignValidation = await validateCampaignForDonations(campaignId);
-
-    if (!campaignValidation.canAcceptDonations) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            campaignValidation.reason || "Campaign cannot accept donations",
-          campaignStatus: campaignValidation.campaign?.status,
-        },
-        { status: 400 }
-      );
-    }
-
-    const campaign = campaignValidation.campaign;
-
-    // Resolve chainer's referral code for payment metadata (when donation comes through a chainer link)
-    let chainerReferralCode: string | null = null;
-    if (bodyChainerId && typeof bodyChainerId === "string") {
-      const [chainerRow] = await db
-        .select({ referralCode: chainers.referralCode, campaignId: chainers.campaignId })
-        .from(chainers)
-        .where(eq(chainers.id, bodyChainerId))
-        .limit(1);
-      if (chainerRow?.referralCode && chainerRow.campaignId === campaignId) {
-        chainerReferralCode = chainerRow.referralCode;
-      }
-    }
-
-    // Check minimum donation amount
-    const minDonation = parseFloat(campaign.minimumDonation);
-    if (amount < minDonation) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Minimum donation amount is ${campaign.currency} ${minDonation}`,
-        },
-        { status: 400 }
-      );
-    }
-
     const donationDonorName = isAnonymous
       ? null
       : (normalizedDonorName || user.fullName || "Guest Donor");
@@ -226,57 +293,6 @@ export async function POST(request: NextRequest) {
 
     if (paymentProvider === "paystack") {
       try {
-        if (quickDonate) {
-          const quickPhone =
-            (normalizedDonorPhone && normalizedDonorPhone.trim()) || "08000000000";
-          const nameParts = (normalizedDonorName || "").trim().split(/\s+/).filter(Boolean);
-          const firstName = nameParts[0] || "Quick";
-          const lastName = nameParts.slice(1).join(" ") || "Donor";
-          const customerMetadata: Record<string, any> = {
-            donationId,
-            campaignId,
-            donationMode: "quick",
-            amount,
-            currency,
-            ...(chainerReferralCode ? { chainCode: chainerReferralCode } : {}),
-          };
-          const customer = await createPaystackCustomer(
-            effectiveDonationEmail,
-            {
-              firstName,
-              lastName,
-              phone: quickPhone,
-            },
-            customerMetadata
-          );
-          const dedicatedAccount = await createPaystackDedicatedAccount(
-            customer.data.customer_code
-          );
-
-          await db
-            .update(donations)
-            .set({
-              paystackCustomerCode: customer.data.customer_code,
-              virtualAccountNumber: dedicatedAccount.data.account_number,
-              virtualAccountBankName: dedicatedAccount.data.bank?.name ?? null,
-              virtualAccountName: dedicatedAccount.data.account_name,
-            })
-            .where(eq(donations.id, donationId));
-
-          return NextResponse.json({
-            success: true,
-            provider: "paystack",
-            mode: "quick",
-            donationId,
-            virtualAccount: {
-              accountNumber: dedicatedAccount.data.account_number,
-              accountName: dedicatedAccount.data.account_name,
-              bankName: dedicatedAccount.data.bank?.name ?? "Paystack Bank",
-              amount,
-            },
-          });
-        }
-
         // Structure metadata with custom_fields for Paystack Dashboard display
         const paystackCustomFields: Array<{ display_name: string; variable_name: string; value: string }> = [
           { display_name: "Campaign Title", variable_name: "campaign_title", value: campaign.title },

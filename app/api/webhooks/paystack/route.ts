@@ -8,6 +8,7 @@ import { campaigns } from '@/lib/schema/campaigns';
 import { notifications } from '@/lib/schema/notifications';
 import { charityDonations, charities } from '@/lib/schema/charities';
 import { campaignPayouts, commissionPayouts } from '@/lib/schema';
+import { users } from '@/lib/schema/users';
 import { eq, sql, and } from 'drizzle-orm';
 import { createPaystackPlan, createPaystackSubscription } from '@/lib/payments/paystack-subscriptions';
 import { 
@@ -101,6 +102,7 @@ export async function POST(request: NextRequest) {
 async function handleChargeSuccess(data: any) {
   try {
     const donationId = await resolveDonationIdFromCharge(data);
+    const fallbackCampaignId = await resolveCampaignIdFromCharge(data);
     const reference = data.reference;
     const recurringDonationId = extractRecurringDonationId(data.metadata);
 
@@ -110,6 +112,13 @@ async function handleChargeSuccess(data: any) {
     }
 
     if (!donationId) {
+      if (fallbackCampaignId) {
+        const syntheticDonationId = await createQuickDonateDonationRecord(data, fallbackCampaignId, reference);
+        if (syntheticDonationId) {
+          await handleCampaignDonationSuccess(syntheticDonationId, reference, fallbackCampaignId);
+          return;
+        }
+      }
       console.error('❌ No donation ID found in charge metadata');
       return;
     }
@@ -461,6 +470,106 @@ async function resolveDonationIdFromCharge(data: any): Promise<string | null> {
   }
 
   return null;
+}
+
+async function resolveCampaignIdFromCharge(data: any): Promise<string | null> {
+  const metadataCampaignId = data?.metadata?.campaignId;
+  if (typeof metadataCampaignId === 'string' && metadataCampaignId) {
+    return metadataCampaignId;
+  }
+
+  const customerMetadataCampaignId = data?.customer?.metadata?.campaignId;
+  if (typeof customerMetadataCampaignId === 'string' && customerMetadataCampaignId) {
+    return customerMetadataCampaignId;
+  }
+
+  const customerCode = data?.customer?.customer_code;
+  if (typeof customerCode === 'string' && customerCode) {
+    const [campaignMatch] = await db
+      .select({ id: campaigns.id })
+      .from(campaigns)
+      .where(eq(campaigns.quickDonateCustomerCode, customerCode))
+      .limit(1);
+    if (campaignMatch?.id) {
+      return campaignMatch.id;
+    }
+  }
+
+  return null;
+}
+
+async function createQuickDonateDonationRecord(
+  data: any,
+  campaignId: string,
+  reference: string
+): Promise<string | null> {
+  const amountKobo = Number(data?.amount || 0);
+  const amount = Number.isFinite(amountKobo) ? amountKobo / 100 : 0;
+  if (amount <= 0) {
+    return null;
+  }
+
+  const [existing] = await db
+    .select({ id: donations.id })
+    .from(donations)
+    .where(eq(donations.paymentIntentId, reference))
+    .limit(1);
+  if (existing?.id) {
+    return existing.id;
+  }
+
+  const donorEmail =
+    (typeof data?.customer?.email === 'string' && data.customer.email.trim()) ||
+    'quickdonor@chainfundit.app';
+  const donorName =
+    (typeof data?.customer?.first_name === 'string' && data.customer.first_name.trim()) ||
+    (typeof data?.customer?.last_name === 'string' && data.customer.last_name.trim())
+      ? `${data.customer.first_name || ''} ${data.customer.last_name || ''}`.trim()
+      : 'Quick Donor';
+
+  let donorId: string | null = null;
+  const [existingUser] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, donorEmail))
+    .limit(1);
+
+  if (existingUser?.id) {
+    donorId = existingUser.id;
+  } else {
+    const [newUser] = await db
+      .insert(users)
+      .values({
+        email: donorEmail,
+        fullName: donorName,
+        isVerified: false,
+        hasCompletedProfile: false,
+      })
+      .returning({ id: users.id });
+    donorId = newUser?.id ?? null;
+  }
+
+  if (!donorId) return null;
+
+  const [newDonation] = await db
+    .insert(donations)
+    .values({
+      campaignId,
+      donorId,
+      amount: amount.toString(),
+      currency: 'NGN',
+      paymentMethod: 'paystack',
+      paymentStatus: 'pending',
+      message: 'Quick Donate',
+      isAnonymous: true,
+      donorName,
+      donorEmail,
+      quickDonate: true,
+      paymentIntentId: reference,
+    })
+    .returning({ id: donations.id });
+
+  return newDonation?.id ?? null;
 }
 
 function extractRecurringDonationId(metadata: any): string | null {
