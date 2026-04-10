@@ -253,6 +253,13 @@
       "when": 1775746777951,
       "tag": "0035_silky_roland_deschain",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1775831519794,
+      "tag": "0036_daily_zombie",
+      "breakpoints": true
     }
   ]
 }

@@ -160,6 +160,7 @@ const Main = ({ campaignSlug }: MainProps) => {
     accountName: string;
     bankName: string;
     amount: number;
+    campaignName?: string;
   } | null>(null);
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
   const [campaign, setCampaign] = useState<CampaignData | null>(null);
@@ -619,6 +620,7 @@ const Main = ({ campaignSlug }: MainProps) => {
         accountName: result.virtualAccount.accountName,
         bankName: result.virtualAccount.bankName,
         amount: result.virtualAccount.amount,
+        campaignName: result.virtualAccount.campaignName,
       });
     } catch (err) {
       console.error("Quick donate error:", err);
@@ -1411,6 +1413,9 @@ const Main = ({ campaignSlug }: MainProps) => {
                 <p className="text-sm font-semibold text-[#1C1917]">Account details</p>
                 <p className="text-sm text-[#44403C]">
                   Bank: <span className="font-medium">{quickDonateDetails.bankName}</span>
+                </p>
+                <p className="text-sm text-[#44403C]">
+                  Campaign: <span className="font-medium">{quickDonateDetails.campaignName || campaignData.title}</span>
                 </p>
                 <p className="text-sm text-[#44403C]">
                   Account Number: <span className="font-semibold tracking-wide">{quickDonateDetails.accountNumber}</span>

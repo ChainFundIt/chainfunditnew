@@ -193,6 +193,10 @@ export const campaigns = pgTable("campaigns", {
 	goalReachedAt: timestamp("goal_reached_at", { mode: 'string' }),
 	autoCloseAt: timestamp("auto_close_at", { mode: 'string' }),
 	expiresAt: timestamp("expires_at", { mode: 'string' }),
+	quickDonateCustomerCode: varchar("quick_donate_customer_code", { length: 100 }),
+	quickDonateAccountNumber: varchar("quick_donate_account_number", { length: 20 }),
+	quickDonateBankName: varchar("quick_donate_bank_name", { length: 100 }),
+	quickDonateAccountName: varchar("quick_donate_account_name", { length: 255 }),
 }, (table) => [
 	unique("campaigns_slug_unique").on(table.slug),
 ]);
