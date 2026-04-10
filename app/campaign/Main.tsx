@@ -35,6 +35,12 @@ import ClientToaster from "@/components/ui/client-toaster";
 import { formatCurrency, getCurrencySymbol } from "@/lib/utils/currency";
 import { ExternalToast, toast } from "sonner";
 import Link from "next/link";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const autoRefreshInterval = 120000; // 2 minutes
 
@@ -145,6 +151,16 @@ const Main = ({ campaignSlug }: MainProps) => {
   const [chainModalOpen, setChainModalOpen] = useState(false);
   const [donateModalOpen, setDonateModalOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [quickDonateModalOpen, setQuickDonateModalOpen] = useState(false);
+  const [quickDonateAmount, setQuickDonateAmount] = useState("");
+  const [quickDonateLoading, setQuickDonateLoading] = useState(false);
+  const [quickDonateError, setQuickDonateError] = useState<string | null>(null);
+  const [quickDonateDetails, setQuickDonateDetails] = useState<{
+    accountNumber: string;
+    accountName: string;
+    bankName: string;
+    amount: number;
+  } | null>(null);
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
   const [campaign, setCampaign] = useState<CampaignData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -551,6 +567,66 @@ const Main = ({ campaignSlug }: MainProps) => {
     : galleryImages;
 
   const campaignDocuments = parseJsonArray(campaignData?.documents);
+
+  const handleQuickDonateStart = () => {
+    setQuickDonateAmount("");
+    setQuickDonateError(null);
+    setQuickDonateDetails(null);
+    setQuickDonateModalOpen(true);
+  };
+
+  const handleQuickDonateSubmit = async () => {
+    if (!campaignData) return;
+    const amount = parseFloat(quickDonateAmount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setQuickDonateError("Enter a valid donation amount.");
+      return;
+    }
+    const minAmount = parseFloat(campaignData.minimumDonation);
+    if (amount < minAmount) {
+      setQuickDonateError(`Minimum donation amount is ₦${minAmount}.`);
+      return;
+    }
+
+    setQuickDonateLoading(true);
+    setQuickDonateError(null);
+    try {
+      const response = await fetch("/api/payments/initialize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          campaignId: campaignData.id,
+          amount,
+          currency: "NGN",
+          paymentProvider: "paystack",
+          quickDonate: true,
+          chainerId: referralChainer?.id || null,
+          isAnonymous: true,
+        }),
+      });
+
+      const result = await response.json().catch(() => null);
+      if (!response.ok || !result?.success || !result?.virtualAccount) {
+        setQuickDonateError(
+          result?.error || "Could not generate quick donate account details."
+        );
+        return;
+      }
+
+      setQuickDonateDetails({
+        accountNumber: result.virtualAccount.accountNumber,
+        accountName: result.virtualAccount.accountName,
+        bankName: result.virtualAccount.bankName,
+        amount: result.virtualAccount.amount,
+      });
+    } catch (err) {
+      console.error("Quick donate error:", err);
+      setQuickDonateError("Could not generate quick donate account details.");
+    } finally {
+      setQuickDonateLoading(false);
+    }
+  };
   return (
     <div className="bg-gray-50 font-jakarta">
       {/* Breadcrumb */}
@@ -1058,6 +1134,17 @@ const Main = ({ campaignSlug }: MainProps) => {
                   <ArrowRight />
                   <span>Donate Now</span>
                 </Button>
+                {campaignData.currency === "NGN" && (
+                  <Button
+                    onClick={handleQuickDonateStart}
+                    disabled={shouldDisableButtons}
+                    className="rounded-3xl h-auto py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                    variant="outline"
+                  >
+                    <Heart />
+                    <span>Quick Donate</span>
+                  </Button>
+                )}
                 {campaignData.isChained && (
                   <Button
                     onClick={() => setChainModalOpen(true)}
@@ -1290,6 +1377,55 @@ const Main = ({ campaignSlug }: MainProps) => {
         campaign={campaign || undefined}
         referralChainer={referralChainer}
       />
+      <Dialog open={quickDonateModalOpen} onOpenChange={setQuickDonateModalOpen}>
+        <DialogContent className="rounded-3xl max-w-md border-none">
+          <DialogHeader>
+            <DialogTitle>Quick Donate</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-600">
+            Enter your amount and generate a Paystack virtual account instantly.
+          </p>
+          <div className="space-y-3 mt-2">
+            <label className="text-sm font-medium text-gray-700 block">Amount (NGN)</label>
+            <input
+              type="number"
+              min="1"
+              value={quickDonateAmount}
+              onChange={(e) => setQuickDonateAmount(e.target.value)}
+              className="w-full h-11 rounded-lg border border-gray-300 px-3"
+              placeholder="Enter amount"
+            />
+            {quickDonateError && (
+              <p className="text-sm text-red-600">{quickDonateError}</p>
+            )}
+            <Button
+              type="button"
+              onClick={handleQuickDonateSubmit}
+              disabled={quickDonateLoading}
+              className="w-full h-11 rounded-full"
+            >
+              {quickDonateLoading ? "Generating account..." : "Donate"}
+            </Button>
+            {quickDonateDetails && (
+              <div className="rounded-lg border border-[#D6E7D4] bg-[#F8FBF7] p-3 space-y-1.5">
+                <p className="text-sm font-semibold text-[#1C1917]">Account details</p>
+                <p className="text-sm text-[#44403C]">
+                  Bank: <span className="font-medium">{quickDonateDetails.bankName}</span>
+                </p>
+                <p className="text-sm text-[#44403C]">
+                  Account Number: <span className="font-semibold tracking-wide">{quickDonateDetails.accountNumber}</span>
+                </p>
+                <p className="text-sm text-[#44403C]">
+                  Account Name: <span className="font-medium">{quickDonateDetails.accountName}</span>
+                </p>
+                <p className="text-sm text-[#44403C]">
+                  Amount: <span className="font-semibold">₦{quickDonateDetails.amount.toLocaleString()}</span>
+                </p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
       <ShareModal
         open={shareModalOpen}
         onOpenChange={setShareModalOpen}

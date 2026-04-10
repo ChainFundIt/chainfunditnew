@@ -227,6 +227,11 @@ export async function POST(request: NextRequest) {
     if (paymentProvider === "paystack") {
       try {
         if (quickDonate) {
+          const quickPhone =
+            (normalizedDonorPhone && normalizedDonorPhone.trim()) || "08000000000";
+          const nameParts = (normalizedDonorName || "").trim().split(/\s+/).filter(Boolean);
+          const firstName = nameParts[0] || "Quick";
+          const lastName = nameParts.slice(1).join(" ") || "Donor";
           const customerMetadata: Record<string, any> = {
             donationId,
             campaignId,
@@ -237,6 +242,11 @@ export async function POST(request: NextRequest) {
           };
           const customer = await createPaystackCustomer(
             effectiveDonationEmail,
+            {
+              firstName,
+              lastName,
+              phone: quickPhone,
+            },
             customerMetadata
           );
           const dedicatedAccount = await createPaystackDedicatedAccount(
