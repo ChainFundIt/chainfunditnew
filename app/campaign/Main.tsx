@@ -22,6 +22,7 @@ import {
   ArrowRight,
   Shield,
   Link2,
+  Copy,
 } from "lucide-react";
 import CTA from "./cta";
 import ChainModal from "./chain-modal";
@@ -162,6 +163,7 @@ const Main = ({ campaignSlug }: MainProps) => {
     amount: number;
     campaignName?: string;
   } | null>(null);
+  const [quickDonateAccountCopied, setQuickDonateAccountCopied] = useState(false);
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
   const [campaign, setCampaign] = useState<CampaignData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -573,6 +575,7 @@ const Main = ({ campaignSlug }: MainProps) => {
     setQuickDonateAmount("");
     setQuickDonateError(null);
     setQuickDonateDetails(null);
+    setQuickDonateAccountCopied(false);
     setQuickDonateModalOpen(true);
   };
 
@@ -615,6 +618,7 @@ const Main = ({ campaignSlug }: MainProps) => {
         return;
       }
 
+      setQuickDonateAccountCopied(false);
       setQuickDonateDetails({
         accountNumber: result.virtualAccount.accountNumber,
         accountName: result.virtualAccount.accountName,
@@ -1417,9 +1421,49 @@ const Main = ({ campaignSlug }: MainProps) => {
                 <p className="text-sm text-[#44403C]">
                   Campaign: <span className="font-medium">{quickDonateDetails.campaignName || campaignData.title}</span>
                 </p>
-                <p className="text-sm text-[#44403C]">
-                  Account Number: <span className="font-semibold tracking-wide">{quickDonateDetails.accountNumber}</span>
-                </p>
+                <div className="flex flex-wrap items-center gap-2 text-sm text-[#44403C]">
+                  <span>
+                    Account Number:{" "}
+                    <span className="font-semibold tracking-wide">
+                      {quickDonateDetails.accountNumber}
+                    </span>
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 rounded-full border-[#104109]/40 text-[#104109] hover:bg-[#F3F8F2]"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(
+                          quickDonateDetails.accountNumber
+                        );
+                        setQuickDonateAccountCopied(true);
+                        window.setTimeout(
+                          () => setQuickDonateAccountCopied(false),
+                          2000
+                        );
+                      } catch {
+                        setQuickDonateError(
+                          "Could not copy. Select the account number manually."
+                        );
+                      }
+                    }}
+                    aria-label="Copy account number"
+                  >
+                    {quickDonateAccountCopied ? (
+                      <>
+                        <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3.5 w-3.5 mr-1" />
+                        Copy
+                      </>
+                    )}
+                  </Button>
+                </div>
                 <p className="text-sm text-[#44403C]">
                   Account Name: <span className="font-medium">{quickDonateDetails.accountName}</span>
                 </p>

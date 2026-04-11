@@ -160,10 +160,11 @@ export async function POST(request: NextRequest) {
         .replace(/\s+/g, " ")
         .trim()
         .slice(0, 60);
+      // Paystack virtual account names use "MERCHANT / {last_name} {first_name}".
+      // Map words so that segment reads in natural title order (e.g. BOOK DRIVE CAMPAIGN).
       const nameWords = campaignNameForAccount.split(/\s+/).filter(Boolean);
+      const quickDonateLastName = (nameWords[0] || "Campaign").slice(0, 50);
       const quickDonateFirstName =
-        (nameWords[0] || "Campaign").slice(0, 50);
-      const quickDonateLastName =
         nameWords.length > 1
           ? nameWords.slice(1).join(" ").slice(0, 50)
           : "Fundraiser";

@@ -35,6 +35,7 @@ import {
   Target,
   Heart,
   CheckCircle2,
+  Copy,
 } from "lucide-react";
 import { Whatsapp } from "iconsax-reactjs";
 
@@ -84,6 +85,7 @@ export default function HangoutEventPage() {
     bankName: string;
     amountNgn: number;
   } | null>(null);
+  const [quickDonateAccountCopied, setQuickDonateAccountCopied] = useState(false);
   const [recentDonors, setRecentDonors] = useState<{ name: string; amount: number }[]>([]);
 
   useEffect(() => {
@@ -237,6 +239,7 @@ export default function HangoutEventPage() {
         return;
       }
       if (data?.virtualAccount?.accountNumber) {
+        setQuickDonateAccountCopied(false);
         setQuickDonateDetails({
           accountName: data.virtualAccount.accountName,
           accountNumber: data.virtualAccount.accountNumber,
@@ -453,9 +456,49 @@ export default function HangoutEventPage() {
                           <p className="text-sm text-[#44403C]">
                             Bank: <span className="font-medium">{quickDonateDetails.bankName}</span>
                           </p>
-                          <p className="text-sm text-[#44403C]">
-                            Account Number: <span className="font-semibold tracking-wide">{quickDonateDetails.accountNumber}</span>
-                          </p>
+                          <div className="flex flex-wrap items-center gap-2 text-sm text-[#44403C]">
+                            <span>
+                              Account Number:{" "}
+                              <span className="font-semibold tracking-wide">
+                                {quickDonateDetails.accountNumber}
+                              </span>
+                            </span>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-8 rounded-full border-[#104109]/40 text-[#104109] hover:bg-[#F3F8F2]"
+                              onClick={async () => {
+                                try {
+                                  await navigator.clipboard.writeText(
+                                    quickDonateDetails.accountNumber
+                                  );
+                                  setQuickDonateAccountCopied(true);
+                                  window.setTimeout(
+                                    () => setQuickDonateAccountCopied(false),
+                                    2000
+                                  );
+                                } catch {
+                                  setDonateError(
+                                    "Could not copy. Select the account number manually."
+                                  );
+                                }
+                              }}
+                              aria-label="Copy account number"
+                            >
+                              {quickDonateAccountCopied ? (
+                                <>
+                                  <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                                  Copied
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="h-3.5 w-3.5 mr-1" />
+                                  Copy
+                                </>
+                              )}
+                            </Button>
+                          </div>
                           <p className="text-sm text-[#44403C]">
                             Account Name: <span className="font-medium">{quickDonateDetails.accountName}</span>
                           </p>
