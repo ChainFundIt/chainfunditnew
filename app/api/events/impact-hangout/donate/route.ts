@@ -69,11 +69,12 @@ export async function POST(request: NextRequest) {
     if (quickDonate) {
       const quickEmailName = (email.split("@")[0] || "quickdonor").replace(/[^\w]/g, " ").trim();
       const nameParts = quickEmailName.split(/\s+/).filter(Boolean);
-      const firstName = nameParts[0] || "Quick";
-      const lastName = nameParts.slice(1).join(" ") || "Donor";
+      // Paystack shows customer segment as "{last_name} {first_name}" on virtual accounts.
+      const naturalFirst = nameParts[0] || "Quick";
+      const naturalRest = nameParts.slice(1).join(" ") || "Donor";
       const customer = await createPaystackCustomer(email, {
-        firstName,
-        lastName,
+        firstName: naturalRest.slice(0, 50),
+        lastName: naturalFirst.slice(0, 50),
         phone: "08000000000",
       }, {
         type: "donation",
