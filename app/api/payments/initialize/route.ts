@@ -160,13 +160,20 @@ export async function POST(request: NextRequest) {
         .replace(/\s+/g, " ")
         .trim()
         .slice(0, 60);
+      const nameWords = campaignNameForAccount.split(/\s+/).filter(Boolean);
+      const quickDonateFirstName =
+        (nameWords[0] || "Campaign").slice(0, 50);
+      const quickDonateLastName =
+        nameWords.length > 1
+          ? nameWords.slice(1).join(" ").slice(0, 50)
+          : "Fundraiser";
 
       try {
         const customer = await createPaystackCustomer(
           `quickdonate+${campaignId}@chainfundit.app`,
           {
-            firstName: campaignNameForAccount || "Campaign",
-            lastName: "",
+            firstName: quickDonateFirstName,
+            lastName: quickDonateLastName,
             phone: quickPhone,
           },
           customerMetadata

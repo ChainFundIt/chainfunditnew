@@ -163,13 +163,17 @@ export async function createPaystackCustomer(
 ): Promise<PaystackCustomerResponse> {
   validatePaystackKey();
 
+  // Paystack rejects customers when last_name is missing or empty (and may do the same for first_name).
+  const firstName = (profile?.firstName ?? '').trim() || 'Customer';
+  const lastName = (profile?.lastName ?? '').trim() || 'Account';
+
   try {
     const response = await axios.post(
       `${PAYSTACK_BASE_URL}/customer`,
       {
         email,
-        first_name: profile?.firstName,
-        last_name: profile?.lastName,
+        first_name: firstName,
+        last_name: lastName,
         phone: profile?.phone,
         metadata,
       },
