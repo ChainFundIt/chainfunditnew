@@ -161,41 +161,57 @@ export async function POST(request: NextRequest) {
         .trim()
         .slice(0, 60);
 
-      const customer = await createPaystackCustomer(
-        `quickdonate+${campaignId}@chainfundit.app`,
-        {
-          firstName: campaignNameForAccount || "Campaign",
-          lastName: "",
-          phone: quickPhone,
-        },
-        customerMetadata
-      );
-      const dedicatedAccount = await createPaystackDedicatedAccount(
-        customer.data.customer_code
-      );
+      try {
+        const customer = await createPaystackCustomer(
+          `quickdonate+${campaignId}@chainfundit.app`,
+          {
+            firstName: campaignNameForAccount || "Campaign",
+            lastName: "",
+            phone: quickPhone,
+          },
+          customerMetadata
+        );
+        const dedicatedAccount = await createPaystackDedicatedAccount(
+          customer.data.customer_code
+        );
 
-      await db
-        .update(campaigns)
-        .set({
-          quickDonateCustomerCode: customer.data.customer_code,
-          quickDonateAccountNumber: dedicatedAccount.data.account_number,
-          quickDonateBankName: dedicatedAccount.data.bank?.name ?? null,
-          quickDonateAccountName: dedicatedAccount.data.account_name,
-        })
-        .where(eq(campaigns.id, campaignId));
+        await db
+          .update(campaigns)
+          .set({
+            quickDonateCustomerCode: customer.data.customer_code,
+            quickDonateAccountNumber: dedicatedAccount.data.account_number,
+            quickDonateBankName: dedicatedAccount.data.bank?.name ?? null,
+            quickDonateAccountName: dedicatedAccount.data.account_name,
+          })
+          .where(eq(campaigns.id, campaignId));
 
-      return NextResponse.json({
-        success: true,
-        provider: "paystack",
-        mode: "quick",
-        virtualAccount: {
-          accountNumber: dedicatedAccount.data.account_number,
-          accountName: dedicatedAccount.data.account_name,
-          bankName: dedicatedAccount.data.bank?.name ?? "Paystack Bank",
-          amount,
-          campaignName: campaign.title,
-        },
-      });
+        return NextResponse.json({
+          success: true,
+          provider: "paystack",
+          mode: "quick",
+          virtualAccount: {
+            accountNumber: dedicatedAccount.data.account_number,
+            accountName: dedicatedAccount.data.account_name,
+            bankName: dedicatedAccount.data.bank?.name ?? "Paystack Bank",
+            amount,
+            campaignName: campaign.title,
+          },
+        });
+      } catch (quickErr: unknown) {
+        const message =
+          quickErr instanceof Error ? quickErr.message : "Unknown error";
+        console.error("Quick Donate virtual account creation failed:", quickErr);
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Could not create a bank transfer account for this campaign. Check Paystack DVA settings and keys.",
+            details: message,
+            code: "QUICK_DONATE_DVA_ERROR",
+          },
+          { status: 502 }
+        );
+      }
     }
 
     // Get authenticated user or create/resolve guest user

@@ -20,6 +20,31 @@ function validatePaystackKey(): void {
   }
 }
 
+/**
+ * Paystack returns HTTP 200 with `{ status: false, message }` for many API errors.
+ * Axios does not throw on 200, so callers must check `body.status`.
+ */
+function assertPaystackSuccess<T extends { status?: boolean; message?: string }>(
+  body: T,
+  context: string
+): asserts body is T & { status: true } {
+  if (!body || body.status !== true) {
+    const msg = body?.message || 'Request failed';
+    throw new Error(`${context}: ${msg}`);
+  }
+}
+
+/**
+ * Dedicated virtual accounts: test keys must use `test-bank`; live typically uses `wema-bank` or `titan-paystack`.
+ * Override with PAYSTACK_DEDICATED_ACCOUNT_BANK if needed.
+ */
+export function resolvePaystackDedicatedAccountPreferredBank(): string {
+  const override = process.env.PAYSTACK_DEDICATED_ACCOUNT_BANK?.trim();
+  if (override) return override;
+  if (PAYSTACK_SECRET_KEY?.startsWith('sk_test_')) return 'test-bank';
+  return 'wema-bank';
+}
+
 export interface PaystackInitializeResponse {
   status: boolean;
   message: string;
@@ -156,7 +181,12 @@ export async function createPaystackCustomer(
       }
     );
 
-    return response.data;
+    const data = response.data;
+    assertPaystackSuccess(data, 'Failed to create Paystack customer');
+    if (!data.data?.customer_code) {
+      throw new Error('Failed to create Paystack customer: no customer_code in response');
+    }
+    return data;
   } catch (error: any) {
     const errorData = error.response?.data || {};
     const errorMessage = errorData.message || error.message || 'Unknown error';
@@ -174,36 +204,70 @@ export async function createPaystackCustomer(
  */
 export async function createPaystackDedicatedAccount(
   customer: number | string,
-  preferredBank: string = 'wema-bank'
+  preferredBank?: string
 ): Promise<PaystackDedicatedAccountResponse> {
   validatePaystackKey();
 
-  try {
-    const response = await axios.post(
-      `${PAYSTACK_BASE_URL}/dedicated_account`,
-      {
-        customer,
-        preferred_bank: preferredBank,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+  const primary = preferredBank?.trim() || resolvePaystackDedicatedAccountPreferredBank();
+  const fallbacks =
+    primary === 'wema-bank'
+      ? ['titan-paystack' as const]
+      : primary === 'titan-paystack'
+        ? ['wema-bank' as const]
+        : [];
 
-    return response.data;
-  } catch (error: any) {
-    const errorData = error.response?.data || {};
-    const errorMessage = errorData.message || error.message || 'Unknown error';
-    console.error('Error creating Paystack dedicated account:', {
-      status: error.response?.status,
-      message: errorMessage,
-      data: errorData,
-    });
-    throw new Error(`Failed to create Paystack dedicated account: ${errorMessage}`);
+  const banksToTry = [primary, ...fallbacks.filter((b) => b !== primary)];
+  let lastMessage = 'Unknown error';
+
+  for (const bank of banksToTry) {
+    try {
+      const response = await axios.post(
+        `${PAYSTACK_BASE_URL}/dedicated_account`,
+        {
+          customer,
+          preferred_bank: bank,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const data = response.data;
+      if (!data?.status) {
+        lastMessage = data?.message || 'Paystack returned status false';
+        console.error('Paystack dedicated account rejected:', {
+          preferred_bank: bank,
+          message: lastMessage,
+          data,
+        });
+        continue;
+      }
+      if (!data.data?.account_number) {
+        lastMessage = 'Paystack did not return account_number';
+        console.error('Paystack dedicated account missing account_number:', { bank, data });
+        continue;
+      }
+      return data;
+    } catch (error: any) {
+      const errorData = error.response?.data || {};
+      lastMessage = errorData.message || error.message || 'Unknown error';
+      console.error('Error creating Paystack dedicated account:', {
+        preferred_bank: bank,
+        status: error.response?.status,
+        message: lastMessage,
+        data: errorData,
+      });
+      if (banksToTry.length > 1 && error.response?.status && error.response.status < 500) {
+        continue;
+      }
+      throw new Error(`Failed to create Paystack dedicated account: ${lastMessage}`);
+    }
   }
+
+  throw new Error(`Failed to create Paystack dedicated account: ${lastMessage}`);
 }
 
 /**

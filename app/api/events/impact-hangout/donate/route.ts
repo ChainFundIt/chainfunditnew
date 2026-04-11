@@ -124,8 +124,13 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Impact Hangout donate init error:", error);
+    const details = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: "Failed to start donation" },
+      {
+        error: "Failed to start donation",
+        details,
+        code: "DONATION_INIT_ERROR",
+      },
       { status: 500 }
     );
   }
