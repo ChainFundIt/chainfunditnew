@@ -156,6 +156,7 @@ const Main = ({ campaignSlug }: MainProps) => {
   const [quickDonateAmount, setQuickDonateAmount] = useState("");
   const [quickDonateLoading, setQuickDonateLoading] = useState(false);
   const [quickDonateError, setQuickDonateError] = useState<string | null>(null);
+  const [quickDonateDonationId, setQuickDonateDonationId] = useState<string | null>(null);
   const [quickDonateDetails, setQuickDonateDetails] = useState<{
     accountNumber: string;
     accountName: string;
@@ -164,6 +165,7 @@ const Main = ({ campaignSlug }: MainProps) => {
     campaignName?: string;
   } | null>(null);
   const [quickDonateAccountCopied, setQuickDonateAccountCopied] = useState(false);
+  const [quickDonateConfirmLoading, setQuickDonateConfirmLoading] = useState(false);
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
   const [campaign, setCampaign] = useState<CampaignData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -576,6 +578,7 @@ const Main = ({ campaignSlug }: MainProps) => {
     setQuickDonateError(null);
     setQuickDonateDetails(null);
     setQuickDonateAccountCopied(false);
+    setQuickDonateDonationId(null);
     setQuickDonateModalOpen(true);
   };
 
@@ -618,6 +621,9 @@ const Main = ({ campaignSlug }: MainProps) => {
         return;
       }
 
+      if (result?.donationId) {
+        setQuickDonateDonationId(result.donationId);
+      }
       setQuickDonateAccountCopied(false);
       setQuickDonateDetails({
         accountNumber: result.virtualAccount.accountNumber,
@@ -1470,6 +1476,46 @@ const Main = ({ campaignSlug }: MainProps) => {
                 <p className="text-sm text-[#44403C]">
                   Amount: <span className="font-semibold">₦{quickDonateDetails.amount.toLocaleString()}</span>
                 </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full rounded-full mt-2"
+                  disabled={!quickDonateDonationId || quickDonateConfirmLoading}
+                  onClick={async () => {
+                    if (!quickDonateDonationId) return;
+                    setQuickDonateConfirmLoading(true);
+                    try {
+                      const res = await fetch(
+                        `/api/donations/status?donationId=${encodeURIComponent(quickDonateDonationId)}`
+                      );
+                      const data = await res.json().catch(() => null);
+                      if (!res.ok || !data?.success) {
+                        setQuickDonateError(data?.error || "Could not confirm payment yet.");
+                        return;
+                      }
+                      if (data.status === "completed") {
+                        toast.success("Payment confirmed", {
+                          description: "We’ve received your donation. Thank you!",
+                          duration: 6000,
+                        });
+                        setQuickDonateModalOpen(false);
+                        return;
+                      }
+                      toast.info("Not confirmed yet", {
+                        description:
+                          "We haven't received confirmation yet. Please try again in a minute.",
+                        duration: 6000,
+                      });
+                    } catch (err) {
+                      console.error("Quick donate confirm error:", err);
+                      setQuickDonateError("Could not confirm payment yet.");
+                    } finally {
+                      setQuickDonateConfirmLoading(false);
+                    }
+                  }}
+                >
+                  {quickDonateConfirmLoading ? "Checking..." : "I've sent the money"}
+                </Button>
               </div>
             )}
           </div>

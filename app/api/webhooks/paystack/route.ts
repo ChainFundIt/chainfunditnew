@@ -113,7 +113,11 @@ async function handleChargeSuccess(data: any) {
 
     if (!donationId) {
       if (fallbackCampaignId) {
-        const syntheticDonationId = await createQuickDonateDonationRecord(data, fallbackCampaignId, reference);
+        const syntheticDonationId = await resolveOrCreateQuickDonateDonationRecord(
+          data,
+          fallbackCampaignId,
+          reference
+        );
         if (syntheticDonationId) {
           await handleCampaignDonationSuccess(syntheticDonationId, reference, fallbackCampaignId);
           return;
@@ -570,6 +574,59 @@ async function createQuickDonateDonationRecord(
     .returning({ id: donations.id });
 
   return newDonation?.id ?? null;
+}
+
+async function resolveOrCreateQuickDonateDonationRecord(
+  data: any,
+  campaignId: string,
+  reference: string
+): Promise<string | null> {
+  const amountKobo = Number(data?.amount || 0);
+  const amount = Number.isFinite(amountKobo) ? amountKobo / 100 : 0;
+  if (amount <= 0) return null;
+
+  const amountStr =
+    Number.isInteger(amount) ? String(amount) : amount.toFixed(2);
+
+  // Prefer matching an existing pending quick-donate attempt for this campaign+amount
+  const [pendingMatch] = await db
+    .select({ id: donations.id })
+    .from(donations)
+    .where(
+      and(
+        eq(donations.campaignId, campaignId),
+        eq(donations.quickDonate, true),
+        eq(donations.paymentStatus, 'pending'),
+        eq(donations.amount, amountStr)
+      )
+    )
+    .orderBy(sql`${donations.createdAt} desc`)
+    .limit(1);
+
+  if (pendingMatch?.id) {
+    const donorEmail =
+      (typeof data?.customer?.email === 'string' && data.customer.email.trim()) ||
+      null;
+    const donorName =
+      (typeof data?.customer?.first_name === 'string' && data.customer.first_name.trim()) ||
+      (typeof data?.customer?.last_name === 'string' && data.customer.last_name.trim())
+        ? `${data.customer.first_name || ''} ${data.customer.last_name || ''}`.trim()
+        : null;
+
+    await db
+      .update(donations)
+      .set({
+        paymentIntentId: reference,
+        donorEmail: donorEmail ?? undefined,
+        donorName: donorName ?? undefined,
+      })
+      .where(eq(donations.id, pendingMatch.id));
+
+    return pendingMatch.id;
+  }
+
+  // Fallback: create a synthetic donation if no attempt exists (e.g. webhook arrives without UI flow)
+  return await createQuickDonateDonationRecord(data, campaignId, reference);
 }
 
 function extractRecurringDonationId(metadata: any): string | null {
