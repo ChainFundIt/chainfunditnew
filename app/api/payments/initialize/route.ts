@@ -6,6 +6,7 @@ import { campaigns } from "@/lib/schema/campaigns";
 import { users } from "@/lib/schema/users";
 import { chainers } from "@/lib/schema/chainers";
 import { eq } from "drizzle-orm";
+import crypto from "crypto";
 import {
   createPaystackCustomer,
   createPaystackDedicatedAccount,
@@ -128,6 +129,63 @@ export async function POST(request: NextRequest) {
         typeof accountName === "string" &&
         accountName.toUpperCase().includes("QUICKDONATE CAMPAIGN");
 
+      const createQuickDonateAttempt = async () => {
+        const suffix = crypto.randomUUID();
+        const guestEmail = `quickdonor+${suffix}@chainfundit.app`;
+        const guestName = "Quick Donor";
+
+        const [existingUser] = await db
+          .select({ id: users.id })
+          .from(users)
+          .where(eq(users.email, guestEmail))
+          .limit(1);
+
+        const donorId = existingUser?.id
+          ? existingUser.id
+          : (
+              await db
+                .insert(users)
+                .values({
+                  email: guestEmail,
+                  fullName: guestName,
+                  isVerified: false,
+                  hasCompletedProfile: false,
+                })
+                .returning({ id: users.id })
+            )[0]?.id;
+
+        if (!donorId) {
+          throw new Error("Failed to create guest donor");
+        }
+
+        const [newDonation] = await db
+          .insert(donations)
+          .values({
+            campaignId,
+            donorId,
+            amount: amount.toString(),
+            currency: "NGN",
+            paymentMethod: "paystack",
+            paymentStatus: "pending",
+            message: "Quick Donate",
+            isAnonymous: true,
+            donorName: guestName,
+            donorEmail: guestEmail,
+            donorPhone: normalizedDonorPhone || null,
+            chainerId:
+              bodyChainerId && typeof bodyChainerId === "string"
+                ? bodyChainerId
+                : null,
+            quickDonate: true,
+          })
+          .returning({ id: donations.id });
+
+        if (!newDonation?.id) {
+          throw new Error("Failed to create quick donate attempt");
+        }
+        return newDonation.id;
+      };
+
       if (
         customerCode &&
         accountNumber &&
@@ -135,10 +193,12 @@ export async function POST(request: NextRequest) {
         accountName &&
         !shouldRefreshLegacyAccountName
       ) {
+        const donationId = await createQuickDonateAttempt();
         return NextResponse.json({
           success: true,
           provider: "paystack",
           mode: "quick",
+          donationId,
           virtualAccount: {
             accountNumber,
             accountName,
@@ -193,10 +253,12 @@ export async function POST(request: NextRequest) {
           })
           .where(eq(campaigns.id, campaignId));
 
+        const donationId = await createQuickDonateAttempt();
         return NextResponse.json({
           success: true,
           provider: "paystack",
           mode: "quick",
+          donationId,
           virtualAccount: {
             accountNumber: dedicatedAccount.data.account_number,
             accountName: dedicatedAccount.data.account_name,

@@ -19,15 +19,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get authenticated user
-    const userEmail = await getUserFromRequest(request);
-    if (!userEmail) {
-      return NextResponse.json(
-        { success: false, error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
-
     // Get donation details
     const donation = await db
       .select()
@@ -43,6 +34,40 @@ export async function GET(request: NextRequest) {
     }
 
     const donationData = donation[0];
+
+    // Require auth for non-quick-donate checks
+    if (!donationData.quickDonate) {
+      const userEmail = await getUserFromRequest(request);
+      if (!userEmail) {
+        return NextResponse.json(
+          { success: false, error: 'Not authenticated' },
+          { status: 401 }
+        );
+      }
+    }
+
+    // Quick donate transfers don't have a client-side reference; wait for webhook to attach it.
+    if (
+      donationData.quickDonate &&
+      donationData.paymentStatus === 'pending' &&
+      !donationData.paymentIntentId
+    ) {
+      return NextResponse.json({
+        success: true,
+        donationId,
+        status: 'pending',
+        wasUpdated: false,
+        message: 'Waiting for bank transfer confirmation from Paystack.',
+        donation: {
+          id: donationData.id,
+          amount: donationData.amount,
+          currency: donationData.currency,
+          paymentStatus: donationData.paymentStatus,
+          createdAt: donationData.createdAt,
+          processedAt: donationData.processedAt,
+        },
+      });
+    }
 
     // For pending donations, check with provider and update if needed
     if (donationData.paymentStatus === 'pending' && donationData.paymentIntentId) {
