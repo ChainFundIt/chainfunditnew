@@ -597,7 +597,8 @@ async function resolveOrCreateQuickDonateDonationRecord(
         eq(donations.campaignId, campaignId),
         eq(donations.quickDonate, true),
         eq(donations.paymentStatus, 'pending'),
-        eq(donations.amount, amountStr)
+        // Compare numerically to avoid "1000" vs "1000.00" mismatches
+        sql`${donations.amount}::numeric = ${amount}`
       )
     )
     .orderBy(sql`${donations.createdAt} desc`)
