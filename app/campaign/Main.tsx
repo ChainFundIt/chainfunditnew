@@ -1441,8 +1441,15 @@ const Main = ({ campaignSlug }: MainProps) => {
                     className="h-8 rounded-full border-[#104109]/40 text-[#104109] hover:bg-[#F3F8F2]"
                     onClick={async () => {
                       try {
+                        const copyText = [
+                          `Campaign: ${quickDonateDetails.campaignName || campaignData.title}`,
+                          `Bank: ${quickDonateDetails.bankName}`,
+                          `Account Number: ${quickDonateDetails.accountNumber}`,
+                          `Account Name: ${quickDonateDetails.accountName}`,
+                          `Amount: ₦${quickDonateDetails.amount.toLocaleString()}`,
+                        ].join("\n");
                         await navigator.clipboard.writeText(
-                          quickDonateDetails.accountNumber
+                          copyText
                         );
                         setQuickDonateAccountCopied(true);
                         window.setTimeout(

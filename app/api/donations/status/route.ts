@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { donations } from '@/lib/schema/donations';
-import { eq } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { verifyPaystackPayment } from '@/lib/payments/paystack';
 import { updateCampaignAmount } from '@/lib/utils/campaign-amount';
 
@@ -52,6 +52,41 @@ export async function GET(request: NextRequest) {
       donationData.paymentStatus === 'pending' &&
       !donationData.paymentIntentId
     ) {
+      // Fallback: sometimes the webhook can record the completion on a different row
+      // (e.g. if matching failed). If the campaign balance has moved, confirm via a
+      // completed quick-donate donation for same campaign + amount created after this attempt.
+      const [completedMatch] = await db
+        .select({ id: donations.id })
+        .from(donations)
+        .where(
+          and(
+            eq(donations.campaignId, donationData.campaignId),
+            eq(donations.quickDonate, true),
+            eq(donations.paymentStatus, 'completed'),
+            sql`${donations.amount}::numeric = ${Number(donationData.amount)}`,
+            sql`${donations.createdAt} >= ${donationData.createdAt}`
+          )
+        )
+        .limit(1);
+
+      if (completedMatch?.id) {
+        return NextResponse.json({
+          success: true,
+          donationId,
+          status: 'completed',
+          wasUpdated: false,
+          message: 'Payment confirmed (matched on campaign + amount).',
+          donation: {
+            id: donationData.id,
+            amount: donationData.amount,
+            currency: donationData.currency,
+            paymentStatus: 'completed',
+            createdAt: donationData.createdAt,
+            processedAt: donationData.processedAt,
+          },
+        });
+      }
+
       return NextResponse.json({
         success: true,
         donationId,
