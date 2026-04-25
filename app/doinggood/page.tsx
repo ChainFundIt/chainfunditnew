@@ -207,7 +207,7 @@ export default function AmbassadorPage() {
             </div>
             <div className="font-jakarta text-[16px] leading-[26px] text-[#78716c]">
               Submit the application form below. If you have questions, reach
-              out to campaigns@chainfundit.com.
+              out to <Link href='mailto:campaigns@chainfundit.com'>campaigns@chainfundit.com</Link>.
             </div>
             <div className="flex items-center gap-2 text-[#78716c] text-sm">
               <MessageCircle className="h-4 w-4" />

@@ -6,14 +6,11 @@ import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import {
   Briefcase,
-  MapPin,
-  Clock,
   DollarSign,
   Users,
   Heart,
   Shield,
   Zap,
-  ArrowRight,
   TrendingUp,
 } from "lucide-react";
 import { db } from "@/lib/db";
@@ -230,112 +227,30 @@ export default async function CareersPage() {
               </div>
             </div>
 
-            {openings.map((opening) => {
-              const responsibilities = Array.isArray(opening.responsibilities)
-                ? opening.responsibilities
-                : [];
-              const requirements = Array.isArray(opening.requirements)
-                ? opening.requirements
-                : [];
-              const customFields = Array.isArray(opening.customFields)
-                ? opening.customFields
-                : [];
-
-              return (
-                <div
-                  key={opening.id}
-                  className="rounded-[40px] border border-[#f5f5f4] bg-white p-8 flex flex-col gap-4"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <div className="font-jakarta font-bold text-[24px] leading-8 text-[#1C1917]">
-                        {opening.title}
-                      </div>
-                      {opening.department && (
-                        <div className="text-sm text-[#78716c]">
-                          {opening.department}
-                        </div>
-                      )}
-                    </div>
-                    <div className="px-3 py-1 rounded-full bg-green-100 text-[#166534] text-xs font-bold">
-                      OPEN
-                    </div>
+            {openings.map((opening) => (
+              <div
+                key={opening.id}
+                className="rounded-[40px] border border-[#f5f5f4] bg-[#FDFBF7] p-8 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between lg:col-span-2"
+              >
+                <div className="space-y-3">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-100 text-[#A16207] text-xs font-bold">
+                    OPEN
                   </div>
-
-                  <div className="flex flex-wrap gap-4 text-sm text-[#78716c]">
-                    {opening.location && (
-                      <span className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-[#104109]" />
-                        {opening.location}
-                      </span>
-                    )}
-                    {opening.employmentType && (
-                      <span className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-[#104109]" />
-                        {opening.employmentType}
-                      </span>
-                    )}
+                  <div className="font-jakarta font-bold text-[28px] leading-[34px] text-[#1C1917]">
+                    {opening.title}
                   </div>
-
-                  {opening.summary && (
-                    <div className="text-[#78716c]">{opening.summary}</div>
-                  )}
-
-                  {responsibilities.length > 0 && (
-                    <div>
-                      <div className="text-sm font-semibold text-[#1C1917] mb-2">
-                        What you will do
-                      </div>
-                      <ul className="space-y-1 text-sm text-[#78716c]">
-                        {responsibilities.map((item, index) => (
-                          <li key={index}>{item}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {requirements.length > 0 && (
-                    <div>
-                      <div className="text-sm font-semibold text-[#1C1917] mb-2">
-                        What we are looking for
-                      </div>
-                      <ul className="space-y-1 text-sm text-[#78716c]">
-                        {requirements.map((item, index) => (
-                          <li key={index}>{item}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {customFields.length > 0 && (
-                    <div className="space-y-2">
-                      {customFields.map((field, index) => (
-                        <div key={`${field.label}-${index}`} className="text-sm">
-                          <span className="font-semibold text-[#1C1917]">
-                            {field.label}:
-                          </span>{" "}
-                          <span className="text-[#78716c]">{field.value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div>
-                    <Button asChild className="bg-[#104109] rounded-full">
-                      <a
-                        href={
-                          opening.applyUrl || "mailto:careers@chainfundit.com"
-                        }
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Apply now
-                      </a>
-                    </Button>
+                  <div className="text-[#78716c] max-w-[760px]">
+                    {opening.summary ||
+                      "Learn more about the role, responsibilities, and how to apply."}.
                   </div>
                 </div>
-              );
-            })}
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button asChild className="bg-[#104109] p-6 rounded-full">
+                    <Link href={`/careers/${opening.id}`}>View Role</Link>
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
 
           {openings.length === 0 && (
