@@ -46,13 +46,6 @@ const ensureCustomFields = (value: unknown) => {
   );
 };
 
-const truncateWords = (text: unknown, limit = 50) => {
-  if (typeof text !== "string") return "";
-  const words = text.trim().split(/\s+/);
-  if (words.length <= limit) return text;
-  return words.slice(0, limit).join(" ") + "...";
-};
-
 export default async function CareerRolePage({
   params,
 }: CareerRolePageProps) {
@@ -171,7 +164,7 @@ export default async function CareerRolePage({
                   ROLE OVERVIEW
                 </div>
                 <div className="font-jakarta text-[16px] leading-[30px] text-[#57534E] md:text-[18px]">
-                  {truncateWords(opening.summary, 50)}
+                  {opening.summary}
                 </div>
               </section>
             )}
