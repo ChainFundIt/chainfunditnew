@@ -70,6 +70,13 @@ const benefits = [
   },
 ];
 
+const truncateWords = (text: unknown, limit = 20) => {
+  if (typeof text !== "string") return "";
+  const words = text.trim().split(/\s+/);
+  if (words.length <= limit) return text;
+  return words.slice(0, limit).join(" ") + "...";
+};
+
 export default async function CareersPage() {
   const openings = await db
     .select()
@@ -240,8 +247,11 @@ export default async function CareersPage() {
                     {opening.title}
                   </div>
                   <div className="text-[#78716c] max-w-[760px]">
-                    {opening.summary ||
-                      "Learn more about the role, responsibilities, and how to apply."}.
+                      {truncateWords(
+                        opening.summary ||
+                          "Learn more about the role, responsibilities, and how to apply.",
+                        50
+                      )}
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4">
