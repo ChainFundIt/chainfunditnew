@@ -256,7 +256,7 @@ export default async function CareerRolePage({
                 <Button
                   asChild
                   variant="outline"
-                  className="h-auto rounded-full border-white px-8 py-4 text-white hover:bg-white/10"
+                  className="h-auto rounded-full border-white px-8 py-4 text-white"
                 >
                   <a href="mailto:careers@chainfundit.com">Email careers</a>
                 </Button>
