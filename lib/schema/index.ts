@@ -25,6 +25,7 @@ export * from './recurring-donations';
 export * from './favourites';
 export * from './campaign-creator-checkins';
 export * from './careers';
+export * from './career-applications';
 export * from './platform-reviews';
 export * from './ambassador-applications';
 export * from './partnership-applications';

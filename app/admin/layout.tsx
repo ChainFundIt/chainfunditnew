@@ -76,6 +76,12 @@ const navigation = [
     current: false,
   },
   {
+    name: "Career Applications",
+    href: "/admin/career-applications",
+    icon: FileText,
+    current: false,
+  },
+  {
     name: "Ambassador Applications",
     href: "/admin/ambassador-applications",
     icon: FileText,

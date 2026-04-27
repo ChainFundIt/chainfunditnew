@@ -14,6 +14,7 @@ import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { db } from "@/lib/db";
 import { careerOpenings } from "@/lib/schema";
+import CareerApplicationForm from "@/components/careers/CareerApplicationForm";
 
 export const dynamic = "force-dynamic";
 
@@ -64,7 +65,7 @@ export default async function CareerRolePage({
   const responsibilities = ensureStringList(opening.responsibilities);
   const requirements = ensureStringList(opening.requirements);
   const customFields = ensureCustomFields(opening.customFields);
-  const applyHref = opening.applyUrl || "mailto:careers@chainfundit.com";
+  const applyHref = opening.applyUrl || "";
   const roleFacts = [
     opening.department
       ? {
@@ -138,10 +139,19 @@ export default async function CareerRolePage({
 
               <div className="flex w-full max-w-[280px] flex-col gap-4">
                 <Button asChild className="h-auto rounded-full bg-[#104109] px-8 py-4">
-                  <a href={applyHref} target="_blank" rel="noreferrer">
-                    Apply Now
-                  </a>
+                  <Link href="#application-form">Apply Now</Link>
                 </Button>
+                {applyHref && (
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="h-auto rounded-full border-[#104109] px-8 py-4 text-[#104109]"
+                  >
+                    <a href={applyHref} target="_blank" rel="noreferrer">
+                      External Apply Link
+                    </a>
+                  </Button>
+                )}
                 <Button
                   asChild
                   variant="outline"
@@ -249,10 +259,19 @@ export default async function CareerRolePage({
                   asChild
                   className="h-auto rounded-full bg-white px-8 py-4 text-[#104109] hover:bg-white/90"
                 >
-                  <a href={applyHref} target="_blank" rel="noreferrer">
-                    Apply for this role
-                  </a>
+                  <Link href="#application-form">Apply for this role</Link>
                 </Button>
+                {applyHref && (
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="h-auto rounded-full border-white px-8 py-4 text-white hover:bg-white/10"
+                  >
+                    <a href={applyHref} target="_blank" rel="noreferrer">
+                      Use external application
+                    </a>
+                  </Button>
+                )}
                 <Button
                   asChild
                   variant="outline"
@@ -263,6 +282,31 @@ export default async function CareerRolePage({
               </div>
             </section>
           </div>
+        </div>
+      </div>
+
+      <div
+        id="application-form"
+        className="bg-[#FDFBF7] px-4 py-16 md:px-8"
+      >
+        <div className="mx-auto max-w-[1100px] rounded-[40px] border border-[#f5f5f4] bg-white p-8 md:p-12">
+          <div className="mb-8 space-y-3 text-center">
+            <div className="font-jakarta text-[14px] font-bold leading-5 text-[#A8A29E]">
+              APPLICATION FORM
+            </div>
+            <div className="font-jakarta text-[30px] font-bold leading-[36px] text-[#1C1917] md:text-[36px] md:leading-10">
+              Apply for {opening.title}
+            </div>
+            <div className="font-jakarta text-[16px] leading-[26px] text-[#78716c]">
+              Submit your application below. If this role also has an external
+              application link, you can use either option.
+            </div>
+          </div>
+
+          <CareerApplicationForm
+            openingId={opening.id}
+            openingTitle={opening.title}
+          />
         </div>
       </div>
 

@@ -260,6 +260,13 @@
       "when": 1775831519794,
       "tag": "0036_daily_zombie",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1777301491155,
+      "tag": "0037_many_sunspot",
+      "breakpoints": true
     }
   ]
 }
