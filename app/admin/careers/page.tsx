@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -237,10 +238,15 @@ export default function AdminCareersPage() {
               Add and manage open roles on the Careers page.
             </p>
           </div>
-          <Button variant="outline" size="sm" onClick={fetchOpenings}>
-            <RefreshCcw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/admin/career-applications">View Applications</Link>
+            </Button>
+            <Button variant="outline" size="sm" onClick={fetchOpenings}>
+              <RefreshCcw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
         </div>
 
         <Card>
@@ -322,7 +328,9 @@ export default function AdminCareersPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Apply URL</label>
+                <label className="text-sm font-medium">
+                  External Apply URL (optional)
+                </label>
                 <Input
                   value={form.applyUrl}
                   onChange={(event) =>
@@ -331,8 +339,12 @@ export default function AdminCareersPage() {
                       applyUrl: event.target.value,
                     }))
                   }
-                  placeholder="https:// or mailto:"
+                  placeholder="Optional: https:// or mailto:"
                 />
+                <p className="text-xs text-gray-500">
+                  Each role now includes a built-in application form. Add a URL
+                  here only if you also want an external apply option.
+                </p>
               </div>
             </div>
 
