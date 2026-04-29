@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
 
 interface CreateOrderResult {
@@ -29,6 +29,49 @@ export function PayPalOrderButtons({
   const pendingDonationIdRef = useRef<string | undefined>(undefined);
   const [isBusy, setIsBusy] = useState(false);
 
+  useEffect(() => {
+    // Ensure PayPal script is loaded before accessing Apple Pay
+    // @ts-ignore
+    if (!window.paypal) return;
+
+    // @ts-ignore
+    window.paypal.Applepay().config().then((config: any) => {
+      if (!config.isEligible) return;
+
+      // @ts-ignore
+      window.paypal.Applepay().render(
+        {
+          createOrder: async () => {
+            const result = await createOrderRequest();
+            pendingDonationIdRef.current = result.donationId;
+            return result.orderId;
+          },
+
+          onApprove: async (data: any) => {
+            if (!data.orderID) {
+              onError?.("Apple Pay did not return an order ID.");
+              return;
+            }
+
+            await captureOrderRequest(
+              data.orderID,
+              pendingDonationIdRef.current
+            );
+          },
+
+          onCancel: async () => {
+            await cancelOrderRequest?.(pendingDonationIdRef.current);
+          },
+
+          onError: () => {
+            onError?.("Apple Pay checkout failed.");
+          },
+        },
+        "#applepay-button-container"
+      );
+    });
+  }, [createOrderRequest, captureOrderRequest, cancelOrderRequest, onError]);
+
   const options = useMemo(
     () => ({
       clientId: clientId || "",
@@ -50,6 +93,7 @@ export function PayPalOrderButtons({
   return (
     <PayPalScriptProvider options={options}>
       <div className={disabled ? "pointer-events-none opacity-50" : ""}>
+        <div id="applepay-button-container" className="mb-3" />
         <PayPalButtons
           style={{ layout: "vertical", shape: "rect", label: "paypal" }}
           disabled={disabled || isBusy}
