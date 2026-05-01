@@ -218,16 +218,39 @@ function PayPalApplePayButton({
   const [{ isResolved }] = usePayPalScriptReducer();
   const [applePayConfig, setApplePayConfig] = useState<ApplePayConfig | null>(null);
   const [isEligible, setIsEligible] = useState(false);
+  const [isApplePaySdkReady, setIsApplePaySdkReady] = useState(false);
   const numericAmount = Number(amount);
 
   useEffect(() => {
-    if (document.querySelector('script[src^="https://applepay.cdn-apple.com"]')) {
-      return;
+    const existingScript = document.querySelector<HTMLScriptElement>(
+      'script[src^="https://applepay.cdn-apple.com"]'
+    );
+
+    if (existingScript) {
+      if (
+        existingScript.dataset.loaded === "true" ||
+        window.customElements?.get("apple-pay-button")
+      ) {
+        setIsApplePaySdkReady(true);
+        return;
+      }
+
+      const handleLoad = () => {
+        existingScript.dataset.loaded = "true";
+        setIsApplePaySdkReady(true);
+      };
+      existingScript.addEventListener("load", handleLoad, { once: true });
+      return () => existingScript.removeEventListener("load", handleLoad);
     }
 
     const script = document.createElement("script");
     script.src = "https://applepay.cdn-apple.com/jsapi/1.latest/apple-pay-sdk.js";
     script.async = true;
+    script.onload = () => {
+      script.dataset.loaded = "true";
+      setIsApplePaySdkReady(true);
+    };
+    script.onerror = () => setIsApplePaySdkReady(false);
     document.head.appendChild(script);
   }, []);
 
@@ -235,7 +258,13 @@ function PayPalApplePayButton({
     let cancelled = false;
 
     async function checkApplePayEligibility() {
-      if (!isResolved || disabled || !Number.isFinite(numericAmount) || numericAmount <= 0) {
+      if (
+        !isResolved ||
+        !isApplePaySdkReady ||
+        disabled ||
+        !Number.isFinite(numericAmount) ||
+        numericAmount <= 0
+      ) {
         setIsEligible(false);
         return;
       }
@@ -266,7 +295,7 @@ function PayPalApplePayButton({
     return () => {
       cancelled = true;
     };
-  }, [disabled, isResolved, numericAmount]);
+  }, [disabled, isResolved, isApplePaySdkReady, numericAmount]);
 
   const handleApplePayClick = () => {
     const ApplePaySession = getApplePaySession();
@@ -346,13 +375,13 @@ function PayPalApplePayButton({
   }
 
   return (
-    <div className="mb-3 h-11 w-full overflow-hidden rounded-lg">
+    <div className="mb-3 h-11 px-8 py-4 w-full overflow-hidden rounded-lg">
       {createElement("apple-pay-button", {
         buttonstyle: "black",
         type: "donate",
         locale: "en-US",
         "aria-label": "Donate with Apple Pay",
-        className: "block h-full w-full",
+        className: "block h-11 w-full",
         onClick: handleApplePayClick,
       })}
     </div>
