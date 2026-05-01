@@ -30,6 +30,7 @@ import DonateModal from "./donate-modal";
 import ShareModal from "./share-modal";
 import UpdateModal from "./update-modal";
 import CommentModal from "./comment-modal";
+import PaystackApplePayButton from "@/components/payments/PaystackApplePayButton";
 import { useCampaignDonations } from "@/hooks/use-campaign-donations";
 import { useTopChainers } from "@/hooks/use-top-chainers";
 import ClientToaster from "@/components/ui/client-toaster";
@@ -639,6 +640,11 @@ const Main = ({ campaignSlug }: MainProps) => {
       setQuickDonateLoading(false);
     }
   };
+
+  const quickDonateNumericAmount = parseFloat(quickDonateAmount);
+  const canUseQuickDonateAmount =
+    Number.isFinite(quickDonateNumericAmount) && quickDonateNumericAmount > 0;
+
   return (
     <div className="bg-gray-50 font-jakarta">
       {/* Breadcrumb */}
@@ -1395,7 +1401,7 @@ const Main = ({ campaignSlug }: MainProps) => {
             <DialogTitle>Quick Donate</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-gray-600">
-            Enter your amount and generate a Paystack virtual account instantly.
+            Enter your amount, then pay instantly with Apple Pay or generate a Paystack virtual account.
           </p>
           <div className="space-y-3 mt-2">
             <label className="text-sm font-medium text-gray-700 block">Amount (NGN)</label>
@@ -1416,8 +1422,28 @@ const Main = ({ campaignSlug }: MainProps) => {
               disabled={quickDonateLoading}
               className="w-full h-11 rounded-full"
             >
-              {quickDonateLoading ? "Generating account..." : "Donate"}
+              {quickDonateLoading ? "Generating account..." : "Generate bank account"}
             </Button>
+            {canUseQuickDonateAmount && (
+              <PaystackApplePayButton
+                amount={quickDonateNumericAmount}
+                currency="NGN"
+                campaignId={campaignData.id}
+                chainerId={referralChainer?.id || null}
+                isAnonymous={true}
+                disabled={quickDonateLoading}
+                onSuccess={() => {
+                  toast.success("Donation completed", {
+                    description: "We’ve received your Apple Pay donation. Thank you!",
+                    duration: 6000,
+                  });
+                  setQuickDonateModalOpen(false);
+                  setDonateModalOpen(true);
+                  sessionStorage.setItem("showThankYouModal", "true");
+                }}
+                onError={(message) => setQuickDonateError(message)}
+              />
+            )}
             {quickDonateDetails && (
               <div className="rounded-lg border border-[#D6E7D4] bg-[#F8FBF7] p-3 space-y-1.5">
                 <p className="text-sm font-semibold text-[#1C1917]">Account details</p>

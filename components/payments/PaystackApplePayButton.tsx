@@ -1,213 +1,259 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
-import { track } from '@/lib/analytics';
-import { getPaystackPublicKey } from '@/lib/payments/paystack';
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { track } from "@/lib/analytics";
+
+type PaystackPaymentRequestConfig = {
+  key: string;
+  email: string;
+  amount: number;
+  currency: string;
+  ref: string;
+  container: string;
+  style?: Record<string, unknown>;
+  onSuccess?: (transaction: { reference?: string; trxref?: string }) => void;
+  onError?: (error?: unknown) => void;
+  onCancel?: () => void;
+  onElementsMount?: (elements: { applePay?: boolean } | null) => void;
+};
+
+type PaystackPopInstance = {
+  paymentRequest: (config: PaystackPaymentRequestConfig) => Promise<void>;
+};
+
+type PaystackPopConstructor = new () => PaystackPopInstance;
+
+declare global {
+  interface Window {
+    PaystackPop?: PaystackPopConstructor;
+  }
+}
 
 interface PaystackApplePayButtonProps {
   amount: number;
   currency: string;
-  donationId: string;
-  email: string;
-  onSuccess: () => void;
-  onError: (error: string) => void;
-  metadata?: Record<string, any>;
+  campaignId: string;
+  chainerId?: string | null;
+  email?: string;
+  donorName?: string;
+  donorPhone?: string;
+  isAnonymous?: boolean;
   label?: string;
+  disabled?: boolean;
+  onSuccess: (donationId?: string) => void;
+  onError: (error: string) => void;
+}
+
+function loadPaystackInline(): Promise<void> {
+  if (window.PaystackPop) {
+    return Promise.resolve();
+  }
+
+  const existingScript = document.querySelector<HTMLScriptElement>(
+    'script[src="https://js.paystack.co/v2/inline.js"]'
+  );
+
+  if (existingScript) {
+    return new Promise((resolve, reject) => {
+      existingScript.addEventListener("load", () => resolve(), { once: true });
+      existingScript.addEventListener("error", () => reject(new Error("Paystack failed to load.")), {
+        once: true,
+      });
+    });
+  }
+
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "https://js.paystack.co/v2/inline.js";
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Paystack failed to load."));
+    document.body.appendChild(script);
+  });
 }
 
 const PaystackApplePayButton: React.FC<PaystackApplePayButtonProps> = ({
   amount,
   currency,
-  donationId,
+  campaignId,
+  chainerId,
   email,
+  donorName,
+  donorPhone,
+  isAnonymous = true,
+  label = "Pay instantly with Apple Pay",
+  disabled = false,
   onSuccess,
   onError,
-  metadata = {},
-  label = 'Pay with Apple Pay',
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isAvailable, setIsAvailable] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isPreparing, setIsPreparing] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const [donationId, setDonationId] = useState<string | undefined>();
+  const containerId = useMemo(
+    () => `paystack-apple-pay-${Math.random().toString(36).slice(2)}`,
+    []
+  );
 
   useEffect(() => {
-    checkApplePayAvailability();
-  }, []);
-
-  const checkApplePayAvailability = () => {
-    // Check if Apple Pay is available on the device
-    if (typeof window !== 'undefined' && window.ApplePaySession) {
-      // Check if Apple Pay can make payments
-      if (window.ApplePaySession.canMakePayments()) {
-        setIsAvailable(true);
-      }
+    setIsMounted(false);
+    setDonationId(undefined);
+    if (containerRef.current) {
+      containerRef.current.innerHTML = "";
     }
-  };
+  }, [amount, currency, campaignId]);
 
-  const handleApplePay = async () => {
-    setIsProcessing(true);
+  const prepareApplePay = async () => {
+    if (!Number.isFinite(amount) || amount <= 0) {
+      onError("Enter a valid donation amount first.");
+      return;
+    }
+
+    setIsPreparing(true);
+    setIsMounted(false);
 
     try {
-      // Initialize payment on server to get reference
-      const response = await fetch('/api/payments/initialize', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      await loadPaystackInline();
+
+      if (!window.PaystackPop) {
+        throw new Error("Paystack is not available in this browser.");
+      }
+
+      const fallbackId =
+        window.crypto?.randomUUID?.() || `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      const fallbackEmail = email?.trim() || `quickdonor+${fallbackId}@chainfundit.app`;
+
+      const response = await fetch("/api/payments/initialize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
+          campaignId,
           amount,
           currency,
-          donationId,
-          paymentProvider: 'paystack',
-          paymentMethod: 'apple_pay',
-          email,
-          metadata,
+          paymentProvider: "paystack",
+          paymentMethod: "apple_pay",
+          quickDonate: true,
+          chainerId: chainerId || null,
+          isAnonymous,
+          email: fallbackEmail,
+          donorName,
+          donorPhone,
         }),
       });
 
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Failed to initialize payment');
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data?.success || !data?.reference || !data?.publicKey) {
+        throw new Error(data?.error || "Could not prepare Apple Pay.");
       }
 
-      // Load Paystack InlineJS if not already loaded
-      if (!window.PaystackPop) {
-        const script = document.createElement('script');
-        script.src = 'https://js.paystack.co/v2/inline.js';
-        script.async = true;
-        
-        await new Promise((resolve, reject) => {
-          script.onload = resolve;
-          script.onerror = reject;
-          document.body.appendChild(script);
-        });
+      setDonationId(data.donationId);
+      if (containerRef.current) {
+        containerRef.current.innerHTML = "";
       }
 
-     
-      const handler = window.PaystackPop.setup({
-        key: getPaystackPublicKey(),
-        email,
-        amount: Math.round(amount * 100), // Convert to kobo/cents
+      const paystack = new window.PaystackPop();
+      await paystack.paymentRequest({
+        key: data.publicKey,
+        email: fallbackEmail,
+        amount: Math.round(amount * 100),
         currency: currency.toUpperCase(),
         ref: data.reference,
-        metadata: {
-          ...metadata,
-          donationId,
-          paymentMethod: 'apple_pay',
+        container: containerId,
+        style: {
+          theme: "dark",
+          applePay: {
+            margin: "0",
+            padding: "0",
+            width: "100%",
+            borderRadius: "9999px",
+            type: "donate",
+            locale: "en",
+          },
         },
-        onClose: () => {
-          setIsProcessing(false);
-          onError('Payment was cancelled');
+        onElementsMount: (elements) => {
+          const hasApplePay = Boolean(elements?.applePay);
+          setIsMounted(hasApplePay);
+          if (!hasApplePay) {
+            onError("Apple Pay is not available on this device or browser.");
+          }
         },
-        callback: async (response: any) => {
+        onSuccess: async (transaction) => {
+          const reference = transaction.reference || transaction.trxref || data.reference;
           try {
-            // Verify payment on server
-            const verifyResponse = await fetch('/api/payments/paystack/verify', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
+            const verifyResponse = await fetch("/api/payments/paystack/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                reference: response.reference,
-                donationId,
+                reference,
+                donationId: data.donationId,
               }),
             });
 
-            const verifyData = await verifyResponse.json();
-
-            if (verifyResponse.ok && verifyData.success) {
-              // Track payment success
-              track('payment_succeeded', {
-                donation_id: donationId,
-                reference: response.reference,
-                payment_method: 'paystack',
-              });
-
-              toast.success('Payment successful! Thank you for your donation.');
-              onSuccess();
-            } else {
-              throw new Error(verifyData.error || 'Payment verification failed');
+            const verifyData = await verifyResponse.json().catch(() => null);
+            if (!verifyResponse.ok || !verifyData?.success) {
+              throw new Error(verifyData?.error || "Payment verification failed.");
             }
-          } catch (error: any) {
-            console.error('Payment verification error:', error);
-            const errorMessage = error.message || 'Payment verification failed';
-            
-            // Track payment failure
-            track('payment_failed', {
-              donation_id: donationId,
-              payment_method: 'paystack',
-              error_message: errorMessage,
-            });
 
-            onError(errorMessage);
-            toast.error(errorMessage);
-          } finally {
-            setIsProcessing(false);
+            track("payment_succeeded", {
+              donation_id: data.donationId,
+              reference,
+              payment_method: "paystack",
+            });
+            onSuccess(data.donationId);
+          } catch (error) {
+            const message =
+              error instanceof Error ? error.message : "Payment verification failed.";
+            track("payment_failed", {
+              donation_id: data.donationId,
+              payment_method: "paystack",
+              error_message: message,
+            });
+            onError(message);
           }
         },
+        onError: (error) => {
+          const message = error instanceof Error ? error.message : "Apple Pay payment failed.";
+          track("payment_failed", {
+            donation_id: data.donationId,
+            payment_method: "paystack",
+            error_message: message,
+          });
+          onError(message);
+        },
+        onCancel: () => {
+          onError("Apple Pay payment was cancelled.");
+        },
       });
-
-      handler.openIframe();
-      
-    } catch (error: any) {
-      console.error('Apple Pay payment error:', error);
-      const errorMessage = error.message || 'Payment failed. Please try again.';
-      
-      // Track payment failure
-      track('payment_failed', {
-        donation_id: donationId,
-        payment_method: 'paystack',
-        error_message: errorMessage,
-      });
-
-      onError(errorMessage);
-      toast.error(errorMessage);
-      setIsProcessing(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not prepare Apple Pay.";
+      onError(message);
+    } finally {
+      setIsPreparing(false);
     }
   };
 
-
-  if (!isAvailable) {
-    return null;
-  }
-
   return (
-    <div className="w-full" ref={containerRef}>
+    <div className="space-y-2">
       <Button
         type="button"
-        onClick={handleApplePay}
-        disabled={isProcessing}
-        className="w-full h-12 bg-black text-white hover:bg-gray-800 flex items-center justify-center gap-2 rounded-lg"
-        style={{
-          WebkitAppearance: 'none',
-          appearance: 'none',
-        }}
+        onClick={prepareApplePay}
+        disabled={disabled || isPreparing}
+        className="h-11 w-full rounded-full bg-black text-white"
       >
-        {isProcessing ? (
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-        ) : (
-          <>
-            <svg
-              className="w-5 h-5"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
-            </svg>
-            {label}
-          </>
-        )}
+        {isPreparing ? "Preparing Apple Pay..." : label}
       </Button>
+      <div
+        id={containerId}
+        ref={containerRef}
+        className={isMounted ? "min-h-11 overflow-hidden rounded-full" : "hidden"}
+      />
+      {donationId && !isMounted ? (
+        <p className="text-xs text-gray-500">Checking Apple Pay availability...</p>
+      ) : null}
     </div>
   );
 };
-
-declare global {
-  interface Window {
-    PaystackPop?: any;
-  }
-}
 
 export default PaystackApplePayButton;

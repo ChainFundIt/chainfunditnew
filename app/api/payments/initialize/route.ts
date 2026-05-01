@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
       donorPhone,
       chainerId: bodyChainerId,
       quickDonate = false,
+      paymentMethod,
       simulate = false, // For testing purposes
     } = body;
 
@@ -117,8 +118,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Quick donate uses a campaign-level virtual account (no donor profile required up front)
-    if (quickDonate) {
+    const isQuickDonateApplePay =
+      quickDonate && paymentProvider === "paystack" && paymentMethod === "apple_pay";
+
+    // Quick donate bank transfer uses a campaign-level virtual account (no donor profile required up front).
+    // Quick donate Apple Pay intentionally skips this branch and uses a normal Paystack transaction.
+    if (quickDonate && !isQuickDonateApplePay) {
       const quickPhone =
         (normalizedDonorPhone && normalizedDonorPhone.trim()) || "08000000000";
       const customerCode = campaign.quickDonateCustomerCode || null;
@@ -455,6 +460,7 @@ export async function POST(request: NextRequest) {
             authorization_url: paymentResult.authorization_url,
             donationId,
             reference: paymentResult.reference,
+            publicKey: process.env.PAYSTACK_PUBLIC_KEY || "",
           });
         }
       } catch (paystackError: any) {
