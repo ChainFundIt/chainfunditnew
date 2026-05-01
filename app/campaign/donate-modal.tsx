@@ -1067,7 +1067,9 @@ const DonateModal: React.FC<DonateModalProps> = ({
                     />
                   ) : (
                     <PayPalOrderButtons
+                      amount={amount}
                       currency={currentCurrencyCode}
+                      label={campaign?.title || "ChainFundit donation"}
                       createOrderRequest={handlePayPalOrderCreate}
                       captureOrderRequest={handlePayPalOrderCapture}
                       cancelOrderRequest={handlePayPalOrderCancel}

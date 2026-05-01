@@ -207,9 +207,7 @@ const PaystackApplePayButton: React.FC<PaystackApplePayButtonProps> = ({
 declare global {
   interface Window {
     PaystackPop?: any;
-    ApplePaySession?: any;
   }
 }
 
 export default PaystackApplePayButton;
-

@@ -683,7 +683,9 @@ export default function CharityDetailPage() {
                       Complete your donation with PayPal below.
                     </p>
                     <PayPalOrderButtons
+                      amount={amount === "custom" ? customAmount : amount}
                       currency={currencyCode}
+                      label={charity?.name || "Charity donation"}
                       disabled={!amount || !donorEmail}
                       createOrderRequest={createPayPalOrder}
                       captureOrderRequest={capturePayPalOrder}
