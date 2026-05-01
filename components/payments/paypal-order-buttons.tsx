@@ -375,13 +375,13 @@ function PayPalApplePayButton({
   }
 
   return (
-    <div className="mb-3 h-11 px-8 py-4 w-full overflow-hidden rounded-lg">
+    <div className="mb-3 px-8 py-4 w-full overflow-hidden rounded-lg">
       {createElement("apple-pay-button", {
         buttonstyle: "black",
         type: "donate",
         locale: "en-US",
         "aria-label": "Donate with Apple Pay",
-        className: "block h-11 w-full",
+        className: "h-12 w-full",
         onClick: handleApplePayClick,
       })}
     </div>
