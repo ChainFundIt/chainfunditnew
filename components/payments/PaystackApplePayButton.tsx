@@ -39,7 +39,6 @@ interface PaystackApplePayButtonProps {
   donorName?: string;
   donorPhone?: string;
   isAnonymous?: boolean;
-  label?: string;
   disabled?: boolean;
   onSuccess: (donationId?: string) => void;
   onError: (error: string) => void;
@@ -82,7 +81,6 @@ const PaystackApplePayButton: React.FC<PaystackApplePayButtonProps> = ({
   donorName,
   donorPhone,
   isAnonymous = true,
-  label = "Pay instantly with Apple Pay",
   disabled = false,
   onSuccess,
   onError,
@@ -91,6 +89,8 @@ const PaystackApplePayButton: React.FC<PaystackApplePayButtonProps> = ({
   const [isPreparing, setIsPreparing] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [donationId, setDonationId] = useState<string | undefined>();
+  const [hasAttemptedPrepare, setHasAttemptedPrepare] = useState(false);
+  const preparedSignatureRef = useRef<string | null>(null);
   const containerId = useMemo(
     () => `paystack-apple-pay-${Math.random().toString(36).slice(2)}`,
     []
@@ -99,12 +99,18 @@ const PaystackApplePayButton: React.FC<PaystackApplePayButtonProps> = ({
   useEffect(() => {
     setIsMounted(false);
     setDonationId(undefined);
+    setHasAttemptedPrepare(false);
+    preparedSignatureRef.current = null;
     if (containerRef.current) {
       containerRef.current.innerHTML = "";
     }
   }, [amount, currency, campaignId]);
 
   const prepareApplePay = async () => {
+    if (isPreparing) {
+      return;
+    }
+
     if (!Number.isFinite(amount) || amount <= 0) {
       onError("Enter a valid donation amount first.");
       return;
@@ -112,6 +118,7 @@ const PaystackApplePayButton: React.FC<PaystackApplePayButtonProps> = ({
 
     setIsPreparing(true);
     setIsMounted(false);
+    setHasAttemptedPrepare(true);
 
     try {
       await loadPaystackInline();
@@ -234,16 +241,56 @@ const PaystackApplePayButton: React.FC<PaystackApplePayButtonProps> = ({
     }
   };
 
+  useEffect(() => {
+    if (disabled || !Number.isFinite(amount) || amount <= 0) {
+      return;
+    }
+
+    const signature = [
+      campaignId,
+      currency.toUpperCase(),
+      amount.toFixed(2),
+      chainerId || "",
+      email || "",
+      donorName || "",
+      donorPhone || "",
+      String(isAnonymous),
+    ].join("|");
+
+    if (preparedSignatureRef.current === signature) {
+      return;
+    }
+
+    preparedSignatureRef.current = signature;
+    void prepareApplePay();
+  }, [
+    amount,
+    campaignId,
+    chainerId,
+    currency,
+    disabled,
+    donorName,
+    donorPhone,
+    email,
+    isAnonymous,
+  ]);
+
   return (
     <div className="space-y-2">
-      <Button
-        type="button"
-        onClick={prepareApplePay}
-        disabled={disabled || isPreparing}
-        className="h-11 w-full rounded-full bg-black text-white"
-      >
-        {isPreparing ? "Preparing Apple Pay..." : label}
-      </Button>
+      {!isMounted ? (
+        <Button
+          type="button"
+          onClick={prepareApplePay}
+          disabled={disabled || isPreparing}
+          className="h-11 w-full rounded-full bg-black text-white"
+        >
+          {isPreparing
+            ? "Preparing Apple Pay..."
+            : hasAttemptedPrepare
+              ? "Retry Apple Pay"
+              : "Preparing Apple Pay..."}
+        </Button>
+      ) : null}
       <div
         id={containerId}
         ref={containerRef}

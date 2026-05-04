@@ -68,6 +68,7 @@ type PayPalApplePay = {
     orderId: string;
     token: unknown;
     billingContact?: unknown;
+    shippingContact?: unknown;
   }) => Promise<unknown>;
 };
 
@@ -89,6 +90,15 @@ function getPayPalApplePay(): PayPalApplePay | undefined {
     | undefined;
 
   return paypal?.Applepay?.();
+}
+
+function getConfirmOrderStatus(result: unknown): string | undefined {
+  if (!result || typeof result !== "object") {
+    return undefined;
+  }
+
+  const status = (result as { status?: unknown }).status;
+  return typeof status === "string" ? status : undefined;
 }
 
 export function PayPalOrderButtons({
@@ -341,14 +351,20 @@ function PayPalApplePayButton({
         const result = await createOrderRequest();
         pendingDonationIdRef.current = result.donationId;
 
-        await applepay.confirmOrder({
+        const confirmResult = await applepay.confirmOrder({
           orderId: result.orderId,
           token: event.payment.token,
           billingContact: event.payment.billingContact,
+          shippingContact: event.payment.shippingContact,
         });
 
-        session.completePayment(ApplePaySession.STATUS_SUCCESS);
+        const confirmStatus = getConfirmOrderStatus(confirmResult);
+        if (confirmStatus && confirmStatus !== "APPROVED" && confirmStatus !== "COMPLETED") {
+          throw new Error(`Apple Pay authorization failed with status: ${confirmStatus}`);
+        }
+
         await captureOrderRequest(result.orderId, result.donationId);
+        session.completePayment(ApplePaySession.STATUS_SUCCESS);
       } catch (error) {
         session.completePayment(ApplePaySession.STATUS_FAILURE);
         const message =
