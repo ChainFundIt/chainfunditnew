@@ -117,8 +117,12 @@ function formatPayPalApplePayError(raw: string): string {
   ) {
     return (
       "Apple Pay could not verify this site with Apple (merchant validation failed). " +
-      "In PayPal: enable Apple Pay for your account, add this exact website domain for Apple Pay on the web, " +
-      "and match live vs sandbox credentials. You can still pay with PayPal or card below."
+      "Fixes that usually resolve this: (1) Host PayPal’s domain association file at " +
+      "`/.well-known/apple-developer-merchantid-domain-association` as binary octet-stream " +
+      "(hex-encoded files must be decoded — the app route does that). " +
+      "(2) In PayPal Developer Dashboard, register this exact domain for Apple Pay. " +
+      "(3) Use PayPal’s association bytes for PayPal Apple Pay — a Paystack-only file will not validate PayPal. " +
+      "You can still pay with PayPal or card below."
     );
   }
   return trimmed;
@@ -340,11 +344,13 @@ function PayPalApplePayButton({
       return;
     }
 
+    const isoCurrency = String(currency).trim().toUpperCase();
+
     const paymentRequest = {
       countryCode: applePayConfig.countryCode,
       merchantCapabilities: applePayConfig.merchantCapabilities,
       supportedNetworks: applePayConfig.supportedNetworks,
-      currencyCode: currency,
+      currencyCode: isoCurrency,
       total: {
         label,
         type: "final",
@@ -356,8 +362,20 @@ function PayPalApplePayButton({
 
     session.onvalidatemerchant = async (event) => {
       try {
+        const validationUrl =
+          (event as { validationURL?: string; validationUrl?: string })
+            .validationURL ??
+          (event as { validationUrl?: string }).validationUrl;
+        if (!validationUrl || typeof validationUrl !== "string") {
+          onError?.(
+            "Apple Pay could not start merchant validation (Safari did not provide a validation URL). Try again in Safari, or use PayPal below."
+          );
+          session.abort();
+          return;
+        }
+
         const validateResult = await applepay.validateMerchant({
-          validationUrl: event.validationURL,
+          validationUrl,
           displayName: label,
         });
         session.completeMerchantValidation(validateResult.merchantSession);

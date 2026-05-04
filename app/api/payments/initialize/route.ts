@@ -14,10 +14,26 @@ import {
 } from "@/lib/payments/paystack";
 import { createPayPalOrder, getPayPalApprovalUrl } from "@/lib/payments/paypal";
 import { getSupportedProviders } from "@/lib/payments/config";
-import {
-  validateCampaignForDonations,
-  checkAndUpdateGoalReached,
-} from "@/lib/utils/campaign-validation";
+import { validateCampaignForDonations } from "@/lib/utils/campaign-validation";
+
+/** `new URL(path, base)` requires `base` to be an absolute URL with scheme. */
+function resolveAppUrlOrigin(request: NextRequest): string {
+  const configured = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (configured) {
+    const withScheme = /^https?:\/\//i.test(configured)
+      ? configured
+      : `https://${configured}`;
+    try {
+      return new URL(withScheme).origin;
+    } catch {
+      console.warn(
+        "NEXT_PUBLIC_APP_URL is invalid; using request origin instead.",
+        configured
+      );
+    }
+  }
+  return request.nextUrl.origin;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,24 +51,48 @@ export async function POST(request: NextRequest) {
       chainerId: bodyChainerId,
       quickDonate = false,
       paymentMethod,
-      simulate = false, // For testing purposes
     } = body;
 
-    // Validate required fields
-    if (!campaignId || !amount || !currency || !paymentProvider) {
+    if (!campaignId || !paymentProvider) {
       return NextResponse.json(
         { success: false, error: "Missing required fields" },
         { status: 400 }
       );
     }
 
+    if (currency == null || String(currency).trim() === "") {
+      return NextResponse.json(
+        { success: false, error: "Missing currency" },
+        { status: 400 }
+      );
+    }
+
+    const currencyCode = String(currency).trim().toUpperCase();
+    if (!/^[A-Z]{3}$/.test(currencyCode)) {
+      return NextResponse.json(
+        { success: false, error: "Invalid currency code" },
+        { status: 400 }
+      );
+    }
+
+    const donationAmount =
+      typeof amount === "number" && Number.isFinite(amount)
+        ? amount
+        : parseFloat(String(amount));
+    if (!Number.isFinite(donationAmount) || donationAmount <= 0) {
+      return NextResponse.json(
+        { success: false, error: "Invalid donation amount" },
+        { status: 400 }
+      );
+    }
+
     // Validate payment provider is supported for currency
-    const supportedProviders = getSupportedProviders(currency);
+    const supportedProviders = getSupportedProviders(currencyCode);
     if (!supportedProviders.includes(paymentProvider)) {
       return NextResponse.json(
         {
           success: false,
-          error: `${paymentProvider} does not support ${currency}`,
+          error: `${paymentProvider} does not support ${currencyCode}`,
         },
         { status: 400 }
       );
@@ -61,7 +101,7 @@ export async function POST(request: NextRequest) {
     const isQuickDonatePaystackNgn =
       Boolean(quickDonate) &&
       paymentProvider === "paystack" &&
-      currency === "NGN";
+      currencyCode === "NGN";
     const isQuickDonatePayPal =
       Boolean(quickDonate) &&
       paymentProvider === "paypal" &&
@@ -119,7 +159,7 @@ export async function POST(request: NextRequest) {
 
     // Check minimum donation amount
     const minDonation = parseFloat(campaign.minimumDonation);
-    if (amount < minDonation) {
+    if (donationAmount < minDonation) {
       return NextResponse.json(
         {
           success: false,
@@ -180,7 +220,7 @@ export async function POST(request: NextRequest) {
           .values({
             campaignId,
             donorId,
-            amount: amount.toString(),
+            amount: donationAmount.toString(),
             currency: "NGN",
             paymentMethod: "paystack",
             paymentStatus: "pending",
@@ -220,7 +260,7 @@ export async function POST(request: NextRequest) {
             accountNumber,
             accountName,
             bankName,
-            amount,
+            amount: donationAmount,
             campaignName: campaign.title,
           },
         });
@@ -280,7 +320,7 @@ export async function POST(request: NextRequest) {
             accountNumber: dedicatedAccount.data.account_number,
             accountName: dedicatedAccount.data.account_name,
             bankName: dedicatedAccount.data.bank?.name ?? "Paystack Bank",
-            amount,
+            amount: donationAmount,
             campaignName: campaign.title,
           },
         });
@@ -380,7 +420,7 @@ export async function POST(request: NextRequest) {
     const effectiveDonationEmail =
       donationDonorEmail ??
       `quickdonor+${Date.now()}_${Math.random().toString(36).slice(2, 8)}@chainfundit.app`;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
+    const appUrl = resolveAppUrlOrigin(request);
 
     // Create donation record (include chainerId when donation comes through a chainer's link)
     const newDonation = await db
@@ -388,8 +428,8 @@ export async function POST(request: NextRequest) {
       .values({
         campaignId,
         donorId: user.id,
-        amount: amount.toString(),
-        currency,
+        amount: donationAmount.toString(),
+        currency: currencyCode,
         paymentMethod: paymentProvider,
         paymentStatus: "pending",
         message,
@@ -446,8 +486,8 @@ export async function POST(request: NextRequest) {
 
         const paystackResponse = await initializePaystackPayment(
           donationDonorEmail || user.email!,
-          amount,
-          currency,
+          donationAmount,
+          currencyCode,
           campaignMetadata,
           callbackUrl
         );
@@ -500,8 +540,8 @@ export async function POST(request: NextRequest) {
         cancelUrl.searchParams.set("donationId", donationId);
 
         const order = await createPayPalOrder({
-          amount,
-          currency,
+          amount: donationAmount,
+          currency: currencyCode,
           donationId,
           campaignTitle: campaign.title,
           donorEmail: donationDonorEmail || user.email || null,
@@ -553,8 +593,13 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Error initializing payment:", error);
+    const details = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { success: false, error: "Internal server error" },
+      {
+        success: false,
+        error: "Internal server error",
+        details,
+      },
       { status: 500 }
     );
   }

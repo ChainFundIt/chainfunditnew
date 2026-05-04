@@ -29,6 +29,8 @@ export interface DonationResult {
   orderId?: string;
   // Error
   error?: string;
+  /** Extra context from API (e.g. Postgres / PayPal message) */
+  details?: string;
 }
 
 export function useDonations() {
@@ -57,8 +59,13 @@ export function useDonations() {
       const result = await response.json();
 
       if (!result.success) {
-        setError(result.error);
-        return { success: false, error: result.error };
+        const combined = [result.error, result.details].filter(Boolean).join(" — ");
+        setError(combined || result.error);
+        return {
+          success: false,
+          error: combined || result.error,
+          details: result.details,
+        };
       }
 
       return result;
