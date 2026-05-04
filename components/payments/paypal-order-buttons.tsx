@@ -108,6 +108,22 @@ function getConfirmOrderStatus(result: unknown): string | undefined {
   return typeof status === "string" ? status : undefined;
 }
 
+/** Maps PayPal JS SDK / Apple Pay failures to donor-readable copy. Raw codes confuse donors in toasts. */
+function formatPayPalApplePayError(raw: string): string {
+  const trimmed = raw.trim();
+  if (
+    trimmed.includes("APPLE_PAY_MERCHANT_SESSION_VALIDATION_ERROR") ||
+    trimmed.toLowerCase().includes("merchant_session_validation")
+  ) {
+    return (
+      "Apple Pay could not verify this site with Apple (merchant validation failed). " +
+      "In PayPal: enable Apple Pay for your account, add this exact website domain for Apple Pay on the web, " +
+      "and match live vs sandbox credentials. You can still pay with PayPal or card below."
+    );
+  }
+  return trimmed;
+}
+
 export function PayPalOrderButtons({
   amount,
   currency,
@@ -346,9 +362,9 @@ function PayPalApplePayButton({
         });
         session.completeMerchantValidation(validateResult.merchantSession);
       } catch (error) {
-        const message =
+        const raw =
           error instanceof Error ? error.message : "Apple Pay merchant validation failed.";
-        onError?.(message);
+        onError?.(formatPayPalApplePayError(raw));
         session.abort();
       }
     };
@@ -375,9 +391,8 @@ function PayPalApplePayButton({
         session.completePayment(ApplePaySession.STATUS_SUCCESS);
       } catch (error) {
         session.completePayment(ApplePaySession.STATUS_FAILURE);
-        const message =
-          error instanceof Error ? error.message : "Apple Pay checkout failed.";
-        onError?.(message);
+        const raw = error instanceof Error ? error.message : "Apple Pay checkout failed.";
+        onError?.(formatPayPalApplePayError(raw));
       } finally {
         onBusyChange(false);
       }
