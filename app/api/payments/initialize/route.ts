@@ -58,14 +58,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const isQuickDonatePaystackNgn =
+      Boolean(quickDonate) &&
+      paymentProvider === "paystack" &&
+      currency === "NGN";
+    const isQuickDonatePayPal =
+      Boolean(quickDonate) &&
+      paymentProvider === "paypal" &&
+      supportedProviders.includes("paypal");
+
     if (
       quickDonate &&
-      (paymentProvider !== "paystack" || currency !== "NGN")
+      !isQuickDonatePaystackNgn &&
+      !isQuickDonatePayPal
     ) {
       return NextResponse.json(
         {
           success: false,
-          error: "Quick Donate is available for NGN Paystack donations only.",
+          error:
+            "Quick Donate supports Nigerian Naira (bank transfer or Apple Pay via Paystack) or international checkout with PayPal (USD, GBP, EUR, CAD, AUD).",
         },
         { status: 400 }
       );
@@ -123,7 +134,8 @@ export async function POST(request: NextRequest) {
 
     // Quick donate bank transfer uses a campaign-level virtual account (no donor profile required up front).
     // Quick donate Apple Pay intentionally skips this branch and uses a normal Paystack transaction.
-    if (quickDonate && !isQuickDonateApplePay) {
+    // PayPal quick donate skips this branch and uses the standard PayPal order flow below.
+    if (isQuickDonatePaystackNgn && !isQuickDonateApplePay) {
       const quickPhone =
         (normalizedDonorPhone && normalizedDonorPhone.trim()) || "08000000000";
       const customerCode = campaign.quickDonateCustomerCode || null;

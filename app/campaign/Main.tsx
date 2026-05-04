@@ -31,6 +31,10 @@ import ShareModal from "./share-modal";
 import UpdateModal from "./update-modal";
 import CommentModal from "./comment-modal";
 import PaystackApplePayButton from "@/components/payments/PaystackApplePayButton";
+import { PayPalOrderButtons } from "@/components/payments/paypal-order-buttons";
+import { CURRENCY_SUPPORT } from "@/lib/payments/config";
+import { getCurrencyCode } from "@/lib/utils/currency";
+import { trackDonation } from "@/lib/analytics";
 import { useCampaignDonations } from "@/hooks/use-campaign-donations";
 import { useTopChainers } from "@/hooks/use-top-chainers";
 import ClientToaster from "@/components/ui/client-toaster";
@@ -43,6 +47,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const autoRefreshInterval = 120000; // 2 minutes
 
@@ -167,6 +178,7 @@ const Main = ({ campaignSlug }: MainProps) => {
   } | null>(null);
   const [quickDonateAccountCopied, setQuickDonateAccountCopied] = useState(false);
   const [quickDonateConfirmLoading, setQuickDonateConfirmLoading] = useState(false);
+  const [quickDonateCurrencyCode, setQuickDonateCurrencyCode] = useState("NGN");
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
   const [campaign, setCampaign] = useState<CampaignData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -580,11 +592,16 @@ const Main = ({ campaignSlug }: MainProps) => {
     setQuickDonateDetails(null);
     setQuickDonateAccountCopied(false);
     setQuickDonateDonationId(null);
+    setQuickDonateCurrencyCode(getCurrencyCode(campaign?.currency || "₦"));
     setQuickDonateModalOpen(true);
   };
 
   const handleQuickDonateSubmit = async () => {
     if (!campaignData) return;
+    if (quickDonateCurrencyCode !== "NGN") {
+      setQuickDonateError("Bank transfer accounts are only available in Nigerian Naira (NGN).");
+      return;
+    }
     const amount = parseFloat(quickDonateAmount);
     if (!Number.isFinite(amount) || amount <= 0) {
       setQuickDonateError("Enter a valid donation amount.");
@@ -641,9 +658,92 @@ const Main = ({ campaignSlug }: MainProps) => {
     }
   };
 
+  const handleQuickPayPalOrderCreate = async () => {
+    if (!campaignData || !quickDonateAmount) {
+      throw new Error("Campaign and amount are required.");
+    }
+
+    const amountNum = parseFloat(quickDonateAmount);
+    const minAmount = parseFloat(campaignData.minimumDonation);
+    if (!Number.isFinite(amountNum) || amountNum < minAmount) {
+      throw new Error(`Minimum donation amount is ${campaignData.currency} ${minAmount}`);
+    }
+
+    const response = await fetch("/api/payments/initialize", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        campaignId: campaignData.id,
+        amount: amountNum,
+        currency: quickDonateCurrencyCode,
+        paymentProvider: "paypal",
+        quickDonate: true,
+        message: "Quick Donate",
+        isAnonymous: true,
+        chainerId: referralChainer?.id || null,
+      }),
+    });
+
+    const result = await response.json().catch(() => null);
+    if (!response.ok || !result?.success || !result?.orderId) {
+      throw new Error(result?.error || "Failed to initialize PayPal checkout.");
+    }
+
+    return {
+      orderId: result.orderId as string,
+      donationId: result.donationId as string | undefined,
+    };
+  };
+
+  const handleQuickPayPalCapture = async (orderId: string) => {
+    if (!campaignData || !quickDonateAmount) {
+      throw new Error("Campaign and amount are required.");
+    }
+
+    const response = await fetch("/api/payments/paypal/capture", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId }),
+    });
+
+    const result = await response.json().catch(() => null);
+    if (!response.ok || !result?.success) {
+      throw new Error(result?.error || "Failed to capture PayPal payment.");
+    }
+
+    trackDonation("donation_completed", {
+      donation_id: result.donationId,
+      campaign_id: campaignData.id,
+      amount: parseFloat(quickDonateAmount),
+      currency: quickDonateCurrencyCode,
+      payment_method: "paypal",
+      is_anonymous: true,
+    });
+
+    toast.success("Donation completed", {
+      description: "We’ve received your donation. Thank you!",
+      duration: 6000,
+    });
+    setQuickDonateModalOpen(false);
+    setDonateModalOpen(true);
+    sessionStorage.setItem("showThankYouModal", "true");
+  };
+
+  const handleQuickPayPalCancel = async (donationId?: string) => {
+    if (!donationId) return;
+
+    await fetch("/api/payments/paypal/cancel", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ donationId }),
+    }).catch(() => null);
+  };
+
   const quickDonateNumericAmount = parseFloat(quickDonateAmount);
   const canUseQuickDonateAmount =
     Number.isFinite(quickDonateNumericAmount) && quickDonateNumericAmount > 0;
+  const isQuickDonateNgn = quickDonateCurrencyCode === "NGN";
 
   return (
     <div className="bg-gray-50 font-jakarta">
@@ -1401,50 +1501,131 @@ const Main = ({ campaignSlug }: MainProps) => {
             <DialogTitle>Quick Donate</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-gray-600">
-            Enter your amount, then pay instantly with Apple Pay or generate a Paystack virtual account.
+            Choose how you want to pay. Nigerian donors can use a dedicated transfer account or Apple Pay via Paystack;
+            international donors can check out with PayPal (Apple Pay appears automatically when your device supports it).
           </p>
-          <div className="space-y-3 mt-2">
-            <label className="text-sm font-medium text-gray-700 block">Amount (NGN)</label>
-            <input
-              type="number"
-              min="1"
-              value={quickDonateAmount}
-              onChange={(e) => setQuickDonateAmount(e.target.value)}
-              className="w-full h-11 rounded-lg border border-gray-300 px-3"
-              placeholder="Enter amount"
-            />
+          <div className="space-y-4 mt-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 block">Currency</label>
+              <Select
+                value={quickDonateCurrencyCode}
+                onValueChange={(code) => {
+                  setQuickDonateCurrencyCode(code);
+                  setQuickDonateError(null);
+                  if (code !== "NGN") {
+                    setQuickDonateDetails(null);
+                    setQuickDonateDonationId(null);
+                    setQuickDonateAccountCopied(false);
+                  }
+                }}
+              >
+                <SelectTrigger className="h-11 w-full rounded-lg border border-gray-300">
+                  <SelectValue placeholder="Select currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="NGN">NGN — Nigeria (bank transfer or Apple Pay)</SelectItem>
+                  {CURRENCY_SUPPORT.paypal.map((code) => (
+                    <SelectItem key={code} value={code}>
+                      {code} — PayPal checkout
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 block">
+                Amount ({quickDonateCurrencyCode})
+              </label>
+              <input
+                type="number"
+                min="1"
+                step="any"
+                value={quickDonateAmount}
+                onChange={(e) => setQuickDonateAmount(e.target.value)}
+                className="w-full h-11 rounded-lg border border-gray-300 px-3"
+                placeholder="Enter amount"
+              />
+            </div>
+
             {quickDonateError && (
               <p className="text-sm text-red-600">{quickDonateError}</p>
             )}
-            <Button
-              type="button"
-              onClick={handleQuickDonateSubmit}
-              disabled={quickDonateLoading}
-              className="w-full h-11 rounded-full"
-            >
-              {quickDonateLoading ? "Generating account..." : "Generate bank account"}
-            </Button>
-            {canUseQuickDonateAmount && (
-              <PaystackApplePayButton
-                amount={quickDonateNumericAmount}
-                currency="NGN"
-                campaignId={campaignData.id}
-                chainerId={referralChainer?.id || null}
-                isAnonymous={true}
-                disabled={quickDonateLoading}
-                onSuccess={() => {
-                  toast.success("Donation completed", {
-                    description: "We’ve received your Apple Pay donation. Thank you!",
-                    duration: 6000,
-                  });
-                  setQuickDonateModalOpen(false);
-                  setDonateModalOpen(true);
-                  sessionStorage.setItem("showThankYouModal", "true");
-                }}
-                onError={(message) => setQuickDonateError(message)}
-              />
+
+            {isQuickDonateNgn ? (
+              <div className="space-y-4">
+                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 space-y-3">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">Bank transfer</p>
+                    <p className="text-xs text-gray-600 mt-0.5">
+                      Generate a Paystack virtual account number. Transfer from your bank app, then tap
+                      “I&apos;ve sent the money” once you&apos;re done.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={handleQuickDonateSubmit}
+                    disabled={quickDonateLoading}
+                    className="w-full h-11 rounded-full bg-[#104901] hover:bg-[#0d3a00]"
+                  >
+                    {quickDonateLoading ? "Generating account..." : "Generate bank account"}
+                  </Button>
+                </div>
+
+                <div className="rounded-2xl border border-gray-200 bg-white p-4 space-y-3">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">Apple Pay (Paystack)</p>
+                    <p className="text-xs text-gray-600 mt-0.5">
+                      Pay in Naira with Apple Pay. You will confirm the amount on the Apple Pay sheet.
+                    </p>
+                  </div>
+                  {canUseQuickDonateAmount && (
+                    <PaystackApplePayButton
+                      amount={quickDonateNumericAmount}
+                      currency="NGN"
+                      campaignId={campaignData.id}
+                      chainerId={referralChainer?.id || null}
+                      isAnonymous={true}
+                      disabled={quickDonateLoading}
+                      onSuccess={() => {
+                        toast.success("Donation completed", {
+                          description: "We’ve received your Apple Pay donation. Thank you!",
+                          duration: 6000,
+                        });
+                        setQuickDonateModalOpen(false);
+                        setDonateModalOpen(true);
+                        sessionStorage.setItem("showThankYouModal", "true");
+                      }}
+                      onError={(message) => setQuickDonateError(message)}
+                    />
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-gray-200 bg-white p-4 space-y-3">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">PayPal</p>
+                  <p className="text-xs text-gray-600 mt-0.5">
+                    Use your PayPal balance or card. On supported iPhones and Safari, an Apple Pay option can appear above
+                    the PayPal button.
+                  </p>
+                </div>
+                {canUseQuickDonateAmount && (
+                  <PayPalOrderButtons
+                    amount={quickDonateAmount}
+                    currency={quickDonateCurrencyCode}
+                    label={campaignData.title || "ChainFundit donation"}
+                    disabled={quickDonateLoading}
+                    createOrderRequest={handleQuickPayPalOrderCreate}
+                    captureOrderRequest={handleQuickPayPalCapture}
+                    cancelOrderRequest={handleQuickPayPalCancel}
+                    onError={(message) => setQuickDonateError(message)}
+                  />
+                )}
+              </div>
             )}
-            {quickDonateDetails && (
+
+            {isQuickDonateNgn && quickDonateDetails && (
               <div className="rounded-lg border border-[#D6E7D4] bg-[#F8FBF7] p-3 space-y-1.5">
                 <p className="text-sm font-semibold text-[#1C1917]">Account details</p>
                 <p className="text-sm text-[#44403C]">

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics";
 
@@ -86,11 +86,10 @@ const PaystackApplePayButton: React.FC<PaystackApplePayButtonProps> = ({
   onError,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const prepareInFlightRef = useRef(false);
   const [isPreparing, setIsPreparing] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [donationId, setDonationId] = useState<string | undefined>();
-  const [hasAttemptedPrepare, setHasAttemptedPrepare] = useState(false);
-  const preparedSignatureRef = useRef<string | null>(null);
   const containerId = useMemo(
     () => `paystack-apple-pay-${Math.random().toString(36).slice(2)}`,
     []
@@ -99,15 +98,13 @@ const PaystackApplePayButton: React.FC<PaystackApplePayButtonProps> = ({
   useEffect(() => {
     setIsMounted(false);
     setDonationId(undefined);
-    setHasAttemptedPrepare(false);
-    preparedSignatureRef.current = null;
     if (containerRef.current) {
       containerRef.current.innerHTML = "";
     }
   }, [amount, currency, campaignId]);
 
-  const prepareApplePay = async () => {
-    if (isPreparing) {
+  const prepareApplePay = useCallback(async () => {
+    if (prepareInFlightRef.current) {
       return;
     }
 
@@ -116,9 +113,9 @@ const PaystackApplePayButton: React.FC<PaystackApplePayButtonProps> = ({
       return;
     }
 
+    prepareInFlightRef.current = true;
     setIsPreparing(true);
     setIsMounted(false);
-    setHasAttemptedPrepare(true);
 
     try {
       await loadPaystackInline();
@@ -237,42 +234,21 @@ const PaystackApplePayButton: React.FC<PaystackApplePayButtonProps> = ({
       const message = error instanceof Error ? error.message : "Could not prepare Apple Pay.";
       onError(message);
     } finally {
+      prepareInFlightRef.current = false;
       setIsPreparing(false);
     }
-  };
-
-  useEffect(() => {
-    if (disabled || !Number.isFinite(amount) || amount <= 0) {
-      return;
-    }
-
-    const signature = [
-      campaignId,
-      currency.toUpperCase(),
-      amount.toFixed(2),
-      chainerId || "",
-      email || "",
-      donorName || "",
-      donorPhone || "",
-      String(isAnonymous),
-    ].join("|");
-
-    if (preparedSignatureRef.current === signature) {
-      return;
-    }
-
-    preparedSignatureRef.current = signature;
-    void prepareApplePay();
   }, [
     amount,
     campaignId,
     chainerId,
     currency,
-    disabled,
     donorName,
     donorPhone,
     email,
     isAnonymous,
+    onError,
+    onSuccess,
+    containerId,
   ]);
 
   return (
@@ -280,21 +256,19 @@ const PaystackApplePayButton: React.FC<PaystackApplePayButtonProps> = ({
       {!isMounted ? (
         <Button
           type="button"
-          onClick={prepareApplePay}
+          onClick={() => void prepareApplePay()}
           disabled={disabled || isPreparing}
           className="h-11 w-full rounded-full bg-black text-white"
         >
-          {isPreparing
-            ? "Preparing Apple Pay..."
-            : hasAttemptedPrepare
-              ? "Retry Apple Pay"
-              : "Preparing Apple Pay..."}
+          {isPreparing ? "Preparing Apple Pay..." : "Pay with Apple Pay"}
         </Button>
       ) : null}
+      {/* Paystack mounts into this node; display:none prevents the wallet button from working */}
       <div
         id={containerId}
         ref={containerRef}
-        className={isMounted ? "min-h-11 overflow-hidden rounded-full" : "hidden"}
+        className="min-h-11 w-full overflow-hidden rounded-full"
+        aria-hidden={!isMounted}
       />
       {donationId && !isMounted ? (
         <p className="text-xs text-gray-500">Checking Apple Pay availability...</p>
