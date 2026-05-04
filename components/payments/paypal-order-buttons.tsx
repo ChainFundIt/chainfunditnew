@@ -1,6 +1,13 @@
 "use client";
 
-import { createElement, useEffect, useMemo, useRef, useState } from "react";
+import {
+  createElement,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { MutableRefObject } from "react";
 import {
   PayPalButtons,
@@ -230,6 +237,7 @@ function PayPalApplePayButton({
   const [isEligible, setIsEligible] = useState(false);
   const [isApplePaySdkReady, setIsApplePaySdkReady] = useState(false);
   const numericAmount = Number(amount);
+  const applePayHostRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const existingScript = document.querySelector<HTMLScriptElement>(
@@ -307,7 +315,7 @@ function PayPalApplePayButton({
     };
   }, [disabled, isResolved, isApplePaySdkReady, numericAmount]);
 
-  const handleApplePayClick = () => {
+  const handleApplePayClick = useCallback(() => {
     const ApplePaySession = getApplePaySession();
     const applepay = getPayPalApplePay();
 
@@ -384,21 +392,70 @@ function PayPalApplePayButton({
     };
 
     session.begin();
-  };
+  }, [
+    applePayConfig,
+    cancelOrderRequest,
+    captureOrderRequest,
+    createOrderRequest,
+    currency,
+    label,
+    numericAmount,
+    onBusyChange,
+    onError,
+    pendingDonationIdRef,
+  ]);
+
+  useEffect(() => {
+    const root = applePayHostRef.current;
+    if (!root || !isEligible || !applePayConfig) {
+      return;
+    }
+
+    let cancelled = false;
+    let appleEl: HTMLElement | null = null;
+    let listener: (() => void) | null = null;
+    let innerRafId = 0;
+
+    const outerRafId = window.requestAnimationFrame(() => {
+      innerRafId = window.requestAnimationFrame(() => {
+        appleEl = root.querySelector("apple-pay-button");
+        if (!(appleEl instanceof HTMLElement) || cancelled) {
+          return;
+        }
+
+        listener = () => {
+          handleApplePayClick();
+        };
+
+        appleEl.addEventListener("click", listener, true);
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(outerRafId);
+      window.cancelAnimationFrame(innerRafId);
+      if (appleEl && listener) {
+        appleEl.removeEventListener("click", listener, true);
+      }
+    };
+  }, [applePayConfig, handleApplePayClick, isEligible]);
 
   if (!isEligible) {
     return null;
   }
 
   return (
-    <div className="mb-3 px-8 py-4 w-full overflow-hidden rounded-lg">
+    <div
+      ref={applePayHostRef}
+      className="mb-3 px-8 py-4 w-full overflow-hidden rounded-lg"
+    >
       {createElement("apple-pay-button", {
         buttonstyle: "black",
         type: "donate",
         locale: "en-US",
         "aria-label": "Donate with Apple Pay",
         className: "h-12 w-full",
-        onClick: handleApplePayClick,
       })}
     </div>
   );
