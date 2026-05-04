@@ -687,7 +687,8 @@ const Main = ({ campaignSlug }: MainProps) => {
 
     const result = await response.json().catch(() => null);
     if (!response.ok || !result?.success || !result?.orderId) {
-      throw new Error(result?.error || "Failed to initialize PayPal checkout.");
+      const combined = [result?.error, result?.details].filter(Boolean).join(" — ");
+      throw new Error(combined || "Failed to initialize PayPal checkout.");
     }
 
     return {
