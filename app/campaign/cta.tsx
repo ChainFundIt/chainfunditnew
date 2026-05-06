@@ -73,6 +73,8 @@ const CTA = (props: Props) => {
     }
     return formatCurrency(amount, currency);
   };
+  const raisedCurrencyCode = stats?.amountRaised?.currency || geolocation?.currency || "USD";
+
   return (
     <div className="w-full py-16 md:py-12 flex items-center justify-center flex-col">
       {/* Main CTA Card */}
@@ -165,7 +167,7 @@ const CTA = (props: Props) => {
             <div className="px-6 py-4 text-center">
               {stats && (
                 <p className="text-2xl md:text-3xl font-bold text-emerald-600">
-                  {formatCurrencyAmount(stats?.amountRaised?.amount || 0, geolocation?.currency as string)}+
+                  {formatCurrencyAmount(stats?.amountRaised?.amount || 0, raisedCurrencyCode)}
                 </p>
               )}
               <p className="text-xs md:text-sm text-gray-600 mt-1">Total Raised</p>

@@ -1,21 +1,24 @@
 import { NextResponse } from "next/server";
-import { getApplePayDomainAssociationBytes } from "@/lib/apple-pay/domain-association";
+import { getApplePayDomainAssociation } from "@/lib/apple-pay/domain-association";
 
-/**
- * Domain association bytes for Apple Pay on the web (PayPal + Apple checks `/.well-known/...`).
- * Rewritten from `/.well-known/apple-developer-merchantid-domain-association` in `next.config.ts`.
- */
 export async function GET() {
-  const payload = getApplePayDomainAssociationBytes();
-  if (!payload?.length) {
-    return new NextResponse("Not found", { status: 404 });
+  const associationFile = await getApplePayDomainAssociation();
+
+  if (!associationFile) {
+    return new NextResponse("Apple Pay domain association file not configured.", {
+      status: 404,
+      headers: {
+        "Content-Type": "text/plain",
+      },
+    });
   }
 
-  return new NextResponse(payload, {
+  return new NextResponse(associationFile, {
     status: 200,
     headers: {
-      "Content-Type": "application/octet-stream",
+      "Content-Type": "text/plain",
       "Cache-Control": "public, max-age=3600",
     },
   });
 }
+

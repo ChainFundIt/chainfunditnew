@@ -1501,10 +1501,10 @@ const Main = ({ campaignSlug }: MainProps) => {
           <DialogHeader>
             <DialogTitle>Quick Donate</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-gray-600">
+          {/* <p className="text-sm text-gray-600">
             Choose how you want to pay. Nigerian donors can use a dedicated transfer account or Apple Pay via Paystack;
             international donors can check out with PayPal (Apple Pay appears automatically when your device supports it).
-          </p>
+          </p> */}
           <div className="space-y-4 mt-2">
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700 block">Currency</label>
@@ -1524,10 +1524,10 @@ const Main = ({ campaignSlug }: MainProps) => {
                   <SelectValue placeholder="Select currency" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="NGN">NGN — Nigeria (bank transfer or Apple Pay)</SelectItem>
+                  <SelectItem value="NGN">NGN</SelectItem>
                   {CURRENCY_SUPPORT.paypal.map((code) => (
                     <SelectItem key={code} value={code}>
-                      {code} — PayPal checkout
+                      {code} 
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1559,7 +1559,7 @@ const Main = ({ campaignSlug }: MainProps) => {
                   <div>
                     <p className="text-sm font-semibold text-gray-900">Bank transfer</p>
                     <p className="text-xs text-gray-600 mt-0.5">
-                      Generate a Paystack virtual account number. Transfer from your bank app, then tap
+                      Transfer from your bank app, then tap
                       “I&apos;ve sent the money” once you&apos;re done.
                     </p>
                   </div>
@@ -1567,13 +1567,13 @@ const Main = ({ campaignSlug }: MainProps) => {
                     type="button"
                     onClick={handleQuickDonateSubmit}
                     disabled={quickDonateLoading}
-                    className="w-full h-11 rounded-full bg-[#104901] hover:bg-[#0d3a00]"
+                    className="w-full h-11 rounded-full bg-[#104901]"
                   >
-                    {quickDonateLoading ? "Generating account..." : "Generate bank account"}
+                    {quickDonateLoading ? "Loading..." : "Show bank account"}
                   </Button>
                 </div>
 
-                <div className="rounded-2xl border border-gray-200 bg-white p-4 space-y-3">
+                {/* <div className="rounded-2xl border border-gray-200 bg-white p-4 space-y-3">
                   <div>
                     <p className="text-sm font-semibold text-gray-900">Apple Pay (Paystack)</p>
                     <p className="text-xs text-gray-600 mt-0.5">
@@ -1600,7 +1600,7 @@ const Main = ({ campaignSlug }: MainProps) => {
                       onError={(message) => setQuickDonateError(message)}
                     />
                   )}
-                </div>
+                </div> */}
               </div>
             ) : (
               <div className="rounded-2xl border border-gray-200 bg-white p-4 space-y-3">

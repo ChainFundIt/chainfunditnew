@@ -4,10 +4,6 @@ const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
 const PAYPAL_CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET;
 const PAYPAL_ENVIRONMENT = (process.env.PAYPAL_ENVIRONMENT || "sandbox").toLowerCase();
 
-type PayPalRequestOptions = Omit<RequestInit, "headers"> & {
-  headers?: HeadersInit;
-};
-
 export interface PayPalLink {
   href: string;
   rel: string;
@@ -73,15 +69,6 @@ export interface PayPalSubscriptionResponse {
   links: PayPalLink[];
 }
 
-interface PayPalProductResponse {
-  id: string;
-}
-
-interface PayPalPlanResponse {
-  id: string;
-  status: string;
-}
-
 export interface CreatePayPalSubscriptionParams {
   recurringDonationId: string;
   campaignTitle: string;
@@ -100,20 +87,10 @@ export interface PayPalPayoutResult {
   transactionId?: string;
 }
 
-const PAYPAL_FETCH_TIMEOUT_MS = 25_000;
-
 function getPayPalBaseUrl(): string {
   return PAYPAL_ENVIRONMENT === "live"
     ? "https://api-m.paypal.com"
     : "https://api-m.sandbox.paypal.com";
-}
-
-function isNetworkTimeoutError(err: unknown): boolean {
-  if (err instanceof Error && err.cause instanceof Error) {
-    const cause = err.cause as Error & { code?: string };
-    return cause.code === "UND_ERR_CONNECT_TIMEOUT" || cause.message?.includes("Timeout");
-  }
-  return false;
 }
 
 function validatePayPalConfig(): void {
@@ -148,7 +125,7 @@ async function getPayPalAccessToken(): Promise<string> {
 
 async function paypalRequest<T>(
   path: string,
-  options: PayPalRequestOptions = {}
+  options: Omit<RequestInit, "headers"> & { headers?: HeadersInit } = {}
 ): Promise<T> {
   const accessToken = await getPayPalAccessToken();
   const response = await fetch(`${getPayPalBaseUrl()}${path}`, {
@@ -164,7 +141,10 @@ async function paypalRequest<T>(
   if (!response.ok) {
     const details =
       Array.isArray(data?.details) && data.details.length > 0
-        ? data.details.map((detail: { issue?: string; description?: string }) => detail.issue || detail.description).filter(Boolean).join(", ")
+        ? data.details
+            .map((detail: { issue?: string; description?: string }) => detail.issue || detail.description)
+            .filter(Boolean)
+            .join(", ")
         : null;
     const message = details || data?.message || "PayPal request failed";
     throw new Error(message);
@@ -241,31 +221,22 @@ export function getPayPalApprovalUrl(resource: { links: PayPalLink[] }): string 
 export async function createPayPalSubscription(
   params: CreatePayPalSubscriptionParams
 ): Promise<PayPalSubscriptionResponse> {
-  const product = await paypalRequest<PayPalProductResponse>("/v1/catalogs/products", {
+  const product = await paypalRequest<{ id: string }>("/v1/catalogs/products", {
     method: "POST",
     body: JSON.stringify({
       name: truncatePayPalText(params.campaignTitle, 127),
-      description: truncatePayPalText(
-        `Recurring donation for ${params.campaignTitle}`,
-        256
-      ),
+      description: truncatePayPalText(`Recurring donation for ${params.campaignTitle}`, 256),
       type: "SERVICE",
       category: "CHARITY",
     }),
   });
 
-  const plan = await paypalRequest<PayPalPlanResponse>("/v1/billing/plans", {
+  const plan = await paypalRequest<{ id: string; status: string }>("/v1/billing/plans", {
     method: "POST",
     body: JSON.stringify({
       product_id: product.id,
-      name: truncatePayPalText(
-        `${params.campaignTitle} ${params.period} recurring donation`,
-        127
-      ),
-      description: truncatePayPalText(
-        `${params.period} recurring donation for ${params.campaignTitle}`,
-        127
-      ),
+      name: truncatePayPalText(`${params.campaignTitle} ${params.period} recurring donation`, 127),
+      description: truncatePayPalText(`${params.period} recurring donation for ${params.campaignTitle}`, 127),
       status: "ACTIVE",
       billing_cycles: [
         {
@@ -294,9 +265,7 @@ export async function createPayPalSubscription(
     body: JSON.stringify({
       plan_id: plan.id,
       custom_id: params.recurringDonationId,
-      subscriber: params.donorEmail
-        ? { email_address: params.donorEmail }
-        : undefined,
+      subscriber: params.donorEmail ? { email_address: params.donorEmail } : undefined,
       application_context: {
         brand_name: "ChainFundit",
         shipping_preference: "NO_SHIPPING",
@@ -313,9 +282,7 @@ export async function getPayPalSubscription(
 ): Promise<PayPalSubscriptionResponse> {
   return paypalRequest<PayPalSubscriptionResponse>(
     `/v1/billing/subscriptions/${subscriptionId}`,
-    {
-      method: "GET",
-    }
+    { method: "GET" }
   );
 }
 
@@ -442,13 +409,7 @@ function truncatePayPalText(value: string, maxLength: number): string {
 }
 
 function getPayPalBillingFrequency(period: "monthly" | "quarterly" | "yearly") {
-  if (period === "quarterly") {
-    return { interval_unit: "MONTH", interval_count: 3 };
-  }
-
-  if (period === "yearly") {
-    return { interval_unit: "YEAR", interval_count: 1 };
-  }
-
+  if (period === "quarterly") return { interval_unit: "MONTH", interval_count: 3 };
+  if (period === "yearly") return { interval_unit: "YEAR", interval_count: 1 };
   return { interval_unit: "MONTH", interval_count: 1 };
 }

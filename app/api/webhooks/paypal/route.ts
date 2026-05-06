@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { donations } from "@/lib/schema/donations";
 import { campaignPayouts, commissionPayouts } from "@/lib/schema";
-import { charities, charityDonations } from "@/lib/schema/charities";
+import { charityDonations } from "@/lib/schema/charities";
 import { recurringDonationPayments, recurringDonations } from "@/lib/schema/recurring-donations";
 import { eq, and } from "drizzle-orm";
 import {
@@ -27,17 +27,15 @@ interface PayPalWebhookEvent {
     state?: string;
     billing_agreement_id?: string;
     transaction_id?: string;
-    custom_id?: string;
+    payout_item_id?: string;
+    payout_item?: {
+      sender_item_id?: string;
+    };
+    sender_item_id?: string;
     amount?: {
       total?: string;
       currency?: string;
     };
-    payout_item_id?: string;
-    payout_item?: {
-      sender_item_id?: string;
-      receiver?: string;
-    };
-    sender_item_id?: string;
     supplementary_data?: {
       related_ids?: {
         order_id?: string;
@@ -78,37 +76,29 @@ export async function POST(request: NextRequest) {
       case "PAYMENT.CAPTURE.COMPLETED":
         await handleOneTimeCaptureCompleted(event);
         break;
-
       case "PAYMENT.CAPTURE.DENIED":
       case "PAYMENT.CAPTURE.DECLINED":
       case "PAYMENT.CAPTURE.REVERSED":
         await handleOneTimeCaptureFailed(event);
         break;
-
       case "BILLING.SUBSCRIPTION.ACTIVATED":
         await updatePayPalRecurringStatus(event.resource?.id, "active", true);
         break;
-
       case "BILLING.SUBSCRIPTION.CANCELLED":
         await updatePayPalRecurringStatus(event.resource?.id, "cancelled", false);
         break;
-
       case "BILLING.SUBSCRIPTION.SUSPENDED":
         await updatePayPalRecurringStatus(event.resource?.id, "paused", false);
         break;
-
       case "BILLING.SUBSCRIPTION.EXPIRED":
         await updatePayPalRecurringStatus(event.resource?.id, "expired", false);
         break;
-
       case "PAYMENT.SALE.COMPLETED":
         await handleRecurringSaleCompleted(event);
         break;
-
       case "PAYMENT.PAYOUTS-ITEM.SUCCEEDED":
         await handlePayoutItemEvent(event, "completed");
         break;
-
       case "PAYMENT.PAYOUTS-ITEM.FAILED":
       case "PAYMENT.PAYOUTS-ITEM.BLOCKED":
       case "PAYMENT.PAYOUTS-ITEM.UNCLAIMED":
@@ -116,7 +106,6 @@ export async function POST(request: NextRequest) {
       case "PAYMENT.PAYOUTS-ITEM.DENIED":
         await handlePayoutItemEvent(event, "failed");
         break;
-
       default:
         break;
     }
@@ -227,17 +216,12 @@ async function handleRecurringSaleCompleted(event: PayPalWebhookEvent) {
   const amount = parseFloat(event.resource?.amount?.total || "0");
   const currency = event.resource?.amount?.currency || "USD";
 
-  if (!subscriptionId || !saleId || !Number.isFinite(amount) || amount <= 0) {
-    return;
-  }
+  if (!subscriptionId || !saleId || !Number.isFinite(amount) || amount <= 0) return;
 
   const existingPayment = await db.query.recurringDonationPayments.findFirst({
     where: eq(recurringDonationPayments.stripePaymentIntentId, saleId),
   });
-
-  if (existingPayment) {
-    return;
-  }
+  if (existingPayment) return;
 
   const subscription = await db.query.recurringDonations.findFirst({
     where: and(
@@ -245,10 +229,7 @@ async function handleRecurringSaleCompleted(event: PayPalWebhookEvent) {
       eq(recurringDonations.stripeSubscriptionId, subscriptionId)
     ),
   });
-
-  if (!subscription) {
-    return;
-  }
+  if (!subscription) return;
 
   const billingPeriodStart = subscription.lastBillingDate
     ? new Date(subscription.lastBillingDate)
@@ -316,14 +297,10 @@ async function handlePayoutItemEvent(
     event.resource?.sender_item_id ||
     null;
 
-  if (!senderItemId) {
-    return;
-  }
+  if (!senderItemId) return;
 
   const [type, payoutId] = senderItemId.split(":");
-  if (!type || !payoutId) {
-    return;
-  }
+  if (!type || !payoutId) return;
 
   const transactionId =
     event.resource?.transaction_id ||
