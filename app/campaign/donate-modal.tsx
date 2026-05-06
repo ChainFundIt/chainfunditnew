@@ -965,9 +965,9 @@ const DonateModal: React.FC<DonateModalProps> = ({
 
               {/* Payment Provider Selection */}
               <div>
-                <Label className="text-base font-medium text-[#5F8555] mb-3 block">
+                {/* <Label className="text-base font-medium text-[#5F8555] mb-3 block">
                   Select Payment Provider
-                </Label>
+                </Label> */}
                 <div className="grid grid-cols-1 gap-3">
                   {supportedProviders.length > 0 ? (
                     supportedProviders.map((provider) => {

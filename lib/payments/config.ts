@@ -104,7 +104,6 @@ export function getPaymentModeStatus(): {
   const paypalPublicClientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
   const paypalClientSecret = process.env.PAYPAL_CLIENT_SECRET;
   const paypalEnvironment = process.env.PAYPAL_ENVIRONMENT;
-
   const getPaystackSecretMode = (): 'test' | 'live' | 'missing' | 'unknown' => {
     if (!paystackSecretKey) return 'missing';
     if (paystackSecretKey.startsWith('sk_test_')) return 'test';
@@ -132,7 +131,6 @@ export function getPaymentModeStatus(): {
   const paypalSecretMode = getPayPalCredentialMode(paypalClientSecret);
   const paypalEnvironmentMode: 'test' | 'live' | 'missing' | 'unknown' =
     !paypalEnvironment ? 'missing' : isPayPalSandbox(paypalEnvironment) ? 'test' : 'live';
-
   return {
     paystack: {
       secretKeyMode: paystackSecretMode,

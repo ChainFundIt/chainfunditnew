@@ -4,21 +4,11 @@
  * @param currency - The currency code or symbol
  * @returns Formatted currency string with symbol
  */
-function coerceAmountToNumber(amount: unknown): number {
-  if (amount == null) {
-    return 0;
+export function formatCurrency(amount: number, currency: string): string {
+  // Handle NaN, null, undefined, or invalid numbers
+  if (typeof amount !== 'number' || isNaN(amount) || !isFinite(amount)) {
+    amount = 0;
   }
-  if (typeof amount === "number") {
-    return Number.isFinite(amount) ? amount : 0;
-  }
-  const parsed = Number.parseFloat(
-    String(amount).replace(/,/g, "").trim()
-  );
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-export function formatCurrency(amount: number | string, currency: string): string {
-  const n = coerceAmountToNumber(amount);
   
   const symbol = getCurrencySymbol(currency);
   
@@ -26,7 +16,7 @@ export function formatCurrency(amount: number | string, currency: string): strin
   const formattedAmount = new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
-  }).format(n);
+  }).format(amount);
 
   return `${symbol}${formattedAmount}`;
 }
