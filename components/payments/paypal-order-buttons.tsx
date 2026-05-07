@@ -38,6 +38,16 @@ interface ApplePayConfig {
   isEligible: boolean;
 }
 
+const APPLE_PAY_DEBUG =
+  process.env.NEXT_PUBLIC_PAYPAL_APPLEPAY_DEBUG === "1" ||
+  process.env.NEXT_PUBLIC_PAYPAL_APPLEPAY_DEBUG === "true";
+
+function logApplePayDebug(stage: string, payload?: unknown) {
+  if (!APPLE_PAY_DEBUG) return;
+  // Keep diagnostics local to browser console unless explicitly enabled.
+  console.info(`[PayPal ApplePay] ${stage}`, payload ?? "");
+}
+
 interface ApplePaySessionEvent {
   validationURL: string;
 }
@@ -307,17 +317,24 @@ function PayPalApplePayButton({
       const applepay = getPayPalApplePay();
 
       if (!ApplePaySession || !ApplePaySession.canMakePayments() || !applepay) {
+        logApplePayDebug("eligibility: missing ApplePaySession/paypal applepay bridge", {
+          hasApplePaySession: Boolean(ApplePaySession),
+          canMakePayments: ApplePaySession?.canMakePayments?.(),
+          hasPayPalApplePay: Boolean(applepay),
+        });
         setIsEligible(false);
         return;
       }
 
       try {
         const config = await applepay.config();
+        logApplePayDebug("eligibility: paypal applepay config", config);
         if (!cancelled) {
           setApplePayConfig(config);
           setIsEligible(Boolean(config.isEligible));
         }
-      } catch {
+      } catch (error) {
+        logApplePayDebug("eligibility: config error", error);
         if (!cancelled) {
           setIsEligible(false);
         }
@@ -336,6 +353,11 @@ function PayPalApplePayButton({
     const applepay = getPayPalApplePay();
 
     if (!ApplePaySession || !applepay || !applePayConfig) {
+      logApplePayDebug("click: unavailable", {
+        hasApplePaySession: Boolean(ApplePaySession),
+        hasApplePaySdkBridge: Boolean(applepay),
+        hasApplePayConfig: Boolean(applePayConfig),
+      });
       onError?.("Apple Pay is not available on this device or browser.");
       return;
     }
@@ -356,14 +378,17 @@ function PayPalApplePayButton({
 
     session.onvalidatemerchant = async (event) => {
       try {
+        logApplePayDebug("merchant-validation:start", { validationURL: event.validationURL });
         const validateResult = await applepay.validateMerchant({
           validationUrl: event.validationURL,
           displayName: label,
         });
+        logApplePayDebug("merchant-validation:success");
         session.completeMerchantValidation(validateResult.merchantSession);
       } catch (error) {
         const raw =
           error instanceof Error ? error.message : "Apple Pay merchant validation failed.";
+        logApplePayDebug("merchant-validation:failure", error);
         onError?.(formatPayPalApplePayError(raw));
         session.abort();
       }
@@ -372,8 +397,10 @@ function PayPalApplePayButton({
     session.onpaymentauthorized = async (event) => {
       try {
         onBusyChange(true);
+        logApplePayDebug("payment-authorized:start");
         const result = await createOrderRequest();
         pendingDonationIdRef.current = result.donationId;
+        logApplePayDebug("order:create:success", result);
 
         const confirmResult = await applepay.confirmOrder({
           orderId: result.orderId,
@@ -381,6 +408,7 @@ function PayPalApplePayButton({
           billingContact: event.payment.billingContact,
           shippingContact: event.payment.shippingContact,
         });
+        logApplePayDebug("order:confirm:result", confirmResult);
 
         const confirmStatus = getConfirmOrderStatus(confirmResult);
         if (confirmStatus && confirmStatus !== "APPROVED" && confirmStatus !== "COMPLETED") {
@@ -388,10 +416,12 @@ function PayPalApplePayButton({
         }
 
         await captureOrderRequest(result.orderId, result.donationId);
+        logApplePayDebug("order:capture:success", { orderId: result.orderId });
         session.completePayment(ApplePaySession.STATUS_SUCCESS);
       } catch (error) {
         session.completePayment(ApplePaySession.STATUS_FAILURE);
         const raw = error instanceof Error ? error.message : "Apple Pay checkout failed.";
+        logApplePayDebug("payment-authorized:failure", error);
         onError?.(formatPayPalApplePayError(raw));
       } finally {
         onBusyChange(false);

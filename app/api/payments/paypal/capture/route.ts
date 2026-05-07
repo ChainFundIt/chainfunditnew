@@ -38,11 +38,18 @@ export async function POST(request: NextRequest) {
       await failCampaignDonation({
         donationId: donation.id,
         providerStatus: capture.status || "CAPTURE_FAILED",
-        failureReason: "PayPal payment was not completed.",
+        failureReason: `PayPal payment was not completed (status: ${capture.status || "unknown"}).`,
       });
 
       return NextResponse.json(
-        { success: false, error: "PayPal payment was not completed." },
+        {
+          success: false,
+          error: "PayPal payment was not completed.",
+          details: {
+            orderId,
+            captureStatus: capture.status || null,
+          },
+        },
         { status: 400 }
       );
     }
