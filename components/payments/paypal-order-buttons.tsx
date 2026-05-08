@@ -44,8 +44,20 @@ const APPLE_PAY_DEBUG =
 
 function logApplePayDebug(stage: string, payload?: unknown) {
   if (!APPLE_PAY_DEBUG) return;
-  // Keep diagnostics local to browser console unless explicitly enabled.
-  console.info(`[PayPal ApplePay] ${stage}`, payload ?? "");
+  // Single-line logs: DevTools sometimes collapses a separate `console.info` argument
+  // in a way that looks like an empty string; stringify for reliable copy/paste.
+  if (payload === undefined) {
+    console.info(`[PayPal ApplePay] ${stage}`);
+    return;
+  }
+  try {
+    console.info(
+      `[PayPal ApplePay] ${stage}`,
+      typeof payload === "string" ? payload : JSON.parse(JSON.stringify(payload))
+    );
+  } catch {
+    console.info(`[PayPal ApplePay] ${stage}`, summarizeUnknownError(payload));
+  }
 }
 
 interface ApplePaySessionEvent {
@@ -116,6 +128,50 @@ function getConfirmOrderStatus(result: unknown): string | undefined {
 
   const status = (result as { status?: unknown }).status;
   return typeof status === "string" ? status : undefined;
+}
+
+/** Normalize PayPal `validateMerchant` payloads — SDKs may nest or JSON-encode the session. */
+function parseMaybeJsonSession(raw: unknown): unknown {
+  if (raw == null) return raw;
+  if (typeof raw === "string") {
+    try {
+      return JSON.parse(raw) as unknown;
+    } catch {
+      return raw;
+    }
+  }
+  return raw;
+}
+
+function looksLikeAppleMerchantSession(candidate: unknown): boolean {
+  if (!candidate || typeof candidate !== "object") return false;
+  const o = candidate as Record<string, unknown>;
+  // Apple session objects always include these; epochTimestamp typing varies by SDK.
+  return (
+    typeof o.merchantSessionIdentifier === "string" && typeof o.signature === "string"
+  );
+}
+
+function extractPayPalAppleMerchantSession(validateResult: unknown): unknown {
+  if (validateResult == null) return undefined;
+
+  const parsedRoot = parseMaybeJsonSession(validateResult);
+  if (parsedRoot && typeof parsedRoot === "object") {
+    const r = parsedRoot as Record<string, unknown>;
+    const nested =
+      r.merchantSession ??
+      r.merchant_session ??
+      r.session ??
+      r.applePayMerchantSession;
+    if (nested != null) {
+      const session = parseMaybeJsonSession(nested);
+      if (looksLikeAppleMerchantSession(session)) return session;
+    }
+    if (looksLikeAppleMerchantSession(parsedRoot)) return parsedRoot;
+  }
+
+  const asSession = parseMaybeJsonSession(validateResult);
+  return looksLikeAppleMerchantSession(asSession) ? asSession : undefined;
 }
 
 function summarizeUnknownError(error: unknown): Record<string, unknown> {
@@ -399,6 +455,7 @@ function PayPalApplePayButton({
       merchantCapabilities: applePayConfig.merchantCapabilities,
       supportedNetworks: applePayConfig.supportedNetworks,
       currencyCode: currency,
+      requiredBillingContactFields: ["postalAddress"],
       total: {
         label,
         type: "final",
@@ -415,17 +472,22 @@ function PayPalApplePayButton({
           validationUrl: event.validationURL,
           displayName: label,
         });
-        const merchantSessionSummary =
+        const merchantSession = extractPayPalAppleMerchantSession(validateResult);
+        const rawKeys =
           validateResult && typeof validateResult === "object"
-            ? {
-                hasMerchantSession: Boolean(
-                  (validateResult as { merchantSession?: unknown }).merchantSession
-                ),
-                keys: Object.keys(validateResult as Record<string, unknown>),
-              }
-            : { hasMerchantSession: false };
-        logApplePayDebug("merchant-validation:success", merchantSessionSummary);
-        session.completeMerchantValidation(validateResult.merchantSession);
+            ? Object.keys(validateResult as Record<string, unknown>)
+            : [];
+        logApplePayDebug("merchant-validation:success", {
+          resolvedSession: Boolean(merchantSession),
+          rawKeys,
+        });
+        if (merchantSession == null) {
+          throw new Error(
+            "PayPal Apple Pay merchant validation returned no merchant session. " +
+              `validateMerchant keys: ${rawKeys.length ? rawKeys.join(", ") : "(non-object response)"}`
+          );
+        }
+        session.completeMerchantValidation(merchantSession);
       } catch (error) {
         const raw =
           error instanceof Error ? error.message : "Apple Pay merchant validation failed.";
