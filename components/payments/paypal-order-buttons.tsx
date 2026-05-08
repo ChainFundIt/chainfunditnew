@@ -1,14 +1,7 @@
 "use client";
 
-import {
-  createElement,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import type { MutableRefObject } from "react";
+import type { CSSProperties, MutableRefObject } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   PayPalButtons,
   PayPalScriptProvider,
@@ -85,6 +78,7 @@ type ChainfunditApplePaySessionConstructor = {
   STATUS_SUCCESS: number;
   STATUS_FAILURE: number;
   canMakePayments: () => boolean;
+  supportsVersion?: (version: number) => boolean;
 };
 
 type PayPalApplePay = {
@@ -150,6 +144,58 @@ function looksLikeAppleMerchantSession(candidate: unknown): boolean {
   return (
     typeof o.merchantSessionIdentifier === "string" && typeof o.signature === "string"
   );
+}
+
+function pickApplePayApiVersion(
+  ApplePaySession: ChainfunditApplePaySessionConstructor
+): number {
+  const supports = ApplePaySession.supportsVersion;
+  if (typeof supports !== "function") return 4;
+  for (const v of [14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4]) {
+    try {
+      if (supports.call(ApplePaySession, v)) return v;
+    } catch {
+      // ignore unsupported version probes
+    }
+  }
+  return 4;
+}
+
+/** WebKit expects a plain JSON object for merchant validation, not a Proxy / odd prototype. */
+function toPlainMerchantSessionForApple(session: unknown): unknown {
+  try {
+    return JSON.parse(JSON.stringify(session)) as unknown;
+  } catch {
+    return session;
+  }
+}
+
+function inferBuyerCountryFromCurrency(currencyCode: string): string {
+  const map: Record<string, string> = {
+    GBP: "GB",
+    USD: "US",
+    EUR: "DE",
+    CAD: "CA",
+    AUD: "AU",
+    JPY: "JP",
+    NZD: "NZ",
+    SEK: "SE",
+    NOK: "NO",
+    DKK: "DK",
+    PLN: "PL",
+    CHF: "CH",
+    CZK: "CZ",
+    HUF: "HU",
+    ILS: "IL",
+    PHP: "PH",
+    SGD: "SG",
+    THB: "TH",
+    TWD: "TW",
+    HKD: "HK",
+    MXN: "MX",
+    BRL: "BR",
+  };
+  return map[currencyCode.trim().toUpperCase()] ?? "US";
 }
 
 function extractPayPalAppleMerchantSession(validateResult: unknown): unknown {
@@ -242,6 +288,8 @@ export function PayPalOrderButtons({
       currency,
       intent: "capture",
       components: "buttons,applepay",
+      // PayPal Apple Pay docs recommend aligning buyer country with the wallet region.
+      buyerCountry: inferBuyerCountryFromCurrency(currency),
     }),
     [clientId, currency]
   );
@@ -351,8 +399,7 @@ function PayPalApplePayButton({
   const [isEligible, setIsEligible] = useState(false);
   const [isApplePaySdkReady, setIsApplePaySdkReady] = useState(false);
   const numericAmount = Number(amount);
-  const applePayHostRef = useRef<HTMLDivElement | null>(null);
-  /** Desktop Safari/Chrome often delivers duplicate clicks on `<apple-pay-button>`; a second session cancels the first. */
+  /** A second `ApplePaySession` while one is active cancels the first (common with double activation). */
   const applePaySessionBusyRef = useRef(false);
 
   useEffect(() => {
@@ -466,7 +513,6 @@ function PayPalApplePayButton({
       merchantCapabilities: applePayConfig.merchantCapabilities,
       supportedNetworks: applePayConfig.supportedNetworks,
       currencyCode: currency,
-      requiredBillingContactFields: ["postalAddress"],
       total: {
         label,
         type: "final",
@@ -478,9 +524,10 @@ function PayPalApplePayButton({
     const sessionStartedAt = Date.now();
     let didReachPaymentAuthorized = false;
 
+    const apiVersion = pickApplePayApiVersion(ApplePaySession);
     let session: InstanceType<ChainfunditApplePaySessionConstructor>;
     try {
-      session = new ApplePaySession(4, paymentRequest);
+      session = new ApplePaySession(apiVersion, paymentRequest);
     } catch (error) {
       releaseApplePaySession();
       logApplePayDebug("session:constructor-failed", summarizeUnknownError(error));
@@ -510,7 +557,11 @@ function PayPalApplePayButton({
               `validateMerchant keys: ${rawKeys.length ? rawKeys.join(", ") : "(non-object response)"}`
           );
         }
-        session.completeMerchantValidation(merchantSession);
+        const plainSession = toPlainMerchantSessionForApple(merchantSession);
+        session.completeMerchantValidation(plainSession);
+        logApplePayDebug("merchant-validation:completeMerchantValidation-called", {
+          apiVersion,
+        });
       } catch (error) {
         const raw =
           error instanceof Error ? error.message : "Apple Pay merchant validation failed.";
@@ -583,6 +634,7 @@ function PayPalApplePayButton({
       session.begin();
       logApplePayDebug("session:begin-called", {
         ts: sessionStartedAt,
+        apiVersion,
       });
     } catch (error) {
       releaseApplePaySession();
@@ -602,62 +654,28 @@ function PayPalApplePayButton({
     pendingDonationIdRef,
   ]);
 
-  useEffect(() => {
-    const root = applePayHostRef.current;
-    if (!root || !isEligible || !applePayConfig) {
-      return;
-    }
-
-    let cancelled = false;
-    let appleEl: HTMLElement | null = null;
-    let listener: EventListener | null = null;
-    let innerRafId = 0;
-
-    const outerRafId = window.requestAnimationFrame(() => {
-      innerRafId = window.requestAnimationFrame(() => {
-        appleEl = root.querySelector("apple-pay-button");
-        if (!(appleEl instanceof HTMLElement) || cancelled) {
-          return;
-        }
-
-        listener = () => {
-          // Do not call stopImmediatePropagation(): Safari's `<apple-pay-button>` may rely on other
-          // listeners on the same host to present the payment sheet. Duplicate sessions are prevented
-          // by `applePaySessionBusyRef` inside `handleApplePayClick`.
-          handleApplePayClick();
-        };
-
-        // Bubble phase so the element's own handlers can run in the natural order for this target.
-        appleEl.addEventListener("click", listener, false);
-      });
-    });
-
-    return () => {
-      cancelled = true;
-      window.cancelAnimationFrame(outerRafId);
-      window.cancelAnimationFrame(innerRafId);
-      if (appleEl && listener) {
-        appleEl.removeEventListener("click", listener, false);
-      }
-    };
-  }, [applePayConfig, handleApplePayClick, isEligible]);
-
   if (!isEligible) {
     return null;
   }
 
+  // Native `<button>` + `-apple-pay-button` keeps the user gesture path on Safari without fighting
+  // the `<apple-pay-button>` custom element / shadow tree (which can leave validation OK but no sheet).
+  const applePaySurfaceStyle = {
+    WebkitAppearance: "-apple-pay-button",
+    ApplePayButtonStyle: "black",
+    ApplePayButtonType: "donate",
+  } as CSSProperties;
+
   return (
-    <div
-      ref={applePayHostRef}
-      className="mb-3 px-8 py-4 w-full overflow-hidden rounded-lg"
-    >
-      {createElement("apple-pay-button", {
-        buttonstyle: "black",
-        type: "donate",
-        locale: "en-US",
-        "aria-label": "Donate with Apple Pay",
-        className: "h-12 w-full",
-      })}
+    <div className="mb-3 px-8 py-4 w-full overflow-hidden rounded-lg">
+      <button
+        type="button"
+        disabled={disabled}
+        aria-label="Donate with Apple Pay"
+        className="h-12 w-full disabled:pointer-events-none disabled:opacity-50"
+        style={applePaySurfaceStyle}
+        onClick={handleApplePayClick}
+      />
     </div>
   );
 }
