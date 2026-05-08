@@ -34,6 +34,14 @@ export async function POST(request: NextRequest) {
     }
 
     const capture = await capturePayPalOrder(orderId);
+    console.info("PayPal capture response", {
+      orderId,
+      captureStatus: capture.status || null,
+      hasPurchaseUnits: Array.isArray(capture.purchase_units),
+      captureId:
+        capture.purchase_units?.[0]?.payments?.captures?.[0]?.id ||
+        null,
+    });
     if (capture.status !== "COMPLETED") {
       await failCampaignDonation({
         donationId: donation.id,
