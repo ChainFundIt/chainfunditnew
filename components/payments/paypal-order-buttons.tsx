@@ -620,13 +620,15 @@ function PayPalApplePayButton({
           return;
         }
 
-        listener = (e: Event) => {
-          // Avoid duplicate activation: the custom element + host sometimes emit overlapping clicks on desktop.
-          e.stopImmediatePropagation();
+        listener = () => {
+          // Do not call stopImmediatePropagation(): Safari's `<apple-pay-button>` may rely on other
+          // listeners on the same host to present the payment sheet. Duplicate sessions are prevented
+          // by `applePaySessionBusyRef` inside `handleApplePayClick`.
           handleApplePayClick();
         };
 
-        appleEl.addEventListener("click", listener, true);
+        // Bubble phase so the element's own handlers can run in the natural order for this target.
+        appleEl.addEventListener("click", listener, false);
       });
     });
 
@@ -635,7 +637,7 @@ function PayPalApplePayButton({
       window.cancelAnimationFrame(outerRafId);
       window.cancelAnimationFrame(innerRafId);
       if (appleEl && listener) {
-        appleEl.removeEventListener("click", listener, true);
+        appleEl.removeEventListener("click", listener, false);
       }
     };
   }, [applePayConfig, handleApplePayClick, isEligible]);
