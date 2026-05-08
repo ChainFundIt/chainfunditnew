@@ -118,6 +118,38 @@ function getConfirmOrderStatus(result: unknown): string | undefined {
   return typeof status === "string" ? status : undefined;
 }
 
+function summarizeUnknownError(error: unknown): Record<string, unknown> {
+  if (!error) return { kind: "empty" };
+  if (error instanceof Error) {
+    const extra: Record<string, unknown> = {};
+    const maybeCode = (error as Error & { code?: unknown }).code;
+    const maybeName = (error as Error & { name?: unknown }).name;
+    if (maybeCode != null) extra.code = maybeCode;
+    if (maybeName != null) extra.name = maybeName;
+    return {
+      kind: "Error",
+      message: error.message,
+      ...extra,
+    };
+  }
+
+  if (typeof error === "object") {
+    try {
+      return {
+        kind: "object",
+        payload: JSON.parse(JSON.stringify(error)),
+      };
+    } catch {
+      return {
+        kind: "object-unserializable",
+        keys: Object.keys(error as Record<string, unknown>),
+      };
+    }
+  }
+
+  return { kind: typeof error, value: String(error) };
+}
+
 /** Maps PayPal JS SDK / Apple Pay failures to donor-readable copy. Raw codes confuse donors in toasts. */
 function formatPayPalApplePayError(raw: string): string {
   const trimmed = raw.trim();
@@ -383,12 +415,21 @@ function PayPalApplePayButton({
           validationUrl: event.validationURL,
           displayName: label,
         });
-        logApplePayDebug("merchant-validation:success");
+        const merchantSessionSummary =
+          validateResult && typeof validateResult === "object"
+            ? {
+                hasMerchantSession: Boolean(
+                  (validateResult as { merchantSession?: unknown }).merchantSession
+                ),
+                keys: Object.keys(validateResult as Record<string, unknown>),
+              }
+            : { hasMerchantSession: false };
+        logApplePayDebug("merchant-validation:success", merchantSessionSummary);
         session.completeMerchantValidation(validateResult.merchantSession);
       } catch (error) {
         const raw =
           error instanceof Error ? error.message : "Apple Pay merchant validation failed.";
-        logApplePayDebug("merchant-validation:failure", error);
+        logApplePayDebug("merchant-validation:failure", summarizeUnknownError(error));
         onError?.(formatPayPalApplePayError(raw));
         session.abort();
       }
@@ -408,7 +449,15 @@ function PayPalApplePayButton({
           billingContact: event.payment.billingContact,
           shippingContact: event.payment.shippingContact,
         });
-        logApplePayDebug("order:confirm:result", confirmResult);
+        const confirmSummary =
+          confirmResult && typeof confirmResult === "object"
+            ? {
+                status: getConfirmOrderStatus(confirmResult),
+                keys: Object.keys(confirmResult as Record<string, unknown>),
+                payload: confirmResult,
+              }
+            : { status: undefined, payload: confirmResult };
+        logApplePayDebug("order:confirm:result", confirmSummary);
 
         const confirmStatus = getConfirmOrderStatus(confirmResult);
         if (confirmStatus && confirmStatus !== "APPROVED" && confirmStatus !== "COMPLETED") {
@@ -421,7 +470,7 @@ function PayPalApplePayButton({
       } catch (error) {
         session.completePayment(ApplePaySession.STATUS_FAILURE);
         const raw = error instanceof Error ? error.message : "Apple Pay checkout failed.";
-        logApplePayDebug("payment-authorized:failure", error);
+        logApplePayDebug("payment-authorized:failure", summarizeUnknownError(error));
         onError?.(formatPayPalApplePayError(raw));
       } finally {
         onBusyChange(false);
@@ -429,6 +478,9 @@ function PayPalApplePayButton({
     };
 
     session.oncancel = async () => {
+      logApplePayDebug("session:cancelled", {
+        pendingDonationId: pendingDonationIdRef.current || null,
+      });
       try {
         await cancelOrderRequest?.(pendingDonationIdRef.current);
       } catch {
