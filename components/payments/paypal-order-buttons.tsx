@@ -475,6 +475,8 @@ function PayPalApplePayButton({
     };
 
     applePaySessionBusyRef.current = true;
+    const sessionStartedAt = Date.now();
+    let didReachPaymentAuthorized = false;
 
     let session: InstanceType<ChainfunditApplePaySessionConstructor>;
     try {
@@ -521,6 +523,7 @@ function PayPalApplePayButton({
 
     session.onpaymentauthorized = async (event) => {
       try {
+        didReachPaymentAuthorized = true;
         onBusyChange(true);
         logApplePayDebug("payment-authorized:start");
         const result = await createOrderRequest();
@@ -565,6 +568,8 @@ function PayPalApplePayButton({
     session.oncancel = async () => {
       logApplePayDebug("session:cancelled", {
         pendingDonationId: pendingDonationIdRef.current || null,
+        elapsedMsFromBegin: Date.now() - sessionStartedAt,
+        reachedPaymentAuthorized: didReachPaymentAuthorized,
       });
       releaseApplePaySession();
       try {
@@ -576,6 +581,9 @@ function PayPalApplePayButton({
 
     try {
       session.begin();
+      logApplePayDebug("session:begin-called", {
+        ts: sessionStartedAt,
+      });
     } catch (error) {
       releaseApplePaySession();
       logApplePayDebug("session:begin-failed", summarizeUnknownError(error));
