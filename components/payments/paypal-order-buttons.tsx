@@ -352,6 +352,8 @@ function PayPalApplePayButton({
   const [isApplePaySdkReady, setIsApplePaySdkReady] = useState(false);
   const numericAmount = Number(amount);
   const applePayHostRef = useRef<HTMLDivElement | null>(null);
+  /** Desktop Safari/Chrome often delivers duplicate clicks on `<apple-pay-button>`; a second session cancels the first. */
+  const applePaySessionBusyRef = useRef(false);
 
   useEffect(() => {
     const existingScript = document.querySelector<HTMLScriptElement>(
@@ -450,6 +452,15 @@ function PayPalApplePayButton({
       return;
     }
 
+    if (applePaySessionBusyRef.current) {
+      logApplePayDebug("click:ignored-session-already-active", {});
+      return;
+    }
+
+    const releaseApplePaySession = () => {
+      applePaySessionBusyRef.current = false;
+    };
+
     const paymentRequest = {
       countryCode: applePayConfig.countryCode,
       merchantCapabilities: applePayConfig.merchantCapabilities,
@@ -463,7 +474,17 @@ function PayPalApplePayButton({
       },
     };
 
-    const session = new ApplePaySession(4, paymentRequest);
+    applePaySessionBusyRef.current = true;
+
+    let session: InstanceType<ChainfunditApplePaySessionConstructor>;
+    try {
+      session = new ApplePaySession(4, paymentRequest);
+    } catch (error) {
+      releaseApplePaySession();
+      logApplePayDebug("session:constructor-failed", summarizeUnknownError(error));
+      onError?.("Could not start Apple Pay on this browser.");
+      return;
+    }
 
     session.onvalidatemerchant = async (event) => {
       try {
@@ -493,6 +514,7 @@ function PayPalApplePayButton({
           error instanceof Error ? error.message : "Apple Pay merchant validation failed.";
         logApplePayDebug("merchant-validation:failure", summarizeUnknownError(error));
         onError?.(formatPayPalApplePayError(raw));
+        releaseApplePaySession();
         session.abort();
       }
     };
@@ -536,6 +558,7 @@ function PayPalApplePayButton({
         onError?.(formatPayPalApplePayError(raw));
       } finally {
         onBusyChange(false);
+        releaseApplePaySession();
       }
     };
 
@@ -543,6 +566,7 @@ function PayPalApplePayButton({
       logApplePayDebug("session:cancelled", {
         pendingDonationId: pendingDonationIdRef.current || null,
       });
+      releaseApplePaySession();
       try {
         await cancelOrderRequest?.(pendingDonationIdRef.current);
       } catch {
@@ -550,7 +574,13 @@ function PayPalApplePayButton({
       }
     };
 
-    session.begin();
+    try {
+      session.begin();
+    } catch (error) {
+      releaseApplePaySession();
+      logApplePayDebug("session:begin-failed", summarizeUnknownError(error));
+      onError?.("Apple Pay could not open the payment sheet.");
+    }
   }, [
     applePayConfig,
     cancelOrderRequest,
@@ -572,7 +602,7 @@ function PayPalApplePayButton({
 
     let cancelled = false;
     let appleEl: HTMLElement | null = null;
-    let listener: (() => void) | null = null;
+    let listener: EventListener | null = null;
     let innerRafId = 0;
 
     const outerRafId = window.requestAnimationFrame(() => {
@@ -582,7 +612,9 @@ function PayPalApplePayButton({
           return;
         }
 
-        listener = () => {
+        listener = (e: Event) => {
+          // Avoid duplicate activation: the custom element + host sometimes emit overlapping clicks on desktop.
+          e.stopImmediatePropagation();
           handleApplePayClick();
         };
 
