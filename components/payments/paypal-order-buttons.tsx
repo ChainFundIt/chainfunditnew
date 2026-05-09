@@ -85,6 +85,7 @@ type ChainfunditApplePaySessionConstructor = {
   STATUS_SUCCESS: number;
   STATUS_FAILURE: number;
   canMakePayments: () => boolean;
+  supportsVersion?: (version: number) => boolean;
 };
 
 type PayPalApplePay = {
@@ -172,6 +173,30 @@ function extractPayPalAppleMerchantSession(validateResult: unknown): unknown {
 
   const asSession = parseMaybeJsonSession(validateResult);
   return looksLikeAppleMerchantSession(asSession) ? asSession : undefined;
+}
+
+function pickApplePayApiVersion(
+  ApplePaySession: ChainfunditApplePaySessionConstructor
+): number {
+  const supports = ApplePaySession.supportsVersion;
+  if (typeof supports !== "function") return 4;
+  for (const v of [14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4]) {
+    try {
+      if (supports.call(ApplePaySession, v)) return v;
+    } catch {
+      // ignore unsupported version probes
+    }
+  }
+  return 4;
+}
+
+/** WebKit is most reliable with a plain JSON object, not a Proxy / odd prototype from the PayPal SDK. */
+function toPlainMerchantSessionForApple(session: unknown): unknown {
+  try {
+    return JSON.parse(JSON.stringify(session)) as unknown;
+  } catch {
+    return session;
+  }
 }
 
 function summarizeUnknownError(error: unknown): Record<string, unknown> {
@@ -466,7 +491,6 @@ function PayPalApplePayButton({
       merchantCapabilities: applePayConfig.merchantCapabilities,
       supportedNetworks: applePayConfig.supportedNetworks,
       currencyCode: currency,
-      requiredBillingContactFields: ["postalAddress"],
       total: {
         label,
         type: "final",
@@ -478,9 +502,10 @@ function PayPalApplePayButton({
     const sessionStartedAt = Date.now();
     let didReachPaymentAuthorized = false;
 
+    const apiVersion = pickApplePayApiVersion(ApplePaySession);
     let session: InstanceType<ChainfunditApplePaySessionConstructor>;
     try {
-      session = new ApplePaySession(4, paymentRequest);
+      session = new ApplePaySession(apiVersion, paymentRequest);
     } catch (error) {
       releaseApplePaySession();
       logApplePayDebug("session:constructor-failed", summarizeUnknownError(error));
@@ -510,7 +535,11 @@ function PayPalApplePayButton({
               `validateMerchant keys: ${rawKeys.length ? rawKeys.join(", ") : "(non-object response)"}`
           );
         }
-        session.completeMerchantValidation(merchantSession);
+        const plainSession = toPlainMerchantSessionForApple(merchantSession);
+        session.completeMerchantValidation(plainSession);
+        logApplePayDebug("merchant-validation:completeMerchantValidation-called", {
+          apiVersion,
+        });
       } catch (error) {
         const raw =
           error instanceof Error ? error.message : "Apple Pay merchant validation failed.";
@@ -583,6 +612,7 @@ function PayPalApplePayButton({
       session.begin();
       logApplePayDebug("session:begin-called", {
         ts: sessionStartedAt,
+        apiVersion,
       });
     } catch (error) {
       releaseApplePaySession();
