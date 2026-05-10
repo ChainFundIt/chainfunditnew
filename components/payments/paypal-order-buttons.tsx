@@ -180,7 +180,9 @@ function pickApplePayApiVersion(
 ): number {
   const supports = ApplePaySession.supportsVersion;
   if (typeof supports !== "function") return 4;
-  for (const v of [14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4]) {
+  // Prefer 6→4 before 14+: PayPal’s Apple Pay flow is commonly exercised on older session
+  // versions; some Safari builds report support for 14 but misbehave with the payment sheet.
+  for (const v of [6, 5, 4, 14, 13, 12, 11, 10, 9, 8, 7]) {
     try {
       if (supports.call(ApplePaySession, v)) return v;
     } catch {

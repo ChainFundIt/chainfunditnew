@@ -995,11 +995,11 @@ const DonateModal: React.FC<DonateModalProps> = ({
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
                               <div className="font-semibold">{PROVIDER_LABELS[provider]}</div>
-                              {isRecommended && (
+                              {/* {isRecommended && (
                                 <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
                                   Recommended
                                 </span>
-                              )}
+                              )} */}
                             </div>
                             <div className="text-sm opacity-70">
                               {PROVIDER_DESCRIPTIONS[provider]}
