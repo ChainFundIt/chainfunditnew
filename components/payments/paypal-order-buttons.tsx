@@ -85,7 +85,6 @@ type ChainfunditApplePaySessionConstructor = {
   STATUS_SUCCESS: number;
   STATUS_FAILURE: number;
   canMakePayments: () => boolean;
-  supportsVersion?: (version: number) => boolean;
 };
 
 type PayPalApplePay = {
@@ -173,32 +172,6 @@ function extractPayPalAppleMerchantSession(validateResult: unknown): unknown {
 
   const asSession = parseMaybeJsonSession(validateResult);
   return looksLikeAppleMerchantSession(asSession) ? asSession : undefined;
-}
-
-function pickApplePayApiVersion(
-  ApplePaySession: ChainfunditApplePaySessionConstructor
-): number {
-  const supports = ApplePaySession.supportsVersion;
-  if (typeof supports !== "function") return 4;
-  // Prefer 6→4 before 14+: PayPal’s Apple Pay flow is commonly exercised on older session
-  // versions; some Safari builds report support for 14 but misbehave with the payment sheet.
-  for (const v of [6, 5, 4, 14, 13, 12, 11, 10, 9, 8, 7]) {
-    try {
-      if (supports.call(ApplePaySession, v)) return v;
-    } catch {
-      // ignore unsupported version probes
-    }
-  }
-  return 4;
-}
-
-/** WebKit is most reliable with a plain JSON object, not a Proxy / odd prototype from the PayPal SDK. */
-function toPlainMerchantSessionForApple(session: unknown): unknown {
-  try {
-    return JSON.parse(JSON.stringify(session)) as unknown;
-  } catch {
-    return session;
-  }
 }
 
 function summarizeUnknownError(error: unknown): Record<string, unknown> {
@@ -379,8 +352,6 @@ function PayPalApplePayButton({
   const [isApplePaySdkReady, setIsApplePaySdkReady] = useState(false);
   const numericAmount = Number(amount);
   const applePayHostRef = useRef<HTMLDivElement | null>(null);
-  /** Desktop Safari/Chrome often delivers duplicate clicks on `<apple-pay-button>`; a second session cancels the first. */
-  const applePaySessionBusyRef = useRef(false);
 
   useEffect(() => {
     const existingScript = document.querySelector<HTMLScriptElement>(
@@ -479,20 +450,12 @@ function PayPalApplePayButton({
       return;
     }
 
-    if (applePaySessionBusyRef.current) {
-      logApplePayDebug("click:ignored-session-already-active", {});
-      return;
-    }
-
-    const releaseApplePaySession = () => {
-      applePaySessionBusyRef.current = false;
-    };
-
     const paymentRequest = {
       countryCode: applePayConfig.countryCode,
       merchantCapabilities: applePayConfig.merchantCapabilities,
       supportedNetworks: applePayConfig.supportedNetworks,
       currencyCode: currency,
+      requiredBillingContactFields: ["postalAddress"],
       total: {
         label,
         type: "final",
@@ -500,20 +463,7 @@ function PayPalApplePayButton({
       },
     };
 
-    applePaySessionBusyRef.current = true;
-    const sessionStartedAt = Date.now();
-    let didReachPaymentAuthorized = false;
-
-    const apiVersion = pickApplePayApiVersion(ApplePaySession);
-    let session: InstanceType<ChainfunditApplePaySessionConstructor>;
-    try {
-      session = new ApplePaySession(apiVersion, paymentRequest);
-    } catch (error) {
-      releaseApplePaySession();
-      logApplePayDebug("session:constructor-failed", summarizeUnknownError(error));
-      onError?.("Could not start Apple Pay on this browser.");
-      return;
-    }
+    const session = new ApplePaySession(4, paymentRequest);
 
     session.onvalidatemerchant = async (event) => {
       try {
@@ -537,24 +487,18 @@ function PayPalApplePayButton({
               `validateMerchant keys: ${rawKeys.length ? rawKeys.join(", ") : "(non-object response)"}`
           );
         }
-        const plainSession = toPlainMerchantSessionForApple(merchantSession);
-        session.completeMerchantValidation(plainSession);
-        logApplePayDebug("merchant-validation:completeMerchantValidation-called", {
-          apiVersion,
-        });
+        session.completeMerchantValidation(merchantSession);
       } catch (error) {
         const raw =
           error instanceof Error ? error.message : "Apple Pay merchant validation failed.";
         logApplePayDebug("merchant-validation:failure", summarizeUnknownError(error));
         onError?.(formatPayPalApplePayError(raw));
-        releaseApplePaySession();
         session.abort();
       }
     };
 
     session.onpaymentauthorized = async (event) => {
       try {
-        didReachPaymentAuthorized = true;
         onBusyChange(true);
         logApplePayDebug("payment-authorized:start");
         const result = await createOrderRequest();
@@ -592,17 +536,13 @@ function PayPalApplePayButton({
         onError?.(formatPayPalApplePayError(raw));
       } finally {
         onBusyChange(false);
-        releaseApplePaySession();
       }
     };
 
     session.oncancel = async () => {
       logApplePayDebug("session:cancelled", {
         pendingDonationId: pendingDonationIdRef.current || null,
-        elapsedMsFromBegin: Date.now() - sessionStartedAt,
-        reachedPaymentAuthorized: didReachPaymentAuthorized,
       });
-      releaseApplePaySession();
       try {
         await cancelOrderRequest?.(pendingDonationIdRef.current);
       } catch {
@@ -610,17 +550,7 @@ function PayPalApplePayButton({
       }
     };
 
-    try {
-      session.begin();
-      logApplePayDebug("session:begin-called", {
-        ts: sessionStartedAt,
-        apiVersion,
-      });
-    } catch (error) {
-      releaseApplePaySession();
-      logApplePayDebug("session:begin-failed", summarizeUnknownError(error));
-      onError?.("Apple Pay could not open the payment sheet.");
-    }
+    session.begin();
   }, [
     applePayConfig,
     cancelOrderRequest,
@@ -642,7 +572,7 @@ function PayPalApplePayButton({
 
     let cancelled = false;
     let appleEl: HTMLElement | null = null;
-    let listener: EventListener | null = null;
+    let listener: (() => void) | null = null;
     let innerRafId = 0;
 
     const outerRafId = window.requestAnimationFrame(() => {
@@ -653,14 +583,10 @@ function PayPalApplePayButton({
         }
 
         listener = () => {
-          // Do not call stopImmediatePropagation(): Safari's `<apple-pay-button>` may rely on other
-          // listeners on the same host to present the payment sheet. Duplicate sessions are prevented
-          // by `applePaySessionBusyRef` inside `handleApplePayClick`.
           handleApplePayClick();
         };
 
-        // Bubble phase so the element's own handlers can run in the natural order for this target.
-        appleEl.addEventListener("click", listener, false);
+        appleEl.addEventListener("click", listener, true);
       });
     });
 
@@ -669,7 +595,7 @@ function PayPalApplePayButton({
       window.cancelAnimationFrame(outerRafId);
       window.cancelAnimationFrame(innerRafId);
       if (appleEl && listener) {
-        appleEl.removeEventListener("click", listener, false);
+        appleEl.removeEventListener("click", listener, true);
       }
     };
   }, [applePayConfig, handleApplePayClick, isEligible]);
