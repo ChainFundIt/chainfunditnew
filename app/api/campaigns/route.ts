@@ -8,6 +8,33 @@ import { generateSlug, generateUniqueSlug } from '@/lib/utils/slug';
 import { sendCampaignCreationEmail } from '@/lib/notifications/campaign-creation-email';
 import { notifyAdminsOfCampaignCreated } from '@/lib/notifications/campaign-created-alerts';
 
+function safeParseStringArray(value: unknown): string[] {
+  if (!value) {
+    return [];
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item));
+  }
+
+  if (typeof value !== 'string') {
+    return [];
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    return Array.isArray(parsed) ? parsed.map((item) => String(item)) : [];
+  } catch {
+    // Gracefully handle legacy non-JSON values instead of failing the whole request.
+    return [];
+  }
+}
+
 async function getUserFromRequest(request: NextRequest) {
   const cookie = request.headers.get('cookie') || '';
   const cookies = parse(cookie);
@@ -142,8 +169,8 @@ export async function GET(request: NextRequest) {
           currentAmount: Number(campaign.currentAmount),
           minimumDonation: Number(campaign.minimumDonation),
           chainerCommissionRate: Number(campaign.chainerCommissionRate),
-          galleryImages: campaign.galleryImages ? JSON.parse(campaign.galleryImages) : [],
-          documents: campaign.documents ? JSON.parse(campaign.documents) : [],
+          galleryImages: safeParseStringArray(campaign.galleryImages),
+          documents: safeParseStringArray(campaign.documents),
           complianceFlags,
           stats,
         };
@@ -168,6 +195,7 @@ export async function GET(request: NextRequest) {
     
     return response;
   } catch (error) {
+    console.error('Error fetching campaigns:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to fetch campaigns' },
       { status: 500 }
