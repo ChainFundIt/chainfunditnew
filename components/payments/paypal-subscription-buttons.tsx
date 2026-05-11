@@ -2,7 +2,6 @@
 
 import { useMemo, useRef, useState } from "react";
 import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
-import { buyerCountryFromCurrency } from "@/lib/payments/paypal-apple-pay-web";
 
 interface CreateSubscriptionResult {
   paypalSubscriptionId: string;
@@ -40,7 +39,6 @@ export function PayPalSubscriptionButtons({
       vault: true,
       intent: "subscription",
       components: "buttons,applepay",
-      "buyer-country": buyerCountryFromCurrency(currency),
     }),
     [clientId, currency]
   );

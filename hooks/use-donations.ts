@@ -50,6 +50,7 @@ export function useDonations() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           ...donationData,
           simulate,
