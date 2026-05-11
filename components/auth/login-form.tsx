@@ -8,15 +8,12 @@ import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { OAuthButtons } from "./oauth-buttons";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"form">) {
-  const [isPhone, setIsPhone] = useState(false);
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect");
@@ -29,7 +26,7 @@ export function LoginForm({
       switch (errorParam) {
         case "oauth_failed":
           errorMessage =
-            "Social login failed. Please try again or use email/phone instead.";
+            "Social login failed. Please try again or use email instead.";
           break;
         case "invalid_callback":
           errorMessage = "Login session expired. Please try signing in again.";
@@ -45,13 +42,9 @@ export function LoginForm({
     async (e: React.FormEvent) => {
       e.preventDefault();
 
-      const identifier = isPhone ? phone.trim() : email.trim();
+      const identifier = email.trim();
       if (!identifier) {
-        toast.error(
-          isPhone
-            ? "Please enter your phone number"
-            : "Please enter your email address"
-        );
+        toast.error("Please enter your email address");
         return;
       }
 
@@ -64,11 +57,7 @@ export function LoginForm({
         const res = await fetch("/api/auth/signin", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(
-            isPhone
-              ? { action: "request_phone_otp", phone: identifier }
-              : { action: "request_email_otp", email: identifier }
-          ),
+          body: JSON.stringify({ action: "request_email_otp", email: identifier }),
           signal: controller.signal,
         });
 
@@ -84,7 +73,6 @@ export function LoginForm({
         const data = await res.json();
 
         if (!res.ok) {
-          // Handle rate limiting
           if (res.status === 429) {
             throw new Error(
               "Too many requests. Please wait a minute before trying again."
@@ -93,60 +81,27 @@ export function LoginForm({
 
           let userMessage = data.error;
           if (data.error?.includes("No account found")) {
-            userMessage = isPhone
-              ? "No account found with this phone number. Please sign up first or try a different number."
-              : "No account found with this email. Please sign up first or check your email address.";
-          } else if (
-            data.error?.includes("WhatsApp OTP service not configured")
-          ) {
             userMessage =
-              "Phone verification is temporarily unavailable. Please use email instead or contact support.";
+              "No account found with this email. Please sign up first or check your email address.";
           } else if (data.error?.includes("Failed to send")) {
-            userMessage = isPhone
-              ? "Unable to send verification code to your phone. Please check the number and try again."
-              : "Unable to send verification code to your email. Please check your email address and try again.";
-          } else if (
-            data.error?.includes("Email is required") ||
-            data.error?.includes("Phone number is required")
-          ) {
-            userMessage = isPhone
-              ? "Please enter your phone number to continue."
-              : "Please enter your email address to continue.";
+            userMessage =
+              "Unable to send verification code to your email. Please check your email address and try again.";
+          } else if (data.error?.includes("Email is required")) {
+            userMessage = "Please enter your email address to continue.";
           }
           throw new Error(
             userMessage || "Unable to send verification code. Please try again."
           );
         }
 
-        // Handle success with method information
-        if (data.method === "sms" && data.fallback) {
-          toast.success(
-            "Verification code sent via SMS! (WhatsApp unavailable)"
-          );
-        } else if (data.method === "whatsapp") {
-          toast.success("Verification code sent! Check your WhatsApp.");
-        } else {
-          toast.success(
-            "Verification code sent! Check your " +
-              (isPhone ? "WhatsApp" : "email") +
-              "."
-          );
-        }
+        toast.success("Verification code sent! Check your email.");
 
-        // Store identifier and type for /otp page
-        if (isPhone) {
-          localStorage.setItem("otp_login_type", "phone");
-          localStorage.setItem("otp_login_identifier", identifier);
-        } else {
-          localStorage.setItem("otp_login_type", "email");
-          localStorage.setItem("otp_login_identifier", identifier);
-        }
+        localStorage.setItem("otp_login_type", "email");
+        localStorage.setItem("otp_login_identifier", identifier);
 
-        // Pass redirect param to OTP page
         let otpUrl = "/otp?mode=signin";
         if (redirect) otpUrl += `&redirect=${encodeURIComponent(redirect)}`;
 
-        // Small delay to ensure toast is shown
         setTimeout(() => {
           window.location.href = otpUrl;
         }, 500);
@@ -162,7 +117,7 @@ export function LoginForm({
         setIsLoading(false);
       }
     },
-    [isPhone, email, phone, redirect]
+    [email, redirect]
   );
 
   return (
@@ -176,55 +131,27 @@ export function LoginForm({
           <h2 className="text-xl font-bold text-gray-900 mb-0.5">
             Log in to your Account.
           </h2>
-          {/* <p className="text-xs text-gray-600">
-            Welcome back! Select your preferred method to log in:
-          </p> */}
         </div>
-
-        {/* <OAuthButtons mode="signin" /> */}
-
-        {/* <div className="relative py-2">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300"></div>
-          </div>
-          <div className="relative flex justify-center text-xs">
-            <span className="px-2 bg-white text-gray-500 font-medium">or continue with email</span>
-          </div>
-        </div> */}
 
         <div className="grid gap-2">
           <Label
-            htmlFor={isPhone ? "phone" : "email"}
+            htmlFor="email"
             className="font-medium text-xs text-gray-700"
           >
-            {isPhone ? "Phone Number" : "Email Address"}
+            Email Address
           </Label>
 
-          {isPhone ? (
-            <Input
-              id="phone"
-              type="tel"
-              placeholder="+234 801 234 5678"
-              className="h-10 bg-gray-50 rounded-lg border border-gray-300 text-xs focus:border-[#109104] focus:ring-[#109104] shadow-none outline-none placeholder:text-gray-400 transition-colors"
-              required
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              disabled={isLoading}
-              autoComplete="tel"
-            />
-          ) : (
-            <Input
-              id="email"
-              type="email"
-              placeholder="name@example.com"
-              className="h-10 bg-gray-50 rounded-lg border border-gray-300 text-xs focus:border-[#109104] focus:ring-[#109104] shadow-none outline-none placeholder:text-gray-400 transition-colors"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={isLoading}
-              autoComplete="email"
-            />
-          )}
+          <Input
+            id="email"
+            type="email"
+            placeholder="name@example.com"
+            className="h-10 bg-gray-50 rounded-lg border border-gray-300 text-xs focus:border-[#109104] focus:ring-[#109104] shadow-none outline-none placeholder:text-gray-400 transition-colors"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={isLoading}
+            autoComplete="email"
+          />
         </div>
 
         <Button

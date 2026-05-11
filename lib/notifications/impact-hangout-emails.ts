@@ -1,6 +1,20 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resendClient: Resend | null = null;
+
+function getResendClient() {
+  if (resendClient) {
+    return resendClient;
+  }
+
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    throw new Error('RESEND_API_KEY is not configured');
+  }
+
+  resendClient = new Resend(apiKey);
+  return resendClient;
+}
 
 const FROM = process.env.RESEND_FROM_EMAIL || "notifications@chainfundit.com";
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://chainfundit.com";
@@ -68,7 +82,7 @@ export async function sendImpactHangoutMilestoneEmail(
       </html>
     `;
 
-    const result = await resend.emails.send({
+    const result = await getResendClient().emails.send({
       from: FROM,
       to: data.to,
       subject,
@@ -167,7 +181,7 @@ export async function sendImpactHangoutReminderEmail(
       </html>
     `;
 
-    const result = await resend.emails.send({
+    const result = await getResendClient().emails.send({
       from: FROM,
       to: data.to,
       subject,
@@ -225,7 +239,7 @@ export async function sendImpactHangoutAccessLinkEmail(
       </html>
     `;
 
-    const result = await resend.emails.send({
+    const result = await getResendClient().emails.send({
       from: FROM,
       to: data.to,
       subject,

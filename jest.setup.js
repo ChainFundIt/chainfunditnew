@@ -35,12 +35,6 @@ process.env.BETTER_AUTH_SECRET = 'test-better-auth-secret';
 process.env.JWT_SECRET = 'test-jwt-secret';
 process.env.RESEND_API_KEY = 'test-resend-api-key';
 process.env.RESEND_FROM_EMAIL = 'test@example.com';
-process.env.TWILIO_ACCOUNT_SID = 'test-twilio-account-sid';
-process.env.TWILIO_AUTH_TOKEN = 'test-twilio-auth-token';
-process.env.TWILIO_WHATSAPP_FROM = 'whatsapp:+1234567890';
-process.env.TWILIO_PHONE_NUMBER = '+1234567890';
-process.env.STRIPE_SECRET_KEY = 'test-stripe-secret-key';
-process.env.STRIPE_PUBLISHABLE_KEY = 'test-stripe-publishable-key';
 process.env.PAYSTACK_SECRET_KEY = 'test-paystack-secret-key';
 process.env.CLOUDINARY_URL = 'cloudinary://test:test@test';
 process.env.OPENAI_API_KEY = 'test-openai-api-key';
@@ -51,8 +45,6 @@ process.env.SHORT_IO_SECRET_KEY = 'test-short-io-api-key';
 process.env.SHORT_IO_DOMAIN = 'example.short.io';
 process.env.GOOGLE_CLIENT_ID = 'test-google-client-id';
 process.env.GOOGLE_CLIENT_SECRET = 'test-google-client-secret';
-process.env.DISCORD_CLIENT_ID = 'test-discord-client-id';
-process.env.DISCORD_CLIENT_SECRET = 'test-discord-client-secret';
 
 // Mock fetch globally
 global.fetch = jest.fn();

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Payment Gateway Environment Setup Script
-# This script helps you configure your environment variables for Stripe and Paystack
+# This script helps you configure your environment variables for Paystack and PayPal
 
 echo "🔧 Payment Gateway Environment Setup"
 echo "===================================="
@@ -27,16 +27,12 @@ echo ""
 check_env_var() {
     local var_name=$1
     local var_value=$(grep "^${var_name}=" .env.local | cut -d '=' -f2-)
-    
+
     if [ -z "$var_value" ]; then
         echo -e "${RED}❌ ${var_name} not set${NC}"
         return 1
     else
-        # Check if it's a valid format (not a URL for webhook secret, etc.)
-        if [[ "$var_name" == "STRIPE_WEBHOOK_SECRET" && "$var_value" =~ ^https?:// ]]; then
-            echo -e "${YELLOW}⚠️  ${var_name} appears to be a URL (should be whsec_...)${NC}"
-            return 1
-        elif [[ "$var_name" == "NEXT_PUBLIC_APP_URL" && "$var_value" =~ \|\| ]]; then
+        if [[ "$var_name" == "NEXT_PUBLIC_APP_URL" && "$var_value" =~ \|\| ]]; then
             echo -e "${YELLOW}⚠️  ${var_name} has invalid format${NC}"
             return 1
         else
@@ -51,11 +47,11 @@ echo ""
 
 # Check all required variables
 check_env_var "NEXT_PUBLIC_APP_URL"
-check_env_var "STRIPE_SECRET_KEY"
-check_env_var "STRIPE_PUBLISHABLE_KEY"
-check_env_var "STRIPE_WEBHOOK_SECRET"
 check_env_var "PAYSTACK_SECRET_KEY"
 check_env_var "NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY"
+check_env_var "PAYPAL_CLIENT_ID"
+check_env_var "PAYPAL_CLIENT_SECRET"
+check_env_var "NEXT_PUBLIC_PAYPAL_CLIENT_ID"
 
 echo ""
 echo "===================================="
@@ -66,17 +62,17 @@ echo "1. Fix NEXT_PUBLIC_APP_URL:"
 echo "   For local development:"
 echo "   NEXT_PUBLIC_APP_URL=https://localhost:3002"
 echo ""
-echo "2. Set up Stripe Webhook Secret:"
-echo "   a. Run: stripe listen --forward-to https://localhost:3002/api/webhooks/stripe"
-echo "   b. Copy the webhook signing secret (starts with whsec_)"
-echo "   c. Add to .env.local: STRIPE_WEBHOOK_SECRET=whsec_..."
+echo "2. Verify Paystack keys:"
+echo "   PAYSTACK_SECRET_KEY=sk_test_..."
+echo "   NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=pk_test_..."
 echo ""
-echo "3. Verify Paystack Public Key:"
-echo "   Make sure you have: NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=pk_test_..."
+echo "3. Verify PayPal keys:"
+echo "   PAYPAL_CLIENT_ID=..."
+echo "   PAYPAL_CLIENT_SECRET=..."
+echo "   NEXT_PUBLIC_PAYPAL_CLIENT_ID=..."
 echo ""
 echo "4. Restart your development server after changes"
 echo ""
 echo -e "${GREEN}📚 For detailed setup instructions, see:${NC}"
 echo "   docs/PAYMENT_GATEWAY_SETUP.md"
 echo ""
-

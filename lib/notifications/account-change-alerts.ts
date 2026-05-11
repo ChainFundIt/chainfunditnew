@@ -4,7 +4,21 @@ import { adminSettings } from '@/lib/schema/admin-settings';
 import { users } from '@/lib/schema';
 import { eq, or } from 'drizzle-orm';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resendClient: Resend | null = null;
+
+function getResendClient() {
+  if (resendClient) {
+    return resendClient;
+  }
+
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    throw new Error('RESEND_API_KEY is not configured');
+  }
+
+  resendClient = new Resend(apiKey);
+  return resendClient;
+}
 
 interface AccountChangeRequestData {
   userId: string;
@@ -133,7 +147,7 @@ export async function sendAccountChangeConfirmationToUser(requestData: AccountCh
       </html>
     `;
 
-    await resend.emails.send({
+    await getResendClient().emails.send({
       from: process.env.RESEND_FROM_EMAIL || 'notifications@chainfundit.com',
       to: requestData.userEmail,
       subject: '✅ Account Change Request Received - ChainFundit',
@@ -273,7 +287,7 @@ async function sendAccountChangeRequestEmailToAdmin(
       </html>
     `;
 
-    await resend.emails.send({
+    await getResendClient().emails.send({
       from: process.env.RESEND_FROM_EMAIL || 'notifications@chainfundit.com',
       to: recipientEmail,
       subject,
@@ -443,7 +457,7 @@ export async function sendAccountChangeApprovalEmail(data: AccountChangeApproval
       </html>
     `;
 
-    await resend.emails.send({
+    await getResendClient().emails.send({
       from: process.env.RESEND_FROM_EMAIL || 'notifications@chainfundit.com',
       to: data.userEmail,
       subject: '✅ Account Change Request Approved - ChainFundit',
@@ -528,7 +542,7 @@ export async function sendAccountChangeRejectionEmail(data: AccountChangeRejecti
       </html>
     `;
 
-    await resend.emails.send({
+    await getResendClient().emails.send({
       from: process.env.RESEND_FROM_EMAIL || 'notifications@chainfundit.com',
       to: data.userEmail,
       subject: '❌ Account Change Request Not Approved - ChainFundit',

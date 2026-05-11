@@ -100,7 +100,7 @@ function OtpPageInner() {
   const [otpTimer, setOtpTimer] = useState(40);
   const [isLoading, setIsLoading] = useState(false);
   const [identifier, setIdentifier] = useState<string | null>(null);
-  const [loginType, setLoginType] = useState<"email" | "phone" | null>(null);
+  const [loginType, setLoginType] = useState<"email" | null>(null);
   const [isResending, setIsResending] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -110,18 +110,14 @@ function OtpPageInner() {
   // Determine identifier and type (signup: query, login: localStorage)
   useEffect(() => {
     const email = searchParams.get("email");
-    const phone = searchParams.get("phone");
     if (email) {
       setIdentifier(email);
       setLoginType("email");
-    } else if (phone) {
-      setIdentifier(phone);
-      setLoginType("phone");
     } else {
       // fallback to login localStorage
       const t = localStorage.getItem("otp_login_type");
       const id = localStorage.getItem("otp_login_identifier");
-      if (t === "email" || t === "phone") {
+      if (t === "email") {
         setLoginType(t);
         setIdentifier(id);
       }
@@ -167,15 +163,8 @@ function OtpPageInner() {
     if (isResending || !identifier || !loginType) return;
     setIsResending(true);
     try {
-      let payload, endpoint;
-      if (loginType === "email") {
-        payload = { action: "request_email_otp", email: identifier };
-        endpoint = mode === "signup" ? "/api/auth/signup" : "/api/auth/signin";
-      } else {
-        const email = searchParams.get("email");
-        payload = { action: "request_phone_otp", phone: identifier };
-        endpoint = "/api/auth/signin";
-      }
+      const payload = { action: "request_email_otp", email: identifier };
+      const endpoint = mode === "signup" ? "/api/auth/signup" : "/api/auth/signin";
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -185,13 +174,9 @@ function OtpPageInner() {
       if (!res.ok) {
         let userMessage = data.error;
         if (data.error?.includes("No account found")) {
-          userMessage = loginType === "phone" 
-            ? "No account found with this phone number. Please sign up first."
-            : "No account found with this email. Please sign up first.";
+          userMessage = "No account found with this email. Please sign up first.";
         } else if (data.error?.includes("Failed to send")) {
-          userMessage = loginType === "phone"
-            ? "Unable to send verification code to your phone. Please check the number and try again."
-            : "Unable to send verification code to your email. Please check your email address and try again.";
+          userMessage = "Unable to send verification code to your email. Please check your email address and try again.";
         }
         throw new Error(userMessage || "Unable to resend verification code. Please try again.");
       }
@@ -209,16 +194,8 @@ function OtpPageInner() {
     if (otp.length !== 6 || isLoading || !identifier || !loginType) return;
     setIsLoading(true);
     try {
-      let payload, endpoint;
-      if (loginType === "email") {
-        payload = { action: "verify_email_otp", email: identifier, otp, phone: phoneParam || undefined };
-        endpoint = mode === "signup" ? "/api/auth/signup" : "/api/auth/signin";
-      } else {
-        // For phone, also send the email from query params if available
-        const email = searchParams.get("email");
-        payload = { action: "verify_phone_otp", phone: identifier, otp, email };
-        endpoint = "/api/auth/signin";
-      }
+      const payload = { action: "verify_email_otp", email: identifier, otp, phone: phoneParam || undefined };
+      const endpoint = mode === "signup" ? "/api/auth/signup" : "/api/auth/signin";
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -248,37 +225,31 @@ function OtpPageInner() {
       
       toast.success("Verification successful! Redirecting...");
       
-      // Track OTP verification and signup/login
       track("otp_verified", {
-        user_email: loginType === "email" ? identifier : undefined,
+        user_email: identifier ?? undefined,
         category: "authentication",
         label: mode,
       });
-      
+
       if (mode === "signup") {
         track("signup", {
-          user_email: loginType === "email" ? identifier : undefined,
+          user_email: identifier ?? undefined,
           user_id: data.user?.id,
         });
-        if (loginType === "email") {
-          track("email_verified", {
-            user_email: identifier,
-            user_id: data.user?.id,
-          });
-        }
+        track("email_verified", {
+          user_email: identifier ?? undefined,
+          user_id: data.user?.id,
+        });
       } else {
         track("login", {
-          user_email: loginType === "email" ? identifier : undefined,
+          user_email: identifier ?? undefined,
           user_id: data.user?.id,
         });
       }
-      
-      // Get user role from the signin response
+
       const userRole = data.user?.role;
-      
-      // Redirect logic based on mode, loginType, and user role
-      if (mode === "signup" && loginType === "email") {
-        // Redirect to TOTP setup after email verification
+
+      if (mode === "signup") {
         router.push(`/setup-totp?email=${encodeURIComponent(identifier ?? "")}`);
       } else {
         // Role-based redirect for login
