@@ -4,28 +4,51 @@ import { eq, sql } from 'drizzle-orm';
 import * as schema from './schema';
 import { users } from './schema/users';
 
-const databaseUrl =
-  process.env.DATABASE_URL ||
-  process.env.POSTGRES_URL ||
-  process.env.POSTGRES_PRISMA_URL ||
-  process.env.POSTGRES_URL_NON_POOLING ||
-  process.env.NEON_DATABASE_URL;
+type DrizzleDb = ReturnType<typeof drizzle<typeof schema>>;
 
-if (!databaseUrl) {
-  throw new Error(
-    'Database URL environment variable is not set. Expected one of: DATABASE_URL, POSTGRES_URL, POSTGRES_PRISMA_URL, POSTGRES_URL_NON_POOLING, NEON_DATABASE_URL'
+let dbInstance: DrizzleDb | null = null;
+
+function resolveDatabaseUrl() {
+  return (
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRES_PRISMA_URL ||
+    process.env.POSTGRES_URL_NON_POOLING ||
+    process.env.NEON_DATABASE_URL
   );
 }
 
-// Configure Neon with optimized settings for better reliability
-const neonSql = neon(databaseUrl, {
-  // Disable array mode for better compatibility
-  arrayMode: false,
-  // Optimize for single queries
-  fullResults: false,
-});
+function getDb() {
+  if (dbInstance) {
+    return dbInstance;
+  }
 
-export const db = drizzle(neonSql, { schema });
+  const databaseUrl = resolveDatabaseUrl();
+  if (!databaseUrl) {
+    throw new Error(
+      'Database URL environment variable is not set. Expected one of: DATABASE_URL, POSTGRES_URL, POSTGRES_PRISMA_URL, POSTGRES_URL_NON_POOLING, NEON_DATABASE_URL'
+    );
+  }
+
+  // Configure Neon with optimized settings for better reliability
+  const neonSql = neon(databaseUrl, {
+    // Disable array mode for better compatibility
+    arrayMode: false,
+    // Optimize for single queries
+    fullResults: false,
+  });
+
+  dbInstance = drizzle(neonSql, { schema });
+  return dbInstance;
+}
+
+export const db = new Proxy({} as DrizzleDb, {
+  get(_target, prop, receiver) {
+    const instance = getDb() as unknown as Record<PropertyKey, unknown>;
+    const value = Reflect.get(instance, prop, receiver);
+    return typeof value === 'function' ? (value as Function).bind(instance) : value;
+  },
+});
 
 // Database query wrapper with retry logic and exponential backoff
 export async function withRetry<T>(
