@@ -3,7 +3,21 @@ import { db } from '@/lib/db';
 import { donations, campaigns } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resendClient: Resend | null = null;
+
+function getResendClient() {
+  if (resendClient) {
+    return resendClient;
+  }
+
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    throw new Error('RESEND_API_KEY is not configured');
+  }
+
+  resendClient = new Resend(apiKey);
+  return resendClient;
+}
 
 interface DonorConfirmationData {
   donationId: string;
@@ -175,7 +189,7 @@ export async function sendDonorConfirmationEmail(data: DonorConfirmationData) {
       </html>
     `;
 
-    await resend.emails.send({
+    await getResendClient().emails.send({
       from: process.env.RESEND_FROM_EMAIL || 'notifications@chainfundit.com',
       to: data.donorEmail,
       subject,

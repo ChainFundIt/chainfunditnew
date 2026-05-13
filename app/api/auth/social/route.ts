@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 
-const SUPPORTED_PROVIDERS = new Set(["google", "discord"]);
+const SUPPORTED_PROVIDERS = new Set(["google"]);
 
 function isProviderConfigured(provider: string) {
   if (provider === "google") {
     return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
-  }
-  if (provider === "discord") {
-    return Boolean(process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET);
   }
   return false;
 }

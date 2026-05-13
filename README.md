@@ -17,12 +17,8 @@ chainfunditnew/
 │   │   │   └── page.tsx         # Login page
 │   │   ├── signup/
 │   │   │   └── page.tsx         # Signup page
-│   │   ├── otp/
-│   │   │   └── page.tsx         # Email OTP verification
-│   │   ├── phone/
-│   │   │   └── page.tsx         # Phone linking
-│   │   └── phone-otp/
-│   │       └── page.tsx         # Phone OTP verification
+│   │   └── otp/
+│   │       └── page.tsx         # Email OTP verification
 │   ├── (dashboard)/              # Protected dashboard routes
 │   │   ├── dashboard/
 │   │   │   └── page.tsx         # Main dashboard
@@ -100,16 +96,14 @@ chainfunditnew/
 
 ### Signup Flow
 ```
-1. /signup              # Email/Phone input (route group)
+1. /signup              # Email input (route group)
 2. /otp                 # Email OTP verification (auto-verify)
-3. /phone               # Phone linking (optional)
-4. /phone-otp           # Phone OTP verification (auto-verify)
-5. /dashboard           # Success redirect (protected)
+3. /dashboard           # Success redirect (protected)
 ```
 
 ### Login Flow
 ```
-1. /login               # Email/Phone input (route group)
+1. /login               # Email input (route group)
 2. /otp                 # OTP verification (auto-verify)
 3. /dashboard           # Success redirect (protected)
 ```

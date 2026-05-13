@@ -1,6 +1,20 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resendClient: Resend | null = null;
+
+function getResendClient() {
+  if (resendClient) {
+    return resendClient;
+  }
+
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    throw new Error('RESEND_API_KEY is not configured');
+  }
+
+  resendClient = new Resend(apiKey);
+  return resendClient;
+}
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://chainfundit.com";
 const logoUrl = `${appUrl}/images/logo.svg`;
 
@@ -30,7 +44,7 @@ export async function sendAmbassadorDecisionEmail({
       ? "Next steps: ChainFundIt Ambassador application"
       : "Update on your ChainFundIt Ambassador application";
 
-  await resend.emails.send({
+  await getResendClient().emails.send({
     from: process.env.RESEND_FROM_EMAIL || "notifications@chainfundit.com",
     to: email,
     subject,
