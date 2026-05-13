@@ -4,12 +4,21 @@ import { eq, sql } from 'drizzle-orm';
 import * as schema from './schema';
 import { users } from './schema/users';
 
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL environment variable is not set');
+const databaseUrl =
+  process.env.DATABASE_URL ||
+  process.env.POSTGRES_URL ||
+  process.env.POSTGRES_PRISMA_URL ||
+  process.env.POSTGRES_URL_NON_POOLING ||
+  process.env.NEON_DATABASE_URL;
+
+if (!databaseUrl) {
+  throw new Error(
+    'Database URL environment variable is not set. Expected one of: DATABASE_URL, POSTGRES_URL, POSTGRES_PRISMA_URL, POSTGRES_URL_NON_POOLING, NEON_DATABASE_URL'
+  );
 }
 
 // Configure Neon with optimized settings for better reliability
-const neonSql = neon(process.env.DATABASE_URL, {
+const neonSql = neon(databaseUrl, {
   // Disable array mode for better compatibility
   arrayMode: false,
   // Optimize for single queries
