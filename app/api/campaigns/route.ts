@@ -226,6 +226,20 @@ export async function POST(request: NextRequest) {
 
     const userId = user[0].id;
 
+    if (user[0].suspendedAt) {
+      return NextResponse.json(
+        { success: false, error: 'Your account is suspended. Please contact support.' },
+        { status: 403 }
+      );
+    }
+
+    if (!user[0].phone) {
+      return NextResponse.json(
+        { success: false, error: 'A phone number is required before creating a campaign. Please update your profile settings.' },
+        { status: 400 }
+      );
+    }
+
     // Parse form data
     const formData = await request.formData();
     

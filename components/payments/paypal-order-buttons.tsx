@@ -232,6 +232,7 @@ export function PayPalOrderButtons({
   onError,
 }: PayPalOrderButtonsProps) {
   const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
+  const merchantId = process.env.NEXT_PUBLIC_PAYPAL_MERCHANT_ID || "*";
   const pendingDonationIdRef = useRef<string | undefined>(undefined);
   const [isBusy, setIsBusy] = useState(false);
 
@@ -241,8 +242,10 @@ export function PayPalOrderButtons({
       currency,
       intent: "capture",
       components: "buttons,applepay",
+      "enable-funding": "applepay",
+      "merchant-id": merchantId,
     }),
-    [clientId, currency]
+    [clientId, currency, merchantId]
   );
 
   if (!clientId) {
@@ -393,6 +396,7 @@ function PayPalApplePayButton({
         !isResolved ||
         !isApplePaySdkReady ||
         disabled ||
+        !window.isSecureContext ||
         !Number.isFinite(numericAmount) ||
         numericAmount <= 0
       ) {
@@ -402,12 +406,14 @@ function PayPalApplePayButton({
 
       const ApplePaySession = getApplePaySession();
       const applepay = getPayPalApplePay();
+      const canMakePayments = ApplePaySession?.canMakePayments?.() ?? false;
 
-      if (!ApplePaySession || !ApplePaySession.canMakePayments() || !applepay) {
+      if (!ApplePaySession || !canMakePayments || !applepay) {
         logApplePayDebug("eligibility: missing ApplePaySession/paypal applepay bridge", {
           hasApplePaySession: Boolean(ApplePaySession),
-          canMakePayments: ApplePaySession?.canMakePayments?.(),
+          canMakePayments,
           hasPayPalApplePay: Boolean(applepay),
+          isSecureContext: window.isSecureContext,
         });
         setIsEligible(false);
         return;

@@ -34,7 +34,10 @@ import {
   Phone,
   Globe,
   Repeat,
+  CircleCheckBig,
+  Clock,
 } from "lucide-react";
+import { formatCurrency } from "@/lib/utils/currency";
 import {
   Dialog,
   DialogContent,
@@ -50,6 +53,43 @@ import { Badge } from "@/components/ui/badge";
 import { Loader } from "@/components/ui/Loader";
 
 type Props = {};
+
+type SubscriptionPayment = {
+  id: string;
+  donationId: string;
+  amount: string;
+  currency: string;
+  status: string;
+  billingPeriodStart: string;
+  billingPeriodEnd: string;
+  scheduledDate: string;
+  paidAt: string | null;
+  createdAt: string | null;
+};
+
+function formatPaymentStatus(status: string): { label: string; className: string } {
+  switch (status) {
+    case "completed":
+      return { label: "Paid", className: "bg-green-50 text-green-700" };
+    case "failed":
+      return { label: "Failed", className: "bg-red-50 text-red-700" };
+    case "pending":
+    default:
+      return { label: "Pending", className: "bg-amber-50 text-amber-700" };
+  }
+}
+
+function formatPaymentDate(iso: string | null, fallback: string): string {
+  const value = iso ?? fallback;
+  if (!value) return "—";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
 
 const Payments = (props: Props) => {
   const {
@@ -104,6 +144,7 @@ const Payments = (props: Props) => {
     totalAmount: string;
     createdAt: string;
     cancelledAt: string | null;
+    payments: SubscriptionPayment[];
   }>>([]);
   const [subscriptionsLoading, setSubscriptionsLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
@@ -131,7 +172,12 @@ const Payments = (props: Props) => {
         const res = await fetch("/api/payments/subscriptions", { credentials: "include" });
         const data = await res.json();
         if (data.success && Array.isArray(data.subscriptions)) {
-          setSubscriptions(data.subscriptions);
+          setSubscriptions(
+            data.subscriptions.map((s: { payments?: SubscriptionPayment[] }) => ({
+              ...s,
+              payments: s.payments ?? [],
+            }))
+          );
         }
       } catch {
         setSubscriptions([]);
@@ -417,7 +463,7 @@ const Payments = (props: Props) => {
             Recurring donations
           </CardTitle>
           <CardDescription>
-            Manage your recurring donations. You can cancel at any time; you will not be charged again after the current period.
+            Manage your recurring donations and view payment history for each subscription. You can cancel at any time; you will not be charged again after the current period.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -430,11 +476,14 @@ const Payments = (props: Props) => {
             <p className="text-[#6B7280] py-4">You don&apos;t have any recurring donations.</p>
           ) : (
             <ul className="space-y-4">
-              {subscriptions.map((sub) => (
+              {subscriptions.map((sub) => {
+                const payments = sub.payments ?? [];
+                return (
                 <li
                   key={sub.id}
-                  className="flex flex-wrap items-center justify-between gap-3 border border-[#e5e7eb] rounded-lg p-4 bg-[#fafafa]"
+                  className="border border-[#e5e7eb] rounded-lg p-4 bg-[#fafafa] space-y-4"
                 >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-[#104901]">
                       {sub.campaignTitle ? (
@@ -449,7 +498,14 @@ const Payments = (props: Props) => {
                       )}
                     </div>
                     <div className="text-sm text-[#6B7280] mt-1">
-                      {sub.currency} {sub.amount} / {sub.period}
+                      {formatCurrency(parseFloat(sub.amount), sub.currency)} / {sub.period}
+                      {sub.totalDonations > 0 && (
+                        <span>
+                          {" "}
+                          · {sub.totalDonations} payment{sub.totalDonations !== 1 ? "s" : ""} (
+                          {formatCurrency(parseFloat(sub.totalAmount), sub.currency)} total)
+                        </span>
+                      )}
                       {sub.nextBillingDate && sub.isActive && (
                         <span> · Next: {new Date(sub.nextBillingDate).toLocaleDateString()}</span>
                       )}
@@ -500,8 +556,71 @@ const Payments = (props: Props) => {
                       <Badge variant="secondary">Cancelled</Badge>
                     )}
                   </div>
+                  </div>
+
+                  <div className="border-t border-[#e5e7eb] pt-3">
+                    <p className="text-sm font-medium text-[#104901] mb-2">Payment history</p>
+                    {payments.length === 0 ? (
+                      <p className="text-sm text-[#6B7280]">No payments recorded yet.</p>
+                    ) : (
+                      <div className="overflow-x-auto rounded-md border border-[#e5e7eb] bg-white">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-[#e5e7eb] bg-[#f9fafb] text-left text-[#6B7280]">
+                              <th className="px-3 py-2 font-medium">Date</th>
+                              <th className="px-3 py-2 font-medium">Amount</th>
+                              <th className="px-3 py-2 font-medium">Billing period</th>
+                              <th className="px-3 py-2 font-medium">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {payments.map((payment) => {
+                              const statusInfo = formatPaymentStatus(payment.status);
+                              return (
+                                <tr
+                                  key={payment.id}
+                                  className="border-b border-[#f3f4f6] last:border-0"
+                                >
+                                  <td className="px-3 py-2.5 text-[#104901] whitespace-nowrap">
+                                    {formatPaymentDate(payment.paidAt, payment.scheduledDate)}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-[#104901] whitespace-nowrap">
+                                    {formatCurrency(
+                                      parseFloat(payment.amount),
+                                      payment.currency
+                                    )}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-[#6B7280] whitespace-nowrap">
+                                    {formatPaymentDate(payment.billingPeriodStart, payment.scheduledDate)}
+                                    {" – "}
+                                    {formatPaymentDate(payment.billingPeriodEnd, payment.scheduledDate)}
+                                  </td>
+                                  <td className="px-3 py-2.5">
+                                    <Badge
+                                      variant="outline"
+                                      className={`text-xs font-normal ${statusInfo.className}`}
+                                    >
+                                      {payment.status === "completed" ? (
+                                        <CircleCheckBig className="h-3 w-3 mr-1 inline" />
+                                      ) : payment.status === "pending" ? (
+                                        <Clock className="h-3 w-3 mr-1 inline" />
+                                      ) : (
+                                        <XCircle className="h-3 w-3 mr-1 inline" />
+                                      )}
+                                      {statusInfo.label}
+                                    </Badge>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
                 </li>
-              ))}
+                );
+              })}
             </ul>
           )}
         </CardContent>

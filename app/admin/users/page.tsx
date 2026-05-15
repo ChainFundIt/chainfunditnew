@@ -58,6 +58,7 @@ interface User {
   phone?: string;
   countryCode?: string;
   accountLocked: boolean;
+  suspendedAt?: string | null;
   role: string;
   createdAt: string;
   isVerified: boolean;
@@ -176,6 +177,8 @@ export default function AdminUsersPage() {
       toast.error('Failed to update user');
     }
   };
+
+  const isSuspended = (user: User) => Boolean(user.suspendedAt);
 
   const handleBulkAction = async (action: string) => {
     if (selectedUsers.length === 0) {
@@ -585,7 +588,7 @@ export default function AdminUsersPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-2">
-                          {getStatusBadge(user.accountLocked ? 'suspended' : 'active')}
+                          {getStatusBadge(isSuspended(user) ? 'suspended' : 'active')}
                           {user.isVerified && (
                             <span title="Verified">
                               <Shield className="h-4 w-4 text-blue-500" />
@@ -644,15 +647,15 @@ export default function AdminUsersPage() {
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                aria-label={user.accountLocked ? 'Activate user' : 'Suspend user'}
+                                aria-label={isSuspended(user) ? 'Activate user' : 'Suspend user'}
                                 onClick={() =>
                                   handleUserAction(
                                     user.id,
-                                    user.accountLocked ? 'activate' : 'suspend'
+                                    isSuspended(user) ? 'activate' : 'suspend'
                                   )
                                 }
                               >
-                                {user.accountLocked ? (
+                                {isSuspended(user) ? (
                                   <CheckCircle className="h-4 w-4 text-green-600" />
                                 ) : (
                                   <Ban className="h-4 w-4 text-red-600" />
@@ -660,7 +663,7 @@ export default function AdminUsersPage() {
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent side="top">
-                              {user.accountLocked ? 'Activate user' : 'Suspend user'}
+                              {isSuspended(user) ? 'Activate user' : 'Suspend user'}
                             </TooltipContent>
                           </Tooltip>
                         </div>
@@ -730,7 +733,7 @@ export default function AdminUsersPage() {
               <div className="rounded-lg border p-3">
                 <p className="text-xs uppercase text-gray-500">Status</p>
                 <div className="mt-1 flex items-center gap-2">
-                  {getStatusBadge(selectedUser.accountLocked ? 'suspended' : 'active')}
+                  {getStatusBadge(isSuspended(selectedUser) ? 'suspended' : 'active')}
                   {selectedUser.isVerified && (
                     <span className="text-xs text-blue-600 flex items-center gap-1">
                       <Shield className="h-3 w-3" />

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { users, donations, campaigns, chainers } from '@/lib/schema';
-import { eq, like, and, desc, count, sum, sql } from 'drizzle-orm';
+import { eq, like, and, desc, count, sum, sql, isNull, isNotNull } from 'drizzle-orm';
 import { requireAdminAuthWith2FA } from '@/lib/admin-auth';
 
 /**
@@ -32,9 +32,9 @@ export async function GET(request: NextRequest) {
     
     if (status !== 'all') {
       if (status === 'active') {
-        whereConditions.push(eq(users.accountLocked, false));
+        whereConditions.push(isNull(users.suspendedAt));
       } else if (status === 'suspended' || status === 'banned') {
-        whereConditions.push(eq(users.accountLocked, true));
+        whereConditions.push(isNotNull(users.suspendedAt));
       }
     }
     
@@ -51,6 +51,8 @@ export async function GET(request: NextRequest) {
         phone: users.phone,
         countryCode: users.countryCode,
         accountLocked: users.accountLocked,
+        suspendedAt: users.suspendedAt,
+        suspendedReason: users.suspendedReason,
         role: users.role,
         createdAt: users.createdAt,
         isVerified: users.isVerified,
@@ -124,7 +126,7 @@ export async function GET(request: NextRequest) {
 
         return {
           ...user,
-          status: user.accountLocked ? 'suspended' : 'active',
+          status: user.suspendedAt ? 'suspended' : 'active',
           stats: {
             totalDonations: totalDonationsCount,
             totalDonated: totalDonatedAmount,

@@ -11,6 +11,7 @@ export interface AdminUser {
   role: 'admin' | 'super_admin';
   isVerified: boolean;
   accountLocked: boolean;
+  suspendedAt: Date | null;
   twoFactorEnabled: boolean;
 }
 
@@ -41,6 +42,7 @@ export async function getAdminUser(request: NextRequest): Promise<AdminUser | nu
         role: users.role,
         isVerified: users.isVerified,
         accountLocked: users.accountLocked,
+        suspendedAt: users.suspendedAt,
         twoFactorEnabled: users.twoFactorEnabled,
       })
       .from(users)
@@ -56,8 +58,9 @@ export async function getAdminUser(request: NextRequest): Promise<AdminUser | nu
       return null;
     }
 
-    // Check if account is locked or not verified
-    if (user.accountLocked || !user.isVerified) {
+    // Admin access is blocked only for suspended accounts or unverified accounts.
+    // accountLocked is used for payout-account locking and should not block admin auth.
+    if (user.suspendedAt || !user.isVerified) {
       return null;
     }
 
@@ -68,6 +71,7 @@ export async function getAdminUser(request: NextRequest): Promise<AdminUser | nu
       role: user.role as 'admin' | 'super_admin',
       isVerified: user.isVerified,
       accountLocked: user.accountLocked || false,
+      suspendedAt: user.suspendedAt || null,
       twoFactorEnabled: user.twoFactorEnabled || false,
     };
 

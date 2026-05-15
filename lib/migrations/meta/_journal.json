@@ -267,6 +267,13 @@
       "when": 1777301491155,
       "tag": "0037_many_sunspot",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1778861067825,
+      "tag": "0038_powerful_leper_queen",
+      "breakpoints": true
     }
   ]
 }

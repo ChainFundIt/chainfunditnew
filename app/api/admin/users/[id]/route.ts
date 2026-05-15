@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { users, donations, campaigns, chainers } from '@/lib/schema';
 import { eq, and, count, sum, desc } from 'drizzle-orm';
+import { requireAdminAuthWith2FA } from '@/lib/admin-auth';
 
 /**
  * GET /api/admin/users/[id]
@@ -136,6 +137,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireAdminAuthWith2FA(request);
+
     const { id: userId } = await params;
     const body = await request.json();
     const { action, ...updateData } = body;
@@ -159,7 +162,8 @@ export async function PATCH(
         updatedUser = await db
           .update(users)
           .set({ 
-            accountLocked: false,
+            suspendedAt: null,
+            suspendedReason: null,
             updatedAt: new Date(),
           })
           .where(eq(users.id, userId))
@@ -170,7 +174,8 @@ export async function PATCH(
         updatedUser = await db
           .update(users)
           .set({ 
-            accountLocked: true,
+            suspendedAt: new Date(),
+            suspendedReason: 'Suspended by admin action',
             updatedAt: new Date(),
           })
           .where(eq(users.id, userId))
@@ -181,7 +186,8 @@ export async function PATCH(
         updatedUser = await db
           .update(users)
           .set({ 
-            accountLocked: true,
+            suspendedAt: new Date(),
+            suspendedReason: 'Banned by admin action',
             updatedAt: new Date(),
           })
           .where(eq(users.id, userId))
@@ -244,6 +250,20 @@ export async function PATCH(
 
   } catch (error) {
     console.error('Error updating user:', error);
+    if (error instanceof Error) {
+      if (error.message === 'Authentication required') {
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { status: 401 }
+        );
+      }
+      if (error.message === '2FA verification required') {
+        return NextResponse.json(
+          { error: '2FA verification required' },
+          { status: 403 }
+        );
+      }
+    }
     return NextResponse.json(
       { error: 'Failed to update user' },
       { status: 500 }
@@ -260,6 +280,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireAdminAuthWith2FA(request);
+
     const { id: userId } = await params;
 
     // Check if user exists
@@ -278,7 +300,8 @@ export async function DELETE(
     const deletedUser = await db
       .update(users)
       .set({ 
-        accountLocked: true,
+        suspendedAt: new Date(),
+        suspendedReason: 'Soft-deleted by admin action',
         updatedAt: new Date(),
       })
       .where(eq(users.id, userId))
@@ -291,6 +314,20 @@ export async function DELETE(
 
   } catch (error) {
     console.error('Error deleting user:', error);
+    if (error instanceof Error) {
+      if (error.message === 'Authentication required') {
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { status: 401 }
+        );
+      }
+      if (error.message === '2FA verification required') {
+        return NextResponse.json(
+          { error: '2FA verification required' },
+          { status: 403 }
+        );
+      }
+    }
     return NextResponse.json(
       { error: 'Failed to delete user' },
       { status: 500 }
