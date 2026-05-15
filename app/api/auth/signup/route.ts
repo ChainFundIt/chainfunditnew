@@ -208,12 +208,18 @@ export async function POST(request: NextRequest) {
       // Create user with normalized email (always store lowercase)
       const name = fullName || normalizedEmail.split("@")[0];
       const normalizedPhone = normalizePhone(phone);
+      if (!normalizedPhone) {
+        return NextResponse.json(
+          { success: false, error: "Phone number is required to complete signup." },
+          { status: 400 }
+        );
+      }
       const [newUser] = await db
         .insert(users)
         .values({ 
           email: normalizedEmail, // Store normalized email
           fullName: name, 
-          phone: normalizedPhone || undefined,
+          phone: normalizedPhone,
           hasCompletedProfile: false,
           role: 'user' // Default role for new signups
         })

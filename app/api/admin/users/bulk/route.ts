@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { users } from '@/lib/schema';
-import { eq, inArray } from 'drizzle-orm';
+import { inArray } from 'drizzle-orm';
+import { requireAdminAuthWith2FA } from '@/lib/admin-auth';
 
 /**
  * PATCH /api/admin/users/bulk
@@ -9,6 +10,8 @@ import { eq, inArray } from 'drizzle-orm';
  */
 export async function PATCH(request: NextRequest) {
   try {
+    await requireAdminAuthWith2FA(request);
+
     const body = await request.json();
     const { userIds, action, ...actionData } = body;
 
@@ -37,7 +40,8 @@ export async function PATCH(request: NextRequest) {
           .update(users)
           .set({ 
             ...updateData,
-            accountLocked: false,
+            suspendedAt: null,
+            suspendedReason: null,
           })
           .where(inArray(users.id, userIds))
           .returning();
@@ -48,7 +52,8 @@ export async function PATCH(request: NextRequest) {
           .update(users)
           .set({ 
             ...updateData,
-            accountLocked: true,
+            suspendedAt: new Date(),
+            suspendedReason: 'Suspended by bulk admin action',
           })
           .where(inArray(users.id, userIds))
           .returning();
@@ -59,7 +64,8 @@ export async function PATCH(request: NextRequest) {
           .update(users)
           .set({ 
             ...updateData,
-            accountLocked: true,
+            suspendedAt: new Date(),
+            suspendedReason: 'Banned by bulk admin action',
           })
           .where(inArray(users.id, userIds))
           .returning();
@@ -94,12 +100,13 @@ export async function PATCH(request: NextRequest) {
         );
 
       case 'delete':
-        // Soft delete by locking accounts
+        // Soft delete by suspending accounts
         updatedUsers = await db
           .update(users)
           .set({ 
             ...updateData,
-            accountLocked: true,
+            suspendedAt: new Date(),
+            suspendedReason: 'Soft-deleted by bulk admin action',
           })
           .where(inArray(users.id, userIds))
           .returning();
@@ -119,13 +126,27 @@ export async function PATCH(request: NextRequest) {
         id: user.id,
         email: user.email,
         fullName: user.fullName,
-        accountLocked: user.accountLocked,
+        suspendedAt: user.suspendedAt,
         isVerified: user.isVerified,
       })),
     });
 
   } catch (error) {
     console.error('Error performing bulk action:', error);
+    if (error instanceof Error) {
+      if (error.message === 'Authentication required') {
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { status: 401 }
+        );
+      }
+      if (error.message === '2FA verification required') {
+        return NextResponse.json(
+          { error: '2FA verification required' },
+          { status: 403 }
+        );
+      }
+    }
     return NextResponse.json(
       { error: 'Failed to perform bulk action' },
       { status: 500 }

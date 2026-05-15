@@ -24,7 +24,16 @@ function resolveAppUrlOrigin(request: NextRequest): string {
       ? configured
       : `https://${configured}`;
     try {
-      return new URL(withScheme).origin;
+      const configuredOrigin = new URL(withScheme).origin;
+      const configuredHost = new URL(withScheme).hostname.toLowerCase();
+      const isLocalConfiguredHost =
+        configuredHost === "localhost" ||
+        configuredHost === "127.0.0.1" ||
+        configuredHost === "::1";
+      if (isLocalConfiguredHost && process.env.NODE_ENV !== "production") {
+        return request.nextUrl.origin;
+      }
+      return configuredOrigin;
     } catch {
       console.warn(
         "NEXT_PUBLIC_APP_URL is invalid; using request origin instead.",

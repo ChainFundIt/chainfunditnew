@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
         role: users.role,
         isVerified: users.isVerified,
         accountLocked: users.accountLocked,
+        suspendedAt: users.suspendedAt,
         twoFactorEnabled: users.twoFactorEnabled,
         createdAt: users.createdAt,
       })
@@ -60,10 +61,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if account is locked
-    if (user.accountLocked) {
+    // Check if account is suspended
+    if (user.suspendedAt) {
       return NextResponse.json(
-        { error: 'Account is locked' },
+        { error: 'Account is suspended' },
         { status: 403 }
       );
     }
@@ -76,6 +77,7 @@ export async function GET(request: NextRequest) {
         role: user.role,
         isVerified: user.isVerified,
         accountLocked: user.accountLocked,
+        suspendedAt: user.suspendedAt,
         twoFactorEnabled: user.twoFactorEnabled,
         createdAt: user.createdAt,
       },

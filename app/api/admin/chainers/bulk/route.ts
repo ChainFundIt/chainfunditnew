@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { chainers } from '@/lib/schema';
-import { eq, inArray } from 'drizzle-orm';
+import { inArray } from 'drizzle-orm';
+import { requireAdminAuthWith2FA } from '@/lib/admin-auth';
 
 /**
  * PATCH /api/admin/chainers/bulk
@@ -9,6 +10,8 @@ import { eq, inArray } from 'drizzle-orm';
  */
 export async function PATCH(request: NextRequest) {
   try {
+    await requireAdminAuthWith2FA(request);
+
     const body = await request.json();
     const { chainerIds, action, ...actionData } = body;
 
@@ -115,6 +118,20 @@ export async function PATCH(request: NextRequest) {
 
   } catch (error) {
     console.error('Error performing bulk action:', error);
+    if (error instanceof Error) {
+      if (error.message === 'Authentication required') {
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { status: 401 }
+        );
+      }
+      if (error.message === '2FA verification required') {
+        return NextResponse.json(
+          { error: '2FA verification required' },
+          { status: 403 }
+        );
+      }
+    }
     return NextResponse.json(
       { error: 'Failed to perform bulk action' },
       { status: 500 }

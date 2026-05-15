@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
         email: users.email,
         fullName: users.fullName,
         isVerified: users.isVerified,
-        accountLocked: users.accountLocked,
+        suspendedAt: users.suspendedAt,
         role: users.role,
       })
       .from(users)
@@ -49,10 +49,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if account is locked
-    if (user.accountLocked) {
+    // Check if account is suspended
+    if (user.suspendedAt) {
       return NextResponse.json(
-        { error: 'Account is locked. Please contact support.' },
+        { error: 'Account is suspended. Please contact support.' },
         { status: 403 }
       );
     }

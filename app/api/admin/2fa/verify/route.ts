@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
         fullName: users.fullName,
         role: users.role,
         isVerified: users.isVerified,
-        accountLocked: users.accountLocked,
+        suspendedAt: users.suspendedAt,
       })
       .from(users)
       .where(eq(users.email, email))
@@ -51,9 +51,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (user.accountLocked || !user.isVerified) {
+    if (user.suspendedAt || !user.isVerified) {
       return NextResponse.json(
-        { error: 'Account is locked or not verified' },
+        { error: 'Account is suspended or not verified' },
         { status: 403 }
       );
     }

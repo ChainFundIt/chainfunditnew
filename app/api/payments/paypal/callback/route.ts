@@ -7,7 +7,24 @@ import { completeCampaignDonation, failCampaignDonation } from "@/lib/payments/c
 import { capturePayPalOrder } from "@/lib/payments/paypal";
 
 function getBaseUrl(request: NextRequest): string {
-  return process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
+  const configured = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (!configured) return request.nextUrl.origin;
+
+  const withScheme = /^https?:\/\//i.test(configured)
+    ? configured
+    : `https://${configured}`;
+
+  try {
+    const parsed = new URL(withScheme);
+    const host = parsed.hostname.toLowerCase();
+    const isLocalHost = host === "localhost" || host === "127.0.0.1" || host === "::1";
+    if (isLocalHost && process.env.NODE_ENV !== "production") {
+      return request.nextUrl.origin;
+    }
+    return parsed.origin;
+  } catch {
+    return request.nextUrl.origin;
+  }
 }
 
 export async function GET(request: NextRequest) {

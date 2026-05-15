@@ -38,7 +38,7 @@ export function PayPalSubscriptionButtons({
       currency,
       vault: true,
       intent: "subscription",
-      components: "buttons,applepay",
+      components: "buttons",
     }),
     [clientId, currency]
   );

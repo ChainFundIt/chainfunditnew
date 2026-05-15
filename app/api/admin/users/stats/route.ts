@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { users, donations, campaigns, chainers } from '@/lib/schema';
-import { eq, gte, count, sum, sql, desc } from 'drizzle-orm';
+import { eq, gte, count, sum, sql, desc, isNotNull, isNull } from 'drizzle-orm';
 
 /**
  * GET /api/admin/users/stats
@@ -15,12 +15,12 @@ export async function GET(request: NextRequest) {
     const [activeUsers] = await db
       .select({ count: count() })
       .from(users)
-      .where(eq(users.isVerified, true));
+      .where(isNull(users.suspendedAt));
 
     const [suspendedUsers] = await db
       .select({ count: count() })
       .from(users)
-      .where(eq(users.accountLocked, true));
+      .where(isNotNull(users.suspendedAt));
 
     const [verifiedUsers] = await db
       .select({ count: count() })
@@ -94,14 +94,14 @@ export async function GET(request: NextRequest) {
     // Role distribution not available in current schema
     const roleDistribution: { role: string; count: number }[] = [];
 
-    // Get user status distribution (using accountLocked as status indicator)
+    // Get user status distribution.
     const statusDistribution = await db
       .select({
-        status: sql<string>`CASE WHEN ${users.accountLocked} THEN 'locked' ELSE 'active' END`,
+        status: sql<string>`CASE WHEN ${users.suspendedAt} IS NOT NULL THEN 'suspended' ELSE 'active' END`,
         count: count(),
       })
       .from(users)
-      .groupBy(sql`CASE WHEN ${users.accountLocked} THEN 'locked' ELSE 'active' END`);
+      .groupBy(sql`CASE WHEN ${users.suspendedAt} IS NOT NULL THEN 'suspended' ELSE 'active' END`);
 
     // Get top users by donations
     const topDonors = await db
