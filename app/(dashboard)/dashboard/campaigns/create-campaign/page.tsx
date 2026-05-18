@@ -154,6 +154,7 @@ export default function CreateCampaignPage() {
       promptedForReviewRef.current = true;
       triggerPlatformReviewPrompt({
         reason: "campaign_created",
+        bypassCooldown: true,
       });
     }
   }, [showSuccessModal, createdCampaign]);

@@ -110,6 +110,7 @@ export async function GET(request: NextRequest) {
           chainerCommissionRate: campaigns.chainerCommissionRate,
           isChained: campaigns.isChained,
           currentAmount: campaigns.currentAmount,
+          isVerified: campaigns.isVerified,
           status: campaigns.status,
           visibility: campaigns.visibility,
           isActive: campaigns.isActive,

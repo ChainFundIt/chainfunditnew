@@ -159,7 +159,10 @@ const ChainModal: React.FC<ChainModalProps> = ({
         setStep("success");
         toast.success("Campaign chained successfully!");
 
-        triggerPlatformReviewPrompt({ reason: "campaign_chained" });
+        triggerPlatformReviewPrompt({
+          reason: "campaign_chained",
+          bypassCooldown: true,
+        });
         
         // Track chain creation
         trackChainer("chain_created", {

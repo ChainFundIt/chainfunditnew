@@ -25,6 +25,7 @@ interface PublicCampaign {
   closedAt: string;
   creatorId: string;
   creatorName: string;
+  isVerified: boolean;
   creatorAvatar: string;
   stats: {
     totalDonations: number;

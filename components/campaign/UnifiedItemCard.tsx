@@ -79,11 +79,11 @@ export function UnifiedItemCard({
   const progressPercentage =
     isCampaign && item.goalAmount
       ? Math.min(
-          100,
-          Math.round(
-            ((item.currentAmount || 0) / item.goalAmount) * 100
-          )
+        100,
+        Math.round(
+          ((item.currentAmount || 0) / item.goalAmount) * 100
         )
+      )
       : 0;
   useEffect(() => {
     if (authLoading) return;
@@ -248,9 +248,9 @@ export function UnifiedItemCard({
           <div className="md:w-2/3 p-6 flex flex-col justify-between h-[400px]">
             <div>
               <div className="flex items-start justify-between mb-2">
-                  <h3 className="text-2xl font-bold text-gray-900 hover:text-[#104901] transition-colors line-clamp-2">
-                    {item.title}
-                  </h3>
+                <h3 className="text-2xl font-bold text-gray-900 hover:text-[#104901] transition-colors line-clamp-2">
+                  {item.title}
+                </h3>
               </div>
 
               <p className="text-gray-600 mb-4 line-clamp-3">
@@ -311,12 +311,16 @@ export function UnifiedItemCard({
               className="w-full h-full object-cover bg-white group-hover:scale-105 transition-transform duration-500"
             />
           )}
-          <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full">
+          <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 flex items-center justify-center rounded-full">
             <span className="font-jakarta font-bold text-xs text-[#104901] uppercase tracking-wider">
               {item.category || "Campaign"}
             </span>
           </div>
-          <div className="absolute top-3 right-3">
+          <div className="absolute flex gap-3 top-3 right-3">
+            <span className={`inline-flex items-center gap-1 rounded-full bg-green-600 px-2 py-0.5 text-[10px] font-semibold text-white border border-green-600 ${item.isVerified ? "bg-green-600 text-white border-green-600" : ""}`}>
+              <Shield className="h-3 w-3 fill-white" />
+              Verified
+            </span>
             <Button
               variant="ghost"
               size="sm"
