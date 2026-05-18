@@ -14,9 +14,9 @@ export interface UnifiedItem {
   coverImage?: string | null;
   category: string; // Normalized category/reason
   originalCategory: string; // Original category/reason from source
+  isVerified?: boolean;
   createdAt: string | Date;
   updatedAt: string | Date;
-  
   // Campaign-specific fields (optional)
   goalAmount?: number;
   currentAmount?: number;
@@ -33,7 +33,6 @@ export interface UnifiedItem {
   
   // Charity-specific fields (optional)
   totalReceived?: string | number;
-  isVerified?: boolean;
   mission?: string;
   logo?: string;
   website?: string;

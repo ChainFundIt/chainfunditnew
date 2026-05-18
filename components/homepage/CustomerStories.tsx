@@ -85,7 +85,7 @@ const CustomerStories = (props: Props) => {
   };
 
   return (
-    <div className="font-jakarta flex items-center justify-center bg-white py-20 px-4">
+    <div className="font-jakarta flex items-center justify-center bg-[#EAF7EE] py-20 px-4">
       <div className="flex flex-col gap-16 md:max-w-[80rem] w-full">
         {/* Header */}
         <motion.div
@@ -95,13 +95,13 @@ const CustomerStories = (props: Props) => {
           viewport={{ once: true }}
           className="flex flex-col items-center gap-4 text-center"
         >
-          <div className="px-4 py-2 rounded-full bg-[#DCFCE7] flex gap-2 w-fit items-center">
-            <StarIcon color="#104109" size={16} />
-            <div className="font-bold text-sm leading-5 text-[#104109]">
+          <div className="px-4 py-2 rounded-full bg-[#14532D] flex gap-2 w-fit items-center">
+            <StarIcon color="#DCFCE7" size={16} />
+            <div className="font-bold text-sm leading-5 text-[#DCFCE7]">
               Trust & Impact
             </div>
           </div>
-          <div className="font-bold text-5xl leading-[48px]">
+          <div className="font-bold text-5xl leading-[48px] text-[#104109]">
             Hear from those who believe
           </div>
         </motion.div>
@@ -119,7 +119,7 @@ const CustomerStories = (props: Props) => {
                   viewport={{ once: true }}
                   className="min-w-0 flex-[0_0_80%] sm:flex-[0_0_calc((100%-1rem)/2)] lg:flex-[0_0_calc((100%-2rem)/3)]"
                 >
-                  <div className="bg-[#FDFBF7] rounded-[32px] p-8 flex flex-col gap-6 h-full">
+                  <div className="bg-[#166534] rounded-[32px] p-8 flex flex-col gap-6 h-full border border-[#22C55E]">
                     {/* Star Rating */}
                     <div className="flex gap-1">
                       {[...Array(5)].map((_, i) => (
@@ -129,7 +129,7 @@ const CustomerStories = (props: Props) => {
                           className={
                             i < review.rating
                               ? "fill-[#FFD700] text-[#FFD700]"
-                              : "text-[#E8E8E8]"
+                              : "text-[#86EFAC]"
                           }
                         />
                       ))}
@@ -137,27 +137,27 @@ const CustomerStories = (props: Props) => {
 
                     {/* Quote */}
                     <p
-                      className={`font-medium text-lg leading-[30px] text-[#1C1917] ${review.isLoading ? "opacity-60" : ""
+                      className={`font-medium text-lg leading-[30px] text-[#ECFDF5] ${review.isLoading ? "opacity-60" : ""
                         }`}
                     >
                       {review.headline}
                     </p>
 
-                    <p>{review.body}</p>
+                    <p className="text-[#D1FAE5] leading-7">{review.body}</p>
 
                     {/* Spacer to push user info to bottom */}
                     <div className="flex-grow" />
 
                     {/* User Info */}
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-[#DCFCE7] text-[#104109] font-extrabold flex items-center justify-center flex-shrink-0">
+                      <div className="w-12 h-12 rounded-full bg-[#DCFCE7] text-[#14532D] font-extrabold flex items-center justify-center flex-shrink-0">
                         {initials(review.displayName)}
                       </div>
                       <div>
-                        <p className="font-bold text-base leading-6 text-[#1C1917]">
+                        <p className="font-bold text-base leading-6 text-[#F0FDF4]">
                           {review.displayName}
                         </p>
-                        <p className="font-bold text-xs leading-4 text-[#A8A29E]">
+                        <p className="font-bold text-xs leading-4 text-[#86EFAC]">
                           {roleLabel(review.role)}
                         </p>
                       </div>
@@ -168,7 +168,7 @@ const CustomerStories = (props: Props) => {
             </div>
           </div>
         ) : (
-          <div className="rounded-[32px] bg-[#FDFBF7] p-8 text-center text-sm text-[#A8A29E]">
+          <div className="rounded-[32px] bg-[#DCFCE7] p-8 text-center text-sm text-[#14532D]">
             No reviews yet. Be the first to share your experience.
           </div>
         )}

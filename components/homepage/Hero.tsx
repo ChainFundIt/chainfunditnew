@@ -201,7 +201,7 @@ const Hero = () => {
                       width={500}
                       height={400}
                       priority={index === 0}
-                      className="md:w-[35rem] w-full object-cover"
+                      className="md:w-[35rem] w-full h-full md:h-[30rem] object-cover"
                     />
                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[90%] bg-white rounded-2xl shadow-xl px-4 py-3">
                       <div className="flex items-center justify-between mb-1 gap-3">

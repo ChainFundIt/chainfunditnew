@@ -16,26 +16,27 @@ import {
   Users,
   Activity,
   BookOpen,
+  Shield,
 } from "lucide-react";
 
 import { usePublicCampaigns } from "@/hooks/use-public-campaigns";
-
-import { Button } from "../ui/button";
+import { formatCurrencyWithConversion } from "@/lib/utils/currency";
+import { Button } from "../ui/button";  
 import BenefitsCarousel from "./BenefitsCarousel";
 
-const CharityImageWithFallback = ({ 
-  src, 
-  alt, 
-  title, 
+const CharityImageWithFallback = ({
+  src,
+  alt,
+  title,
   height,
   width,
   className
-}: { 
-  src: string; 
-  alt: string; 
-  title: string; 
-  height: number; 
-  width: number; 
+}: {
+  src: string;
+  alt: string;
+  title: string;
+  height: number;
+  width: number;
   className: string;
 }) => {
   const [imageError, setImageError] = React.useState(false);
@@ -168,14 +169,23 @@ const Main = () => {
 
   const cardDetails = displayCampaigns.map((campaign) => {
     return {
-        id: campaign.id,
-        slug: campaign.slug,
-        creator: campaign.creatorName || "Unknown",
+      id: campaign.id,
+      slug: campaign.slug,
+      creator: campaign.creatorName || "Unknown",
       title: campaign.title,
       description: campaign.description || "Learn more about this campaign's impact.",
       image: campaign.coverImageUrl || null,
       category: campaign.reason || "Community",
-    };  
+      currentAmount: campaign.currentAmount || 0,
+      goalAmount: campaign.goalAmount || 0,
+      currency: campaign.currency || "USD",
+      progressPercentage: campaign.stats?.progressPercentage || 0,
+      stats: campaign.stats || {
+        totalDonations: 0,
+        uniqueDonors: 0,
+      },
+      isVerified: campaign.isVerified || false,
+    };
   });
   return (
     <div>
@@ -239,11 +249,10 @@ const Main = () => {
               <button
                 key={item.value}
                 onClick={() => setSelectedFilter(item.value)}
-                className={`flex gap-2 items-center px-5 py-3 rounded-full font-bold text-sm leading-5 transition-all duration-300 ${
-                  selectedFilter === item.value
+                className={`flex gap-2 items-center px-5 py-3 rounded-full font-bold text-sm leading-5 transition-all duration-300 ${selectedFilter === item.value
                     ? "bg-black text-white"
                     : "bg-white text-black"
-                }`}
+                  }`}
               >
                 {item.icon}
                 {item.label}
@@ -311,7 +320,7 @@ const Main = () => {
                         title={card.title}
                         height={224}
                         width={382}
-                        className="w-[382px] h-[224px] object-contain bg-white group-hover:scale-105 transition-transform duration-500"
+                        className="w-[380px] h-[220px] object-cover bg-white group-hover:scale-105 transition-transform duration-500"
                       />
                     )}
                     <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 rounded-full">
@@ -319,6 +328,12 @@ const Main = () => {
                         {card.category}
                       </span>
                     </div>
+                    {card.isVerified && (
+                      <div className="absolute top-4 right-4 bg-green-600 text-white px-3 py-1 rounded-full flex items-center gap-1.5">
+                        <Shield className="h-3 w-3" fill="white"/>
+                        <span className="font-jakarta font-bold text-xs">Verified</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* CONTENT SECTION */}
@@ -340,11 +355,34 @@ const Main = () => {
                       </div>
                     </div>
                     <div className="flex flex-col gap-2">
-                      <div className="flex gap-2 items-center">
+                       {/* divider */}
+                       <div className="flex gap-2 items-center">
                         <div className="flex gap-2 bg-[#59AD4A] h-1 w-full rounded-full"></div>
                         <Heart color="#F87171" size={30} />
                         <div className="flex gap-2 bg-[#59AD4A] h-1 w-full rounded-full"></div>
                       </div>
+                      {/* progress */}
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="font-jakarta font-bold text-[#1ABD73]">
+                          {formatCurrencyWithConversion(
+                            card.currentAmount as number,
+                            card.currency || "USD",
+                            card.goalAmount as number,
+                            card.currency || "USD"
+                          )}{" "}
+                          raised
+                        </span>
+                        <span className="font-jakarta font-regular text-[#999999] text-sm">
+                          {formatCurrencyWithConversion(card.goalAmount || 0, card.currency || "USD")}{" "}
+                        </span>
+                      </div>
+                      <div className="w-full bg-[#E8E8E8] h-2 rounded-full overflow-hidden mb-4">
+                        <div
+                          className="bg-[#1ABD73] h-full rounded-full transition-all duration-300"
+                          style={{ width: `${card.progressPercentage}%` }}
+                        ></div>
+                      </div>
+                     
                       <Button
                         onClick={(e) => {
                           e.stopPropagation();
