@@ -9,7 +9,7 @@ import { notifications } from '@/lib/schema/notifications';
 import { charityDonations, charities } from '@/lib/schema/charities';
 import { campaignPayouts, commissionPayouts } from '@/lib/schema';
 import { users } from '@/lib/schema/users';
-import { eq, sql, and } from 'drizzle-orm';
+import { eq, sql, and, desc } from 'drizzle-orm';
 import { createPaystackPlan, createPaystackSubscription } from '@/lib/payments/paystack-subscriptions';
 import { 
   DONATION_STATUS_CONFIG, 
@@ -669,6 +669,26 @@ async function handleRecurringChargeSuccess(
   const { updateSubscriptionAfterPayment, processRecurringDonationPayment } = await import('@/lib/services/subscription-service');
 
   let donationId = donationIdFromMetadata;
+  let alreadyProcessed = false;
+
+  const [referencePayment] = await db
+    .select({
+      donationId: recurringDonationPayments.donationId,
+      paymentStatus: recurringDonationPayments.paymentStatus,
+    })
+    .from(recurringDonationPayments)
+    .where(
+      and(
+        eq(recurringDonationPayments.recurringDonationId, recurringDonationId),
+        eq(recurringDonationPayments.paystackTransactionId, reference)
+      )
+    )
+    .limit(1);
+
+  if (referencePayment?.donationId) {
+    donationId = referencePayment.donationId;
+    alreadyProcessed = referencePayment.paymentStatus === 'completed';
+  }
 
   if (!donationId) {
     const created = await processRecurringDonationPayment(recurringDonationId);
@@ -677,6 +697,11 @@ async function handleRecurringChargeSuccess(
       return;
     }
     donationId = created.donationId;
+  }
+
+  if (!donationId) {
+    console.error('Recurring payment could not be linked to a donation:', recurringDonationId);
+    return;
   }
 
   await handleCampaignDonationSuccess(
@@ -695,7 +720,9 @@ async function handleRecurringChargeSuccess(
       )
     );
 
-  await updateSubscriptionAfterPayment(recurringDonationId, donationId, true);
+  if (!alreadyProcessed) {
+    await updateSubscriptionAfterPayment(recurringDonationId, donationId, true);
+  }
 
   if (!recurringDonation.paystackSubscriptionId) {
     const authorizationCode = data.authorization?.authorization_code;
@@ -764,16 +791,76 @@ async function handleRecurringChargeFailed(
     data.gateway_response || data.status || 'Recurring charge failed'
   );
 
-  if (donationIdFromMetadata) {
+  let donationId = donationIdFromMetadata;
+  const [referencePayment] = await db
+    .select({
+      donationId: recurringDonationPayments.donationId,
+      paymentStatus: recurringDonationPayments.paymentStatus,
+    })
+    .from(recurringDonationPayments)
+    .where(
+      and(
+        eq(recurringDonationPayments.recurringDonationId, recurringDonationId),
+        eq(recurringDonationPayments.paystackTransactionId, reference)
+      )
+    )
+    .limit(1);
+
+  if (!donationId && referencePayment?.donationId) {
+    donationId = referencePayment.donationId;
+  }
+
+  if (referencePayment?.paymentStatus === 'failed') {
+    return;
+  }
+
+  if (!donationId) {
+    const [pendingPayment] = await db
+      .select({
+        donationId: recurringDonationPayments.donationId,
+      })
+      .from(recurringDonationPayments)
+      .where(
+        and(
+          eq(recurringDonationPayments.recurringDonationId, recurringDonationId),
+          eq(recurringDonationPayments.paymentStatus, 'pending')
+        )
+      )
+      .orderBy(desc(recurringDonationPayments.createdAt))
+      .limit(1);
+
+    donationId = pendingPayment?.donationId;
+  }
+
+  if (donationId) {
     await handleCampaignDonationFailed(
-      donationIdFromMetadata,
+      donationId,
       reference,
       recurringDonation.campaignId,
       data
     );
 
     const { updateSubscriptionAfterPayment } = await import('@/lib/services/subscription-service');
-    await updateSubscriptionAfterPayment(recurringDonationId, donationIdFromMetadata, false);
+    await updateSubscriptionAfterPayment(recurringDonationId, donationId, false);
+    await db
+      .update(recurringDonationPayments)
+      .set({
+        paystackTransactionId: reference,
+      })
+      .where(
+        and(
+          eq(recurringDonationPayments.recurringDonationId, recurringDonationId),
+          eq(recurringDonationPayments.donationId, donationId)
+        )
+      );
+
+    await db
+      .update(recurringDonations)
+      .set({
+        lastFailureReason: failureReason,
+        updatedAt: new Date(),
+      })
+      .where(eq(recurringDonations.id, recurringDonationId));
   } else {
     await db
       .update(recurringDonations)
