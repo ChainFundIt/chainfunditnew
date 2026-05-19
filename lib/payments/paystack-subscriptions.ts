@@ -160,16 +160,34 @@ export async function getPaystackSubscription(subscriptionCode: string): Promise
   }
 }
 
+async function resolveSubscriptionEmailToken(subscriptionCode: string): Promise<string | null> {
+  const subscription = await getPaystackSubscription(subscriptionCode);
+  return (
+    subscription?.email_token ||
+    subscription?.emailToken ||
+    subscription?.subscription_token ||
+    null
+  );
+}
+
 /**
  * Cancel a Paystack subscription
  */
-export async function cancelPaystackSubscription(subscriptionCode: string): Promise<any> {
+export async function cancelPaystackSubscription(
+  subscriptionCode: string,
+  emailToken?: string
+): Promise<any> {
   try {
+    const token = emailToken || (await resolveSubscriptionEmailToken(subscriptionCode));
+    if (!token) {
+      throw new Error('Missing Paystack subscription email token for cancellation');
+    }
+
     const response = await axios.post(
       `${PAYSTACK_BASE_URL}/subscription/disable`,
       {
         code: subscriptionCode,
-        token: subscriptionCode, // Paystack uses token for cancellation
+        token,
       },
       {
         headers: {
@@ -189,13 +207,21 @@ export async function cancelPaystackSubscription(subscriptionCode: string): Prom
 /**
  * Enable a Paystack subscription
  */
-export async function enablePaystackSubscription(subscriptionCode: string): Promise<any> {
+export async function enablePaystackSubscription(
+  subscriptionCode: string,
+  emailToken?: string
+): Promise<any> {
   try {
+    const token = emailToken || (await resolveSubscriptionEmailToken(subscriptionCode));
+    if (!token) {
+      throw new Error('Missing Paystack subscription email token for enablement');
+    }
+
     const response = await axios.post(
       `${PAYSTACK_BASE_URL}/subscription/enable`,
       {
         code: subscriptionCode,
-        token: subscriptionCode,
+        token,
       },
       {
         headers: {

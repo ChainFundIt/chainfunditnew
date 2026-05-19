@@ -2,7 +2,7 @@ import { db } from '@/lib/db';
 import { recurringDonations, recurringDonationPayments } from '@/lib/schema/recurring-donations';
 import { donations } from '@/lib/schema/donations';
 import { campaigns } from '@/lib/schema/campaigns';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, desc } from 'drizzle-orm';
 import {
   createOrRetrievePaystackCustomer,
   createPaystackPlan,
@@ -295,6 +295,29 @@ export async function processRecurringDonationPayment(
     return { success: false, error: 'Subscription is not active' };
   }
 
+  const scheduledDate =
+    subscription.nextBillingDate || new Date().toISOString().split('T')[0];
+
+  // Ensure we create only one donation record per billing cycle.
+  const [existingCyclePayment] = await db
+    .select({
+      id: recurringDonationPayments.id,
+      donationId: recurringDonationPayments.donationId,
+    })
+    .from(recurringDonationPayments)
+    .where(
+      and(
+        eq(recurringDonationPayments.recurringDonationId, recurringDonationId),
+        eq(recurringDonationPayments.scheduledDate, scheduledDate)
+      )
+    )
+    .orderBy(desc(recurringDonationPayments.createdAt))
+    .limit(1);
+
+  if (existingCyclePayment?.donationId) {
+    return { success: true, donationId: existingCyclePayment.donationId };
+  }
+
   // Create donation record for this payment
   const donation = await db.insert(donations).values({
     campaignId: subscription.campaignId,
@@ -327,7 +350,7 @@ export async function processRecurringDonationPayment(
     paymentStatus: 'pending',
     billingPeriodStart: billingPeriodStart.toISOString().split('T')[0],
     billingPeriodEnd: billingPeriodEnd.toISOString().split('T')[0],
-    scheduledDate: new Date().toISOString().split('T')[0],
+    scheduledDate: scheduledDate,
   });
 
   // The actual payment will be processed by the payment provider
@@ -387,7 +410,21 @@ export async function updateSubscriptionAfterPayment(
       .update(recurringDonations)
       .set({
         failedAttempts: subscription.failedAttempts + 1,
+        updatedAt: new Date(),
       })
       .where(eq(recurringDonations.id, recurringDonationId));
+
+    await db
+      .update(recurringDonationPayments)
+      .set({
+        paymentStatus: 'failed',
+        processedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(recurringDonationPayments.recurringDonationId, recurringDonationId),
+          eq(recurringDonationPayments.donationId, donationId)
+        )
+      );
   }
 }
