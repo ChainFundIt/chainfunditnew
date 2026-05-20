@@ -119,49 +119,74 @@ const CustomerStories = (props: Props) => {
                   viewport={{ once: true }}
                   className="min-w-0 flex-[0_0_80%] sm:flex-[0_0_calc((100%-1rem)/2)] lg:flex-[0_0_calc((100%-2rem)/3)]"
                 >
-                  <div className="bg-[#166534] rounded-[32px] p-8 flex flex-col gap-6 h-full border border-[#22C55E]">
-                    {/* Star Rating */}
-                    <div className="flex gap-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          size={20}
-                          className={
-                            i < review.rating
-                              ? "fill-[#FFD700] text-[#FFD700]"
-                              : "text-[#86EFAC]"
-                          }
-                        />
-                      ))}
-                    </div>
-
-                    {/* Quote */}
-                    <p
-                      className={`font-medium text-lg leading-[30px] text-[#ECFDF5] ${review.isLoading ? "opacity-60" : ""
-                        }`}
-                    >
-                      {review.headline}
-                    </p>
-
-                    <p className="text-[#D1FAE5] leading-7">{review.body}</p>
-
-                    {/* Spacer to push user info to bottom */}
-                    <div className="flex-grow" />
-
-                    {/* User Info */}
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-[#DCFCE7] text-[#14532D] font-extrabold flex items-center justify-center flex-shrink-0">
-                        {initials(review.displayName)}
+                  <div className="bg-[#104109] rounded-[32px] p-8 flex flex-col gap-6 h-full border border-[#22C55E]">
+                    {review.isLoading ? (
+                      <div className="animate-pulse flex flex-col gap-6 h-full">
+                        <div className="flex gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <div
+                              key={i}
+                              className="h-5 w-5 rounded-full bg-[#2A6B2A]"
+                            />
+                          ))}
+                        </div>
+                        <div className="space-y-3">
+                          <div className="h-6 w-3/4 rounded bg-[#2A6B2A]" />
+                          <div className="h-4 w-full rounded bg-[#2A6B2A]" />
+                          <div className="h-4 w-5/6 rounded bg-[#2A6B2A]" />
+                        </div>
+                        <div className="flex-grow" />
+                        <div className="flex items-center gap-4">
+                          <div className="h-12 w-12 rounded-full bg-[#2A6B2A]" />
+                          <div className="space-y-2 w-full">
+                            <div className="h-4 w-2/5 rounded bg-[#2A6B2A]" />
+                            <div className="h-3 w-1/3 rounded bg-[#2A6B2A]" />
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-bold text-base leading-6 text-[#F0FDF4]">
-                          {review.displayName}
+                    ) : (
+                      <>
+                        {/* Star Rating */}
+                        <div className="flex gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              size={20}
+                              className={
+                                i < review.rating
+                                  ? "fill-[#FFD700] text-[#FFD700]"
+                                  : "text-[#86EFAC]"
+                              }
+                            />
+                          ))}
+                        </div>
+
+                        {/* Quote */}
+                        <p className="font-medium text-lg leading-[30px] text-[#ECFDF5]">
+                          {review.headline}
                         </p>
-                        <p className="font-bold text-xs leading-4 text-[#86EFAC]">
-                          {roleLabel(review.role)}
-                        </p>
-                      </div>
-                    </div>
+
+                        <p className="text-[#D1FAE5] leading-7">{review.body}</p>
+
+                        {/* Spacer to push user info to bottom */}
+                        <div className="flex-grow" />
+
+                        {/* User Info */}
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-full bg-[#DCFCE7] text-[#14532D] font-extrabold flex items-center justify-center flex-shrink-0">
+                            {initials(review.displayName)}
+                          </div>
+                          <div>
+                            <p className="font-bold text-base leading-6 text-[#F0FDF4]">
+                              {review.displayName}
+                            </p>
+                            <p className="font-bold text-xs leading-4 text-[#86EFAC]">
+                              {roleLabel(review.role)}
+                            </p>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </motion.div>
               ))}

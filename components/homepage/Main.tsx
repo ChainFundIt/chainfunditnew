@@ -21,7 +21,7 @@ import {
 
 import { usePublicCampaigns } from "@/hooks/use-public-campaigns";
 import { formatCurrencyWithConversion } from "@/lib/utils/currency";
-import { Button } from "../ui/button";  
+import { Button } from "../ui/button";
 import BenefitsCarousel from "./BenefitsCarousel";
 
 const CharityImageWithFallback = ({
@@ -250,8 +250,8 @@ const Main = () => {
                 key={item.value}
                 onClick={() => setSelectedFilter(item.value)}
                 className={`flex gap-2 items-center px-5 py-3 rounded-full font-bold text-sm leading-5 transition-all duration-300 ${selectedFilter === item.value
-                    ? "bg-black text-white"
-                    : "bg-white text-black"
+                  ? "bg-black text-white"
+                  : "bg-white text-black"
                   }`}
               >
                 {item.icon}
@@ -330,7 +330,7 @@ const Main = () => {
                     </div>
                     {card.isVerified && (
                       <div className="absolute top-4 right-4 bg-green-600 text-white px-3 py-1 rounded-full flex items-center gap-1.5">
-                        <Shield className="h-3 w-3" fill="white"/>
+                        <Shield className="h-3 w-3" fill="white" />
                         <span className="font-jakarta font-bold text-xs">Verified</span>
                       </div>
                     )}
@@ -355,12 +355,13 @@ const Main = () => {
                       </div>
                     </div>
                     <div className="flex flex-col gap-2">
-                       {/* divider */}
-                       <div className="flex gap-2 items-center">
+                      {/* divider */}
+                      {/* <div className="flex gap-2 items-center">
                         <div className="flex gap-2 bg-[#59AD4A] h-1 w-full rounded-full"></div>
                         <Heart color="#F87171" size={30} />
                         <div className="flex gap-2 bg-[#59AD4A] h-1 w-full rounded-full"></div>
-                      </div>
+                      </div> */}
+                      <hr className="border-[#E8E8E8]" />
                       {/* progress */}
                       <div className="flex justify-between items-center mb-3">
                         <span className="font-jakarta font-bold text-[#1ABD73]">
@@ -382,7 +383,7 @@ const Main = () => {
                           style={{ width: `${card.progressPercentage}%` }}
                         ></div>
                       </div>
-                     
+
                       <Button
                         onClick={(e) => {
                           e.stopPropagation();
