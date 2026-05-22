@@ -5,6 +5,7 @@ import {
   users,
   donations,
   campaignPayouts,
+  campaigns,
 } from "@/lib/schema";
 import { getUserFromRequest } from "@/lib/auth";
 import { and, eq, sql } from "drizzle-orm";
@@ -45,6 +46,10 @@ async function getEligibility(userId: string) {
           and ${donations.paymentStatus} = 'completed'
       ) as "donorEligible",
       exists(
+        select 1 from ${campaigns}
+        where ${campaigns.creatorId} = ${userId}
+          and ${campaigns.deletedAt} is null
+      ) or exists(
         select 1 from ${campaignPayouts}
         where ${campaignPayouts.userId} = ${userId}
           and ${campaignPayouts.status} in ('pending', 'approved', 'processing', 'completed')

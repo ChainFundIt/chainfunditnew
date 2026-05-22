@@ -159,7 +159,7 @@ export default function ReviewSettings() {
           <CardContent>
             <div className="text-sm text-gray-600">
               You can leave a platform review after you&apos;ve completed a
-              donation or received your first payout.
+              donation or created your first campaign.
             </div>
           </CardContent>
         </Card>
