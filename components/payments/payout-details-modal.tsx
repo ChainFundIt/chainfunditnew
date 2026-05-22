@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/currency";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 
 interface PayoutDetailsModalProps {
   isOpen: boolean;
@@ -83,6 +84,10 @@ export function PayoutDetailsModal({
   isProcessing = false,
 }: PayoutDetailsModalProps) {
   const [banks, setBanks] = useState<any[]>([]);
+  const [withdrawalType, setWithdrawalType] = useState<"full" | "partial">(
+    "full"
+  );
+  const [partialAmount, setPartialAmount] = useState<string>("");
   const router = useRouter();
 
   // Fetch banks when modal opens
@@ -103,11 +108,25 @@ export function PayoutDetailsModal({
     }
   }, [isOpen]);
 
-  // Calculate fees - simple, no loops
-  const calculateFees = () => {
-    const baseAmount = Math.max(campaign.availableAmount || 0, 0);
+  useEffect(() => {
+    if (isOpen) {
+      setWithdrawalType("full");
+      setPartialAmount("");
+    }
+  }, [isOpen, campaign.id]);
+
+  const availableAmount = Math.max(campaign.availableAmount || 0, 0);
+
+  // Calculate fees for the requested payout amount
+  const calculateFees = (requestedAmount: number) => {
+    const baseAmount = Math.max(requestedAmount, 0);
     const rawChainerCommissions = campaign.chainerCommissionsTotal || 0;
-    const chainerCommissions = Math.min(rawChainerCommissions, baseAmount);
+    const availableRatio =
+      availableAmount > 0 ? Math.min(baseAmount / availableAmount, 1) : 0;
+    const chainerCommissions = Math.min(
+      rawChainerCommissions * availableRatio,
+      baseAmount
+    );
     const chainfunditFeePercentage = 0.05; // 5%
     const chainfunditFee = baseAmount * chainfunditFeePercentage;
     
@@ -138,7 +157,48 @@ export function PayoutDetailsModal({
     };
   };
 
-  const fees = calculateFees();
+  const parsedPartialAmount = Number(partialAmount.replace(/,/g, ""));
+  const hasPartialAmountInput = partialAmount.trim().length > 0;
+  const requestedAmount =
+    withdrawalType === "full"
+      ? availableAmount
+      : hasPartialAmountInput && Number.isFinite(parsedPartialAmount)
+        ? parsedPartialAmount
+        : 0;
+  const normalizedRequestedAmount = Number(requestedAmount.toFixed(2));
+  const fees = calculateFees(normalizedRequestedAmount);
+
+  const getAmountValidationError = () => {
+    if (withdrawalType === "full") {
+      if (availableAmount <= 0) {
+        return "No funds available for payout";
+      }
+      return null;
+    }
+
+    if (!hasPartialAmountInput) {
+      return "Enter an amount to withdraw";
+    }
+
+    if (!Number.isFinite(parsedPartialAmount)) {
+      return "Enter a valid number";
+    }
+
+    if (parsedPartialAmount <= 0) {
+      return "Amount must be greater than zero";
+    }
+
+    if (parsedPartialAmount > availableAmount) {
+      return `Amount cannot exceed ${formatCurrency(
+        availableAmount,
+        campaign.currencyCode
+      )}`;
+    }
+
+    return null;
+  };
+
+  const amountValidationError = getAmountValidationError();
 
   const getBankName = () => {
     if (userProfile?.bankName) return userProfile.bankName;
@@ -163,10 +223,14 @@ export function PayoutDetailsModal({
       toast.error("No funds available for payout");
       return;
     }
+    if (amountValidationError) {
+      toast.error(amountValidationError);
+      return;
+    }
 
     onConfirmPayout(
       campaign.id,
-      campaign.availableAmount,
+      normalizedRequestedAmount,
       campaign.currencyCode,
       campaign.payoutProvider
     );
@@ -250,10 +314,52 @@ export function PayoutDetailsModal({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
+              <div className="bg-white/70 rounded-lg p-3 space-y-3">
+                <p className="text-sm font-semibold text-[#104109]">Withdrawal Amount</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    variant={withdrawalType === "full" ? "default" : "outline"}
+                    className="justify-start"
+                    onClick={() => setWithdrawalType("full")}
+                  >
+                    Withdraw all
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={withdrawalType === "partial" ? "default" : "outline"}
+                    className="justify-start"
+                    onClick={() => setWithdrawalType("partial")}
+                  >
+                    Withdraw custom amount
+                  </Button>
+                </div>
+
+                {withdrawalType === "partial" && (
+                  <div className="space-y-1">
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={partialAmount}
+                      onChange={(e) => setPartialAmount(e.target.value)}
+                      placeholder={`Enter amount in ${campaign.currencyCode}`}
+                    />
+                    <p className="text-xs text-gray-500">
+                      Available:{" "}
+                      {formatCurrency(availableAmount, campaign.currencyCode)}
+                    </p>
+                    {amountValidationError && (
+                      <p className="text-xs text-red-600">{amountValidationError}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <div className="flex justify-between items-center">
-                <span className="text-gray-700">Available Amount:</span>
+                <span className="text-gray-700">Requested Amount:</span>
                 <span className="font-semibold text-lg">
-                  {formatCurrency(fees.baseAmount, campaign.currencyCode)}
+                  {formatCurrency(normalizedRequestedAmount, campaign.currencyCode)}
                 </span>
               </div>
               
@@ -264,12 +370,10 @@ export function PayoutDetailsModal({
                     -{formatCurrency(fees.totalFees, campaign.currencyCode)}
                   </span>
                 </div>
-                {fees.chainerCommissions > 0 && (
-                  <div className="flex justify-between text-xs text-gray-500 pl-2">
-                    <span>• Platform fee (5%)</span>
-                    <span>-{formatCurrency(fees.chainfunditFee, campaign.currencyCode)}</span>
-                  </div>
-                )}
+                <div className="flex justify-between text-xs text-gray-500 pl-2">
+                  <span>• Platform fee (5%)</span>
+                  <span>-{formatCurrency(fees.chainfunditFee, campaign.currencyCode)}</span>
+                </div>
                 {fees.chainerCommissions > 0 && (
                   <div className="flex justify-between text-xs text-gray-500 pl-2">
                     <span>• Ambassador commissions</span>
@@ -498,6 +602,7 @@ export function PayoutDetailsModal({
               disabled={
                 isProcessing ||
                 !campaign.payoutProvider ||
+                !!amountValidationError ||
                 userProfile?.accountChangeRequested ||
                 (campaign.payoutProvider === 'paypal' && !userProfile?.email) ||
                 (campaign.payoutProvider === 'paystack' && !userProfile?.accountVerified) ||
