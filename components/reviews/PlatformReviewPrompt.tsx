@@ -400,7 +400,7 @@ export default function PlatformReviewPrompt() {
             ) : (
               <div className="text-sm text-muted-foreground">
                 You can leave a platform review after you&apos;ve completed a donation or
-                received your first payout.
+                created your first campaign.
               </div>
             )
           ) : null}

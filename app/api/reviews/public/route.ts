@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { platformReviews, users, donations, campaignPayouts } from "@/lib/schema";
+import {
+  platformReviews,
+  users,
+  donations,
+  campaignPayouts,
+  campaigns,
+} from "@/lib/schema";
 import { desc, eq, sql } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
@@ -16,6 +22,10 @@ export async function GET(request: NextRequest) {
     )`;
 
     const creatorEligibleSql = sql<boolean>`exists(
+      select 1 from ${campaigns}
+      where ${campaigns.creatorId} = ${users.id}
+        and ${campaigns.deletedAt} is null
+    ) or exists(
       select 1 from ${campaignPayouts}
       where ${campaignPayouts.userId} = ${users.id}
         and ${campaignPayouts.status} in ('pending', 'approved', 'processing', 'completed')
