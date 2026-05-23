@@ -72,8 +72,7 @@ const PayoutsPage = () => {
 
   // Get user's geolocation and currency conversion capabilities
   const { geolocation, loading: geolocationLoading } = useGeolocation();
-  const { formatAmount, loading: conversionLoading } =
-    useCurrencyConversion(geolocation);
+  const { formatAmount } = useCurrencyConversion(geolocation);
 
   useEffect(() => {
     loadPayoutData();

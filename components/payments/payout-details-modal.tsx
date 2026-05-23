@@ -40,25 +40,9 @@ interface PayoutDetailsModalProps {
     chainerCommissionsInNGN?: number;
   };
   userProfile?: {
-    fullName: string;
-    email: string;
-    accountNumber?: string;
-    bankName?: string;
-    bankCode?: string;
-    accountName?: string;
+    email?: string;
     accountVerified?: boolean;
     accountChangeRequested?: boolean;
-    accountChangeReason?: string;
-    stripeAccountId?: string;
-    stripeAccountReady?: boolean;
-    // International bank account fields
-    internationalBankAccountNumber?: string;
-    internationalBankRoutingNumber?: string;
-    internationalBankSwiftBic?: string;
-    internationalBankCountry?: string;
-    internationalBankName?: string;
-    internationalAccountName?: string;
-    internationalAccountVerified?: boolean;
   };
   onContinueToPayoutFlow: (
     campaign: PayoutDetailsModalProps["campaign"]
