@@ -1,12 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, withRetry } from '@/lib/db';
 import { campaigns, users, donations } from '@/lib/schema';
-import { eq, and, or, inArray, count, sum, desc, ne, like, isNull } from 'drizzle-orm';
+import { eq, and, or, inArray, count, sum, desc, ne, like, isNull, sql } from 'drizzle-orm';
 import { parse } from 'cookie';
 import { verifyUserJWT } from '@/lib/auth';
 import { generateSlug, generateUniqueSlug } from '@/lib/utils/slug';
 import { sendCampaignCreationEmail } from '@/lib/notifications/campaign-creation-email';
 import { notifyAdminsOfCampaignCreated } from '@/lib/notifications/campaign-created-alerts';
+
+const campaignIdempotentSelect = {
+  id: campaigns.id,
+  creatorId: campaigns.creatorId,
+  title: campaigns.title,
+  slug: campaigns.slug,
+  subtitle: campaigns.subtitle,
+  description: campaigns.description,
+  reason: campaigns.reason,
+  fundraisingFor: campaigns.fundraisingFor,
+  duration: campaigns.duration,
+  videoUrl: campaigns.videoUrl,
+  coverImageUrl: campaigns.coverImageUrl,
+  galleryImages: campaigns.galleryImages,
+  documents: campaigns.documents,
+  goalAmount: campaigns.goalAmount,
+  currency: campaigns.currency,
+  minimumDonation: campaigns.minimumDonation,
+  chainerCommissionRate: campaigns.chainerCommissionRate,
+  isChained: campaigns.isChained,
+  currentAmount: campaigns.currentAmount,
+  status: campaigns.status,
+  visibility: campaigns.visibility,
+  isActive: campaigns.isActive,
+  createdAt: campaigns.createdAt,
+  updatedAt: campaigns.updatedAt,
+  closedAt: campaigns.closedAt,
+};
 
 function safeParseStringArray(value: unknown): string[] {
   if (!value) {
@@ -217,7 +245,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user details
-    const user = await db.select().from(users).where(eq(users.email, userEmail)).limit(1);
+    const user = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        fullName: users.fullName,
+        phone: users.phone,
+        suspendedAt: users.suspendedAt,
+      })
+      .from(users)
+      .where(eq(users.email, userEmail))
+      .limit(1);
     if (!user.length) {
       return NextResponse.json(
         { success: false, error: 'User not found' },
@@ -245,7 +283,6 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     
     // Extract campaign data
-    const creationRequestId = (formData.get('creationRequestId') as string) || null;
     const title = formData.get('title') as string;
     const subtitle = formData.get('subtitle') as string;
     const description = formData.get('description') as string;
@@ -288,23 +325,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Idempotency: if this exact creation request was already processed for this user,
-    // return the existing campaign instead of creating a duplicate.
-    if (creationRequestId) {
-      const existingByRequestId = await db
-        .select()
-        .from(campaigns)
-        .where(and(eq(campaigns.creatorId, userId), eq(campaigns.creationRequestId, creationRequestId)))
-        .limit(1);
-
-      if (existingByRequestId.length) {
-        return NextResponse.json(
-          { success: true, data: existingByRequestId[0], idempotent: true },
-          { status: 200 }
-        );
-      }
-    }
-
     // Validate numeric fields
     const goalAmountNum = parseFloat(goalAmount);
     const minimumDonationNum = parseFloat(minimumDonation);
@@ -344,7 +364,6 @@ export async function POST(request: NextRequest) {
       videoUrl: 255,
       coverImageUrl: 255,
       currency: 50,
-      creationRequestId: 64,
       visibility: 20,
     };
     const safeStr = (s: string | null | undefined, max: number) =>
@@ -358,9 +377,6 @@ export async function POST(request: NextRequest) {
     const coverImageUrlSafe = safeStr(coverImageUrl, L.coverImageUrl);
     const currencySafe = (currency || 'USD').trim().slice(0, L.currency);
     const visibilitySafe = (visibility || 'public').trim().slice(0, L.visibility);
-    const creationRequestIdSafe = creationRequestId
-      ? String(creationRequestId).trim().slice(0, L.creationRequestId)
-      : null;
 
     // Generate unique slug; never allow empty (some titles become empty after slugify)
     let baseSlug = generateSlug(titleSafe);
@@ -372,8 +388,7 @@ export async function POST(request: NextRequest) {
     };
 
     let newCampaign: any[] = [];
-    let effectiveCreationRequestId: string | null = creationRequestIdSafe;
-    // Create campaign (retry on slug collisions; handle idempotency-key collisions and global creation_request_id collision)
+    // Create campaign (retry on slug collisions)
     for (let attempt = 0; attempt < 4; attempt++) {
       // Check for existing slugs to ensure uniqueness (include baseSlug-# variants)
       const existingSlugs = await db
@@ -384,61 +399,82 @@ export async function POST(request: NextRequest) {
       const uniqueSlug = generateUniqueSlug(baseSlug, existingSlugs.map(c => c.slug));
 
       try {
-        newCampaign = await db.insert(campaigns).values({
-          creatorId: userId,
-          creationRequestId: effectiveCreationRequestId,
-          title: titleSafe,
-          slug: uniqueSlug,
-          subtitle: subtitleSafe,
-          description,
-          reason: reasonSafe,
-          fundraisingFor: fundraisingForSafe,
-          duration: durationSafe,
-          videoUrl: videoUrlSafe,
-          coverImageUrl: coverImageUrlSafe,
-          galleryImages: galleryImages || null,
-          documents: documents || null,
-          goalAmount: goalAmountNum.toString(),
-          currency: currencySafe,
-          minimumDonation: minimumDonationNum.toString(),
-          chainerCommissionRate: isChainedBool ? commissionRateNum.toString() : '0',
-          isChained: isChainedBool,
-          currentAmount: '0',
-          status: 'active',
-          visibility: visibilitySafe,
-          isActive: true,
-          complianceStatus: 'approved',
-          complianceSummary: null,
-          complianceFlags: null,
-          riskScore: '0',
-          reviewRequired: false,
-          lastScreenedAt: null,
-          blockedAt: null,
-        }).returning();
+        const insertedCampaign = await db.execute(sql`
+          insert into "campaigns" (
+            "creator_id",
+            "title",
+            "slug",
+            "subtitle",
+            "description",
+            "reason",
+            "fundraising_for",
+            "duration",
+            "video_url",
+            "cover_image_url",
+            "gallery_images",
+            "documents",
+            "goal_amount",
+            "currency",
+            "minimum_donation",
+            "chainer_commission_rate",
+            "is_chained",
+            "current_amount",
+            "status",
+            "visibility",
+            "is_active"
+          ) values (
+            ${userId},
+            ${titleSafe},
+            ${uniqueSlug},
+            ${subtitleSafe},
+            ${description},
+            ${reasonSafe},
+            ${fundraisingForSafe},
+            ${durationSafe},
+            ${videoUrlSafe},
+            ${coverImageUrlSafe},
+            ${galleryImages || null},
+            ${documents || null},
+            ${goalAmountNum.toString()},
+            ${currencySafe},
+            ${minimumDonationNum.toString()},
+            ${isChainedBool ? commissionRateNum.toString() : '0'},
+            ${isChainedBool},
+            ${'0'},
+            ${'active'},
+            ${visibilitySafe},
+            ${true}
+          )
+          returning
+            "id" as "id",
+            "creator_id" as "creatorId",
+            "title" as "title",
+            "slug" as "slug",
+            "subtitle" as "subtitle",
+            "description" as "description",
+            "reason" as "reason",
+            "fundraising_for" as "fundraisingFor",
+            "duration" as "duration",
+            "video_url" as "videoUrl",
+            "cover_image_url" as "coverImageUrl",
+            "gallery_images" as "galleryImages",
+            "documents" as "documents",
+            "goal_amount" as "goalAmount",
+            "currency" as "currency",
+            "minimum_donation" as "minimumDonation",
+            "chainer_commission_rate" as "chainerCommissionRate",
+            "is_chained" as "isChained",
+            "current_amount" as "currentAmount",
+            "status" as "status",
+            "visibility" as "visibility",
+            "is_active" as "isActive",
+            "created_at" as "createdAt",
+            "updated_at" as "updatedAt",
+            "closed_at" as "closedAt"
+        `);
+        newCampaign = (insertedCampaign.rows ?? []) as any[];
         break;
       } catch (err) {
-        // If the idempotency key already exists (race), return the previously created campaign.
-        if (effectiveCreationRequestId && isUniqueViolation(err)) {
-          const existingByRequestId = await db
-            .select()
-            .from(campaigns)
-            .where(and(eq(campaigns.creatorId, userId), eq(campaigns.creationRequestId, effectiveCreationRequestId)))
-            .limit(1);
-
-          if (existingByRequestId.length) {
-            return NextResponse.json(
-              { success: true, data: existingByRequestId[0], idempotent: true },
-              { status: 200 }
-            );
-          }
-          // Unique violation but not our campaign: another user has this creationRequestId (rare collision).
-          // Retry once without idempotency key so this user's campaign still gets created.
-          if (attempt === 0) {
-            effectiveCreationRequestId = null;
-            continue;
-          }
-        }
-
         // Otherwise: likely a slug collision, retry with new slug.
         if (attempt === 3 || !isUniqueViolation(err)) throw err;
       }

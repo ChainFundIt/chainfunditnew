@@ -25,7 +25,46 @@ export async function GET(request: NextRequest) {
     if (!email) {
       return NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
     }
-    const user = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    const user = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        fullName: users.fullName,
+        phone: users.phone,
+        countryCode: users.countryCode,
+        avatar: users.avatar,
+        bio: users.bio,
+        hasCompletedProfile: users.hasCompletedProfile,
+        hasSeenWelcomeModal: users.hasSeenWelcomeModal,
+        instagram: users.instagram,
+        facebook: users.facebook,
+        linkedin: users.linkedin,
+        twitter: users.twitter,
+        tiktok: users.tiktok,
+        youtube: users.youtube,
+        role: users.role,
+        // Payout/account verification fields used by payout flow
+        accountNumber: users.accountNumber,
+        bankCode: users.bankCode,
+        bankName: users.bankName,
+        accountName: users.accountName,
+        accountVerified: users.accountVerified,
+        accountLocked: users.accountLocked,
+        accountChangeRequested: users.accountChangeRequested,
+        accountChangeReason: users.accountChangeReason,
+        internationalBankAccountNumber: users.internationalBankAccountNumber,
+        internationalBankRoutingNumber: users.internationalBankRoutingNumber,
+        internationalBankSwiftBic: users.internationalBankSwiftBic,
+        internationalBankCountry: users.internationalBankCountry,
+        internationalBankName: users.internationalBankName,
+        internationalAccountName: users.internationalAccountName,
+        internationalAccountVerified: users.internationalAccountVerified,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
     if (!user.length) {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
     }
@@ -71,7 +110,26 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date(),
       })
       .where(eq(users.email, email))
-      .returning();
+      .returning({
+        id: users.id,
+        email: users.email,
+        fullName: users.fullName,
+        phone: users.phone,
+        countryCode: users.countryCode,
+        avatar: users.avatar,
+        bio: users.bio,
+        hasCompletedProfile: users.hasCompletedProfile,
+        hasSeenWelcomeModal: users.hasSeenWelcomeModal,
+        instagram: users.instagram,
+        facebook: users.facebook,
+        linkedin: users.linkedin,
+        twitter: users.twitter,
+        tiktok: users.tiktok,
+        youtube: users.youtube,
+        role: users.role,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      });
 
     if (!updateResult.length) {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
@@ -96,7 +154,26 @@ export async function PATCH(request: NextRequest) {
     const updateResult = await db.update(users)
       .set({ hasSeenWelcomeModal, updatedAt: new Date() })
       .where(eq(users.email, email))
-      .returning();
+      .returning({
+        id: users.id,
+        email: users.email,
+        fullName: users.fullName,
+        phone: users.phone,
+        countryCode: users.countryCode,
+        avatar: users.avatar,
+        bio: users.bio,
+        hasCompletedProfile: users.hasCompletedProfile,
+        hasSeenWelcomeModal: users.hasSeenWelcomeModal,
+        instagram: users.instagram,
+        facebook: users.facebook,
+        linkedin: users.linkedin,
+        twitter: users.twitter,
+        tiktok: users.tiktok,
+        youtube: users.youtube,
+        role: users.role,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      });
     if (!updateResult.length) {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
     }

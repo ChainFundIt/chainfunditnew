@@ -19,7 +19,7 @@ import { useRouter } from "next/navigation";
 import {
   fetchUserProfile,
   fetchPayoutData,
-  fetchCampaignDetails,
+  requestPayout,
   type CampaignPayout,
   type PayoutData,
 } from "@/app/utils/api/payouts";
@@ -31,6 +31,7 @@ import { PayoutsIcon } from "@/public/icons/PayoutsIcon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PayoutDetailsModal } from "@/components/payments/payout-details-modal";
+import { PayoutAmountModal } from "@/components/payments/payout-amount-modal";
 import {
   PayoutSuccessModal,
   type PayoutSuccessData,
@@ -38,98 +39,6 @@ import {
 import { triggerPlatformReviewPrompt } from "@/lib/utils/review-prompt";
 
 import Card from "../_components/Card/page";
-
-const REQUEST_PAYOUT_TIMEOUT_MS = 15000;
-
-async function requestPayout(params: any): Promise<any> {
-  const { campaignId, amount, currency, payoutProvider } = params;
-
-  try {
-    const abortController = new AbortController();
-    const timeoutId = window.setTimeout(
-      () => abortController.abort(),
-      REQUEST_PAYOUT_TIMEOUT_MS
-    );
-
-    try {
-      const response = await fetch("/api/payouts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          campaignId,
-          amount,
-          currency,
-          payoutProvider,
-        }),
-        signal: abortController.signal,
-      });
-
-      // Handle non-OK responses
-      if (!response.ok) {
-        const errorData = await response
-          .json()
-          .catch(() => ({ error: "Failed to process payout" }));
-
-        if (response.status === 409 && errorData.existingPayout) {
-          return {
-            success: false,
-            error: errorData.error,
-            existingPayout: errorData.existingPayout,
-          };
-        }
-
-        return {
-          success: false,
-          error: errorData.error || `Server error: ${response.status}`,
-        };
-      }
-
-      // Parse successful response
-      const result = await response.json();
-
-      if (result.success) {
-        return {
-          success: true,
-          data: result.data,
-        };
-      } else {
-        return {
-          success: false,
-          error: result.error || "Failed to process payout",
-        };
-      }
-    } finally {
-      clearTimeout(timeoutId);
-    }
-  } catch (error) {
-    // Handle timeout errors
-    if (error instanceof Error && error.name === "AbortError") {
-      return {
-        success: false,
-        error: "Request timeout. The server took too long to respond.",
-      };
-    }
-
-    // Handle network errors
-    if (error instanceof TypeError && error.message.includes("fetch")) {
-      return {
-        success: false,
-        error: "Network error. Please check your connection.",
-      };
-    }
-
-    // Generic error handler
-    const errorMessage =
-      error instanceof Error ? error.message : "Failed to process payout";
-
-    return {
-      success: false,
-      error: errorMessage,
-    };
-  }
-}
 
 const TrendingUpIcon = () => {
   return <TrendingUp size={24} color="white" />;
@@ -154,7 +63,8 @@ const PayoutsPage = () => {
   );
   const [selectedCampaign, setSelectedCampaign] =
     useState<CampaignPayout | null>(null);
-  const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [showPayoutSummaryModal, setShowPayoutSummaryModal] = useState(false);
+  const [showPayoutAmountModal, setShowPayoutAmountModal] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [payoutSuccessData, setPayoutSuccessData] =
@@ -193,56 +103,9 @@ const PayoutsPage = () => {
     }
   };
 
-  const handlePayoutClick = async (campaign: CampaignPayout) => {
-    try {
-      const chainerDonations =
-        payoutData?.chainerDonations?.filter(
-          (donation) => donation.campaignId === campaign.id
-        ) || [];
-
-      const campaignDetails = await fetchCampaignDetails(campaign.id);
-      const commissionRate = campaignDetails
-        ? Number(campaignDetails.chainerCommissionRate)
-        : 0;
-
-      const chainerDonationsTotal = chainerDonations.reduce(
-        (sum, d) => sum + parseFloat(d.amount),
-        0
-      );
-      const chainerCommissionsTotal = chainerDonations.reduce((sum, d) => {
-        const commissionEarned = (d as any).chainerCommissionEarned;
-
-        if (commissionEarned && parseFloat(commissionEarned) > 0) {
-          return sum + parseFloat(commissionEarned);
-        }
-        const calculatedCommission =
-          parseFloat(d.amount) * (commissionRate / 100);
-        return sum + calculatedCommission;
-      }, 0);
-
-      const enhancedCampaign = {
-        ...campaign,
-        chainerDonations,
-        chainerDonationsTotal,
-        chainerDonationsInNGN: chainerDonations.reduce((sum, d) => {
-          const amount = parseFloat(d.amount);
-          return sum + (d.currency === "NGN" ? amount : amount * 0.001);
-        }, 0),
-        chainerCommissionRate: commissionRate,
-        chainerCommissionsTotal,
-        chainerCommissionsInNGN:
-          campaign.totalRaised > 0
-            ? chainerCommissionsTotal *
-              (campaign.totalRaisedInNGN / campaign.totalRaised)
-            : 0,
-      };
-
-      setSelectedCampaign(enhancedCampaign);
-      setShowPayoutModal(true);
-    } catch (error) {
-      setSelectedCampaign(campaign);
-      setShowPayoutModal(true);
-    }
+  const handlePayoutClick = (campaign: CampaignPayout) => {
+    setSelectedCampaign(campaign);
+    setShowPayoutSummaryModal(true);
   };
 
   const handleConfirmPayout = async (
@@ -255,7 +118,7 @@ const PayoutsPage = () => {
     const loadingToastId = toast.loading("Submitting payout request...");
 
     setProcessingPayouts((prev) => new Set(prev).add(campaignId));
-    setShowPayoutModal(false);
+    setShowPayoutAmountModal(false);
     setSelectedCampaign(null);
 
     try {
@@ -283,12 +146,17 @@ const PayoutsPage = () => {
 
         if (result.existingPayout) {
           const existing = result.existingPayout;
-          const statusLabel = existing.status === 'pending' ? 'Pending Review' 
-            : existing.status === 'approved' ? 'Approved - Processing'
-            : existing.status === 'processing' ? 'Processing'
-            : existing.status;
-          
-          errorMessage = `You already have a payout request for this campaign.\n\n` +
+          const statusLabel =
+            existing.status === "pending"
+              ? "Pending Review"
+              : existing.status === "approved"
+                ? "Approved - Processing"
+                : existing.status === "processing"
+                  ? "Processing"
+                  : existing.status;
+
+          errorMessage =
+            `You already have a payout request for this campaign.\n\n` +
             `Status: ${statusLabel}\n` +
             `Amount: ${formatCurrency(parseFloat(existing.requestedAmount), currency)}\n` +
             `Requested: ${new Date(existing.createdAt).toLocaleDateString()}\n\n` +
@@ -910,13 +778,30 @@ const PayoutsPage = () => {
         )}
       </div>
 
-      {/* Payout Details Modal */}
       {selectedCampaign && selectedCampaign.payoutProvider && (
         <PayoutDetailsModal
-          isOpen={showPayoutModal}
+          isOpen={showPayoutSummaryModal}
           onClose={() => {
-            setShowPayoutModal(false);
+            setShowPayoutSummaryModal(false);
             setSelectedCampaign(null);
+          }}
+          campaign={selectedCampaign}
+          userProfile={userProfile}
+          onContinueToPayoutFlow={(campaign) => {
+            setSelectedCampaign(campaign);
+            setShowPayoutSummaryModal(false);
+            setShowPayoutAmountModal(true);
+          }}
+          isProcessing={processingPayouts.has(selectedCampaign.id)}
+        />
+      )}
+
+      {selectedCampaign && selectedCampaign.payoutProvider && (
+        <PayoutAmountModal
+          isOpen={showPayoutAmountModal}
+          onClose={() => {
+            setShowPayoutAmountModal(false);
+            setShowPayoutSummaryModal(true);
           }}
           campaign={selectedCampaign}
           userProfile={userProfile}
@@ -934,6 +819,7 @@ const PayoutsPage = () => {
           triggerPlatformReviewPrompt({ reason: "payout" });
         }}
       />
+
     </div>
   );
 };

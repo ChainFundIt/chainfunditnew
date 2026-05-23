@@ -49,18 +49,50 @@ export async function requireUserAuth(request: NextRequest): Promise<Authenticat
     throw new Error('Unauthorized');
   }
 
-  const [user] = await db
-    .select({
-      id: users.id,
-      email: users.email,
-      fullName: users.fullName,
-      role: users.role,
-      twoFactorEnabled: users.twoFactorEnabled,
-      twoFactorBackupCodes: users.twoFactorBackupCodes,
-    })
-    .from(users)
-    .where(eq(users.id, payload.sub))
-    .limit(1);
+  let user:
+    | {
+        id: string;
+        email: string;
+        fullName: string | null;
+        role: string | null;
+        twoFactorEnabled: boolean | null;
+        twoFactorBackupCodes: string | null;
+      }
+    | undefined;
+  try {
+    [user] = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        fullName: users.fullName,
+        role: users.role,
+        twoFactorEnabled: users.twoFactorEnabled,
+        twoFactorBackupCodes: users.twoFactorBackupCodes,
+      })
+      .from(users)
+      .where(eq(users.id, payload.sub))
+      .limit(1);
+  } catch {
+    // Fallback for partially migrated environments missing role/2FA fields.
+    const [fallbackUser] = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        fullName: users.fullName,
+      })
+      .from(users)
+      .where(eq(users.id, payload.sub))
+      .limit(1);
+
+    user = fallbackUser
+      ? {
+          ...fallbackUser,
+          role: null,
+          twoFactorEnabled: false,
+          twoFactorBackupCodes: null,
+        }
+      : undefined;
+  }
 
   if (!user) {
     throw new Error('Unauthorized');

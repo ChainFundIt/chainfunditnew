@@ -74,16 +74,11 @@ export function useCurrencyConversion(userGeolocation: GeolocationData | null): 
     }
 
     try {
-      setLoading(true);
-      setError(null);
-      
       const conversion = await convertCurrency(amount, fromCurrency, toCurrency);
       return conversion;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Conversion failed');
       return null;
-    } finally {
-      setLoading(false);
     }
   }, [userGeolocation]);
 
@@ -96,9 +91,6 @@ export function useCurrencyConversion(userGeolocation: GeolocationData | null): 
     }
 
     try {
-      setLoading(true);
-      setError(null);
-      
       const result = await formatAmountWithConversion(
         amount, 
         originalCurrency, 
@@ -111,8 +103,6 @@ export function useCurrencyConversion(userGeolocation: GeolocationData | null): 
       // Don't set error for currency conversion failures - just fallback gracefully
       console.warn('Currency conversion failed, using original currency:', err);
       return { amount, currency: originalCurrency };
-    } finally {
-      setLoading(false);
     }
   }, [userGeolocation]);
 
