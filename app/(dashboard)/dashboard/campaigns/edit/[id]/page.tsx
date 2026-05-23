@@ -243,13 +243,17 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
   const performSubmit = async () => {
     setSaving(true);
     setError(null);
+    const payload = {
+      ...formData,
+      chainerCommissionRate: formData.isChained ? formData.chainerCommissionRate : 0,
+    };
     try {
       const response = await fetch(`/api/campaigns/${campaignId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json();
@@ -589,7 +593,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
                 <label className="block text-sm font-medium text-[#104109] mb-2">Do you want your campaign to be chained?</label>
                 <Switch
                   checked={formData.isChained}
-                  onCheckedChange={(checked) => handleInputChange("isChained", checked ? 1 : 0)}
+                  onCheckedChange={(checked) => handleInputChange("isChained", checked)}
                 />
               </div>
 
@@ -601,11 +605,12 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
                   type="number"
                   value={formData.chainerCommissionRate}
                   onChange={(e) => handleInputChange("chainerCommissionRate", parseFloat(e.target.value) || 0)}
-                  placeholder="Enter commission rate"
-                  className="rounded-xl border-gray-300 focus:border-[#104109] focus:ring-[#104109]"
-                  min="1"
+                  placeholder={formData.isChained ? "Enter commission rate" : "Enable chaining to edit"}
+                  className="rounded-xl border-gray-300 focus:border-[#104109] focus:ring-[#104109] disabled:bg-gray-100 disabled:text-gray-500"
+                  min={formData.isChained ? "1" : "0"}
                   max="10"
                   step="0.1"
+                  disabled={!formData.isChained}
                 />
               </div>
             </div>

@@ -17,8 +17,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid verification code' }, { status: 400 });
     }
 
-    const success = await enableTwoFactor(user.email, secret, backupCodes);
-    if (!success) {
+    const result = await enableTwoFactor(user.email, secret, backupCodes);
+    if (!result.success) {
+      if (result.unsupported) {
+        return NextResponse.json(
+          { error: '2FA is not available on this database yet. Please contact support.' },
+          { status: 503 }
+        );
+      }
       return NextResponse.json({ error: 'Failed to enable 2FA' }, { status: 500 });
     }
 

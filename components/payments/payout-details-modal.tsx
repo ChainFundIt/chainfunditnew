@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Dialog,
@@ -11,21 +11,15 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   DollarSign,
   Building2,
-  Clock,
-  CheckCircle,
   AlertCircle,
   ExternalLink,
-  Copy,
   Send,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/currency";
 import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
 
 interface PayoutDetailsModalProps {
   isOpen: boolean;
@@ -46,32 +40,13 @@ interface PayoutDetailsModalProps {
     chainerCommissionsInNGN?: number;
   };
   userProfile?: {
-    fullName: string;
-    email: string;
-    accountNumber?: string;
-    bankName?: string;
-    bankCode?: string;
-    accountName?: string;
+    email?: string;
     accountVerified?: boolean;
     accountChangeRequested?: boolean;
-    accountChangeReason?: string;
-    stripeAccountId?: string;
-    stripeAccountReady?: boolean;
-    // International bank account fields
-    internationalBankAccountNumber?: string;
-    internationalBankRoutingNumber?: string;
-    internationalBankSwiftBic?: string;
-    internationalBankCountry?: string;
-    internationalBankName?: string;
-    internationalAccountName?: string;
-    internationalAccountVerified?: boolean;
   };
-  onConfirmPayout: (
-    campaignId: string,
-    amount: number,
-    currency: string,
-    payoutProvider: string
-  ) => Promise<void>;
+  onContinueToPayoutFlow: (
+    campaign: PayoutDetailsModalProps["campaign"]
+  ) => void;
   isProcessing?: boolean;
 }
 
@@ -80,53 +55,16 @@ export function PayoutDetailsModal({
   onClose,
   campaign,
   userProfile,
-  onConfirmPayout,
+  onContinueToPayoutFlow,
   isProcessing = false,
 }: PayoutDetailsModalProps) {
-  const [banks, setBanks] = useState<any[]>([]);
-  const [withdrawalType, setWithdrawalType] = useState<"full" | "partial">(
-    "full"
-  );
-  const [partialAmount, setPartialAmount] = useState<string>("");
   const router = useRouter();
 
-  // Fetch banks when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      const fetchBanks = async () => {
-        try {
-          const response = await fetch("/api/banks");
-          const result = await response.json();
-          if (result.success) {
-            setBanks(result.data || []);
-          }
-        } catch (error) {
-          console.error("Error fetching banks:", error);
-        }
-      };
-      fetchBanks();
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (isOpen) {
-      setWithdrawalType("full");
-      setPartialAmount("");
-    }
-  }, [isOpen, campaign.id]);
-
   const availableAmount = Math.max(campaign.availableAmount || 0, 0);
-
-  // Calculate fees for the requested payout amount
-  const calculateFees = (requestedAmount: number) => {
-    const baseAmount = Math.max(requestedAmount, 0);
+  const fees = useMemo(() => {
+    const baseAmount = availableAmount;
     const rawChainerCommissions = campaign.chainerCommissionsTotal || 0;
-    const availableRatio =
-      availableAmount > 0 ? Math.min(baseAmount / availableAmount, 1) : 0;
-    const chainerCommissions = Math.min(
-      rawChainerCommissions * availableRatio,
-      baseAmount
-    );
+    const chainerCommissions = Math.min(rawChainerCommissions, baseAmount);
     const chainfunditFeePercentage = 0.05; // 5%
     const chainfunditFee = baseAmount * chainfunditFeePercentage;
     
@@ -155,66 +93,15 @@ export function PayoutDetailsModal({
       totalFees,
       netAmount,
     };
-  };
+  }, [availableAmount, campaign.chainerCommissionsTotal, campaign.payoutProvider]);
 
-  const parsedPartialAmount = Number(partialAmount.replace(/,/g, ""));
-  const hasPartialAmountInput = partialAmount.trim().length > 0;
-  const requestedAmount =
-    withdrawalType === "full"
-      ? availableAmount
-      : hasPartialAmountInput && Number.isFinite(parsedPartialAmount)
-        ? parsedPartialAmount
-        : 0;
-  const normalizedRequestedAmount = Number(requestedAmount.toFixed(2));
-  const fees = calculateFees(normalizedRequestedAmount);
+  const isBlockedByProfile =
+    userProfile?.accountChangeRequested ||
+    (campaign.payoutProvider === "paypal" && !userProfile?.email) ||
+    (campaign.payoutProvider === "paystack" && !userProfile?.accountVerified) ||
+    campaign.payoutProvider === "stripe";
 
-  const getAmountValidationError = () => {
-    if (withdrawalType === "full") {
-      if (availableAmount <= 0) {
-        return "No funds available for payout";
-      }
-      return null;
-    }
-
-    if (!hasPartialAmountInput) {
-      return "Enter an amount to withdraw";
-    }
-
-    if (!Number.isFinite(parsedPartialAmount)) {
-      return "Enter a valid number";
-    }
-
-    if (parsedPartialAmount <= 0) {
-      return "Amount must be greater than zero";
-    }
-
-    if (parsedPartialAmount > availableAmount) {
-      return `Amount cannot exceed ${formatCurrency(
-        availableAmount,
-        campaign.currencyCode
-      )}`;
-    }
-
-    return null;
-  };
-
-  const amountValidationError = getAmountValidationError();
-
-  const getBankName = () => {
-    if (userProfile?.bankName) return userProfile.bankName;
-    if (userProfile?.bankCode && banks.length > 0) {
-      const bank = banks.find((b) => b.code === userProfile.bankCode);
-      return bank?.name || "Unknown Bank";
-    }
-    return "N/A";
-  };
-
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success(`${label} copied`);
-  };
-
-  const handleConfirmPayout = () => {
+  const handleContinue = () => {
     if (!campaign.payoutProvider) {
       toast.error("Payout provider not configured");
       return;
@@ -223,17 +110,7 @@ export function PayoutDetailsModal({
       toast.error("No funds available for payout");
       return;
     }
-    if (amountValidationError) {
-      toast.error(amountValidationError);
-      return;
-    }
-
-    onConfirmPayout(
-      campaign.id,
-      normalizedRequestedAmount,
-      campaign.currencyCode,
-      campaign.payoutProvider
-    );
+    onContinueToPayoutFlow(campaign);
   };
 
   if (!isOpen) {
@@ -242,14 +119,21 @@ export function PayoutDetailsModal({
 
   // Main modal content
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          onClose();
+        }
+      }}
+    >
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-[#104109]">
             Request Payout
           </DialogTitle>
           <DialogDescription>
-            Review your payout details before confirming
+            Step 1 of 2: Review your payout details before choosing an amount.
           </DialogDescription>
         </DialogHeader>
 
@@ -305,7 +189,7 @@ export function PayoutDetailsModal({
             </CardContent>
           </Card>
 
-          {/* Simplified Payout Summary */}
+          {/* Estimated Payout Summary */}
           <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2 text-[#104109]">
@@ -314,54 +198,21 @@ export function PayoutDetailsModal({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="bg-white/70 rounded-lg p-3 space-y-3">
-                <p className="text-sm font-semibold text-[#104109]">Withdrawal Amount</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <Button
-                    type="button"
-                    variant={withdrawalType === "full" ? "default" : "outline"}
-                    className="justify-start"
-                    onClick={() => setWithdrawalType("full")}
-                  >
-                    Withdraw all
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={withdrawalType === "partial" ? "default" : "outline"}
-                    className="justify-start"
-                    onClick={() => setWithdrawalType("partial")}
-                  >
-                    Withdraw custom amount
-                  </Button>
-                </div>
-
-                {withdrawalType === "partial" && (
-                  <div className="space-y-1">
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={partialAmount}
-                      onChange={(e) => setPartialAmount(e.target.value)}
-                      placeholder={`Enter amount in ${campaign.currencyCode}`}
-                    />
-                    <p className="text-xs text-gray-500">
-                      Available:{" "}
-                      {formatCurrency(availableAmount, campaign.currencyCode)}
-                    </p>
-                    {amountValidationError && (
-                      <p className="text-xs text-red-600">{amountValidationError}</p>
-                    )}
-                  </div>
-                )}
-              </div>
-
               <div className="flex justify-between items-center">
-                <span className="text-gray-700">Requested Amount:</span>
+                <span className="text-gray-700">Available Amount:</span>
                 <span className="font-semibold text-lg">
-                  {formatCurrency(normalizedRequestedAmount, campaign.currencyCode)}
+                  {formatCurrency(availableAmount, campaign.currencyCode)}
                 </span>
               </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-700">Payout Provider:</span>
+                <span className="font-semibold capitalize">
+                  {campaign.payoutProvider}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500">
+                This estimate assumes a full withdrawal. You can choose full or custom amount in the next step.
+              </p>
               
               <div className="bg-white/60 rounded-lg p-3 space-y-1.5">
                 <div className="flex justify-between text-sm">
@@ -388,10 +239,8 @@ export function PayoutDetailsModal({
                 )}
               </div>
 
-              <Separator className="my-2" />
-              
               <div className="flex justify-between items-center pt-2">
-                <span className="font-bold text-xl text-[#104109]">You'll Receive:</span>
+                <span className="font-bold text-xl text-[#104109]">Est. Receive (full):</span>
                 <span className="font-bold text-2xl text-green-600">
                   {formatCurrency(fees.netAmount, campaign.currencyCode)}
                 </span>
@@ -402,194 +251,40 @@ export function PayoutDetailsModal({
             </CardContent>
           </Card>
 
-          {/* Bank Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
-                {campaign.payoutProvider === 'paypal'
-                  ? 'PayPal Account'
-                  : campaign.currencyCode !== 'NGN'
-                    ? 'International Bank Account'
-                    : 'Bank Account'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {(() => {
-                if (campaign.payoutProvider === 'paypal') {
-                  return (
-                    <div className="space-y-3">
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-blue-600" />
-                          <Badge variant="default" className="bg-blue-100 text-blue-800">
-                            PayPal payout
-                          </Badge>
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-xs text-gray-500">PayPal Email</span>
-                        <div className="flex items-center gap-1 mt-1">
-                          <span className="font-medium text-sm">{userProfile?.email || "N/A"}</span>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-5 w-5 p-0"
-                            onClick={() => copyToClipboard(userProfile?.email || "", "PayPal email")}
-                          >
-                            <Copy className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                }
-
-                const isForeignCurrency = campaign.currencyCode !== 'NGN';
-                const isVerified = isForeignCurrency 
-                  ? userProfile?.internationalAccountVerified 
-                  : userProfile?.accountVerified;
-
-                if (isVerified) {
-                  if (isForeignCurrency) {
-                    // Show international bank account details
-                    return (
-                      <div className="space-y-3">
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle className="h-4 w-4 text-green-600" />
-                            <Badge variant="default" className="bg-green-100 text-green-800">
-                              Account Verified
-                            </Badge>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <span className="text-xs text-gray-500">Account Name</span>
-                            <div className="flex items-center gap-1 mt-1">
-                              <span className="font-medium text-sm">{userProfile?.internationalAccountName || "N/A"}</span>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-5 w-5 p-0"
-                                onClick={() => copyToClipboard(userProfile?.internationalAccountName || "", "Account name")}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                          <div>
-                            <span className="text-xs text-gray-500">Account Number</span>
-                            <div className="flex items-center gap-1 mt-1">
-                              <span className="font-mono font-medium text-sm">
-                                {userProfile?.internationalBankAccountNumber || "N/A"}
-                              </span>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-5 w-5 p-0"
-                                onClick={() => copyToClipboard(userProfile?.internationalBankAccountNumber || "", "Account number")}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                          <div>
-                            <span className="text-xs text-gray-500">Bank</span>
-                            <p className="font-medium text-sm mt-1">{userProfile?.internationalBankName || "N/A"}</p>
-                          </div>
-                          <div>
-                            <span className="text-xs text-gray-500">Country</span>
-                            <p className="font-medium text-sm mt-1">{userProfile?.internationalBankCountry || "N/A"}</p>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  } else {
-                    // Show Nigerian bank account details
-                    return (
-                      <div className="space-y-3">
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle className="h-4 w-4 text-green-600" />
-                            <Badge variant="default" className="bg-green-100 text-green-800">
-                              Account Verified
-                            </Badge>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <span className="text-xs text-gray-500">Account Name</span>
-                            <div className="flex items-center gap-1 mt-1">
-                              <span className="font-medium text-sm">{userProfile?.accountName || "N/A"}</span>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-5 w-5 p-0"
-                                onClick={() => copyToClipboard(userProfile?.accountName || "", "Account name")}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                          <div>
-                            <span className="text-xs text-gray-500">Account Number</span>
-                            <div className="flex items-center gap-1 mt-1">
-                              <span className="font-mono font-medium text-sm">
-                                {userProfile?.accountNumber || "N/A"}
-                              </span>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-5 w-5 p-0"
-                                onClick={() => copyToClipboard(userProfile?.accountNumber || "", "Account number")}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="col-span-2">
-                            <span className="text-xs text-gray-500">Bank</span>
-                            <p className="font-medium text-sm mt-1">{getBankName()}</p>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  }
-                } else {
-                  // Not verified - show message to add bank account
-                  return (
-                    <div className="text-center py-6">
-                      <AlertCircle className="h-10 w-10 text-amber-500 mx-auto mb-3" />
-                      <p className="font-medium text-gray-900 mb-1">
-                        {isForeignCurrency ? 'International Bank Account Required' : 'Bank Account Required'}
-                      </p>
-                      <p className="text-sm text-gray-600 mb-4">
-                        {isForeignCurrency 
-                          ? 'Add and verify your international bank account to receive payouts in ' + campaign.currencyCode
-                          : 'Complete your bank account setup to receive payouts.'}
-                      </p>
-                      <Button
-                        onClick={() => {
-                          onClose();
-                          router.push("/dashboard/settings?tab=payments");
-                        }}
-                        className="bg-[#104109] text-white"
-                      >
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        {isForeignCurrency ? 'Add Bank Account' : 'Set Up Bank Account'}
-                      </Button>
-                    </div>
-                  );
-                }
-              })()}
-            </CardContent>
-          </Card>
+          {isBlockedByProfile && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="font-medium text-amber-900 mb-1">
+                    Payout setup requires attention
+                  </p>
+                  <p className="text-sm text-amber-800 mb-3">
+                    Please complete or verify your payout details in settings before continuing.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      onClose();
+                      router.push("/dashboard/settings?tab=payments");
+                    }}
+                    className="bg-amber-600 hover:bg-amber-700 text-white hover:text-white border-amber-600"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Open Payment Settings
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
 
           {/* Action Buttons */}
           <div className="flex gap-3 pt-2">
             <Button
+              type="button"
               onClick={onClose}
               variant="outline"
               className="flex-1 rounded-xl p-4 text-sm"
@@ -597,93 +292,23 @@ export function PayoutDetailsModal({
               Cancel
             </Button>
             <Button
-              onClick={handleConfirmPayout}
+              type="button"
+              onClick={handleContinue}
               className="flex-1 rounded-xl p-4 text-sm bg-[#104109] text-white"
               disabled={
                 isProcessing ||
                 !campaign.payoutProvider ||
-                !!amountValidationError ||
-                userProfile?.accountChangeRequested ||
-                (campaign.payoutProvider === 'paypal' && !userProfile?.email) ||
-                (campaign.payoutProvider === 'paystack' && !userProfile?.accountVerified) ||
-                (campaign.payoutProvider === 'stripe')
+                (campaign.availableAmount || 0) <= 0 ||
+                isBlockedByProfile
               }
             >
               <>
                 <Send className="h-4 w-4 mr-2" />
-                Confirm Request
+                Continue to Amount Selection
               </>
             </Button>
           </div>
 
-          {/* Stripe no longer supported (legacy campaigns) */}
-          {campaign.payoutProvider === 'stripe' && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                <div className="flex-1">
-                  <p className="font-medium text-amber-900 mb-1">Stripe no longer supported</p>
-                  <p className="text-sm text-amber-800">
-                    Stripe payouts are no longer available. Please contact support to update your payout method to PayPal or Paystack.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Account Change Request Pending Warning */}
-          {userProfile?.accountChangeRequested && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <Clock className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                <div className="flex-1">
-                  <p className="font-medium text-blue-900 mb-1">Bank Account Change Pending Review</p>
-                  <p className="text-sm text-blue-800 mb-3">
-                    Your request to change bank account details is being reviewed. You'll be able to request payouts once it's approved.
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      onClose();
-                      router.push("/dashboard/settings?tab=payments");
-                    }}
-                    className="border-blue-600 text-blue-700 hover:bg-blue-100"
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Check Status
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Bank Account Verification Required (for Paystack) */}
-          {campaign.payoutProvider === 'paystack' && !userProfile?.accountVerified && !userProfile?.accountChangeRequested && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                <div className="flex-1">
-                  <p className="font-medium text-amber-900 mb-1">Bank Account Verification Required</p>
-                  <p className="text-sm text-amber-800 mb-3">
-                    Please verify your bank account in settings before requesting a payout.
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      onClose();
-                      router.push("/dashboard/settings?tab=payments");
-                    }}
-                    className="bg-amber-600 hover:bg-amber-700 text-white border-amber-600"
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Verify Bank Account
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </DialogContent>
     </Dialog>

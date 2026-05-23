@@ -15,6 +15,23 @@ export interface TwoFactorVerification {
   backupCodeUsed?: boolean;
 }
 
+export interface TwoFactorEnableResult {
+  success: boolean;
+  unsupported?: boolean;
+}
+
+function isMissingTwoFactorColumns(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const maybeError = error as {
+    code?: string;
+    message?: string;
+    cause?: { code?: string; message?: string };
+  };
+  const code = maybeError.code ?? maybeError.cause?.code;
+  const message = `${maybeError.message ?? ''} ${maybeError.cause?.message ?? ''}`.toLowerCase();
+  return code === '42703' && message.includes('two_factor_');
+}
+
 /**
  * Generate a new 2FA secret and QR code for setup
  */
@@ -76,15 +93,28 @@ export async function verifyTwoFactorCode(
   userEmail: string,
   code: string
 ): Promise<TwoFactorVerification> {
-  // Get user's 2FA secret
-  const [user] = await db
-    .select({
-      twoFactorSecret: users.twoFactorSecret,
-      twoFactorBackupCodes: users.twoFactorBackupCodes,
-    })
-    .from(users)
-    .where(eq(users.email, userEmail))
-    .limit(1);
+  let user:
+    | {
+        twoFactorSecret: string | null;
+        twoFactorBackupCodes: string | null;
+      }
+    | undefined;
+  try {
+    // Get user's 2FA secret
+    [user] = await db
+      .select({
+        twoFactorSecret: users.twoFactorSecret,
+        twoFactorBackupCodes: users.twoFactorBackupCodes,
+      })
+      .from(users)
+      .where(eq(users.email, userEmail))
+      .limit(1);
+  } catch (error) {
+    if (isMissingTwoFactorColumns(error)) {
+      return { isValid: false };
+    }
+    throw error;
+  }
 
   if (!user || !user.twoFactorSecret) {
     return { isValid: false };
@@ -123,7 +153,7 @@ export async function enableTwoFactor(
   userEmail: string,
   secret: string,
   backupCodes: string[]
-): Promise<boolean> {
+): Promise<TwoFactorEnableResult> {
   try {
     
     const result = await db
@@ -135,10 +165,16 @@ export async function enableTwoFactor(
       })
       .where(eq(users.email, userEmail));
 
-    return true;
+    return { success: true };
   } catch (error) {
+    if (isMissingTwoFactorColumns(error)) {
+      return {
+        success: false,
+        unsupported: true,
+      };
+    }
     console.error('Error enabling 2FA:', error);
-    return false;
+    return { success: false };
   }
 }
 
@@ -167,13 +203,20 @@ export async function disableTwoFactor(userEmail: string): Promise<boolean> {
  * Check if user has 2FA enabled
  */
 export async function isTwoFactorEnabled(userEmail: string): Promise<boolean> {
-  const [user] = await db
-    .select({ twoFactorEnabled: users.twoFactorEnabled })
-    .from(users)
-    .where(eq(users.email, userEmail))
-    .limit(1);
+  try {
+    const [user] = await db
+      .select({ twoFactorEnabled: users.twoFactorEnabled })
+      .from(users)
+      .where(eq(users.email, userEmail))
+      .limit(1);
 
-  return user?.twoFactorEnabled || false;
+    return user?.twoFactorEnabled || false;
+  } catch (error) {
+    if (isMissingTwoFactorColumns(error)) {
+      return false;
+    }
+    throw error;
+  }
 }
 
 /**
@@ -204,11 +247,18 @@ function generateRandomCode(): string {
  */
 export async function regenerateBackupCodes(userEmail: string): Promise<string[]> {
   const newBackupCodes = generateBackupCodes();
-  
-  await db
-    .update(users)
-    .set({ twoFactorBackupCodes: JSON.stringify(newBackupCodes) })
-    .where(eq(users.email, userEmail));
+
+  try {
+    await db
+      .update(users)
+      .set({ twoFactorBackupCodes: JSON.stringify(newBackupCodes) })
+      .where(eq(users.email, userEmail));
+  } catch (error) {
+    if (isMissingTwoFactorColumns(error)) {
+      return [];
+    }
+    throw error;
+  }
 
   return newBackupCodes;
 }

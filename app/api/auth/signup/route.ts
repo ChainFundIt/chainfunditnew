@@ -193,7 +193,10 @@ export async function POST(request: NextRequest) {
 
       // Check if user exists with case-insensitive email lookup
       const [existingUser] = await db
-        .select()
+        .select({
+          id: users.id,
+          email: users.email,
+        })
         .from(users)
         .where(sql`LOWER(${users.email}) = LOWER(${normalizedEmail})`)
         .limit(1);
@@ -214,28 +217,52 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      const [newUser] = await db
-        .insert(users)
-        .values({ 
-          email: normalizedEmail, // Store normalized email
-          fullName: name, 
-          phone: normalizedPhone,
-          hasCompletedProfile: false,
-          role: 'user' // Default role for new signups
-        })
-        .returning();
+      // Insert using a narrow column list so signup still works on partially migrated databases.
+      const insertedUser = await db.execute(sql`
+        insert into "users" (
+          "email",
+          "full_name",
+          "phone",
+          "has_completed_profile"
+        )
+        values (
+          ${normalizedEmail},
+          ${name},
+          ${normalizedPhone},
+          ${false}
+        )
+        returning
+          "id" as "id",
+          "email" as "email",
+          "full_name" as "fullName",
+          "phone" as "phone",
+          "has_completed_profile" as "hasCompletedProfile"
+      `);
+      const newUser = insertedUser.rows?.[0] as
+        | {
+            id: string;
+            email: string;
+            fullName: string;
+            phone: string | null;
+            hasCompletedProfile: boolean | null;
+          }
+        | undefined;
 
-      const result = { user: newUser };
-
-      if (!result) {
+      if (!newUser) {
         return NextResponse.json(
           {
             success: false,
-            error: "Verification code has expired or is invalid. Please request a new code.",
+            error: "Unable to create your account right now. Please try again.",
           },
-          { status: 400 }
+          { status: 500 }
         );
       }
+      const result = {
+        user: {
+          ...newUser,
+          role: "user",
+        },
+      };
 
       // Generate access and refresh tokens
       const tokens = await generateTokenPair({ id: result.user.id, email: result.user.email }, request);
