@@ -44,9 +44,7 @@ interface PayoutDetailsModalProps {
     accountVerified?: boolean;
     accountChangeRequested?: boolean;
   };
-  onContinueToPayoutFlow: (
-    campaign: PayoutDetailsModalProps["campaign"]
-  ) => void;
+  onContinueToPayoutFlow: () => void;
   isProcessing?: boolean;
 }
 
@@ -110,7 +108,7 @@ export function PayoutDetailsModal({
       toast.error("No funds available for payout");
       return;
     }
-    onContinueToPayoutFlow(campaign);
+    onContinueToPayoutFlow();
   };
 
   if (!isOpen) {

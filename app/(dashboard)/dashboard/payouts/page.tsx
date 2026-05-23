@@ -131,8 +131,11 @@ const PayoutsPage = () => {
       if (result.success && result.data) {
         toast.success(result.data.message);
         setPayoutSuccessData({
+          amount,
+          currency,
+          provider: payoutProvider,
           ...result.data,
-          campaignTitle,
+          campaignTitle: campaignTitle || "Campaign payout",
         });
         setShowSuccessModal(true);
         setTimeout(() => {
@@ -786,8 +789,7 @@ const PayoutsPage = () => {
           }}
           campaign={selectedCampaign}
           userProfile={userProfile}
-          onContinueToPayoutFlow={(campaign) => {
-            setSelectedCampaign(campaign);
+          onContinueToPayoutFlow={() => {
             setShowPayoutSummaryModal(false);
             setShowPayoutAmountModal(true);
           }}
