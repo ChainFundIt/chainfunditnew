@@ -317,10 +317,12 @@ export function UnifiedItemCard({
             </span>
           </div>
           <div className="absolute flex gap-3 top-3 right-3">
-            <span className={`inline-flex items-center gap-1 rounded-full bg-green-600 px-2 py-0.5 text-[10px] font-semibold text-white border border-green-600 ${item.isVerified ? "bg-green-600 text-white border-green-600" : ""}`}>
-              <Shield className="h-3 w-3 fill-white" />
-              Verified
-            </span>
+            {item.isVerified && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-green-600 bg-green-600 px-2 py-0.5 text-[10px] font-semibold text-white whitespace-nowrap">
+                <Shield className="h-3 w-3 shrink-0 text-white" fill="white" />
+                Verified
+              </span>
+            )}
             <Button
               variant="ghost"
               size="sm"
@@ -343,11 +345,6 @@ export function UnifiedItemCard({
                 Organized by{" "}
                 <b className="text-black">{item.creatorName || "Campaign"}</b>
               </p>
-              {item.isVerified && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-[#104901] border border-[#104901]/20">
-                  <Shield className="h-3 w-3" />
-                </span>
-              )}
             </div>
             <Link href={getItemUrl()}>
               <h3 className="font-jakarta font-bold text-lg text-black mb-2 hover:text-[#104901] transition-colors">
