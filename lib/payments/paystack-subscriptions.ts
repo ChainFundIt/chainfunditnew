@@ -5,6 +5,14 @@ const PAYSTACK_BASE_URL = 'https://api.paystack.co';
 
 export type SubscriptionPeriod = 'monthly' | 'quarterly' | 'yearly';
 
+function shouldRetryWithoutMetadata(error: any): boolean {
+  const message =
+    error?.response?.data?.message ||
+    error?.message ||
+    '';
+  return /unknown\/unexpected parameter:\s*"metadata"/i.test(String(message));
+}
+
 /**
  * Convert period to Paystack plan interval
  */
@@ -88,7 +96,7 @@ export async function createPaystackPlan(
         name,
         amount: Math.round(amount * 100), // Convert to kobo/cents
         interval: getPaystackInterval(period),
-        currency: currency.toLowerCase(),
+        currency: currency.toUpperCase(),
         metadata,
       },
       {
@@ -101,6 +109,26 @@ export async function createPaystackPlan(
 
     return response.data.data;
   } catch (error: any) {
+    if (metadata && shouldRetryWithoutMetadata(error)) {
+      const retryResponse = await axios.post(
+        `${PAYSTACK_BASE_URL}/plan`,
+        {
+          name,
+          amount: Math.round(amount * 100),
+          interval: getPaystackInterval(period),
+          currency: currency.toUpperCase(),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      return retryResponse.data.data;
+    }
+
     console.error('Error creating Paystack plan:', error.response?.data || error.message);
     throw error;
   }
@@ -134,6 +162,25 @@ export async function createPaystackSubscription(
 
     return response.data.data;
   } catch (error: any) {
+    if (metadata && shouldRetryWithoutMetadata(error)) {
+      const retryResponse = await axios.post(
+        `${PAYSTACK_BASE_URL}/subscription`,
+        {
+          customer: customerCode,
+          plan: planCode,
+          authorization: authorizationCode,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      return retryResponse.data.data;
+    }
+
     console.error('Error creating Paystack subscription:', error.response?.data || error.message);
     throw error;
   }
