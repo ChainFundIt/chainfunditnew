@@ -547,6 +547,7 @@ const Payments = (props: Props) => {
                             variant="outline"
                             disabled={cancellingId !== null}
                             onClick={() => setCancelConfirmId(sub.id)}
+                            className="text-red-500 border-red-500 rounded-md"
                           >
                             Cancel subscription
                           </Button>
