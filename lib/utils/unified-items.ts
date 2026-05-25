@@ -41,6 +41,8 @@ export function normalizeCampaign(campaign: any): UnifiedItem {
     currency: campaign.currency,
     status: campaign.status,
     isActive: campaign.isActive,
+    // Keep compatibility with potential snake_case payloads
+    isVerified: Boolean(campaign.isVerified ?? campaign.is_verified ?? false),
     reason: reason,
     creatorName: campaign.creatorName,
     creatorAvatar: campaign.creatorAvatar,
