@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Save, Loader2, Upload, X } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Upload, X, Globe, Lock } from "lucide-react";
 import Image from "next/image";
 import { formatCurrency } from "@/lib/utils/currency";
 import { useFileUpload } from "@/hooks/use-upload";
@@ -23,6 +23,7 @@ import { triggerPlatformReviewPrompt } from "@/lib/utils/review-prompt";
 interface CampaignFormData {
   title: string;
   subtitle: string;
+  visibility: "public" | "private";
   description: string;
   reason: string;
   fundraisingFor: string;
@@ -54,6 +55,7 @@ interface Campaign {
   chainerCommissionRate: number;
   currentAmount: number;
   status: string;
+  visibility: "public" | "private";
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -86,6 +88,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
   const [formData, setFormData] = useState<CampaignFormData>({
     title: "",
     subtitle: "",
+    visibility: "public",
     description: "",
     reason: "",
     fundraisingFor: "",
@@ -156,6 +159,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
         setFormData({
           title: campaignData.title || "",
           subtitle: campaignData.subtitle || "",
+          visibility: campaignData.visibility === "private" ? "private" : "public",
           description: campaignData.description || "",
           reason: campaignData.reason || "",
           fundraisingFor: campaignData.fundraisingFor || "",
@@ -495,6 +499,37 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
                   placeholder="Enter campaign subtitle"
                   className="rounded-xl border-gray-300 focus:border-[#104109] focus:ring-[#104109]"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#104109] mb-2">
+                  Visibility
+                </label>
+                <Select
+                  value={formData.visibility}
+                  onValueChange={(value) => handleInputChange("visibility", value as "public" | "private")}
+                >
+                  <SelectTrigger className="rounded-xl border-gray-300 focus:border-[#104109] focus:ring-[#104109]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="public">
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-4 w-4" />
+                        Public
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="private">
+                      <div className="flex items-center gap-2">
+                        <Lock className="h-4 w-4" />
+                        Private
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500 mt-2">
+                  Private campaigns are hidden from listings but still accessible via direct link.
+                </p>
               </div>
 
               <div>

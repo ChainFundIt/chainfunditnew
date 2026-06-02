@@ -259,6 +259,7 @@ export async function PUT(
       'minimumDonation',
       'chainerCommissionRate',
       'isChained',
+      'visibility',
       'status',
       'isActive'
     ];
@@ -267,6 +268,8 @@ export async function PUT(
       if (body[field] !== undefined) {
         if (field === 'isChained') {
           updateData[field] = Boolean(body[field]);
+        } else if (field === 'visibility') {
+          updateData[field] = body[field] === 'private' ? 'private' : 'public';
         } else {
           updateData[field] = body[field];
         }
