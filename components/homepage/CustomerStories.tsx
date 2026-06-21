@@ -26,7 +26,7 @@ const CustomerStories = (props: Props) => {
   const autoplay = useRef(
     Autoplay({
       delay: 6500,
-      stopOnInteraction: false,
+      stopOnInteraction: true,
       stopOnMouseEnter: true,
     })
   );
@@ -84,6 +84,11 @@ const CustomerStories = (props: Props) => {
     return parts.map((p) => p[0]?.toUpperCase()).join("") || "?";
   };
 
+  const stopEmblaEvent = (event: React.SyntheticEvent) => {
+    // Prevent Embla drag handling from fighting with inner review scrolling.
+    event.stopPropagation();
+  };
+
   return (
     <div className="font-jakarta flex items-center justify-center bg-[#EAF7EE] py-20 px-4">
       <div className="flex flex-col gap-16 md:max-w-[80rem] w-full">
@@ -119,7 +124,7 @@ const CustomerStories = (props: Props) => {
                   viewport={{ once: true }}
                   className="min-w-0 flex-[0_0_80%] sm:flex-[0_0_calc((100%-1rem)/2)] lg:flex-[0_0_calc((100%-2rem)/3)]"
                 >
-                  <div className="bg-[#104109] rounded-[32px] p-8 flex flex-col gap-6 h-full border border-[#22C55E]">
+                  <div className="bg-[#104109] rounded-[32px] p-8 flex flex-col gap-6 h-[420px] border border-[#22C55E]">
                     {review.isLoading ? (
                       <div className="animate-pulse flex flex-col gap-6 h-full">
                         <div className="flex gap-1">
@@ -161,15 +166,18 @@ const CustomerStories = (props: Props) => {
                           ))}
                         </div>
 
-                        {/* Quote */}
-                        <p className="font-medium text-lg leading-[30px] text-[#ECFDF5]">
-                          {review.headline}
-                        </p>
-
-                        <p className="text-[#D1FAE5] leading-7">{review.body}</p>
-
-                        {/* Spacer to push user info to bottom */}
-                        <div className="flex-grow" />
+                        {/* Scroll area keeps cards the same height for long reviews */}
+                        <div
+                          className="flex-1 overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable]"
+                          onWheelCapture={stopEmblaEvent}
+                          onTouchMoveCapture={stopEmblaEvent}
+                          onPointerDownCapture={stopEmblaEvent}
+                        >
+                          <p className="font-medium text-lg leading-[30px] text-[#ECFDF5]">
+                            {review.headline}
+                          </p>
+                          <p className="text-[#D1FAE5] leading-7 mt-3">{review.body}</p>
+                        </div>
 
                         {/* User Info */}
                         <div className="flex items-center gap-4">
