@@ -13,6 +13,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Table,
   TableBody,
   TableCell,
@@ -109,6 +117,7 @@ export default function AdminCampaignsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [stats, setStats] = useState<CampaignStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -117,7 +126,21 @@ export default function AdminCampaignsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [hasLoadedCampaigns, setHasLoadedCampaigns] = useState(false);
+  const [feeOverrideCampaign, setFeeOverrideCampaign] = useState<Campaign | null>(null);
+  const [feeOverrideInput, setFeeOverrideInput] = useState("");
+  const [isSavingFeeOverride, setIsSavingFeeOverride] = useState(false);
+  const [feeOverrideSuccessText, setFeeOverrideSuccessText] = useState<string | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    const debounceTimer = window.setTimeout(() => {
+      setCurrentPage(1);
+      setSearchTerm(searchInput.trim());
+    }, 300);
+
+    return () => window.clearTimeout(debounceTimer);
+  }, [searchInput]);
 
   useEffect(() => {
     fetchCampaigns();
@@ -145,6 +168,7 @@ export default function AdminCampaignsPage() {
       toast.error("Failed to fetch campaigns");
     } finally {
       setLoading(false);
+      setHasLoadedCampaigns(true);
     }
   };
 
@@ -280,22 +304,26 @@ export default function AdminCampaignsPage() {
     setIsModalOpen(true);
   };
 
-  const handleFeeOverride = async (campaign: Campaign) => {
-    const currentOverride = campaign.platformFeeOverrideEnabled
-      ? campaign.platformFeeOverridePercent ?? 0
-      : null;
-    const input = window.prompt(
-      `Set platform payout fee override for "${campaign.title}".\n` +
-        `Enter a percentage from 0 to ${DEFAULT_PLATFORM_FEE_PERCENT} (example: 1.5).\n` +
-        `Leave blank to remove override and use default platform fee.`,
-      currentOverride == null ? "" : String(currentOverride)
-    );
+  const openFeeOverrideModal = (campaign: Campaign) => {
+    const initialValue = campaign.platformFeeOverrideEnabled
+      ? String(campaign.platformFeeOverridePercent ?? 0)
+      : "";
+    setFeeOverrideCampaign(campaign);
+    setFeeOverrideInput(initialValue);
+    setFeeOverrideSuccessText(null);
+  };
 
-    if (input == null) {
-      return;
-    }
+  const closeFeeOverrideModal = () => {
+    if (isSavingFeeOverride) return;
+    setFeeOverrideCampaign(null);
+    setFeeOverrideInput("");
+    setFeeOverrideSuccessText(null);
+  };
 
-    const trimmedInput = input.trim();
+  const handleFeeOverrideSave = async () => {
+    if (!feeOverrideCampaign) return;
+
+    const trimmedInput = feeOverrideInput.trim();
     const isReset = trimmedInput === "";
     const parsed = isReset ? null : Number(trimmedInput);
     const parsedPercent = parsed ?? 0;
@@ -313,7 +341,8 @@ export default function AdminCampaignsPage() {
     }
 
     try {
-      const response = await fetch(`/api/admin/campaigns/${campaign.id}`, {
+      setIsSavingFeeOverride(true);
+      const response = await fetch(`/api/admin/campaigns/${feeOverrideCampaign.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -332,10 +361,46 @@ export default function AdminCampaignsPage() {
 
       if (isReset) {
         toast.success("Platform fee override removed.");
+        setFeeOverrideSuccessText(
+          `Saved. This campaign now uses the default platform fee (${DEFAULT_PLATFORM_FEE_PERCENT}%).`
+        );
+        setFeeOverrideCampaign((prev) =>
+          prev
+            ? {
+                ...prev,
+                platformFeeOverrideEnabled: false,
+                platformFeeOverridePercent: null,
+              }
+            : prev
+        );
       } else if (parsed === 0) {
         toast.success("Campaign fee exemption enabled (0% platform fee).");
+        setFeeOverrideSuccessText(
+          "Saved. Platform payout fee is now 0% (exempt) for this campaign."
+        );
+        setFeeOverrideCampaign((prev) =>
+          prev
+            ? {
+                ...prev,
+                platformFeeOverrideEnabled: true,
+                platformFeeOverridePercent: 0,
+              }
+            : prev
+        );
       } else {
         toast.success(`Platform fee override set to ${parsed}%.`);
+        setFeeOverrideSuccessText(
+          `Saved. Platform payout fee is now ${parsed}% for this campaign.`
+        );
+        setFeeOverrideCampaign((prev) =>
+          prev
+            ? {
+                ...prev,
+                platformFeeOverrideEnabled: true,
+                platformFeeOverridePercent: parsed,
+              }
+            : prev
+        );
       }
       fetchCampaigns();
     } catch (error) {
@@ -343,6 +408,8 @@ export default function AdminCampaignsPage() {
       toast.error(
         error instanceof Error ? error.message : "Failed to update fee override"
       );
+    } finally {
+      setIsSavingFeeOverride(false);
     }
   };
 
@@ -411,7 +478,7 @@ export default function AdminCampaignsPage() {
     return Math.min(Math.round((current / goal) * 100), 100);
   };
 
-  if (loading && campaigns.length === 0) {
+  if (!hasLoadedCampaigns && loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -547,8 +614,8 @@ export default function AdminCampaignsPage() {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
                       placeholder="Search campaigns by title, creator, or description..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      value={searchInput}
+                      onChange={(e) => setSearchInput(e.target.value)}
                       className="pl-10"
                     />
                   </div>
@@ -894,7 +961,7 @@ export default function AdminCampaignsPage() {
                               variant="ghost"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleFeeOverride(campaign);
+                                    openFeeOverrideModal(campaign);
                               }}
                               title="Set payout platform fee override / exemption"
                             >
@@ -946,6 +1013,94 @@ export default function AdminCampaignsPage() {
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
       />
+
+      <Dialog
+        open={Boolean(feeOverrideCampaign)}
+        onOpenChange={(open) => {
+          if (!open) closeFeeOverrideModal();
+        }}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-[#104109]">
+              Payout Platform Fee Override
+            </DialogTitle>
+            <DialogDescription className="space-y-2 text-sm text-gray-600">
+              <p>
+                Set a custom platform fee for <span className="font-medium text-gray-900">{feeOverrideCampaign?.title ?? "this campaign"}</span>.
+              </p>
+              <p>
+                Leave blank to use the default platform fee ({DEFAULT_PLATFORM_FEE_PERCENT}%).
+              </p>
+              <p>
+                Use <span className="font-medium text-gray-900">0%</span> to fully exempt the campaign from platform payout fees.
+              </p>
+              <p>
+                Provider processing fee still applies and is calculated from payout amount.
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="fee-override-percent"
+              className="text-sm font-medium text-[#104109]"
+            >
+              Platform Fee Percentage
+            </label>
+            <Input
+              id="fee-override-percent"
+              type="number"
+              min={0}
+              max={DEFAULT_PLATFORM_FEE_PERCENT}
+              step="0.1"
+              value={feeOverrideInput}
+              onChange={(e) => {
+                setFeeOverrideInput(e.target.value);
+                if (feeOverrideSuccessText) {
+                  setFeeOverrideSuccessText(null);
+                }
+              }}
+              placeholder={`0 - ${DEFAULT_PLATFORM_FEE_PERCENT}`}
+              disabled={isSavingFeeOverride}
+            />
+            <p className="text-xs text-gray-500">
+              Valid range: 0 to {DEFAULT_PLATFORM_FEE_PERCENT}.
+            </p>
+            <p className="text-xs text-gray-600">
+              Current rule:{" "}
+              {feeOverrideCampaign?.platformFeeOverrideEnabled
+                ? `${feeOverrideCampaign.platformFeeOverridePercent ?? 0}% override is active`
+                : `Default ${DEFAULT_PLATFORM_FEE_PERCENT}% platform fee`}
+            </p>
+            {feeOverrideSuccessText && (
+              <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+                <div className="flex items-start gap-2">
+                  <CheckCircle className="mt-0.5 h-4 w-4 text-emerald-700" />
+                  <span>{feeOverrideSuccessText}</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={closeFeeOverrideModal}
+              disabled={isSavingFeeOverride}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-[var(--color-darkGreen)] text-white"
+              onClick={handleFeeOverrideSave}
+              disabled={isSavingFeeOverride}
+            >
+              {isSavingFeeOverride ? "Saving..." : "Save Fee Rule"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </TooltipProvider>
   );
 }

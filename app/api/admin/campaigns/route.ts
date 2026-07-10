@@ -46,37 +46,115 @@ export async function GET(request: NextRequest) {
 
     const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined;
 
-    // Get campaigns with creator info
-    const campaignsList = await db
-      .select({
-        id: campaigns.id,
-        slug: campaigns.slug,
-        title: campaigns.title,
-        description: campaigns.description,
-        creatorId: campaigns.creatorId,
-        goalAmount: campaigns.goalAmount,
-        currentAmount: campaigns.currentAmount,
-        currency: campaigns.currency,
-        status: campaigns.status,
-        isVerified: campaigns.isVerified,
-        verifiedPendingAt: campaigns.verifiedPendingAt,
-        complianceStatus: campaigns.complianceStatus,
-        createdAt: campaigns.createdAt,
-        updatedAt: campaigns.updatedAt,
-        isActive: campaigns.isActive,
-        coverImageUrl: campaigns.coverImageUrl,
-        isChained: campaigns.isChained,
-        chainerCommissionRate: campaigns.chainerCommissionRate,
-        platformFeeOverrideEnabled: campaigns.platformFeeOverrideEnabled,
-        platformFeeOverridePercent: campaigns.platformFeeOverridePercent,
-        creatorName: users.fullName,
-      })
-      .from(campaigns)
-      .leftJoin(users, eq(campaigns.creatorId, users.id))
-      .where(whereClause)
-      .orderBy(desc(campaigns.createdAt))
-      .limit(limit)
-      .offset(offset);
+    // Get campaigns with creator info.
+    // Some staging databases may temporarily lag migrations for newly added fee override columns,
+    // so we fallback to a legacy projection when those columns are unavailable.
+    let campaignsList: Array<{
+      id: string;
+      slug: string;
+      title: string;
+      description: string;
+      creatorId: string;
+      goalAmount: string | number;
+      currentAmount: string | number;
+      currency: string;
+      status: string;
+      isVerified: boolean;
+      verifiedPendingAt: Date | null;
+      complianceStatus: string;
+      createdAt: Date;
+      updatedAt: Date;
+      isActive: boolean;
+      coverImageUrl: string | null;
+      isChained: boolean;
+      chainerCommissionRate: string | number;
+      platformFeeOverrideEnabled: boolean;
+      platformFeeOverridePercent: string | number | null;
+      creatorName: string | null;
+    }>;
+
+    try {
+      campaignsList = await db
+        .select({
+          id: campaigns.id,
+          slug: campaigns.slug,
+          title: campaigns.title,
+          description: campaigns.description,
+          creatorId: campaigns.creatorId,
+          goalAmount: campaigns.goalAmount,
+          currentAmount: campaigns.currentAmount,
+          currency: campaigns.currency,
+          status: campaigns.status,
+          isVerified: campaigns.isVerified,
+          verifiedPendingAt: campaigns.verifiedPendingAt,
+          complianceStatus: campaigns.complianceStatus,
+          createdAt: campaigns.createdAt,
+          updatedAt: campaigns.updatedAt,
+          isActive: campaigns.isActive,
+          coverImageUrl: campaigns.coverImageUrl,
+          isChained: campaigns.isChained,
+          chainerCommissionRate: campaigns.chainerCommissionRate,
+          platformFeeOverrideEnabled: campaigns.platformFeeOverrideEnabled,
+          platformFeeOverridePercent: campaigns.platformFeeOverridePercent,
+          creatorName: users.fullName,
+        })
+        .from(campaigns)
+        .leftJoin(users, eq(campaigns.creatorId, users.id))
+        .where(whereClause)
+        .orderBy(desc(campaigns.createdAt))
+        .limit(limit)
+        .offset(offset);
+    } catch (queryError) {
+      const err = queryError as Error & { code?: string };
+      const isMissingColumn =
+        err.code === '42703' ||
+        err.message.includes('column') ||
+        err.message.includes('does not exist');
+
+      if (!isMissingColumn) {
+        throw queryError;
+      }
+
+      console.warn('Falling back to legacy admin campaigns select due to missing columns:', {
+        message: err.message,
+        code: err.code,
+      });
+
+      const legacyRows = await db
+        .select({
+          id: campaigns.id,
+          slug: campaigns.slug,
+          title: campaigns.title,
+          description: campaigns.description,
+          creatorId: campaigns.creatorId,
+          goalAmount: campaigns.goalAmount,
+          currentAmount: campaigns.currentAmount,
+          currency: campaigns.currency,
+          status: campaigns.status,
+          isVerified: campaigns.isVerified,
+          verifiedPendingAt: campaigns.verifiedPendingAt,
+          complianceStatus: campaigns.complianceStatus,
+          createdAt: campaigns.createdAt,
+          updatedAt: campaigns.updatedAt,
+          isActive: campaigns.isActive,
+          coverImageUrl: campaigns.coverImageUrl,
+          isChained: campaigns.isChained,
+          chainerCommissionRate: campaigns.chainerCommissionRate,
+          creatorName: users.fullName,
+        })
+        .from(campaigns)
+        .leftJoin(users, eq(campaigns.creatorId, users.id))
+        .where(whereClause)
+        .orderBy(desc(campaigns.createdAt))
+        .limit(limit)
+        .offset(offset);
+
+      campaignsList = legacyRows.map((row) => ({
+        ...row,
+        platformFeeOverrideEnabled: false,
+        platformFeeOverridePercent: null,
+      }));
+    }
 
     // Get total count for pagination
     const [totalCount] = await db
