@@ -67,6 +67,8 @@ export async function GET(request: NextRequest) {
         coverImageUrl: campaigns.coverImageUrl,
         isChained: campaigns.isChained,
         chainerCommissionRate: campaigns.chainerCommissionRate,
+        platformFeeOverrideEnabled: campaigns.platformFeeOverrideEnabled,
+        platformFeeOverridePercent: campaigns.platformFeeOverridePercent,
         creatorName: users.fullName,
       })
       .from(campaigns)
@@ -115,6 +117,10 @@ export async function GET(request: NextRequest) {
           goalAmount: Number(campaign.goalAmount),
           currentAmount: Number(campaign.currentAmount),
           chainerCommissionRate: Number(campaign.chainerCommissionRate || 0),
+          platformFeeOverridePercent:
+            campaign.platformFeeOverridePercent != null
+              ? Number(campaign.platformFeeOverridePercent)
+              : null,
           status: effectiveStatus,
           donationCount: donationStats?.count || 0,
           chainerCount: chainerStats?.count || 0,

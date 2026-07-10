@@ -49,6 +49,10 @@ export const campaigns = pgTable('campaigns', {
   quickDonateAccountNumber: varchar('quick_donate_account_number', { length: 20 }),
   quickDonateBankName: varchar('quick_donate_bank_name', { length: 100 }),
   quickDonateAccountName: varchar('quick_donate_account_name', { length: 255 }),
+  // Optional campaign-level payout fee override managed by admin.
+  // Percentage value is in percent points (e.g. 1.5 means 1.5%).
+  platformFeeOverrideEnabled: boolean('platform_fee_override_enabled').default(false).notNull(),
+  platformFeeOverridePercent: decimal('platform_fee_override_percent', { precision: 5, scale: 2 }),
 });
 
 

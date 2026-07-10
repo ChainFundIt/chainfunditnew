@@ -38,6 +38,8 @@ interface PayoutDetailsModalProps {
     payoutConfig: any;
     chainerCommissionsTotal?: number;
     chainerCommissionsInNGN?: number;
+    effectivePlatformFeePercent?: number;
+    providerFeePercent?: number;
   };
   userProfile?: {
     email?: string;
@@ -63,27 +65,19 @@ export function PayoutDetailsModal({
     const baseAmount = availableAmount;
     const rawChainerCommissions = campaign.chainerCommissionsTotal || 0;
     const chainerCommissions = Math.min(rawChainerCommissions, baseAmount);
-    const chainfunditFeePercentage = 0.05; // 5%
-    const chainfunditFee = baseAmount * chainfunditFeePercentage;
-    
-    // Provider fees (simplified)
-    let providerFee = 0;
+    const platformFeePercent = campaign.effectivePlatformFeePercent ?? 5;
+    const providerFeePercent = campaign.providerFeePercent ?? 2;
+    const chainfunditFee = (baseAmount * platformFeePercent) / 100;
+    const providerFee = (baseAmount * providerFeePercent) / 100;
     let fixedFee = 0;
-    
-    if (campaign.payoutProvider === "paystack") {
-      providerFee = chainfunditFee * 0.01; // 1% of chainfundit fee
-      fixedFee = 0;
-    } else if (campaign.payoutProvider === "paypal") {
-      providerFee = chainfunditFee * 0.02;
-      fixedFee = 0;
-    }
-    
-    const netChainfunditFee = chainfunditFee - providerFee;
-    const totalFees = netChainfunditFee + fixedFee;
+
+    const totalFees = chainfunditFee + providerFee + fixedFee;
     const netAmount = Math.max(baseAmount - totalFees - chainerCommissions, 0);
 
     return {
       baseAmount,
+      platformFeePercent,
+      providerFeePercent,
       chainfunditFee,
       providerFee,
       fixedFee,
@@ -220,7 +214,7 @@ export function PayoutDetailsModal({
                   </span>
                 </div>
                 <div className="flex justify-between text-xs text-gray-500 pl-2">
-                  <span>• Platform fee (5%)</span>
+                  <span>• Platform fee ({fees.platformFeePercent}%)</span>
                   <span>-{formatCurrency(fees.chainfunditFee, campaign.currencyCode)}</span>
                 </div>
                 {fees.chainerCommissions > 0 && (
@@ -231,7 +225,7 @@ export function PayoutDetailsModal({
                 )}
                 {(fees.providerFee > 0 || fees.fixedFee > 0) && (
                   <div className="flex justify-between text-xs text-gray-500 pl-2">
-                    <span>• Payment processing</span>
+                    <span>• Payment processing ({fees.providerFeePercent}%)</span>
                     <span>-{formatCurrency((fees.providerFee || 0) + (fees.fixedFee || 0), campaign.currencyCode)}</span>
                   </div>
                 )}

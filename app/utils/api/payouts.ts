@@ -21,6 +21,10 @@ export interface CampaignPayout {
   goalProgress: number;
   hasReached50Percent: boolean;
   availableForPayout: boolean;
+  platformFeeOverrideEnabled?: boolean;
+  platformFeeOverridePercent?: string | number | null;
+  effectivePlatformFeePercent?: number;
+  providerFeePercent?: number;
   activePayout?: {
     id: string;
     status: string;

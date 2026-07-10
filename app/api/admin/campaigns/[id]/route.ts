@@ -6,6 +6,10 @@ import {
   sendCampaignReactivatedEmail,
   sendCampaignVerificationPendingEmail,
 } from '@/lib/notifications/campaign-status-emails';
+import {
+  DEFAULT_PLATFORM_FEE_PERCENT,
+  resolveEffectivePlatformFeePercent,
+} from '@/lib/payments/payout-fee-config';
 import { eq, and, count, sum, desc } from 'drizzle-orm';
 
 /**
@@ -34,6 +38,8 @@ export async function GET(
         updatedAt: campaigns.updatedAt,
         isActive: campaigns.isActive,
         isVerified: campaigns.isVerified,
+        platformFeeOverrideEnabled: campaigns.platformFeeOverrideEnabled,
+        platformFeeOverridePercent: campaigns.platformFeeOverridePercent,
         coverImageUrl: campaigns.coverImageUrl,
         creatorName: users.fullName,
         creatorEmail: users.email,
@@ -269,6 +275,51 @@ export async function PATCH(
         break;
 
       case 'update':
+        if ('platformFeeOverrideEnabled' in updateData || 'platformFeeOverridePercent' in updateData) {
+          const overrideEnabled =
+            updateData.platformFeeOverrideEnabled == null
+              ? existingCampaign.platformFeeOverrideEnabled
+              : Boolean(updateData.platformFeeOverrideEnabled);
+
+          const rawOverridePercent = updateData.platformFeeOverridePercent;
+          const parsedOverridePercent =
+            rawOverridePercent == null || rawOverridePercent === ''
+              ? null
+              : Number(rawOverridePercent);
+
+          if (
+            parsedOverridePercent != null &&
+            (!Number.isFinite(parsedOverridePercent) || parsedOverridePercent < 0)
+          ) {
+            return NextResponse.json(
+              { error: 'Platform fee override must be a valid non-negative number.' },
+              { status: 400 }
+            );
+          }
+
+          if (
+            parsedOverridePercent != null &&
+            parsedOverridePercent > DEFAULT_PLATFORM_FEE_PERCENT
+          ) {
+            return NextResponse.json(
+              {
+                error: `Platform fee override cannot exceed default platform fee (${DEFAULT_PLATFORM_FEE_PERCENT}%).`,
+              },
+              { status: 400 }
+            );
+          }
+
+          updateData.platformFeeOverrideEnabled = overrideEnabled;
+          updateData.platformFeeOverridePercent = overrideEnabled
+            ? resolveEffectivePlatformFeePercent({
+                overrideEnabled: true,
+                overridePercent:
+                  parsedOverridePercent ??
+                  existingCampaign.platformFeeOverridePercent,
+              }).toString()
+            : null;
+        }
+
         updatedCampaign = await db
           .update(campaigns)
           .set({ 

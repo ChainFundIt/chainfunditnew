@@ -164,47 +164,72 @@ export async function GET(request: NextRequest) {
     );
 
 
-    // Get donation stats for each campaign
-    const campaignsWithStats = await Promise.all(
-      campaignsWithDetails.map(async (campaign) => {
-        const donationStats = await withRetry(() =>
+    // Fetch donation stats in a single grouped query to avoid N+1 load.
+    const campaignIds = campaignsWithDetails.map((campaign) => campaign.id);
+    const donationStatsRows = campaignIds.length
+      ? await withRetry(() =>
           db
             .select({
+              campaignId: donations.campaignId,
               totalDonations: count(donations.id),
               totalAmount: sum(donations.amount),
               uniqueDonors: count(donations.donorId),
             })
             .from(donations)
-            .where(and(
-              eq(donations.campaignId, campaign.id),
-              eq(donations.paymentStatus, 'completed')
-            ))
-        );
+            .where(
+              and(
+                inArray(donations.campaignId, campaignIds),
+                eq(donations.paymentStatus, 'completed')
+              )
+            )
+            .groupBy(donations.campaignId)
+        )
+      : [];
 
-        const stats = {
-          totalDonations: Number(donationStats[0]?.totalDonations || 0),
-          totalAmount: Number(donationStats[0]?.totalAmount || 0),
-          uniqueDonors: Number(donationStats[0]?.uniqueDonors || 0),
-          progressPercentage: Math.min(100, Math.round((Number(campaign.currentAmount) / Number(campaign.goalAmount)) * 100)),
-        };
-
-        const complianceFlags = Array.isArray(campaign.complianceFlags)
-          ? (campaign.complianceFlags as string[])
-          : [];
-
-        return {
-          ...campaign,
-          goalAmount: Number(campaign.goalAmount),
-          currentAmount: Number(campaign.currentAmount),
-          minimumDonation: Number(campaign.minimumDonation),
-          chainerCommissionRate: Number(campaign.chainerCommissionRate),
-          galleryImages: safeParseStringArray(campaign.galleryImages),
-          documents: safeParseStringArray(campaign.documents),
-          complianceFlags,
-          stats,
-        };
-      })
+    const donationStatsMap = new Map(
+      donationStatsRows.map((row) => [
+        row.campaignId,
+        {
+          totalDonations: Number(row.totalDonations || 0),
+          totalAmount: Number(row.totalAmount || 0),
+          uniqueDonors: Number(row.uniqueDonors || 0),
+        },
+      ])
     );
+
+    const campaignsWithStats = campaignsWithDetails.map((campaign) => {
+      const donationStats = donationStatsMap.get(campaign.id) ?? {
+        totalDonations: 0,
+        totalAmount: 0,
+        uniqueDonors: 0,
+      };
+      const goalAmountNumber = Number(campaign.goalAmount);
+      const currentAmountNumber = Number(campaign.currentAmount);
+
+      const stats = {
+        ...donationStats,
+        progressPercentage:
+          goalAmountNumber > 0
+            ? Math.min(100, Math.round((currentAmountNumber / goalAmountNumber) * 100))
+            : 0,
+      };
+
+      const complianceFlags = Array.isArray(campaign.complianceFlags)
+        ? (campaign.complianceFlags as string[])
+        : [];
+
+      return {
+        ...campaign,
+        goalAmount: goalAmountNumber,
+        currentAmount: currentAmountNumber,
+        minimumDonation: Number(campaign.minimumDonation),
+        chainerCommissionRate: Number(campaign.chainerCommissionRate),
+        galleryImages: safeParseStringArray(campaign.galleryImages),
+        documents: safeParseStringArray(campaign.documents),
+        complianceFlags,
+        stats,
+      };
+    });
     
     
     const response = NextResponse.json({

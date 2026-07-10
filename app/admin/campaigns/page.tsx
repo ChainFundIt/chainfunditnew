@@ -38,6 +38,7 @@ import {
   AlertTriangle,
   Clock,
   DollarSign,
+  Percent,
   TrendingUp,
   Users,
   Calendar,
@@ -61,6 +62,7 @@ import {
 } from "@/components/ui/tooltip";
 import { CampaignDashboardModal } from "@/components/admin/campaign-dashboard-modal";
 import { Trash } from "iconsax-reactjs";
+import { DEFAULT_PLATFORM_FEE_PERCENT } from "@/lib/payments/payout-fee-config";
 
 interface Campaign {
   id: string;
@@ -86,6 +88,8 @@ interface Campaign {
   imageUrl?: string;
   coverImageUrl?: string;
   location?: string;
+  platformFeeOverrideEnabled?: boolean;
+  platformFeeOverridePercent?: number | null;
 }
 
 interface CampaignStats {
@@ -274,6 +278,72 @@ export default function AdminCampaignsPage() {
   const handleOpenCampaignDashboard = (campaign: Campaign) => {
     setSelectedCampaignId(campaign.id);
     setIsModalOpen(true);
+  };
+
+  const handleFeeOverride = async (campaign: Campaign) => {
+    const currentOverride = campaign.platformFeeOverrideEnabled
+      ? campaign.platformFeeOverridePercent ?? 0
+      : null;
+    const input = window.prompt(
+      `Set platform payout fee override for "${campaign.title}".\n` +
+        `Enter a percentage from 0 to ${DEFAULT_PLATFORM_FEE_PERCENT} (example: 1.5).\n` +
+        `Leave blank to remove override and use default platform fee.`,
+      currentOverride == null ? "" : String(currentOverride)
+    );
+
+    if (input == null) {
+      return;
+    }
+
+    const trimmedInput = input.trim();
+    const isReset = trimmedInput === "";
+    const parsed = isReset ? null : Number(trimmedInput);
+    const parsedPercent = parsed ?? 0;
+
+    if (
+      !isReset &&
+      (!Number.isFinite(parsedPercent) ||
+        parsedPercent < 0 ||
+        parsedPercent > DEFAULT_PLATFORM_FEE_PERCENT)
+    ) {
+      toast.error(
+        `Enter a valid platform fee between 0 and ${DEFAULT_PLATFORM_FEE_PERCENT}.`
+      );
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/campaigns/${campaign.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "update",
+          platformFeeOverrideEnabled: !isReset,
+          platformFeeOverridePercent: parsed,
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to update campaign fee override");
+      }
+
+      if (isReset) {
+        toast.success("Platform fee override removed.");
+      } else if (parsed === 0) {
+        toast.success("Campaign fee exemption enabled (0% platform fee).");
+      } else {
+        toast.success(`Platform fee override set to ${parsed}%.`);
+      }
+      fetchCampaigns();
+    } catch (error) {
+      console.error("Error updating campaign fee override:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update fee override"
+      );
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -670,6 +740,11 @@ export default function AdminCampaignsPage() {
                                 Verified
                               </Badge>
                             )}
+                            {campaign.platformFeeOverrideEnabled && (
+                              <Badge className="bg-blue-100 text-blue-800">
+                                Fee {campaign.platformFeeOverridePercent ?? 0}%
+                              </Badge>
+                            )}
                             {campaign.verifiedPendingAt &&
                               !campaign.isVerified && (
                                 <Badge className="bg-amber-100 text-amber-900">
@@ -814,6 +889,17 @@ export default function AdminCampaignsPage() {
                                 <ShieldOff className="h-4 w-4 text-gray-600" />
                               </Button>
                             )}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleFeeOverride(campaign);
+                              }}
+                              title="Set payout platform fee override / exemption"
+                            >
+                              <Percent className="h-4 w-4 text-blue-600" />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
