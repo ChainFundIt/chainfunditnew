@@ -44,7 +44,14 @@ async function runVerifyPendingPaystack(request: NextRequest) {
     
     // Get pending Paystack donations older than 5 minutes
     const pendingDonations = await db
-      .select()
+      .select({
+        id: donations.id,
+        paymentIntentId: donations.paymentIntentId,
+        campaignId: donations.campaignId,
+        amount: donations.amount,
+        currency: donations.currency,
+        donorId: donations.donorId,
+      })
       .from(donations)
       .where(and(
         eq(donations.paymentStatus, 'pending'),

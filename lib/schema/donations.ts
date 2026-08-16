@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, timestamp, decimal, text, boolean, integer } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, timestamp, decimal, text, boolean, integer, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 export const donations = pgTable('donations', {
@@ -35,7 +35,13 @@ export const donations = pgTable('donations', {
   virtualAccountNumber: varchar('virtual_account_number', { length: 20 }),
   virtualAccountBankName: varchar('virtual_account_bank_name', { length: 100 }),
   virtualAccountName: varchar('virtual_account_name', { length: 255 }),
-});
+}, (table) => ({
+  pendingPaystackVerificationIdx: index('donations_pending_paystack_verification_idx').on(
+    table.paymentStatus,
+    table.paymentMethod,
+    table.createdAt
+  ),
+}));
 
 // Relations will be defined later to avoid circular dependencies
 

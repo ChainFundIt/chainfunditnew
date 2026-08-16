@@ -17,8 +17,6 @@ async function runCloseCampaigns(request: NextRequest) {
     const result = await closeEligibleCampaigns();
     const endTime = Date.now();
     
-    const stats = await getCampaignClosureStats();
-    
     return NextResponse.json({
       success: true,
       message: 'Campaign closure job completed',
@@ -26,7 +24,6 @@ async function runCloseCampaigns(request: NextRequest) {
         executionTime: endTime - startTime,
         closed: result.closed,
         errors: result.errors,
-        stats,
         summary: {
           totalClosed: result.closed.length,
           totalErrors: result.errors.length,

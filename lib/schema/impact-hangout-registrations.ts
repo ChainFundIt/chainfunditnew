@@ -6,6 +6,7 @@ import {
   timestamp,
   boolean,
   integer,
+  index,
 } from "drizzle-orm/pg-core";
 
 export const KICKSTART_AMOUNTS_NGN = [5_000, 10_000, 20_000] as const;
@@ -52,7 +53,16 @@ export const impactHangoutRegistrations = pgTable(
     reminder5minSentAt: timestamp("reminder_5min_sent_at"),
     reminder1daySentAt: timestamp("reminder_1day_sent_at"),
     reminder5daysSentAt: timestamp("reminder_5days_sent_at"),
-  }
+  },
+  (table) => ({
+    pendingReminderIdx: index("impact_hangout_pending_reminder_idx").on(
+      table.paymentStatus,
+      table.createdAt,
+      table.reminder5minSentAt,
+      table.reminder1daySentAt,
+      table.reminder5daysSentAt
+    ),
+  })
 );
 
 export type ImpactHangoutRegistration =

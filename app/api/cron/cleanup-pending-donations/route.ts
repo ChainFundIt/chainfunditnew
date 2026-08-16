@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
         paymentMethod: donations.paymentMethod,
         createdAt: donations.createdAt,
         campaignTitle: campaigns.title,
+        creatorId: campaigns.creatorId,
       })
       .from(donations)
       .leftJoin(campaigns, eq(donations.campaignId, campaigns.id))
@@ -65,16 +66,9 @@ export async function GET(request: NextRequest) {
           })
           .where(eq(donations.id, donation.id));
 
-        // Create notification for campaign creator
-        const campaign = await db
-          .select({ creatorId: campaigns.creatorId })
-          .from(campaigns)
-          .where(eq(campaigns.id, donation.campaignId))
-          .limit(1);
-
-        if (campaign.length > 0) {
+        if (donation.creatorId) {
           await db.insert(notifications).values({
-            userId: campaign[0].creatorId,
+            userId: donation.creatorId,
             type: 'donation_failed',
             title: 'Donation Timeout',
             message: `A donation of ${donation.currency} ${donation.amount} timed out after ${hoursOld} hours. The payment provider did not respond.`,

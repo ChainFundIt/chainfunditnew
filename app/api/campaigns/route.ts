@@ -398,6 +398,31 @@ export async function POST(request: NextRequest) {
     const reasonSafe = safeStr(reason, L.reason);
     const fundraisingForSafe = safeStr(fundraisingFor, L.fundraisingFor);
     const durationSafe = safeStr(duration, L.duration);
+    // Store the campaign expiration timestamp once so cron jobs can filter
+    // expired campaigns directly in the database instead of recalculating it.
+    const calculateExpiresAt = (durationValue: string | null): Date | null => {
+      if (!durationValue) return null;
+
+      const match = durationValue.trim().toLowerCase().match(/^(\d+)\s*(day|days|week|weeks|month|months|year|years)$/);
+      if (!match) return null;
+
+      const amount = Number(match[1]);
+      const unit = match[2];
+      const expiresAt = new Date();
+
+      if (unit === 'day' || unit === 'days') {
+        expiresAt.setDate(expiresAt.getDate() + amount);
+      } else if (unit === 'week' || unit === 'weeks') {
+        expiresAt.setDate(expiresAt.getDate() + amount * 7);
+      } else if (unit === 'month' || unit === 'months') {
+        expiresAt.setMonth(expiresAt.getMonth() + amount);
+      } else if (unit === 'year' || unit === 'years') {
+        expiresAt.setFullYear(expiresAt.getFullYear() + amount);
+      }
+
+      return expiresAt;
+    };
+    const expiresAt = calculateExpiresAt(durationSafe);
     const videoUrlSafe = safeStr(videoUrl, L.videoUrl);
     const coverImageUrlSafe = safeStr(coverImageUrl, L.coverImageUrl);
     const currencySafe = (currency || 'USD').trim().slice(0, L.currency);
@@ -434,6 +459,7 @@ export async function POST(request: NextRequest) {
             "reason",
             "fundraising_for",
             "duration",
+            "expires_at",
             "video_url",
             "cover_image_url",
             "gallery_images",
@@ -456,6 +482,7 @@ export async function POST(request: NextRequest) {
             ${reasonSafe},
             ${fundraisingForSafe},
             ${durationSafe},
+            ${expiresAt},
             ${videoUrlSafe},
             ${coverImageUrlSafe},
             ${galleryImages || null},
@@ -480,6 +507,7 @@ export async function POST(request: NextRequest) {
             "reason" as "reason",
             "fundraising_for" as "fundraisingFor",
             "duration" as "duration",
+            "expires_at" as "expiresAt",
             "video_url" as "videoUrl",
             "cover_image_url" as "coverImageUrl",
             "gallery_images" as "galleryImages",

@@ -281,6 +281,13 @@
       "when": 1783600482468,
       "tag": "0039_dashing_korg",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1786827034047,
+      "tag": "0040_furry_living_tribunal",
+      "breakpoints": true
     }
   ]
 }
