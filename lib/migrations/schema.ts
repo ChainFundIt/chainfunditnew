@@ -197,6 +197,8 @@ export const campaigns = pgTable("campaigns", {
 	quickDonateAccountNumber: varchar("quick_donate_account_number", { length: 20 }),
 	quickDonateBankName: varchar("quick_donate_bank_name", { length: 100 }),
 	quickDonateAccountName: varchar("quick_donate_account_name", { length: 255 }),
+	platformFeeOverrideEnabled: boolean("platform_fee_override_enabled").default(false).notNull(),
+	platformFeeOverridePercent: numeric("platform_fee_override_percent", { precision: 5, scale:  2 }),
 }, (table) => [
 	unique("campaigns_slug_unique").on(table.slug),
 ]);

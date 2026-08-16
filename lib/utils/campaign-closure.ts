@@ -1,7 +1,7 @@
 import { db } from '@/lib/db';
 import { campaigns } from '@/lib/schema/campaigns';
 import { notifications } from '@/lib/schema/notifications';
-import { eq, and, lt, gte } from 'drizzle-orm';
+import { eq, and, lt, gte, isNotNull, count } from 'drizzle-orm';
 
 export interface CampaignClosureResult {
   campaignId: string;
@@ -11,15 +11,11 @@ export interface CampaignClosureResult {
   error?: string;
 }
 
-/**
- * Parse duration string to get end date
- */
 export function parseDurationToEndDate(duration: string, createdAt: Date): Date | null {
   if (!duration || duration === 'Not applicable') {
-    return null; // No expiration
+    return null;
   }
 
-  const now = new Date();
   const endDate = new Date(createdAt);
 
   switch (duration) {
@@ -42,35 +38,25 @@ export function parseDurationToEndDate(duration: string, createdAt: Date): Date 
   return endDate;
 }
 
-/**
- * Check if a campaign should be closed due to goal reached
- */
 export function shouldCloseForGoalReached(currentAmount: number, goalAmount: number): boolean {
   return currentAmount >= goalAmount;
 }
 
-/**
- * Check if a campaign should be closed due to expiration
- */
 export function shouldCloseForExpiration(duration: string, createdAt: Date): boolean {
   const endDate = parseDurationToEndDate(duration, createdAt);
   if (!endDate) return false;
-  
+
   return new Date() > endDate;
 }
 
-/**
- * Close a single campaign
- */
 export async function closeCampaign(
-  campaignId: string, 
+  campaignId: string,
   reason: 'goal_reached' | 'expired' | 'manual',
   userId?: string
 ): Promise<CampaignClosureResult> {
   try {
     const now = new Date();
 
-    // Update campaign status
     const updateResult = await db
       .update(campaigns)
       .set({
@@ -94,13 +80,12 @@ export async function closeCampaign(
 
     const campaign = updateResult[0];
 
-    // Create notification for campaign creator
     if (userId) {
       await db.insert(notifications).values({
         userId,
         type: 'campaign_closed',
         title: reason === 'goal_reached' ? 'Campaign Goal Reached!' : 'Campaign Closed',
-        message: reason === 'goal_reached' 
+        message: reason === 'goal_reached'
           ? `Congratulations! Your campaign "${campaign.title}" has reached its goal of ${campaign.currency} ${campaign.goalAmount}.`
           : `Your campaign "${campaign.title}" has been closed.`,
         metadata: JSON.stringify({
@@ -133,15 +118,11 @@ export async function closeCampaign(
   }
 }
 
-/**
- * Get campaigns that should be closed
- */
 export async function getCampaignsToClose(): Promise<{
   goalReached: Array<{ id: string; creatorId: string; title: string; currentAmount: string; goalAmount: string; currency: string }>;
-  expired: Array<{ id: string; creatorId: string; title: string; duration: string; createdAt: Date; currency: string; goalAmount: string; currentAmount: string }>;
+  expired: Array<{ id: string; creatorId: string; title: string; currency: string; goalAmount: string; currentAmount: string }>;
 }> {
   try {
-    // Get campaigns that have reached their goal
     const goalReachedCampaigns = await db
       .select({
         id: campaigns.id,
@@ -160,14 +141,12 @@ export async function getCampaignsToClose(): Promise<{
         )
       );
 
-    // Get campaigns that have expired
+    const now = new Date();
     const expiredCampaigns = await db
       .select({
         id: campaigns.id,
         creatorId: campaigns.creatorId,
         title: campaigns.title,
-        duration: campaigns.duration,
-        createdAt: campaigns.createdAt,
         currency: campaigns.currency,
         goalAmount: campaigns.goalAmount,
         currentAmount: campaigns.currentAmount,
@@ -176,27 +155,15 @@ export async function getCampaignsToClose(): Promise<{
       .where(
         and(
           eq(campaigns.status, 'active'),
-          eq(campaigns.isActive, true)
+          eq(campaigns.isActive, true),
+          isNotNull(campaigns.expiresAt),
+          lt(campaigns.expiresAt, now)
         )
       );
 
-    // Filter expired campaigns
-    const now = new Date();
-    const actuallyExpired = expiredCampaigns.filter(campaign => {
-      if (!campaign.duration || campaign.duration === 'Not applicable') {
-        return false;
-      }
-      
-      const endDate = parseDurationToEndDate(campaign.duration, campaign.createdAt);
-      return endDate && now > endDate;
-    }).map(campaign => ({
-      ...campaign,
-      duration: campaign.duration!
-    }));
-
     return {
       goalReached: goalReachedCampaigns,
-      expired: actuallyExpired
+      expired: expiredCampaigns
     };
 
   } catch (error) {
@@ -208,20 +175,16 @@ export async function getCampaignsToClose(): Promise<{
   }
 }
 
-/**
- * Close all campaigns that should be closed
- */
 export async function closeEligibleCampaigns(): Promise<{
   closed: CampaignClosureResult[];
   errors: CampaignClosureResult[];
 }> {
   try {
     const { goalReached, expired } = await getCampaignsToClose();
-    
+
     const results: CampaignClosureResult[] = [];
     const errors: CampaignClosureResult[] = [];
 
-    // Close goal-reached campaigns
     for (const campaign of goalReached) {
       const result = await closeCampaign(campaign.id, 'goal_reached', campaign.creatorId);
       if (result.success) {
@@ -231,7 +194,6 @@ export async function closeEligibleCampaigns(): Promise<{
       }
     }
 
-    // Close expired campaigns
     for (const campaign of expired) {
       const result = await closeCampaign(campaign.id, 'expired', campaign.creatorId);
       if (result.success) {
@@ -249,9 +211,6 @@ export async function closeEligibleCampaigns(): Promise<{
   }
 }
 
-/**
- * Get campaign closure statistics
- */
 export async function getCampaignClosureStats(): Promise<{
   totalActive: number;
   goalReached: number;
@@ -259,28 +218,50 @@ export async function getCampaignClosureStats(): Promise<{
   totalClosed: number;
 }> {
   try {
-    const { goalReached, expired } = await getCampaignsToClose();
-    
-    const totalActive = await db
-      .select({ count: campaigns.id })
-      .from(campaigns)
-      .where(
-        and(
-          eq(campaigns.status, 'active'),
-          eq(campaigns.isActive, true)
-        )
-      );
+    const now = new Date();
 
-    const totalClosed = await db
-      .select({ count: campaigns.id })
-      .from(campaigns)
-      .where(eq(campaigns.status, 'closed'));
+    const [totalActiveResult, goalReachedResult, expiredResult, totalClosedResult] = await Promise.all([
+      db
+        .select({ count: count() })
+        .from(campaigns)
+        .where(
+          and(
+            eq(campaigns.status, 'active'),
+            eq(campaigns.isActive, true)
+          )
+        ),
+      db
+        .select({ count: count() })
+        .from(campaigns)
+        .where(
+          and(
+            eq(campaigns.status, 'active'),
+            eq(campaigns.isActive, true),
+            gte(campaigns.currentAmount, campaigns.goalAmount)
+          )
+        ),
+      db
+        .select({ count: count() })
+        .from(campaigns)
+        .where(
+          and(
+            eq(campaigns.status, 'active'),
+            eq(campaigns.isActive, true),
+            isNotNull(campaigns.expiresAt),
+            lt(campaigns.expiresAt, now)
+          )
+        ),
+      db
+        .select({ count: count() })
+        .from(campaigns)
+        .where(eq(campaigns.status, 'closed')),
+    ]);
 
     return {
-      totalActive: totalActive.length,
-      goalReached: goalReached.length,
-      expired: expired.length,
-      totalClosed: totalClosed.length
+      totalActive: totalActiveResult[0]?.count ?? 0,
+      goalReached: goalReachedResult[0]?.count ?? 0,
+      expired: expiredResult[0]?.count ?? 0,
+      totalClosed: totalClosedResult[0]?.count ?? 0,
     };
 
   } catch (error) {

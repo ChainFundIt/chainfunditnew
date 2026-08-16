@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, timestamp, text, decimal, integer, boolean, jsonb } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, timestamp, text, decimal, integer, boolean, jsonb, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 export const campaigns = pgTable('campaigns', {
@@ -49,7 +49,14 @@ export const campaigns = pgTable('campaigns', {
   quickDonateAccountNumber: varchar('quick_donate_account_number', { length: 20 }),
   quickDonateBankName: varchar('quick_donate_bank_name', { length: 100 }),
   quickDonateAccountName: varchar('quick_donate_account_name', { length: 255 }),
-});
+  // Optional campaign-level payout fee override managed by admin.
+  // Percentage value is in percent points (e.g. 1.5 means 1.5%).
+  platformFeeOverrideEnabled: boolean('platform_fee_override_enabled').default(false).notNull(),
+  platformFeeOverridePercent: decimal('platform_fee_override_percent', { precision: 5, scale: 2 }),
+}, (table) => ({
+  activeExpiresAtIdx: index('campaigns_active_expires_at_idx').on(table.status, table.isActive, table.expiresAt),
+  activeGoalIdx: index('campaigns_active_goal_idx').on(table.status, table.isActive, table.currentAmount),
+}));
 
 
 // Relations will be defined later to avoid circular dependencies

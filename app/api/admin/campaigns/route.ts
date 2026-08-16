@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { campaigns, users, donations, chainers } from '@/lib/schema';
-import { eq, like, and, desc, count, sum, sql, or, isNull } from 'drizzle-orm';
+import { eq, like, and, desc, count, sql, or, isNull, inArray } from 'drizzle-orm';
 
 /**
  * GET /api/admin/campaigns
@@ -46,35 +46,115 @@ export async function GET(request: NextRequest) {
 
     const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined;
 
-    // Get campaigns with creator info
-    const campaignsList = await db
-      .select({
-        id: campaigns.id,
-        slug: campaigns.slug,
-        title: campaigns.title,
-        description: campaigns.description,
-        creatorId: campaigns.creatorId,
-        goalAmount: campaigns.goalAmount,
-        currentAmount: campaigns.currentAmount,
-        currency: campaigns.currency,
-        status: campaigns.status,
-        isVerified: campaigns.isVerified,
-        verifiedPendingAt: campaigns.verifiedPendingAt,
-        complianceStatus: campaigns.complianceStatus,
-        createdAt: campaigns.createdAt,
-        updatedAt: campaigns.updatedAt,
-        isActive: campaigns.isActive,
-        coverImageUrl: campaigns.coverImageUrl,
-        isChained: campaigns.isChained,
-        chainerCommissionRate: campaigns.chainerCommissionRate,
-        creatorName: users.fullName,
-      })
-      .from(campaigns)
-      .leftJoin(users, eq(campaigns.creatorId, users.id))
-      .where(whereClause)
-      .orderBy(desc(campaigns.createdAt))
-      .limit(limit)
-      .offset(offset);
+    // Get campaigns with creator info.
+    // Some staging databases may temporarily lag migrations for newly added fee override columns,
+    // so we fallback to a legacy projection when those columns are unavailable.
+    let campaignsList: Array<{
+      id: string;
+      slug: string;
+      title: string;
+      description: string;
+      creatorId: string;
+      goalAmount: string | number;
+      currentAmount: string | number;
+      currency: string;
+      status: string;
+      isVerified: boolean;
+      verifiedPendingAt: Date | null;
+      complianceStatus: string;
+      createdAt: Date;
+      updatedAt: Date;
+      isActive: boolean;
+      coverImageUrl: string | null;
+      isChained: boolean;
+      chainerCommissionRate: string | number;
+      platformFeeOverrideEnabled: boolean;
+      platformFeeOverridePercent: string | number | null;
+      creatorName: string | null;
+    }>;
+
+    try {
+      campaignsList = await db
+        .select({
+          id: campaigns.id,
+          slug: campaigns.slug,
+          title: campaigns.title,
+          description: campaigns.description,
+          creatorId: campaigns.creatorId,
+          goalAmount: campaigns.goalAmount,
+          currentAmount: campaigns.currentAmount,
+          currency: campaigns.currency,
+          status: campaigns.status,
+          isVerified: campaigns.isVerified,
+          verifiedPendingAt: campaigns.verifiedPendingAt,
+          complianceStatus: campaigns.complianceStatus,
+          createdAt: campaigns.createdAt,
+          updatedAt: campaigns.updatedAt,
+          isActive: campaigns.isActive,
+          coverImageUrl: campaigns.coverImageUrl,
+          isChained: campaigns.isChained,
+          chainerCommissionRate: campaigns.chainerCommissionRate,
+          platformFeeOverrideEnabled: campaigns.platformFeeOverrideEnabled,
+          platformFeeOverridePercent: campaigns.platformFeeOverridePercent,
+          creatorName: users.fullName,
+        })
+        .from(campaigns)
+        .leftJoin(users, eq(campaigns.creatorId, users.id))
+        .where(whereClause)
+        .orderBy(desc(campaigns.createdAt))
+        .limit(limit)
+        .offset(offset);
+    } catch (queryError) {
+      const err = queryError as Error & { code?: string };
+      const isMissingColumn =
+        err.code === '42703' ||
+        err.message.includes('column') ||
+        err.message.includes('does not exist');
+
+      if (!isMissingColumn) {
+        throw queryError;
+      }
+
+      console.warn('Falling back to legacy admin campaigns select due to missing columns:', {
+        message: err.message,
+        code: err.code,
+      });
+
+      const legacyRows = await db
+        .select({
+          id: campaigns.id,
+          slug: campaigns.slug,
+          title: campaigns.title,
+          description: campaigns.description,
+          creatorId: campaigns.creatorId,
+          goalAmount: campaigns.goalAmount,
+          currentAmount: campaigns.currentAmount,
+          currency: campaigns.currency,
+          status: campaigns.status,
+          isVerified: campaigns.isVerified,
+          verifiedPendingAt: campaigns.verifiedPendingAt,
+          complianceStatus: campaigns.complianceStatus,
+          createdAt: campaigns.createdAt,
+          updatedAt: campaigns.updatedAt,
+          isActive: campaigns.isActive,
+          coverImageUrl: campaigns.coverImageUrl,
+          isChained: campaigns.isChained,
+          chainerCommissionRate: campaigns.chainerCommissionRate,
+          creatorName: users.fullName,
+        })
+        .from(campaigns)
+        .leftJoin(users, eq(campaigns.creatorId, users.id))
+        .where(whereClause)
+        .orderBy(desc(campaigns.createdAt))
+        .limit(limit)
+        .offset(offset);
+
+      campaignsList = legacyRows.map((row) => ({
+        ...row,
+        platformFeeOverrideEnabled: false,
+        platformFeeOverridePercent: null,
+      }));
+    }
 
     // Get total count for pagination
     const [totalCount] = await db
@@ -82,47 +162,65 @@ export async function GET(request: NextRequest) {
       .from(campaigns)
       .where(whereClause);
 
-    // Get campaign stats for each campaign
-    const campaignsWithStats = await Promise.all(
-      campaignsList.map(async (campaign) => {
-        // Get donation count
-        const [donationStats] = await db
+    const campaignIds = campaignsList.map((campaign) => campaign.id);
+
+    const donationCounts = campaignIds.length
+      ? await db
           .select({
+            campaignId: donations.campaignId,
             count: count(),
           })
           .from(donations)
-          .where(and(
-            eq(donations.campaignId, campaign.id),
-            eq(donations.paymentStatus, 'completed')
-          ));
+          .where(
+            and(
+              inArray(donations.campaignId, campaignIds),
+              eq(donations.paymentStatus, 'completed')
+            )
+          )
+          .groupBy(donations.campaignId)
+      : [];
 
-        // Get chainer count
-        const [chainerStats] = await db
+    const chainerCounts = campaignIds.length
+      ? await db
           .select({
+            campaignId: chainers.campaignId,
             count: count(),
           })
           .from(chainers)
-          .where(eq(chainers.campaignId, campaign.id));
+          .where(inArray(chainers.campaignId, campaignIds))
+          .groupBy(chainers.campaignId)
+      : [];
 
-        const effectiveStatus =
-          campaign.complianceStatus === 'in_review'
-            ? 'under_review'
-            : campaign.status;
-
-        return {
-          ...campaign,
-          // Normalize numeric fields that may come back as strings (decimals)
-          goalAmount: Number(campaign.goalAmount),
-          currentAmount: Number(campaign.currentAmount),
-          chainerCommissionRate: Number(campaign.chainerCommissionRate || 0),
-          status: effectiveStatus,
-          donationCount: donationStats?.count || 0,
-          chainerCount: chainerStats?.count || 0,
-          reportCount: 0,
-          hasReports: false,
-        };
-      })
+    const donationCountMap = new Map(
+      donationCounts.map((row) => [row.campaignId, Number(row.count || 0)])
     );
+    const chainerCountMap = new Map(
+      chainerCounts.map((row) => [row.campaignId, Number(row.count || 0)])
+    );
+
+    const campaignsWithStats = campaignsList.map((campaign) => {
+      const effectiveStatus =
+        campaign.complianceStatus === 'in_review'
+          ? 'under_review'
+          : campaign.status;
+
+      return {
+        ...campaign,
+        // Normalize numeric fields that may come back as strings (decimals)
+        goalAmount: Number(campaign.goalAmount),
+        currentAmount: Number(campaign.currentAmount),
+        chainerCommissionRate: Number(campaign.chainerCommissionRate || 0),
+        platformFeeOverridePercent:
+          campaign.platformFeeOverridePercent != null
+            ? Number(campaign.platformFeeOverridePercent)
+            : null,
+        status: effectiveStatus,
+        donationCount: donationCountMap.get(campaign.id) || 0,
+        chainerCount: chainerCountMap.get(campaign.id) || 0,
+        reportCount: 0,
+        hasReports: false,
+      };
+    });
 
     const totalPages = Math.ceil(totalCount.count / limit);
 
@@ -134,9 +232,15 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
+    const err = error as Error & { code?: string };
     console.error('Error fetching campaigns:', error);
+    const isProd = process.env.VERCEL_ENV === 'production';
     return NextResponse.json(
-      { error: 'Failed to fetch campaigns' },
+      {
+        error: 'Failed to fetch campaigns',
+        details: !isProd ? err.message : undefined,
+        code: !isProd ? err.code : undefined,
+      },
       { status: 500 }
     );
   }

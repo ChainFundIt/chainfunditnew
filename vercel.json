@@ -46,8 +46,7 @@
     },
     {
       "path": "/api/cron/impact-hangout-reminders",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/30 * * * *"
     }
   ]
 }
-

@@ -397,14 +397,12 @@ const PayoutsPage = () => {
       return sum;
     }, 0);
     const chainerCommissions = Math.min(rawChainerCommissions, baseAmount);
-    const chainfunditFee = baseAmount * 0.05;
-    const providerFee = campaign.payoutProvider === "paystack" 
-      ? chainfunditFee * 0.01 
-      : campaign.payoutProvider === "paypal"
-      ? chainfunditFee * 0.02
-      : 0;
+    const platformFeePercent = campaign.effectivePlatformFeePercent ?? 5;
+    const providerFeePercent = campaign.providerFeePercent ?? 2;
+    const chainfunditFee = (baseAmount * platformFeePercent) / 100;
+    const providerFee = (baseAmount * providerFeePercent) / 100;
     const fixedFee = 0;
-    const totalFees = (chainfunditFee - providerFee) + fixedFee;
+    const totalFees = chainfunditFee + providerFee + fixedFee;
     const netAmount = Math.max(baseAmount - totalFees - chainerCommissions, 0);
     const baseAmountInNGN = campaign.availableAmountInNGN || 0;
     const ratio = baseAmount > 0 ? baseAmountInNGN / baseAmount : 0;

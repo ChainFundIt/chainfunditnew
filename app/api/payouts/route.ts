@@ -22,6 +22,10 @@ import {
 } from "@/lib/utils/currency-conversion";
 import { notifyPayoutRequest } from "@/lib/notifications/payout-request-alerts";
 import { sendPayoutConfirmationEmail } from "@/lib/payments/payout-email";
+import {
+  calculatePayoutFees,
+  resolveEffectivePlatformFeePercent,
+} from "@/lib/payments/payout-fee-config";
 // import { ensurePayoutKyc } from "@/lib/kyc/service";
 
 const normalizeAmount = (value: number) =>
@@ -53,6 +57,8 @@ export async function GET(request: NextRequest) {
         currentAmount: campaigns.currentAmount,
         status: campaigns.status,
         createdAt: campaigns.createdAt,
+        platformFeeOverrideEnabled: campaigns.platformFeeOverrideEnabled,
+        platformFeeOverridePercent: campaigns.platformFeeOverridePercent,
       })
       .from(campaigns)
       .where(eq(campaigns.creatorId, user.id));
@@ -194,6 +200,15 @@ export async function GET(request: NextRequest) {
         const payoutConfig = payoutProvider
           ? getPayoutConfig(payoutProvider)
           : null;
+        const effectivePlatformFeePercent = resolveEffectivePlatformFeePercent({
+          overrideEnabled: campaign.platformFeeOverrideEnabled,
+          overridePercent: campaign.platformFeeOverridePercent,
+        });
+        const previewFees = calculatePayoutFees({
+          requestedAmount: availableAmount,
+          payoutProvider,
+          effectivePlatformFeePercent,
+        });
 
         // Convert goalAmount to number (Drizzle decimal returns string)
         // Use the same pattern as other API routes
@@ -239,6 +254,10 @@ export async function GET(request: NextRequest) {
           payoutSupported,
           payoutProvider,
           payoutConfig,
+          platformFeeOverrideEnabled: campaign.platformFeeOverrideEnabled,
+          platformFeeOverridePercent: campaign.platformFeeOverridePercent,
+          effectivePlatformFeePercent: previewFees.platformFeePercent,
+          providerFeePercent: previewFees.providerFeePercent,
           availableForPayout:
             payoutSupported &&
             availableAmount > 0 &&
@@ -583,29 +602,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Calculate payout fees (matching frontend calculation)
-    // ChainFundIt fee: 5% of requested amount
-    const chainfunditFeePercentage = 0.05; // 5%
-    const chainfunditFee = requestedAmount * chainfunditFeePercentage;
-    
-    // Provider fees
-    let providerFee = 0;
-    let fixedFee = 0;
-    
-    if (payoutProvider === "paystack") {
-      providerFee = chainfunditFee * 0.01; // 1% of ChainFundIt fee (simplified from frontend)
-      fixedFee = 0;
-    } else if (payoutProvider === "paypal") {
-      providerFee = chainfunditFee * 0.02;
-      fixedFee = 0;
-    } else {
-      // Default fallback
-      providerFee = chainfunditFee * 0.02; // 2% of ChainFundIt fee
-      fixedFee = 0;
-    }
-    
-    const netChainfunditFee = chainfunditFee - providerFee;
-    const fees = normalizeAmount(netChainfunditFee + fixedFee);
+    const effectivePlatformFeePercent = resolveEffectivePlatformFeePercent({
+      overrideEnabled: campaign.platformFeeOverrideEnabled,
+      overridePercent: campaign.platformFeeOverridePercent,
+    });
+    const feeBreakdown = calculatePayoutFees({
+      requestedAmount,
+      payoutProvider,
+      effectivePlatformFeePercent,
+    });
+    const fees = normalizeAmount(feeBreakdown.totalFees);
     
     // Validate fees don't exceed requested amount
     if (fees >= requestedAmount) {
@@ -615,8 +621,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const netAmountRaw = requestedAmount - fees;
-    const netAmount = netAmountRaw > 0 ? normalizeAmount(netAmountRaw) : 0;
+    const netAmount = normalizeAmount(feeBreakdown.netAmount);
     
     // Validate netAmount is positive
     if (netAmount <= 0) {
@@ -677,6 +682,13 @@ export async function POST(request: NextRequest) {
         status: "pending",
         netAmount,
         fees,
+        feeBreakdown: {
+          platformFeePercent: feeBreakdown.platformFeePercent,
+          providerFeePercent: feeBreakdown.providerFeePercent,
+          platformFee: normalizeAmount(feeBreakdown.platformFee),
+          providerFee: normalizeAmount(feeBreakdown.providerFee),
+          fixedFee: normalizeAmount(feeBreakdown.fixedFee),
+        },
         estimatedDelivery:
           payoutProvider === "paypal"
               ? "Minutes to 1 business day"

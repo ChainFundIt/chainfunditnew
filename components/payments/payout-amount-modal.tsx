@@ -26,6 +26,8 @@ interface PayoutAmountModalProps {
     payoutProvider: string | null;
     payoutConfig: any;
     chainerCommissionsTotal?: number;
+    effectivePlatformFeePercent?: number;
+    providerFeePercent?: number;
   };
   userProfile?: {
     email?: string;
@@ -136,20 +138,13 @@ export function PayoutAmountModal({
       baseAmount
     );
 
-    const chainfunditFee = baseAmount * 0.05;
-    let providerFee = 0;
+    const platformFeePercent = campaign.effectivePlatformFeePercent ?? 5;
+    const providerFeePercent = campaign.providerFeePercent ?? 2;
+    const chainfunditFee = (baseAmount * platformFeePercent) / 100;
+    const providerFee = (baseAmount * providerFeePercent) / 100;
     let fixedFee = 0;
 
-    if (campaign.payoutProvider === "paystack") {
-      providerFee = chainfunditFee * 0.01;
-    } else if (campaign.payoutProvider === "paypal") {
-      providerFee = chainfunditFee * 0.02;
-    } else {
-      providerFee = chainfunditFee * 0.02;
-    }
-
-    const netChainfunditFee = chainfunditFee - providerFee;
-    const totalFees = netChainfunditFee + fixedFee;
+    const totalFees = chainfunditFee + providerFee + fixedFee;
     const netAmount = Math.max(baseAmount - totalFees - chainerCommissions, 0);
 
     return {

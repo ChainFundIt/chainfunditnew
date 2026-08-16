@@ -80,21 +80,21 @@ export async function runSyncScreeningForCampaign(input: {
 }
 
 async function fetchCampaignContext(campaignId: string) {
-  const record = await db.query.campaigns.findFirst({
-    where: eq(campaigns.id, campaignId),
-  });
+  const [record] = await db
+    .select({
+      campaign: campaigns,
+      creator: users,
+    })
+    .from(campaigns)
+    .leftJoin(users, eq(users.id, campaigns.creatorId))
+    .where(eq(campaigns.id, campaignId))
+    .limit(1);
 
   if (!record) return undefined;
 
-  const creator = record.creatorId
-    ? await db.query.users.findFirst({
-        where: eq(users.id, record.creatorId),
-      })
-    : undefined;
-
   return {
-    campaign: record as CampaignContext,
-    creator: creator as CreatorContext | undefined,
+    campaign: record.campaign as CampaignContext,
+    creator: record.creator as CreatorContext | undefined,
   };
 }
 
@@ -198,7 +198,10 @@ async function failScreeningJob(jobId: string, error: unknown) {
 
 async function claimPendingJobs(limit: number) {
   const pending = await db
-    .select()
+    .select({
+      id: campaignScreenings.id,
+      status: campaignScreenings.status,
+    })
     .from(campaignScreenings)
     .where(eq(campaignScreenings.status, 'pending'))
     .orderBy(desc(campaignScreenings.createdAt))

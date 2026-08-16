@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, timestamp, text, jsonb, decimal } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, timestamp, text, jsonb, decimal, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { campaigns } from './campaigns';
 
@@ -18,7 +18,12 @@ export const campaignScreenings = pgTable('campaign_screenings', {
   completedAt: timestamp('completed_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => ({
+  pendingScreeningsIdx: index('campaign_screenings_pending_idx').on(
+    table.status,
+    table.createdAt
+  ),
+}));
 
 export const campaignScreeningsRelations = relations(campaignScreenings, ({ one }) => ({
   campaign: one(campaigns, {

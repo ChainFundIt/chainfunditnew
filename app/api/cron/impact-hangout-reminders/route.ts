@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { impactHangoutRegistrations } from "@/lib/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, or, lt, isNull } from "drizzle-orm";
 import { sendImpactHangoutReminderEmail } from "@/lib/notifications/impact-hangout-emails";
 import { getCronDisabledResponse } from "@/lib/utils/cron-control";
 import { requireCronAuth } from "@/lib/utils/cron-auth";
@@ -45,7 +45,25 @@ async function runImpactHangoutReminders(request: NextRequest) {
         reminder5daysSentAt: impactHangoutRegistrations.reminder5daysSentAt,
       })
       .from(impactHangoutRegistrations)
-      .where(eq(impactHangoutRegistrations.paymentStatus, "pending"));
+      .where(
+        and(
+          eq(impactHangoutRegistrations.paymentStatus, "pending"),
+          or(
+            and(
+              lt(impactHangoutRegistrations.createdAt, fiveDaysAgo),
+              isNull(impactHangoutRegistrations.reminder5daysSentAt)
+            ),
+            and(
+              lt(impactHangoutRegistrations.createdAt, oneDayAgo),
+              isNull(impactHangoutRegistrations.reminder1daySentAt)
+            ),
+            and(
+              lt(impactHangoutRegistrations.createdAt, fiveMinAgo),
+              isNull(impactHangoutRegistrations.reminder5minSentAt)
+            )
+          )
+        )
+      );
 
     for (const row of pending) {
       const createdAt = row.createdAt ? new Date(row.createdAt) : null;
