@@ -210,7 +210,7 @@ Set these in `.env.local` before running migrations.
 - ✅ Campaign detail pages
 - ✅ Media upload and management
 
-### Phase 3: Chainer System
+### Phase 3: Chain System
 - ✅ Referral link generation
 - ✅ Commission tracking
 - ✅ Leaderboards
