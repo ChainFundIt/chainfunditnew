@@ -23,17 +23,11 @@ export async function GET(request: NextRequest) {
       const verification = await verifyPaystackPayment(reference);
 
       if (verification.status && verification.data.status === "success") {
-        const meta =
-          verification.data.metadata ||
-          verification.data.meta ||
-          verification.data.custom_fields;
+        const metadata = verification.data.metadata ?? {};
         const metaContributionId =
-          (typeof meta === "object" && meta !== null
-            ? (meta as { donationId?: string; donation_id?: string })
-            : undefined)?.donationId ||
-          (typeof meta === "object" && meta !== null
-            ? (meta as { donation_id?: string }).donation_id
-            : undefined);
+          (typeof metadata.donationId === "string" && metadata.donationId) ||
+          (typeof metadata.donation_id === "string" && metadata.donation_id) ||
+          undefined;
 
         let contribution =
           (await db.query.collectionContributions.findFirst({
