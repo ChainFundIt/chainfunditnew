@@ -148,6 +148,32 @@ const nextConfig = {
     root: path.resolve(__dirname),
   },
 
+  async redirects() {
+    return [
+      // Legacy URLs (pre-Collections rename)
+      {
+        source: "/virtual-giving-mall",
+        destination: "/collections",
+        permanent: true,
+      },
+      {
+        source: "/virtual-giving-mall/:slug",
+        destination: "/collections/:slug",
+        permanent: true,
+      },
+      {
+        source: "/virtual-giving-mall/:slug/payment-callback",
+        destination: "/collections/:slug/payment-callback",
+        permanent: true,
+      },
+      {
+        source: "/virtual-giving-mall/:slug/payment-success",
+        destination: "/collections/:slug/payment-success",
+        permanent: true,
+      },
+    ];
+  },
+
   // Trailing slash
   trailingSlash: false,
 

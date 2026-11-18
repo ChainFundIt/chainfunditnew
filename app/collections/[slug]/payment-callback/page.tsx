@@ -29,7 +29,7 @@ function PaymentCallbackContent() {
   const verifyPayment = async (reference: string, method: 'paystack' | 'paypal') => {
     try {
       const response = await fetch(
-        `/api/charities/verify-payment?reference=${reference}&method=${method}`
+        `/api/collections/verify-payment?reference=${reference}&method=${method}`
       );
       
       const data = await response.json();
@@ -38,7 +38,9 @@ function PaymentCallbackContent() {
         setStatus('success');
         // Redirect to success page after 2 seconds
         setTimeout(() => {
-          router.push(`/virtual-giving-mall/${params.slug}/payment-success?donation_id=${data.donation?.id}`);
+          router.push(
+            `/collections/${params.slug}/payment-success?contribution_id=${data.contribution?.id || data.donation?.id}`
+          );
         }, 2000);
       } else {
         setStatus('failed');

@@ -51,7 +51,7 @@ const Navbar = (props: Props) => {
             <Link href="/campaigns">Campaigns</Link>
           </li>
           <li className="font-jakarta font-medium text-[14px] leading-[20px] text-[#57534E] hover:text-[#065f46]">
-            <Link href="/virtual-giving-mall">Virtual Giving Mall</Link>
+            <Link href="/collections">Collections</Link>
           </li>
           <li className="font-jakarta font-medium text-[14px] leading-[20px] text-[#57534E] hover:text-[#065f46]">
             <Link href="/about">About Us</Link>
@@ -130,10 +130,10 @@ const Navbar = (props: Props) => {
 
             <li>
               <Link
-                href="/virtual-giving-mall"
+                href="/collections"
                 onClick={() => setMenuOpen(false)}
               >
-                Virtual Giving Mall
+                Collections
               </Link>
             </li>
 

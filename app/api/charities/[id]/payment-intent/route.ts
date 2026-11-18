@@ -157,8 +157,8 @@ export async function POST(
       });
     } else if (paymentMethod === 'paypal') {
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
-      const returnUrl = `${baseUrl}/virtual-giving-mall/${charity.slug}/payment-callback`;
-      const cancelUrl = `${baseUrl}/virtual-giving-mall/${charity.slug}`;
+      const returnUrl = `${baseUrl}/charities/${charity.slug}/payment-callback`;
+      const cancelUrl = `${baseUrl}/charities/${charity.slug}`;
       const order = await createPayPalOrder({
         amount: parseFloat(amount),
         currency,

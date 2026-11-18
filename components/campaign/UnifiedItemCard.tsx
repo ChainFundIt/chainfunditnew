@@ -184,7 +184,7 @@ export function UnifiedItemCard({
     if (isCampaign) {
       return `/campaign/${item.slug}`;
     }
-    return `/virtual-giving-mall/${item.slug}`;
+    return `/charities/${item.slug}`;
   };
 
   const getValidCharityLogo = (logo?: string | null) => {

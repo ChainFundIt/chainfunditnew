@@ -62,7 +62,7 @@ export type AnalyticsEvent =
   | "form_completed"
   | "form_abandoned"
 
-  // Virtual Giving Mall Events
+  // Charity collection catalog events (legacy event names retained for dashboards)
   | "product_viewed"
   | "product_purchased"
   | "cart_added"
@@ -118,7 +118,7 @@ export interface AnalyticsParams {
   page_path?: string;
   page_title?: string;
 
-  // Product related (Virtual Giving Mall)
+  // Charity collection catalog (legacy parameter names)
   product_id?: string;
   product_name?: string;
   product_price?: number;

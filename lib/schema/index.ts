@@ -30,3 +30,4 @@ export * from './platform-reviews';
 export * from './ambassador-applications';
 export * from './partnership-applications';
 export * from './impact-hangout-registrations';
+export * from './collections';

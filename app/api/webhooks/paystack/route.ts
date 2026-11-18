@@ -7,6 +7,8 @@ import { recurringDonations, recurringDonationPayments } from '@/lib/schema/recu
 import { campaigns } from '@/lib/schema/campaigns';
 import { notifications } from '@/lib/schema/notifications';
 import { charityDonations, charities } from '@/lib/schema/charities';
+import { collectionContributions } from '@/lib/schema/collections';
+import { completeCollectionContribution } from '@/lib/payments/collection-contribution-processing';
 import { campaignPayouts, commissionPayouts } from '@/lib/schema';
 import { users } from '@/lib/schema/users';
 import { eq, sql, and, desc } from 'drizzle-orm';
@@ -153,7 +155,22 @@ async function handleChargeSuccess(data: any) {
       return;
     }
 
-    console.error('❌ Donation not found in either campaigns or charities:', donationId);
+    const collectionContribution = await db
+      .select({ collectionId: collectionContributions.collectionId })
+      .from(collectionContributions)
+      .where(eq(collectionContributions.id, donationId))
+      .limit(1);
+
+    if (collectionContribution.length > 0) {
+      await handleCollectionContributionSuccess(
+        donationId,
+        reference,
+        collectionContribution[0].collectionId
+      );
+      return;
+    }
+
+    console.error('❌ Donation not found in campaigns, charities, or collections:', donationId);
   } catch (error) {
     console.error('💥 Error handling charge success:', error);
   }
@@ -295,6 +312,40 @@ async function handleCharityDonationSuccess(donationId: string, reference: strin
     console.log(`✅ Charity donation ${donationId} processed successfully`);
   } catch (error) {
     console.error('💥 Error handling charity donation success:', error);
+  }
+}
+
+async function handleCollectionContributionSuccess(
+  contributionId: string,
+  reference: string,
+  collectionId: string
+) {
+  try {
+    const existing = await db
+      .select({ paymentStatus: collectionContributions.paymentStatus })
+      .from(collectionContributions)
+      .where(eq(collectionContributions.id, contributionId))
+      .limit(1);
+
+    if (!existing.length) {
+      console.error('Collection contribution not found:', contributionId);
+      return;
+    }
+
+    if (existing[0].paymentStatus === 'completed') {
+      return;
+    }
+
+    await completeCollectionContribution({
+      contributionId,
+      paymentReference: reference,
+    });
+
+    console.log(
+      `✅ Collection contribution ${contributionId} processed for collection ${collectionId}`
+    );
+  } catch (error) {
+    console.error('💥 Error handling collection contribution success:', error);
   }
 }
 

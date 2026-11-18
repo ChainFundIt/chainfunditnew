@@ -41,7 +41,7 @@ export async function POST() {
       createdUsers = await db.insert(users).values(testUsers).returning();
     }
     
-    // Create charity-based campaigns if none exist - using charities from virtual mall
+    // Create charity-based campaigns if none exist (aligned with Collections charities)
     if (campaignCount.count === 0) {
       const charityCampaigns = [
         {
