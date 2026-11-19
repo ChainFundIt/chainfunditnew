@@ -89,7 +89,7 @@ export function CollectionSupportChainfundit({
                   <p>
                     If you choose <strong className="text-[#1C1917]">Yes</strong>{" "}
                     under Support ChainFundIt, you can add any amount you like to
-                    help us run the platform — entirely optional.
+                    help us run the platform. Enter how much you&apos;d like to add.
                   </p>
                   <p>
                     If you choose <strong className="text-[#1C1917]">Not this time</strong>,
@@ -105,15 +105,17 @@ export function CollectionSupportChainfundit({
       {supportChainfundit && (
         <div className="space-y-2">
           <Label htmlFor="chainfundit-support-amount" className={collectionLabel}>
-            Amount to support ChainFundIt ({currencyCode})
+            Amount to support ChainFundIt ({currencyCode}){" "}
+            <span className="text-destructive">*</span>
           </Label>
           <Input
             id="chainfundit-support-amount"
             type="number"
             inputMode="decimal"
-            min="0"
+            min={currencyCode === "NGN" ? "1" : "0.01"}
             step={amountStep}
-            placeholder={`0 — optional, in ${currencyCode}`}
+            required
+            placeholder={`Enter amount in ${currencyCode}`}
             value={supportAmount}
             onChange={(e) => onSupportAmountChange(e.target.value)}
             className="h-12 rounded-full border-[#E7E5E4] text-base text-[#1C1917] placeholder:text-[#78716C]"

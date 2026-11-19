@@ -76,14 +76,16 @@ export async function POST(
     const chainfunditSupportAmount = parseFloat(
       String(chainfunditSupportAmountInput ?? 0)
     );
-    if (
-      supportChainfundit &&
-      (!Number.isFinite(chainfunditSupportAmount) || chainfunditSupportAmount < 0)
-    ) {
-      return NextResponse.json(
-        { error: "Invalid ChainFundIt support amount" },
-        { status: 400 }
-      );
+    if (supportChainfundit) {
+      if (
+        !Number.isFinite(chainfunditSupportAmount) ||
+        chainfunditSupportAmount <= 0
+      ) {
+        return NextResponse.json(
+          { error: "Enter an amount to support ChainFundIt" },
+          { status: 400 }
+        );
+      }
     }
 
     const fees = calculateCollectionCheckoutFees({

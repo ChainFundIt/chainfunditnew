@@ -101,7 +101,7 @@ export default function CollectionDetailPage() {
   const [message, setMessage] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("paypal");
-  const [supportChainfundit, setSupportChainfundit] = useState(false);
+  const [supportChainfundit, setSupportChainfundit] = useState(true);
   const [chainfunditSupportAmount, setChainfunditSupportAmount] = useState("");
 
   const currencyCode = locationInfo?.currency.code || "USD";
@@ -175,6 +175,11 @@ export default function CollectionDetailPage() {
       return;
     }
 
+    if (supportChainfundit && !hasValidSupportAmount) {
+      toast.error("Please enter an amount to support ChainFundIt");
+      return;
+    }
+
     setDonating(true);
 
     try {
@@ -198,7 +203,7 @@ export default function CollectionDetailPage() {
             paymentMethod: activePaymentMethod,
             supportChainfundit,
             chainfunditSupportAmount: supportChainfundit
-              ? chainfunditSupportAmount || "0"
+              ? chainfunditSupportAmount
               : "0",
           }),
         }
@@ -223,6 +228,9 @@ export default function CollectionDetailPage() {
   };
 
   const createPayPalOrder = async () => {
+    if (supportChainfundit && !hasValidSupportAmount) {
+      throw new Error("Please enter an amount to support ChainFundIt");
+    }
     const response = await fetch(`/api/collections/${collection?.id}/payment-intent`, {
       method: "POST",
       headers: {
@@ -238,7 +246,7 @@ export default function CollectionDetailPage() {
         paymentMethod: "paypal",
         supportChainfundit,
         chainfunditSupportAmount: supportChainfundit
-          ? chainfunditSupportAmount || "0"
+          ? chainfunditSupportAmount
           : "0",
       }),
     });
@@ -268,9 +276,14 @@ export default function CollectionDetailPage() {
   };
 
   const contributionNumeric = parseFloat(contributionAmount || "");
-  const supportAmountNumeric = parseFloat(chainfunditSupportAmount || "0");
+  const supportAmountNumeric = parseFloat(chainfunditSupportAmount || "");
   const hasValidContribution =
     Number.isFinite(contributionNumeric) && contributionNumeric > 0;
+  const hasValidSupportAmount =
+    !supportChainfundit ||
+    (Number.isFinite(supportAmountNumeric) && supportAmountNumeric > 0);
+  const canSubmitContribution =
+    hasValidContribution && hasValidSupportAmount;
 
   const checkoutFees = useMemo(() => {
     const paymentMethod = (
@@ -695,7 +708,7 @@ export default function CollectionDetailPage() {
                       }
                       currency={currencyCode}
                       label={collection?.title || "Collection contribution"}
-                      disabled={!hasValidContribution || !donorEmail}
+                      disabled={!canSubmitContribution || !donorEmail}
                       createOrderRequest={createPayPalOrder}
                       captureOrderRequest={capturePayPalOrder}
                       onError={(message) => toast.error(message)}
@@ -705,14 +718,16 @@ export default function CollectionDetailPage() {
                   <Button
                     type="submit"
                     disabled={
-                      donating || !hasValidContribution || !paymentOptionsReady
+                      donating ||
+                      !canSubmitContribution ||
+                      !paymentOptionsReady
                     }
                     className={`${collectionBtnPrimary} w-full`}
                     size="lg"
                   >
                     {donating
                       ? "Processing..."
-                      : hasValidContribution
+                      : canSubmitContribution
                         ? `Pay ${formatMoney(checkoutFees.totalCharged)}`
                         : "Contribute"}
                   </Button>

@@ -26,7 +26,7 @@ describe("calculateCollectionCheckoutFees", () => {
     expect(fees.totalCharged).toBe(102);
   });
 
-  it("allows zero support amount when opted in", () => {
+  it("includes zero support in fee preview only when amount not set yet", () => {
     const fees = calculateCollectionCheckoutFees({
       contributionAmount: 10,
       currency: "USD",

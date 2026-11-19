@@ -96,7 +96,7 @@ const CollectionsHero = () => {
             </div>
             <div className="flex items-center gap-2">
               <Users size={18} color="#78716C" />
-              <span>No account to pay</span>
+              <span>Contribute without an account</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle size={18} color="#78716C" />
