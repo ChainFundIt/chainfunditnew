@@ -32,7 +32,7 @@ const PAYPAL_NAMESPACE = "chainfunditPaypal";
 const scriptLoads = new Map<string, Promise<void>>();
 
 function getPayPalNamespace() {
-  return (window as Window & Record<string, PayPalNamespace | undefined>)[PAYPAL_NAMESPACE];
+  return (window as unknown as Record<string, PayPalNamespace | undefined>)[PAYPAL_NAMESPACE];
 }
 
 function paypalButtonsReady() {
