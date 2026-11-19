@@ -30,7 +30,6 @@ export default function GetStartedPage() {
             className="group flex flex-col justify-between gap-10 p-8 transition-colors hover:bg-[#F7F6F5] md:p-12"
           >
             <div>
-              <p className="text-sm font-semibold text-[#57534E]">For a cause</p>
               <h2 className="mt-3 text-2xl font-bold tracking-tight text-[#104109] md:text-3xl">
                 Start a campaign
               </h2>
@@ -50,7 +49,6 @@ export default function GetStartedPage() {
             className="group flex flex-col justify-between gap-10 border-t border-[#E7E5E4] bg-[#F3F8F2] p-8 transition-colors hover:bg-[#E7F0E4] md:border-l md:border-t-0 md:p-12"
           >
             <div>
-              <p className="text-sm font-semibold text-[#57534E]">For a group</p>
               <h2 className="mt-3 text-2xl font-bold tracking-tight text-[#104109] md:text-3xl">
                 Start a collection
               </h2>

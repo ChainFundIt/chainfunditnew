@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Download, Share2, ArrowLeft } from "lucide-react";
+import { CheckCircle, Download, Share2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
@@ -177,7 +177,7 @@ function PaymentSuccessContent() {
               </Button>
             </div>
 
-            <div className="pt-4 space-y-3">
+            <div className="pt-4">
               <Button
                 asChild
                 className={`${collectionBtnPrimary} w-full`}
@@ -185,16 +185,6 @@ function PaymentSuccessContent() {
               >
                 <Link href={`/collections/${collection?.slug || slug}`}>
                   Back to collection
-                </Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                className={`${collectionBtnOutline} w-full`}
-              >
-                <Link href="/collections/browse">
-                  <ArrowLeft className="h-4 w-4" />
-                  Browse collections
                 </Link>
               </Button>
             </div>

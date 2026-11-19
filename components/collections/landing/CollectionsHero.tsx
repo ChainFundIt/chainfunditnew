@@ -13,7 +13,6 @@ type HeroSlide = {
   imageUrl: string;
   label: string;
   title: string;
-  progress: number;
 };
 
 const slides: HeroSlide[] = [
@@ -22,21 +21,18 @@ const slides: HeroSlide[] = [
     imageUrl: "/images/teamwork.png",
     label: "Wedding gift",
     title: "A gift the whole group can share",
-    progress: 72,
   },
   {
     id: "birthday",
     imageUrl: "/images/coin-jar.jpg",
     label: "Birthday",
     title: "Everyone chips in before the day",
-    progress: 54,
   },
   {
     id: "reunion",
     imageUrl: "/images/welcome.jpg",
     label: "Reunion",
     title: "One pot for the whole get-together",
-    progress: 88,
   },
 ];
 
@@ -80,20 +76,17 @@ const CollectionsHero = () => {
             occasions, make it easy for everyone to chip in without chasing
             bank transfers or keeping track of who has paid.
           </div>
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="w-full">
             <Button
               asChild
-              className="bg-[#104109] px-8 py-4 rounded-full h-auto font-bold text-lg leading-7 border-none"
+              className="bg-[#104109] w-full px-8 py-4 rounded-full h-auto font-bold text-lg leading-7 border-none justify-center"
             >
-              <Link href="/collections/create">
+              <Link
+                href="/collections/create"
+                className="flex w-full items-center justify-center gap-2"
+              >
                 Start a collection <ArrowRight size={20} />
               </Link>
-            </Button>
-            <Button
-              asChild
-              className="bg-white px-8 py-4 rounded-full h-auto font-bold text-lg leading-7 text-[#104109]"
-            >
-              <Link href="/collections/browse">Browse collections</Link>
             </Button>
           </div>
           <div className="flex flex-wrap gap-8 text-[#78716C] font-medium text-sm leading-5 mt-6">
@@ -138,23 +131,12 @@ const CollectionsHero = () => {
                       className="md:w-[35rem] w-full h-full md:h-[30rem] object-cover"
                     />
                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[90%] bg-white rounded-2xl shadow-xl px-4 py-3">
-                      <div className="flex items-center justify-between mb-1 gap-3">
-                        <p className="font-regular text-xs text-[#666]">
-                          <b>{slide.label}</b>
-                        </p>
-                        <span className="text-xs font-semibold text-[#F97316] bg-[#F97316]/10 px-2 py-1 rounded-full whitespace-nowrap">
-                          {slide.progress}% collected
-                        </span>
-                      </div>
-                      <h4 className="font-bold text-base md:text-lg text-black line-clamp-1">
+                      <p className="font-regular text-xs text-[#666] mb-1">
+                        <b>{slide.label}</b>
+                      </p>
+                      <h4 className="font-bold text-base md:text-lg text-black line-clamp-2">
                         {slide.title}
                       </h4>
-                      <div className="w-full h-2 bg-[#E5E5E5] rounded-full overflow-hidden mt-2">
-                        <div
-                          className="h-full bg-[#13C870] rounded-full transition-all duration-700"
-                          style={{ width: `${slide.progress}%` }}
-                        />
-                      </div>
                     </div>
                   </div>
                 ))}

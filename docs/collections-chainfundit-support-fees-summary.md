@@ -5,12 +5,12 @@ Full detail: [`collections-chainfundit-support-fees.md`](./collections-chainfund
 
 ---
 
-## What we want
+## What we want (decided)
 
-Add an optional **“Support ChainFundIt”** step on **collections** checkout (similar in spirit to Collctiv, ChainFundIt-branded UI).
+Add **“Support ChainFundIt”** on **collections** checkout (Collctiv-style UI, ChainFundIt branding).
 
-- **If they say yes:** contributor pays **collection amount + payment-provider fee** → **organiser gets the full amount** they chose.  
-- **If not this time:** contributor pays **only the collection amount** → fees come out later (organiser may net less unless we subsidise).
+- **Yes — support ChainFundIt:** `total = contribution + processing fee + ChainFundIt fee`, where **processing % + ChainFundIt % = 5%** (e.g. provider 3.5% → ChainFundIt 1.5%). **Organiser gets full contribution.**  
+- **Not this time:** `total = contribution + payment-provider fee only` (no ChainFundIt portion).
 
 ---
 

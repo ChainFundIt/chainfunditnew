@@ -4,7 +4,6 @@ import Footer from "@/components/layout/Footer";
 import CollectionsHero from "@/components/collections/landing/CollectionsHero";
 import CollectionsSteps from "@/components/collections/landing/CollectionsSteps";
 import CollectionsHighlight from "@/components/collections/landing/CollectionsHighlight";
-import CollectionsPreview from "@/components/collections/landing/CollectionsPreview";
 import CollectionsCta from "@/components/collections/landing/CollectionsCta";
 import CollectionsMoments from "@/components/collections/landing/CollectionsMoments";
 import CollectionsFaqs from "@/components/collections/landing/CollectionsFaqs";
@@ -22,7 +21,6 @@ export default function CollectionsLandingPage() {
       <CollectionsHero />
       <CollectionsSteps />
       <CollectionsHighlight />
-      <CollectionsPreview />
       <CollectionsCta />
       <CollectionsMoments />
       <CollectionsFaqs />

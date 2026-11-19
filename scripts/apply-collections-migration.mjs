@@ -67,7 +67,20 @@ async function main() {
     "utf8"
   );
   await sql.query(categorySql.trim(), []);
-  console.log("Collections schema up to date (including category column).");
+
+  const feesMigration = fs.readFileSync(
+    path.resolve(__dirname, "../lib/migrations/0043_collection_contribution_fees.sql"),
+    "utf8"
+  );
+  const feeStatements = feesMigration
+    .split("--> statement-breakpoint")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  for (const stmt of feeStatements) {
+    await sql.query(stmt, []);
+  }
+
+  console.log("Collections schema up to date.");
 }
 
 main().catch((error) => {

@@ -42,6 +42,10 @@ export const collectionContributions = pgTable("collection_contributions", {
   contributorName: varchar("contributor_name", { length: 255 }),
   contributorEmail: varchar("contributor_email", { length: 255 }),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  totalCharged: decimal("total_charged", { precision: 10, scale: 2 }),
+  providerFeeAmount: decimal("provider_fee_amount", { precision: 10, scale: 2 }),
+  platformFeeAmount: decimal("platform_fee_amount", { precision: 10, scale: 2 }),
+  supportChainfundit: boolean("support_chainfundit").default(false).notNull(),
   currency: varchar("currency", { length: 3 }).notNull().default("USD"),
   paymentStatus: varchar("payment_status", { length: 20 })
     .default("pending")

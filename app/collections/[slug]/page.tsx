@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -25,7 +25,12 @@ import Footer from "@/components/layout/Footer";
 import Image from "next/image";
 import { Textarea } from "@/components/ui/textarea";
 import { CollectionFaq } from "@/components/collections/CollectionFaq";
-import { cn } from "@/lib/utils";
+import { CollectionSupportChainfundit } from "@/components/collections/CollectionSupportChainfundit";
+import { CollectionPaymentBreakdown } from "@/components/collections/CollectionPaymentBreakdown";
+import {
+  calculateCollectionCheckoutFees,
+  type CollectionPaymentProvider,
+} from "@/lib/collections/checkout-fees";
 import { getCollectionCategory, getCollectionCategoryLabel } from "@/lib/collections/categories";
 import {
   collectionBody,
@@ -86,23 +91,19 @@ export default function CollectionDetailPage() {
   const {
     locationInfo,
     loading: locationLoading,
-    getPresetAmounts,
     formatAmount,
   } = useGeolocationCurrency();
 
   // Donation form state
-  const [amount, setAmount] = useState("");
-  const [customAmount, setCustomAmount] = useState("");
+  const [contributionAmount, setContributionAmount] = useState("");
   const [donorName, setDonorName] = useState("");
   const [donorEmail, setDonorEmail] = useState("");
   const [message, setMessage] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("paypal");
+  const [supportChainfundit, setSupportChainfundit] = useState(false);
+  const [chainfunditSupportAmount, setChainfunditSupportAmount] = useState("");
 
-  // Get preset amounts based on user's currency
-  const presetAmounts = locationInfo
-    ? getPresetAmounts(locationInfo.currency.code)
-    : ["25", "50", "100", "250", "500", "1000"];
   const currencyCode = locationInfo?.currency.code || "USD";
   const supportedPaymentMethods = getSupportedProviders(currencyCode);
   const paymentOptionsReady = !locationLoading;
@@ -162,7 +163,7 @@ export default function CollectionDetailPage() {
       return;
     }
 
-    const donationAmount = amount === "custom" ? customAmount : amount;
+    const donationAmount = contributionAmount;
 
     if (!donationAmount || parseFloat(donationAmount) <= 0) {
       toast.error("Please enter a valid donation amount");
@@ -195,6 +196,10 @@ export default function CollectionDetailPage() {
             message,
             isAnonymous,
             paymentMethod: activePaymentMethod,
+            supportChainfundit,
+            chainfunditSupportAmount: supportChainfundit
+              ? chainfunditSupportAmount || "0"
+              : "0",
           }),
         }
       );
@@ -218,20 +223,23 @@ export default function CollectionDetailPage() {
   };
 
   const createPayPalOrder = async () => {
-    const donationAmount = amount === "custom" ? customAmount : amount;
     const response = await fetch(`/api/collections/${collection?.id}/payment-intent`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        amount: donationAmount,
+        amount: contributionAmount,
         currency: currencyCode,
         contributorName: isAnonymous ? "Anonymous" : donorName,
         contributorEmail: donorEmail,
         message,
         isAnonymous,
         paymentMethod: "paypal",
+        supportChainfundit,
+        chainfunditSupportAmount: supportChainfundit
+          ? chainfunditSupportAmount || "0"
+          : "0",
       }),
     });
 
@@ -259,14 +267,41 @@ export default function CollectionDetailPage() {
     window.location.href = `/collections/${collection?.slug}/payment-success?contribution_id=${data.contribution?.id || data.donation?.id}`;
   };
 
-  const selectedContributionAmount =
-    amount === "custom"
-      ? customAmount
-      : amount || "";
-  const formattedSelectedAmount =
-    selectedContributionAmount && parseFloat(selectedContributionAmount) > 0
-      ? formatAmount(selectedContributionAmount, currencyCode)
-      : formatAmount("0", currencyCode);
+  const contributionNumeric = parseFloat(contributionAmount || "");
+  const supportAmountNumeric = parseFloat(chainfunditSupportAmount || "0");
+  const hasValidContribution =
+    Number.isFinite(contributionNumeric) && contributionNumeric > 0;
+
+  const checkoutFees = useMemo(() => {
+    const paymentMethod = (
+      activePaymentMethod ||
+      supportedPaymentMethods[0] ||
+      "paypal"
+    ) as CollectionPaymentProvider;
+    const contribution = hasValidContribution ? contributionNumeric : 0;
+    const supportAmount =
+      supportChainfundit && Number.isFinite(supportAmountNumeric)
+        ? Math.max(supportAmountNumeric, 0)
+        : 0;
+    return calculateCollectionCheckoutFees({
+      contributionAmount: contribution,
+      currency: currencyCode,
+      paymentMethod,
+      supportChainfundit,
+      chainfunditSupportAmount: supportAmount,
+    });
+  }, [
+    hasValidContribution,
+    contributionNumeric,
+    currencyCode,
+    activePaymentMethod,
+    supportedPaymentMethods,
+    supportChainfundit,
+    supportAmountNumeric,
+  ]);
+
+  const formatMoney = (value: number) =>
+    formatAmount(value.toString(), currencyCode);
 
   const handleShareCollection = async () => {
     if (!collection) return;
@@ -293,11 +328,11 @@ export default function CollectionDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f4f7f2] py-24 px-4">
-        <div className="max-w-6xl mx-auto animate-pulse space-y-6">
+        <div className="max-w-[80rem] mx-auto animate-pulse space-y-6">
           <div className="h-8 bg-gray-200 rounded w-48" />
-          <div className="grid lg:grid-cols-5 gap-6">
-            <div className="lg:col-span-3 h-96 bg-gray-200 rounded-3xl" />
-            <div className="lg:col-span-2 h-96 bg-gray-200 rounded-3xl" />
+          <div className="grid lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-7 h-96 bg-gray-200 rounded-3xl" />
+            <div className="lg:col-span-5 h-96 bg-gray-200 rounded-3xl" />
           </div>
         </div>
       </div>
@@ -307,7 +342,7 @@ export default function CollectionDetailPage() {
   if (!collection) {
     return (
       <div className="min-h-screen bg-[#f4f7f2] py-24 px-4">
-        <div className="max-w-6xl mx-auto text-center">
+        <div className="max-w-[80rem] mx-auto text-center">
           <h1 className={`${collectionSectionTitle} mb-4`}>
             Collection not found
           </h1>
@@ -339,7 +374,7 @@ export default function CollectionDetailPage() {
     <div className={`${collectionPage} bg-[#f4f7f2]`}>
       <Navbar />
 
-      <main className="max-w-6xl mx-auto px-4 pt-24 pb-16">
+      <main className="max-w-[80rem] mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
           <nav className={`flex items-center gap-2 ${collectionBodySmall}`}>
             <Link href="/collections" className="font-semibold text-[#104109]">
@@ -351,12 +386,6 @@ export default function CollectionDetailPage() {
             </span>
           </nav>
           <div className="flex items-center gap-2">
-            <Button asChild variant="outline" size="sm" className={collectionBtnOutlineSmall}>
-              <Link href="/collections/browse">
-                <ArrowLeft className="h-4 w-4" />
-                All collections
-              </Link>
-            </Button>
             <Button
               type="button"
               variant="outline"
@@ -370,8 +399,8 @@ export default function CollectionDetailPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
-          <div className="lg:col-span-3 space-y-6 order-2 lg:order-1">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+          <div className="lg:col-span-7 space-y-6 order-2 lg:order-1">
             <section className="bg-white border border-[#e5ebe3] rounded-3xl shadow-sm overflow-hidden">
               <div className="grid md:grid-cols-2 gap-0">
                 <div className="p-6 md:p-8 flex flex-col justify-center">
@@ -501,115 +530,43 @@ export default function CollectionDetailPage() {
             <CollectionFaq />
           </div>
 
-          <div className="lg:col-span-2 order-1 lg:order-2">
+          <div className="lg:col-span-5 order-1 lg:order-2">
             <div className="bg-white rounded-3xl p-6 md:p-8 border border-[#e5ebe3] shadow-md lg:sticky lg:top-24">
-              <p className={`${collectionBodySmall} mb-1`}>
-                Payment
-              </p>
-              <h2 className="font-jakarta text-xl font-bold tracking-tight text-[#104109] md:text-2xl mb-1">
-                Your contribution
+              <h2 className="font-jakarta text-xl font-bold tracking-tight text-[#104109] md:text-2xl mb-6">
+                Contribute
               </h2>
-              <p className={`${collectionBodySmall} mb-4`}>
-                Contribution to {collection.organiserName}
-              </p>
-              <p className="text-3xl font-bold text-[#104109] mb-6">
-                {formattedSelectedAmount}
-              </p>
 
               <form onSubmit={handleDonate} className="space-y-6">
-                {/* Amount Selection */}
-                <div className="space-y-3">
-                  <Label className={collectionLabel}>
-                    Select Amount ({locationInfo?.currency.code || "USD"})
+                <div className="space-y-2">
+                  <Label htmlFor="contribution-amount" className={collectionLabel}>
+                    Contribution amount ({currencyCode})
                   </Label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {presetAmounts.map((preset) => (
-                      <Button
-                        key={preset}
-                        type="button"
-                        variant={amount === preset ? "default" : "outline"}
-                        className={cn(
-                          "h-10 rounded-full px-2 text-sm font-semibold shadow-none",
-                          amount === preset
-                            ? "border-0 bg-[#104109] text-white hover:bg-[#0d3507] hover:text-white"
-                            : "border-2 border-[#104109] bg-transparent text-[#104109] hover:bg-[#F3F8F2] hover:text-[#104109]"
-                        )}
-                        onClick={() => setAmount(preset)}
-                      >
-                        {formatAmount(
-                          preset,
-                          locationInfo?.currency.code || "USD"
-                        )}
-                      </Button>
-                    ))}
-                  </div>
-                  <Button
-                    type="button"
-                    variant={amount === "custom" ? "default" : "outline"}
-                    className={cn(
-                      "h-10 w-full rounded-full text-sm font-semibold shadow-none",
-                      amount === "custom"
-                        ? "border-0 bg-[#104109] text-white hover:bg-[#0d3507] hover:text-white"
-                        : "border-2 border-[#104109] bg-transparent text-[#104109] hover:bg-[#F3F8F2] hover:text-[#104109]"
-                    )}
-                    onClick={() => setAmount("custom")}
-                  >
-                    Custom amount
-                  </Button>
-                  {amount === "custom" && (
-                    <Input
-                      type="number"
-                      placeholder={`Enter amount in ${locationInfo?.currency.code || "USD"}`}
-                      value={customAmount}
-                      onChange={(e) => setCustomAmount(e.target.value)}
-                      min="1"
-                      step={
-                        locationInfo?.currency.code === "NGN" ? "1" : "0.01"
-                      }
-                      className="mt-3 h-12 rounded-full border-[#E7E5E4] text-base text-[#1C1917] placeholder:text-[#78716C]"
-                    />
-                  )}
+                  <Input
+                    id="contribution-amount"
+                    type="number"
+                    inputMode="decimal"
+                    placeholder={`Enter amount in ${currencyCode}`}
+                    value={contributionAmount}
+                    onChange={(e) => setContributionAmount(e.target.value)}
+                    min="0"
+                    step={currencyCode === "NGN" ? "1" : "0.01"}
+                    required
+                    className="h-12 rounded-full border-[#E7E5E4] text-base text-[#1C1917] placeholder:text-[#78716C]"
+                  />
                 </div>
 
-                {/* Donor Information */}
-                <div className="space-y-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="donorName" className={collectionLabel}>Your name (optional)</Label>
-                    <Input
-                      type="text"
-                      id="donorName"
-                      value={donorName}
-                      onChange={(e) => setDonorName(e.target.value)}
-                      placeholder="John Doe"
-                      disabled={isAnonymous}
-                      className="h-12 rounded-full border-[#E7E5E4] text-base text-[#1C1917] placeholder:text-[#78716C]"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="donorEmail" className={collectionLabel}>
-                      Email address <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      type="email"
-                      id="donorEmail"
-                      value={donorEmail}
-                      onChange={(e) => setDonorEmail(e.target.value)}
-                      placeholder="john@example.com"
-                      required
-                      className="h-12 rounded-full border-[#E7E5E4] text-base text-[#1C1917] placeholder:text-[#78716C]"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="message" className={collectionLabel}>Message (optional)</Label>
-                    <Textarea
-                      id="message"
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      placeholder="Leave a message of support..."
-                      rows={3}
-                      className="rounded-2xl border-[#E7E5E4] text-base text-[#1C1917] placeholder:text-[#78716C]"
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="message" className={collectionLabel}>
+                    Leave a message? (optional)
+                  </Label>
+                  <Textarea
+                    id="message"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="Enter your message..."
+                    rows={3}
+                    className="rounded-2xl border-[#E7E5E4] text-base text-[#1C1917] placeholder:text-[#78716C]"
+                  />
                 </div>
 
                 {/* Anonymous Donation */}
@@ -625,14 +582,64 @@ export default function CollectionDetailPage() {
                     htmlFor="anonymous"
                     className="cursor-pointer text-sm font-medium text-[#57534E]"
                   >
-                    Donate anonymously
+                    Hide my name from public view
                   </Label>
+                </div>
+
+                {collection && (
+                  <CollectionSupportChainfundit
+                    organiserName={collection.organiserName}
+                    currencyCode={currencyCode}
+                    supportChainfundit={supportChainfundit}
+                    supportAmount={chainfunditSupportAmount}
+                    onSupportChange={setSupportChainfundit}
+                    onSupportAmountChange={setChainfunditSupportAmount}
+                  />
+                )}
+
+                {collection && (
+                  <CollectionPaymentBreakdown
+                    organiserName={collection.organiserName}
+                    fees={checkoutFees}
+                    formatMoney={formatMoney}
+                  />
+                )}
+
+                <div className="space-y-3 pt-2 border-t border-[#E7E5E4]">
+                  <div className="space-y-2">
+                    <Label htmlFor="donorName" className={collectionLabel}>
+                      Full name
+                    </Label>
+                    <Input
+                      type="text"
+                      id="donorName"
+                      value={donorName}
+                      onChange={(e) => setDonorName(e.target.value)}
+                      placeholder="Clare Jones"
+                      disabled={isAnonymous}
+                      className="h-12 rounded-full border-[#E7E5E4] text-base text-[#1C1917] placeholder:text-[#78716C]"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="donorEmail" className={collectionLabel}>
+                      Email address <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      type="email"
+                      id="donorEmail"
+                      value={donorEmail}
+                      onChange={(e) => setDonorEmail(e.target.value)}
+                      placeholder="clare@example.com"
+                      required
+                      className="h-12 rounded-full border-[#E7E5E4] text-base text-[#1C1917] placeholder:text-[#78716C]"
+                    />
+                  </div>
                 </div>
 
                 {/* Payment Method */}
                 <div className="space-y-3">
                   <Label className={collectionLabel}>
-                    Payment Method
+                    Payment method
                   </Label>
                   {!paymentOptionsReady || !activePaymentMethod ? (
                     <p className={collectionBodySmall}>
@@ -681,10 +688,14 @@ export default function CollectionDetailPage() {
                       Complete your donation with PayPal below.
                     </p>
                     <PayPalOrderButtons
-                      amount={amount === "custom" ? customAmount : amount}
+                      amount={
+                        hasValidContribution
+                          ? checkoutFees.totalCharged
+                          : contributionAmount
+                      }
                       currency={currencyCode}
                       label={collection?.title || "Collection contribution"}
-                      disabled={!amount || !donorEmail}
+                      disabled={!hasValidContribution || !donorEmail}
                       createOrderRequest={createPayPalOrder}
                       captureOrderRequest={capturePayPalOrder}
                       onError={(message) => toast.error(message)}
@@ -693,13 +704,17 @@ export default function CollectionDetailPage() {
                 ) : (
                   <Button
                     type="submit"
-                    disabled={donating || !amount || !paymentOptionsReady}
+                    disabled={
+                      donating || !hasValidContribution || !paymentOptionsReady
+                    }
                     className={`${collectionBtnPrimary} w-full`}
                     size="lg"
                   >
                     {donating
                       ? "Processing..."
-                      : `Contribute ${amount && amount !== "custom" ? formatAmount(amount, currencyCode) : customAmount ? formatAmount(customAmount, currencyCode) : ""}`}
+                      : hasValidContribution
+                        ? `Pay ${formatMoney(checkoutFees.totalCharged)}`
+                        : "Contribute"}
                   </Button>
                 )}
               </form>

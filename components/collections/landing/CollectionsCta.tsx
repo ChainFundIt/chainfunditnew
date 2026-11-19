@@ -79,12 +79,6 @@ const CollectionsCta = () => {
           >
             <Link href="/collections/create">Start a collection</Link>
           </Button>
-          <Button
-            asChild
-            className="bg-white px-8 py-4 rounded-full h-auto font-bold text-lg leading-7 text-[#104109] w-full md:w-fit"
-          >
-            <Link href="/collections/browse">Browse collections</Link>
-          </Button>
         </motion.div>
 
         <motion.div

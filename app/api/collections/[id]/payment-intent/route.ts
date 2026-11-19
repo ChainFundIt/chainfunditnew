@@ -6,6 +6,10 @@ import { initializePaystackPayment } from "@/lib/payments/paystack";
 import { createPayPalOrder, getPayPalApprovalUrl } from "@/lib/payments/paypal";
 import { getSupportedProviders } from "@/lib/payments/config";
 import { findCollectionByIdOrSlug } from "@/lib/collections/resolve-collection";
+import {
+  calculateCollectionCheckoutFees,
+  type CollectionPaymentProvider,
+} from "@/lib/collections/checkout-fees";
 
 export async function POST(
   request: NextRequest,
@@ -24,6 +28,8 @@ export async function POST(
       isAnonymous,
       contributionId,
       paymentMethod: requestedPaymentMethod,
+      supportChainfundit: supportChainfunditInput,
+      chainfunditSupportAmount: chainfunditSupportAmountInput,
     } = body;
 
     const collection = await findCollectionByIdOrSlug(id);
@@ -58,12 +64,58 @@ export async function POST(
       );
     }
 
+    const contributionAmount = parseFloat(String(amount));
+    if (!Number.isFinite(contributionAmount) || contributionAmount <= 0) {
+      return NextResponse.json(
+        { error: "Invalid contribution amount" },
+        { status: 400 }
+      );
+    }
+
+    const supportChainfundit = supportChainfunditInput === true;
+    const chainfunditSupportAmount = parseFloat(
+      String(chainfunditSupportAmountInput ?? 0)
+    );
+    if (
+      supportChainfundit &&
+      (!Number.isFinite(chainfunditSupportAmount) || chainfunditSupportAmount < 0)
+    ) {
+      return NextResponse.json(
+        { error: "Invalid ChainFundIt support amount" },
+        { status: 400 }
+      );
+    }
+
+    const fees = calculateCollectionCheckoutFees({
+      contributionAmount,
+      currency,
+      paymentMethod: paymentMethod as CollectionPaymentProvider,
+      supportChainfundit,
+      chainfunditSupportAmount: supportChainfundit
+        ? chainfunditSupportAmount
+        : 0,
+    });
+
+    const contributionValues = {
+      contributorEmail,
+      contributorName: isAnonymous ? "Anonymous" : contributorName,
+      amount: fees.contributionAmount.toString(),
+      totalCharged: fees.totalCharged.toString(),
+      providerFeeAmount: fees.providerFee.toString(),
+      platformFeeAmount: fees.platformFee.toString(),
+      supportChainfundit: fees.supportChainfundit,
+      currency,
+      message,
+      isAnonymous: Boolean(isAnonymous),
+      paymentMethod,
+    };
+
     let contribution;
     if (contributionId) {
       const [updated] = await db
         .update(collectionContributions)
         .set({
-          paymentMethod,
+          ...contributionValues,
           updatedAt: new Date(),
         })
         .where(eq(collectionContributions.id, contributionId))
@@ -74,13 +126,7 @@ export async function POST(
         .insert(collectionContributions)
         .values({
           collectionId: collection.id,
-          contributorEmail,
-          contributorName: isAnonymous ? "Anonymous" : contributorName,
-          amount: amount.toString(),
-          currency,
-          message,
-          isAnonymous: Boolean(isAnonymous),
-          paymentMethod,
+          ...contributionValues,
           paymentStatus: "pending",
         })
         .returning();
@@ -117,7 +163,7 @@ export async function POST(
 
       const paystackResponse = await initializePaystackPayment(
         contributorEmail,
-        parseFloat(amount),
+        fees.totalCharged,
         currency,
         metadata,
         callbackUrl
@@ -137,6 +183,7 @@ export async function POST(
         reference: paystackResponse.data.reference,
         contributionId: contribution.id,
         donationId: contribution.id,
+        fees,
       });
     }
 
@@ -145,7 +192,7 @@ export async function POST(
       const returnUrl = `${baseUrl}/collections/${collection.slug}/payment-callback`;
       const cancelUrl = `${baseUrl}/collections/${collection.slug}`;
       const order = await createPayPalOrder({
-        amount: parseFloat(amount),
+        amount: fees.totalCharged,
         currency,
         donationId: contribution.id,
         campaignTitle: collection.title,
@@ -175,6 +222,7 @@ export async function POST(
         orderId: order.id,
         contributionId: contribution.id,
         donationId: contribution.id,
+        fees,
       });
     }
 
