@@ -192,7 +192,7 @@ function PaymentSuccessContent() {
                 variant="outline"
                 className={`${collectionBtnOutline} w-full`}
               >
-                <Link href="/collections">
+                <Link href="/collections/browse">
                   <ArrowLeft className="h-4 w-4" />
                   Browse collections
                 </Link>

@@ -19,10 +19,6 @@ const Navbar = (props: Props) => {
   const router = useRouter();
   const { profile, loading: profileLoading } = useUserProfile();
   const isAdmin = profile?.role === "admin" || profile?.role === "super_admin";
-  const handleCreateCampaign = () => {
-    window.location.href = "/dashboard/campaigns/create-campaign";
-  };
-
   return (
     <nav className="sticky top-0 z-40 border-b border-[#E7E5E4] bg-white px-20 py-3">
       <div className="px-8 flex justify-between">
@@ -95,10 +91,10 @@ const Navbar = (props: Props) => {
           )}
 
           <Button
+            asChild
             className="bg-[#064E3B] py-[10px] px-[24px] rounded-full font-jakarta font-bold text-[14px] leading-[20px] hover:bg-gray-100"
-            onClick={handleCreateCampaign}
           >
-            Start a Campaign
+            <Link href="/get-started">Get Started</Link>
           </Button>
         </section>
       </div>
@@ -164,10 +160,12 @@ const Navbar = (props: Props) => {
             )}
 
             <Button
+              asChild
               className="bg-[#064E3B] py-[10px] px-[24px] rounded-full font-jakarta font-bold text-[14px] leading-[20px] hover:bg-gray-100"
-              onClick={handleCreateCampaign}
             >
-              Start a Campaign
+              <Link href="/get-started" onClick={() => setMenuOpen(false)}>
+                Get Started
+              </Link>
             </Button>
           </div>
         </div>

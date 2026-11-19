@@ -42,10 +42,10 @@ export function useCollections(filters: CollectionsFilters = {}) {
       if (filters.sortBy) params.set("sortBy", filters.sortBy);
 
       const response = await fetch(`/api/collections?${params.toString()}`);
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to load collections");
+      if (!response.ok || !data) {
+        throw new Error(data?.error || "Failed to load collections");
       }
 
       setCollections(data.collections || []);

@@ -128,7 +128,7 @@ export function LoginForm({
     >
       <div className="flex flex-col gap-3 md:text-left text-center">
         <div>
-          <h2 className="text-xl font-bold text-gray-900 mb-0.5">
+          <h2 className="font-jakarta text-lg font-bold tracking-tight text-[#104109] mb-0.5">
             Log in to your Account.
           </h2>
         </div>
@@ -136,7 +136,7 @@ export function LoginForm({
         <div className="grid gap-2">
           <Label
             htmlFor="email"
-            className="font-medium text-xs text-gray-700"
+            className="font-jakarta font-medium text-[14px] leading-[20px] text-[#57534E]"
           >
             Email Address
           </Label>
@@ -145,7 +145,7 @@ export function LoginForm({
             id="email"
             type="email"
             placeholder="name@example.com"
-            className="h-10 bg-gray-50 rounded-lg border border-gray-300 text-xs focus:border-[#109104] focus:ring-[#109104] shadow-none outline-none placeholder:text-gray-400 transition-colors"
+            className="h-11 bg-[#F7F6F5] rounded-lg border border-[#E7E5E4] font-jakarta text-[14px] leading-[20px] md:text-[14px] text-[#1C1917] focus:border-[#104109] focus:ring-[#104109] shadow-none outline-none placeholder:text-[#A8A29E] transition-colors"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -156,15 +156,15 @@ export function LoginForm({
 
         <Button
           type="submit"
-          className="h-10 bg-[#104109] hover:bg-white text-white font-semibold text-sm rounded-lg transition-colors w-full"
+          className="h-11 bg-[#064E3B] hover:bg-[#05382C] text-white hover:text-white font-jakarta font-bold text-[14px] leading-[20px] rounded-full transition-colors w-full"
         >
           {isLoading ? "Sending..." : "Log in"}
         </Button>
       </div>
 
-      <div className="text-center text-xs text-gray-600">
+      <div className="text-center font-jakarta text-[14px] leading-[20px] text-[#57534E]">
         Don't have an account?{" "}
-        <Link href="/signup" className="font-semibold text-blue-600 hover:text-blue-700">
+        <Link href="/signup" className="font-semibold text-[#104109] hover:text-[#064E3B]">
           Sign up
         </Link>
       </div>

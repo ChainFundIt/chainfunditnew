@@ -7,16 +7,15 @@ import { Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
-const CREATE_CAMPAIGN_HREF = "/dashboard/campaigns/create-campaign";
+const GET_STARTED_HREF = "/get-started";
 const COOKIE_CONSENT_KEY = "chainfundit_cookie_consent";
 
 function shouldHideOnPath(pathname: string) {
   // Avoid duplicating CTAs or interfering with admin/dashboard UIs.
   if (pathname.startsWith("/dashboard")) return true;
   if (pathname.startsWith("/admin")) return true;
-
-  // Avoid showing when user is already on create campaign.
-  if (pathname === CREATE_CAMPAIGN_HREF) return true;
+  if (pathname === GET_STARTED_HREF) return true;
+  if (pathname.startsWith("/collections/create")) return true;
 
   return false;
 }
@@ -53,9 +52,9 @@ export default function StartCampaignFab() {
             asChild
             className="w-full h-16 text-lg rounded-full shadow-lg border border-white/30"
           >
-            <Link href={CREATE_CAMPAIGN_HREF} aria-label="Start a campaign">
+            <Link href={GET_STARTED_HREF} aria-label="Get started">
               <Plus className="h-4 w-4" />
-              Start a campaign
+              Get started
             </Link>
           </Button>
         </div>

@@ -23,13 +23,8 @@ import { PayPalOrderButtons } from "@/components/payments/paypal-order-buttons";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import Image from "next/image";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Textarea } from "@/components/ui/textarea";
+import { CollectionFaq } from "@/components/collections/CollectionFaq";
 import { cn } from "@/lib/utils";
 import { getCollectionCategory, getCollectionCategoryLabel } from "@/lib/collections/categories";
 import {
@@ -357,7 +352,7 @@ export default function CollectionDetailPage() {
           </nav>
           <div className="flex items-center gap-2">
             <Button asChild variant="outline" size="sm" className={collectionBtnOutlineSmall}>
-              <Link href="/collections">
+              <Link href="/collections/browse">
                 <ArrowLeft className="h-4 w-4" />
                 All collections
               </Link>
@@ -503,38 +498,7 @@ export default function CollectionDetailPage() {
               )}
             </section>
 
-            <section className="bg-white border border-[#e5ebe3] rounded-3xl shadow-sm p-6 md:p-8">
-              <h2 className={`${collectionCardTitle} mb-2`}>
-                Frequently asked questions
-              </h2>
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="what">
-                  <AccordionTrigger>
-                    What is a ChainFundIt collection?
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    A collection is a shared pot for a group goal — gifts, events,
-                    class funds, and more. Share the link and people can pay with a
-                    card; no account needed.
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="account">
-                  <AccordionTrigger>Do I need an account?</AccordionTrigger>
-                  <AccordionContent>
-                    No. Enter your email and payment details to contribute. You
-                    can choose to give anonymously if you prefer.
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="safe">
-                  <AccordionTrigger>Is paying here secure?</AccordionTrigger>
-                  <AccordionContent>
-                    Yes. Payments are processed through regulated providers
-                    (Paystack and PayPal) with encryption in transit. ChainFundIt
-                    does not store your full card details.
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </section>
+            <CollectionFaq />
           </div>
 
           <div className="lg:col-span-2 order-1 lg:order-2">

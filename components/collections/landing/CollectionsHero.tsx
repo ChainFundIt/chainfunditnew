@@ -1,0 +1,186 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, CheckCircle, Shield, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import "@/components/layout/animations.css";
+
+type HeroSlide = {
+  id: string;
+  imageUrl: string;
+  label: string;
+  title: string;
+  progress: number;
+};
+
+const slides: HeroSlide[] = [
+  {
+    id: "wedding",
+    imageUrl: "/images/teamwork.png",
+    label: "Wedding gift",
+    title: "A gift the whole group can share",
+    progress: 72,
+  },
+  {
+    id: "birthday",
+    imageUrl: "/images/coin-jar.jpg",
+    label: "Birthday",
+    title: "Everyone chips in before the day",
+    progress: 54,
+  },
+  {
+    id: "reunion",
+    imageUrl: "/images/welcome.jpg",
+    label: "Reunion",
+    title: "One pot for the whole get-together",
+    progress: 88,
+  },
+];
+
+const CollectionsHero = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const { ref: leftRef, isInView: leftInView } = useScrollAnimation();
+  const { ref: rightRef, isInView: rightInView } = useScrollAnimation();
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="font-jakarta flex items-center justify-center bg-[var(--color-background)] py-20 px-4">
+      <div className="flex md:flex-row md:gap-20 flex-col gap-12">
+        <div
+          ref={leftRef}
+          className={`flex flex-col gap-8 md:w-[35rem] w-full text-left transition-all duration-500 ${
+            leftInView ? "animate-slide-in-left" : "opacity-0"
+          }`}
+        >
+          <div className="flex py-2 px-4 gap-2 rounded-full bg-white items-center w-fit mb-2">
+            <div className="w-2 h-2 rounded-full bg-[#104901] flex-shrink-0"></div>
+            <span className="font-bold text-xs leading-4 uppercase">
+              Collect money without sharing bank details
+            </span>
+          </div>
+          <h1 className="font-extrabold text-5xl md:text-6xl leading-[1.05]">
+            <span className="block text-[#1C1917]">Everyone chips in.</span>
+            <span className="block text-[#104109]">Nobody gets left</span>
+            <span className="relative inline-block text-[#104109]">
+              <span className="relative z-10">with the bill.</span>
+              <span className="absolute inset-x-0 -bottom-3 h-3 bg-[#10B9814D] z-0" />
+            </span>
+          </h1>
+          <div className="font-normal text-lg leading-[1.9] text-[#57534E]">
+            From weddings and birthdays to group gifts, reunions and special
+            occasions, make it easy for everyone to chip in without chasing
+            bank transfers or keeping track of who has paid.
+          </div>
+          <div className="flex flex-col md:flex-row gap-4">
+            <Button
+              asChild
+              className="bg-[#104109] px-8 py-4 rounded-full h-auto font-bold text-lg leading-7 border-none"
+            >
+              <Link href="/collections/create">
+                Start a collection <ArrowRight size={20} />
+              </Link>
+            </Button>
+            <Button
+              asChild
+              className="bg-white px-8 py-4 rounded-full h-auto font-bold text-lg leading-7 text-[#104109]"
+            >
+              <Link href="/collections/browse">Browse collections</Link>
+            </Button>
+          </div>
+          <div className="flex flex-wrap gap-8 text-[#78716C] font-medium text-sm leading-5 mt-6">
+            <div className="flex items-center gap-2">
+              <Shield size={18} color="#78716C" />
+              <span>Secure</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Users size={18} color="#78716C" />
+              <span>No account to pay</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle size={18} color="#78716C" />
+              <span>See who paid</span>
+            </div>
+          </div>
+        </div>
+
+        <div
+          ref={rightRef}
+          className={`transition-all duration-500 ${
+            rightInView ? "animate-slide-in-right" : "opacity-0"
+          }`}
+        >
+          <div className="md:w-[35rem] w-full">
+            <div className="relative rounded-3xl overflow-hidden">
+              <div
+                className="flex transition-transform duration-700 ease-out"
+                style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+              >
+                {slides.map((slide, index) => (
+                  <div
+                    key={slide.id}
+                    className="relative min-w-full rounded-3xl overflow-hidden"
+                  >
+                    <Image
+                      src={slide.imageUrl}
+                      alt={slide.title}
+                      width={500}
+                      height={400}
+                      priority={index === 0}
+                      className="md:w-[35rem] w-full h-full md:h-[30rem] object-cover"
+                    />
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[90%] bg-white rounded-2xl shadow-xl px-4 py-3">
+                      <div className="flex items-center justify-between mb-1 gap-3">
+                        <p className="font-regular text-xs text-[#666]">
+                          <b>{slide.label}</b>
+                        </p>
+                        <span className="text-xs font-semibold text-[#F97316] bg-[#F97316]/10 px-2 py-1 rounded-full whitespace-nowrap">
+                          {slide.progress}% collected
+                        </span>
+                      </div>
+                      <h4 className="font-bold text-base md:text-lg text-black line-clamp-1">
+                        {slide.title}
+                      </h4>
+                      <div className="w-full h-2 bg-[#E5E5E5] rounded-full overflow-hidden mt-2">
+                        <div
+                          className="h-full bg-[#13C870] rounded-full transition-all duration-700"
+                          style={{ width: `${slide.progress}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-center gap-2 mt-4">
+              {slides.map((slide, index) => (
+                <button
+                  key={`${slide.id}-dot`}
+                  type="button"
+                  aria-label={`Go to slide ${index + 1}`}
+                  onClick={() => setCurrentSlide(index)}
+                  className={`h-2 rounded-full transition-all ${
+                    currentSlide === index
+                      ? "w-6 bg-[#104109]"
+                      : "w-2 bg-[#D6D3D1]"
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CollectionsHero;
