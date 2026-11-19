@@ -32,6 +32,16 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { getCollectionCategory, getCollectionCategoryLabel } from "@/lib/collections/categories";
+import {
+  collectionBody,
+  collectionBodySmall,
+  collectionBtnOutlineSmall,
+  collectionBtnPrimary,
+  collectionCardTitle,
+  collectionLabel,
+  collectionPage,
+  collectionSectionTitle,
+} from "@/lib/collections/ui";
 
 interface Collection {
   id: string;
@@ -100,12 +110,20 @@ export default function CollectionDetailPage() {
     : ["25", "50", "100", "250", "500", "1000"];
   const currencyCode = locationInfo?.currency.code || "USD";
   const supportedPaymentMethods = getSupportedProviders(currencyCode);
+  const paymentOptionsReady = !locationLoading;
+  const activePaymentMethod =
+    paymentOptionsReady && supportedPaymentMethods.includes(paymentMethod as any)
+      ? paymentMethod
+      : paymentOptionsReady
+        ? supportedPaymentMethods[0]
+        : null;
 
   useEffect(() => {
-    if (!supportedPaymentMethods.includes(paymentMethod as any) && supportedPaymentMethods.length > 0) {
-      setPaymentMethod(supportedPaymentMethods[0]);
+    if (!paymentOptionsReady || !activePaymentMethod) return;
+    if (paymentMethod !== activePaymentMethod) {
+      setPaymentMethod(activePaymentMethod);
     }
-  }, [paymentMethod, supportedPaymentMethods]);
+  }, [paymentOptionsReady, paymentMethod, activePaymentMethod]);
 
   useEffect(() => {
     if (slug) {
@@ -145,7 +163,7 @@ export default function CollectionDetailPage() {
 
   const handleDonate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (paymentMethod === "paypal") {
+    if (activePaymentMethod === "paypal" || !activePaymentMethod) {
       return;
     }
 
@@ -181,7 +199,7 @@ export default function CollectionDetailPage() {
             contributorEmail: donorEmail,
             message,
             isAnonymous,
-            paymentMethod,
+            paymentMethod: activePaymentMethod,
           }),
         }
       );
@@ -295,10 +313,10 @@ export default function CollectionDetailPage() {
     return (
       <div className="min-h-screen bg-[#f4f7f2] py-24 px-4">
         <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+          <h1 className={`${collectionSectionTitle} mb-4`}>
             Collection not found
           </h1>
-          <Button asChild>
+          <Button asChild className={collectionBtnPrimary}>
             <Link href="/collections">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to collections
@@ -323,22 +341,22 @@ export default function CollectionDetailPage() {
     : null;
 
   return (
-    <div className="min-h-screen bg-[#f4f7f2]">
+    <div className={`${collectionPage} bg-[#f4f7f2]`}>
       <Navbar />
 
       <main className="max-w-6xl mx-auto px-4 pt-24 pb-16">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
-          <nav className="flex items-center gap-2 text-sm text-gray-600">
-            <Link href="/collections" className="hover:text-[#104109]">
+          <nav className={`flex items-center gap-2 ${collectionBodySmall}`}>
+            <Link href="/collections" className="font-semibold text-[#104109]">
               Collections
             </Link>
             <ChevronRight className="h-4 w-4" />
-            <span className="text-gray-900 font-medium line-clamp-1">
+            <span className="font-medium text-[#1C1917] line-clamp-1">
               {collection.title}
             </span>
           </nav>
           <div className="flex items-center gap-2">
-            <Button asChild variant="ghost" size="sm" className="rounded-3xl">
+            <Button asChild variant="outline" size="sm" className={collectionBtnOutlineSmall}>
               <Link href="/collections">
                 <ArrowLeft className="h-4 w-4" />
                 All collections
@@ -348,7 +366,7 @@ export default function CollectionDetailPage() {
               type="button"
               variant="outline"
               size="sm"
-              className="rounded-3xl"
+              className={collectionBtnOutlineSmall}
               onClick={handleShareCollection}
             >
               <Share2 className="h-4 w-4" />
@@ -362,19 +380,19 @@ export default function CollectionDetailPage() {
             <section className="bg-white border border-[#e5ebe3] rounded-3xl shadow-sm overflow-hidden">
               <div className="grid md:grid-cols-2 gap-0">
                 <div className="p-6 md:p-8 flex flex-col justify-center">
-                  <p className="text-xs uppercase tracking-wider text-[#6b7a6b] mb-2">
+                  <p className={`${collectionBodySmall} mb-2`}>
                     {categoryLabel || "Active collection"}
                   </p>
-                  <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+                  <h1 className={collectionSectionTitle}>
                     {collection.title}
                   </h1>
                   {categoryMeta && CategoryIcon && (
-                    <div className="mt-3 inline-flex items-center gap-2 text-sm text-gray-600">
-                      <CategoryIcon className="h-4 w-4 text-brand-green-dark" />
+                    <div className={`mt-3 inline-flex items-center gap-2 ${collectionBodySmall}`}>
+                      <CategoryIcon className="h-4 w-4 text-[#104109]" />
                       <span>{categoryMeta.label}</span>
                     </div>
                   )}
-                  <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-700">
+                  <div className={`mt-4 flex flex-wrap gap-4 ${collectionBodySmall}`}>
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-[#59AD4A]" />
                       <span>
@@ -398,7 +416,7 @@ export default function CollectionDetailPage() {
                   {stats && (
                     <div className="mt-6 grid grid-cols-2 gap-3">
                       <div className="rounded-xl bg-[#f0f7ed] px-4 py-3">
-                        <p className="text-xs text-gray-600">Raised so far</p>
+                        <p className={collectionBodySmall}>Raised so far</p>
                         <p className="text-xl font-bold text-[#104109]">
                           {formatAmount(
                             stats.totalRaised.toString(),
@@ -407,7 +425,7 @@ export default function CollectionDetailPage() {
                         </p>
                       </div>
                       <div className="rounded-xl bg-[#fff8e8] px-4 py-3">
-                        <p className="text-xs text-gray-600">Contributors</p>
+                        <p className={collectionBodySmall}>Contributors</p>
                         <p className="text-xl font-bold text-[#b8860b]">
                           {stats.successfulContributions}
                         </p>
@@ -434,11 +452,11 @@ export default function CollectionDetailPage() {
               </div>
 
               <div className="border-t border-[#e5ebe3] p-6 md:p-8">
-                <h2 className="text-lg font-semibold text-gray-900 mb-3">
+                <h2 className={`${collectionCardTitle} mb-3`}>
                   About this collection
                 </h2>
                 {collection.description && (
-                  <p className="text-gray-600 leading-relaxed">
+                  <p className={collectionBody}>
                     {collection.description}
                   </p>
                 )}
@@ -446,11 +464,11 @@ export default function CollectionDetailPage() {
             </section>
 
             <section className="bg-white border border-[#e5ebe3] rounded-3xl shadow-sm p-6 md:p-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">
+              <h2 className={`${collectionCardTitle} mb-4`}>
                 Recent contributions
               </h2>
               {recentContributions.length === 0 ? (
-                <p className="text-gray-500 text-sm">
+                <p className={collectionBodySmall}>
                   Be the first to contribute to this collection.
                 </p>
               ) : (
@@ -460,7 +478,7 @@ export default function CollectionDetailPage() {
                       key={contribution.id}
                       className="rounded-xl border border-gray-100 bg-[#fafcfa] px-4 py-3"
                     >
-                      <p className="text-sm text-gray-900">
+                      <p className={`${collectionBodySmall} text-[#1C1917]`}>
                         <span className="font-semibold">
                           {contribution.isAnonymous
                             ? "Anonymous supporter"
@@ -475,7 +493,7 @@ export default function CollectionDetailPage() {
                         </span>
                       </p>
                       {contribution.message && (
-                        <p className="text-sm text-gray-600 mt-1">
+                        <p className={`${collectionBodySmall} mt-1`}>
                           {contribution.message}
                         </p>
                       )}
@@ -486,7 +504,7 @@ export default function CollectionDetailPage() {
             </section>
 
             <section className="bg-white border border-[#e5ebe3] rounded-3xl shadow-sm p-6 md:p-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-2">
+              <h2 className={`${collectionCardTitle} mb-2`}>
                 Frequently asked questions
               </h2>
               <Accordion type="single" collapsible className="w-full">
@@ -521,13 +539,13 @@ export default function CollectionDetailPage() {
 
           <div className="lg:col-span-2 order-1 lg:order-2">
             <div className="bg-white rounded-3xl p-6 md:p-8 border border-[#e5ebe3] shadow-md lg:sticky lg:top-24">
-              <p className="text-xs uppercase tracking-wider text-gray-500 mb-1">
+              <p className={`${collectionBodySmall} mb-1`}>
                 Payment
               </p>
-              <h2 className="text-2xl font-bold text-gray-900 mb-1">
+              <h2 className="font-jakarta text-xl font-bold tracking-tight text-[#104109] md:text-2xl mb-1">
                 Your contribution
               </h2>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className={`${collectionBodySmall} mb-4`}>
                 Contribution to {collection.organiserName}
               </p>
               <p className="text-3xl font-bold text-[#104109] mb-6">
@@ -537,7 +555,7 @@ export default function CollectionDetailPage() {
               <form onSubmit={handleDonate} className="space-y-6">
                 {/* Amount Selection */}
                 <div className="space-y-3">
-                  <Label className="text-gray-900">
+                  <Label className={collectionLabel}>
                     Select Amount ({locationInfo?.currency.code || "USD"})
                   </Label>
                   <div className="grid grid-cols-3 gap-2">
@@ -547,8 +565,10 @@ export default function CollectionDetailPage() {
                         type="button"
                         variant={amount === preset ? "default" : "outline"}
                         className={cn(
-                          "h-auto rounded-3xl py-2.5 px-2 text-xs sm:text-sm",
-                          amount === preset && "border-2 border-white"
+                          "h-10 rounded-full px-2 text-sm font-semibold shadow-none",
+                          amount === preset
+                            ? "border-0 bg-[#104109] text-white hover:bg-[#0d3507] hover:text-white"
+                            : "border-2 border-[#104109] bg-transparent text-[#104109] hover:bg-[#F3F8F2] hover:text-[#104109]"
                         )}
                         onClick={() => setAmount(preset)}
                       >
@@ -563,8 +583,10 @@ export default function CollectionDetailPage() {
                     type="button"
                     variant={amount === "custom" ? "default" : "outline"}
                     className={cn(
-                      "w-full h-auto rounded-3xl py-2.5",
-                      amount === "custom" && "border-2 border-white"
+                      "h-10 w-full rounded-full text-sm font-semibold shadow-none",
+                      amount === "custom"
+                        ? "border-0 bg-[#104109] text-white hover:bg-[#0d3507] hover:text-white"
+                        : "border-2 border-[#104109] bg-transparent text-[#104109] hover:bg-[#F3F8F2] hover:text-[#104109]"
                     )}
                     onClick={() => setAmount("custom")}
                   >
@@ -580,7 +602,7 @@ export default function CollectionDetailPage() {
                       step={
                         locationInfo?.currency.code === "NGN" ? "1" : "0.01"
                       }
-                      className="mt-3"
+                      className="mt-3 h-12 rounded-full border-[#E7E5E4] text-base text-[#1C1917] placeholder:text-[#78716C]"
                     />
                   )}
                 </div>
@@ -588,7 +610,7 @@ export default function CollectionDetailPage() {
                 {/* Donor Information */}
                 <div className="space-y-3">
                   <div className="space-y-2">
-                    <Label htmlFor="donorName">Your name (optional)</Label>
+                    <Label htmlFor="donorName" className={collectionLabel}>Your name (optional)</Label>
                     <Input
                       type="text"
                       id="donorName"
@@ -596,10 +618,11 @@ export default function CollectionDetailPage() {
                       onChange={(e) => setDonorName(e.target.value)}
                       placeholder="John Doe"
                       disabled={isAnonymous}
+                      className="h-12 rounded-full border-[#E7E5E4] text-base text-[#1C1917] placeholder:text-[#78716C]"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="donorEmail">
+                    <Label htmlFor="donorEmail" className={collectionLabel}>
                       Email address <span className="text-destructive">*</span>
                     </Label>
                     <Input
@@ -609,16 +632,18 @@ export default function CollectionDetailPage() {
                       onChange={(e) => setDonorEmail(e.target.value)}
                       placeholder="john@example.com"
                       required
+                      className="h-12 rounded-full border-[#E7E5E4] text-base text-[#1C1917] placeholder:text-[#78716C]"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="message">Message (optional)</Label>
+                    <Label htmlFor="message" className={collectionLabel}>Message (optional)</Label>
                     <Textarea
                       id="message"
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
                       placeholder="Leave a message of support..."
                       rows={3}
+                      className="rounded-2xl border-[#E7E5E4] text-base text-[#1C1917] placeholder:text-[#78716C]"
                     />
                   </div>
                 </div>
@@ -634,7 +659,7 @@ export default function CollectionDetailPage() {
                   />
                   <Label
                     htmlFor="anonymous"
-                    className="cursor-pointer text-sm text-gray-700"
+                    className="cursor-pointer text-sm font-medium text-[#57534E]"
                   >
                     Donate anonymously
                   </Label>
@@ -642,47 +667,53 @@ export default function CollectionDetailPage() {
 
                 {/* Payment Method */}
                 <div className="space-y-3">
-                  <Label className="text-sm font-medium text-gray-900">
+                  <Label className={collectionLabel}>
                     Payment Method
                   </Label>
+                  {!paymentOptionsReady || !activePaymentMethod ? (
+                    <p className={collectionBodySmall}>
+                      Loading payment options…
+                    </p>
+                  ) : (
                   <RadioGroup
-                    value={paymentMethod}
+                    value={activePaymentMethod}
                     onValueChange={setPaymentMethod}
                   >
                     {supportedPaymentMethods.includes("paystack") && (
-                      <div className="flex items-center space-x-3 p-3 border border-gray-200 rounded-3xl hover:border-brand-green-dark transition cursor-pointer">
+                      <div className="flex items-center space-x-3 p-3 border border-[#E7E5E4] rounded-full hover:border-[#104109] transition cursor-pointer">
                         <RadioGroupItem value="paystack" id="paystack" />
                         <Label
                           htmlFor="paystack"
-                          className="cursor-pointer text-sm text-gray-700 flex-1 m-0"
+                          className="cursor-pointer text-sm font-medium text-[#1C1917] flex-1 m-0"
                         >
                           Paystack
                         </Label>
                       </div>
                     )}
                     {supportedPaymentMethods.includes("paypal") && (
-                      <div className="flex items-center space-x-3 p-3 border border-gray-200 rounded-3xl hover:border-brand-green-dark transition cursor-pointer">
-                        <RadioGroupItem value="paypal" id="paypal" />
+                      <div className="flex items-center space-x-3 p-3 border border-[#E7E5E4] rounded-full hover:border-[#104109] transition cursor-pointer">
+                        <RadioGroupItem value="paypal" id="payment-method-paypal" />
                         <Label
-                          htmlFor="paypal"
-                          className="cursor-pointer text-sm text-gray-700 flex-1 m-0"
+                          htmlFor="payment-method-paypal"
+                          className="cursor-pointer text-sm font-medium text-[#1C1917] flex-1 m-0"
                         >
                           PayPal
                         </Label>
                       </div>
                     )}
                   </RadioGroup>
+                  )}
                 </div>
 
                 {/* Security Badge */}
-                <div className="flex items-center gap-2 text-xs text-brand-green-dark p-3 border border-brand-green-dark/20 bg-[#f0f7ed] rounded-3xl">
+                <div className="flex items-center gap-2 text-sm font-medium text-[#104109] p-3 border border-[#104109]/20 bg-[#F3F8F2] rounded-full">
                   <Shield className="h-4 w-4 flex-shrink-0" />
                   <span>Secure and encrypted payment</span>
                 </div>
 
-                {paymentMethod === "paypal" ? (
+                {activePaymentMethod === "paypal" ? (
                   <div className="rounded-xl border border-gray-200 bg-white p-3">
-                    <p className="mb-3 text-sm text-gray-600">
+                    <p className={`mb-3 ${collectionBodySmall}`}>
                       Complete your donation with PayPal below.
                     </p>
                     <PayPalOrderButtons
@@ -698,8 +729,8 @@ export default function CollectionDetailPage() {
                 ) : (
                   <Button
                     type="submit"
-                    disabled={donating || !amount}
-                    className="w-full rounded-3xl h-auto py-3"
+                    disabled={donating || !amount || !paymentOptionsReady}
+                    className={`${collectionBtnPrimary} w-full`}
                     size="lg"
                   >
                     {donating

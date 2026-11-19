@@ -52,20 +52,20 @@ function PaymentCallbackContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 flex items-center justify-center">
+    <div className="font-jakarta min-h-screen bg-[var(--color-background)] text-[#1C1917] py-12 px-4 flex items-center justify-center">
       <Card className="max-w-md w-full">
         <CardHeader>
-          <CardTitle className="text-center">
+          <CardTitle className="text-center font-jakarta text-xl font-bold tracking-tight text-[#104109] md:text-2xl">
             {status === 'verifying' && (
               <div className="flex flex-col items-center gap-4">
-                <Loader2 className="h-12 w-12 text-blue-600 animate-spin" />
+                <Loader2 className="h-12 w-12 text-[#104109] animate-spin" />
                 <span>Verifying Payment...</span>
               </div>
             )}
             {status === 'success' && (
               <div className="flex flex-col items-center gap-4">
-                <CheckCircle className="h-12 w-12 text-green-600" />
-                <span className="text-green-600">Payment Successful!</span>
+                <CheckCircle className="h-12 w-12 text-[#104109]" />
+                <span>Payment Successful!</span>
               </div>
             )}
             {status === 'failed' && (
@@ -76,7 +76,7 @@ function PaymentCallbackContent() {
             )}
           </CardTitle>
         </CardHeader>
-        <CardContent className="text-center text-gray-600">
+        <CardContent className="text-center text-base leading-relaxed text-[#57534E]">
           {status === 'verifying' && (
             <p>Please wait while we verify your payment...</p>
           )}
@@ -95,7 +95,7 @@ function PaymentCallbackContent() {
 export default function PaymentCallbackPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 py-12 px-4 flex items-center justify-center">
+      <div className="font-jakarta min-h-screen bg-[var(--color-background)] text-[#1C1917] py-12 px-4 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
       </div>
     }>

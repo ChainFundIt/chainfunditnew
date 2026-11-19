@@ -26,18 +26,18 @@ export function CollectionStepIndicator({
             key={step.num}
             className={cn(
               "flex flex-col items-center gap-1 min-w-[3rem]",
-              isActive ? "text-brand-green-dark" : "text-gray-400"
+              isActive ? "text-[#104109]" : "text-[#78716C]"
             )}
           >
             <span
               className={cn(
-                "text-lg font-semibold tabular-nums",
-                isComplete && "text-brand-green-dark/70"
+                "text-lg font-bold tabular-nums",
+                isComplete && "text-[#104109]/70"
               )}
             >
               {step.num}
             </span>
-            <span className="text-[10px] uppercase tracking-wider hidden sm:block">
+            <span className="text-xs font-semibold tracking-wide hidden sm:block">
               {step.label}
             </span>
           </div>

@@ -17,12 +17,19 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCollections } from "@/hooks/use-collections";
 import { getCollectionCategoryLabel } from "@/lib/collections/categories";
+import {
+  collectionBodySmall,
+  collectionBtnInverse,
+  collectionBtnPrimary,
+  collectionCardTitle,
+  collectionHeroBody,
+  collectionHeroTitle,
+  collectionPage,
+} from "@/lib/collections/ui";
 
 export default function CollectionsPage() {
-  const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const { collections, loading, error } = useCollections({
-    search: searchQuery || undefined,
     limit: 100,
     sortBy: "recent",
   });
@@ -39,18 +46,16 @@ export default function CollectionsPage() {
   };
 
   return (
-    <div className="font-jakarta">
+    <div className={collectionPage}>
       <Navbar />
-      <div className="bg-[#104109] py-[5rem] flex items-center justify-center">
+      <div className="bg-[#104109] py-20 md:py-28 flex items-center justify-center">
         <div className="px-4 flex flex-col gap-6 items-center md:max-w-[56rem] relative z-0">
-          <div className="font-extrabold text-white text-[4rem] leading-[4rem] text-center">
-            Collections
-          </div>
-          <div className="text-xl text-[#d1fae5] text-center max-w-2xl">
+          <h1 className={`${collectionHeroTitle} text-center`}>Collections</h1>
+          <p className={`${collectionHeroBody} text-center max-w-2xl`}>
             Chip in for gifts, events, class funds, and group goals. Pay with
             your card — no account needed to contribute.
-          </div>
-          <Button asChild size="lg" className="rounded-3xl h-auto py-3">
+          </p>
+          <Button asChild size="lg" className={collectionBtnInverse}>
             <Link href="/collections/create">
               <Plus className="h-4 w-4" />
               Start a collection
@@ -64,29 +69,20 @@ export default function CollectionsPage() {
         style={{ zIndex: "5" }}
       >
         <div className="max-w-[80rem] w-full">
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <input
-                type="text"
-                placeholder="Search by title or organiser..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green-dark focus:border-transparent"
-              />
-            </div>
-          </div>
-
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="font-jakarta text-xl font-bold tracking-tight text-[#104109] md:text-2xl">
               {collections.length} active collections
             </h2>
-            <div className="flex items-center gap-2 bg-white rounded-lg p-1 shadow-sm border border-gray-200">
+            <div className="flex items-center gap-1 rounded-full border border-[#E7E5E4] bg-white p-1">
               <Button
                 type="button"
                 variant={viewMode === "grid" ? "default" : "ghost"}
                 size="icon"
-                className="rounded-md"
+                className={
+                  viewMode === "grid"
+                    ? "h-10 w-10 rounded-full border-0 bg-[#104109] text-white shadow-none hover:bg-[#0d3507] hover:text-white"
+                    : "h-10 w-10 rounded-full text-[#57534E] shadow-none hover:bg-[#F3F8F2] hover:text-[#104109]"
+                }
                 onClick={() => setViewMode("grid")}
                 aria-label="Grid view"
               >
@@ -101,7 +97,11 @@ export default function CollectionsPage() {
                 type="button"
                 variant={viewMode === "list" ? "default" : "ghost"}
                 size="icon"
-                className="rounded-md"
+                className={
+                  viewMode === "list"
+                    ? "h-10 w-10 rounded-full border-0 bg-[#104109] text-white shadow-none hover:bg-[#0d3507] hover:text-white"
+                    : "h-10 w-10 rounded-full text-[#57534E] shadow-none hover:bg-[#F3F8F2] hover:text-[#104109]"
+                }
                 onClick={() => setViewMode("list")}
                 aria-label="List view"
               >
@@ -133,10 +133,10 @@ export default function CollectionsPage() {
           {error && (
             <div className="text-center py-16">
               <Shield className="h-16 w-16 mx-auto text-red-400 mb-4" />
-              <h3 className="text-xl font-semibold text-gray-600 mb-2">
+              <h3 className={`${collectionCardTitle} mb-2`}>
                 Could not load collections
               </h3>
-              <p className="text-gray-500">{error}</p>
+              <p className={collectionBodySmall}>{error}</p>
             </div>
           )}
 
@@ -169,30 +169,30 @@ export default function CollectionsPage() {
                       )}
                     </div>
                     <div className="p-5 md:p-6 flex flex-col gap-3 flex-grow">
-                      <p className="text-xs uppercase tracking-wider text-gray-500 line-clamp-1">
+                      <p className="text-sm font-medium text-[#57534E] line-clamp-1">
                         {categoryLabel || "Collection"}
                       </p>
-                      <p className="text-xs text-gray-500 flex items-center gap-2">
+                      <p className={`${collectionBodySmall} flex items-center gap-2`}>
                         <Users className="h-3.5 w-3.5 shrink-0" />
                         {item.organiserName}
                       </p>
                       <Link href={`/collections/${item.slug}`}>
-                        <h3 className="font-bold text-lg text-gray-900 hover:text-[#104109] line-clamp-2">
+                        <h3 className={`${collectionCardTitle} line-clamp-2`}>
                           {item.title}
                         </h3>
                       </Link>
                       {item.description && (
-                        <p className="text-sm text-gray-600 line-clamp-2">
+                        <p className={`${collectionBodySmall} md:text-base line-clamp-2`}>
                           {item.description}
                         </p>
                       )}
-                      <div className="mt-auto pt-3 border-t border-gray-100 flex items-center justify-between text-sm">
+                      <div className="mt-auto pt-3 border-t border-[#E7E5E4] flex items-center justify-between text-sm">
                         <span className="font-semibold text-[#104109]">
                           Raised {item.currency}{" "}
                           {parseFloat(item.totalRaised || "0").toLocaleString()}
                         </span>
                         {dueLabel && (
-                          <span className="text-gray-500 flex items-center gap-1">
+                          <span className="text-[#57534E] flex items-center gap-1">
                             <Calendar className="h-3.5 w-3.5" />
                             {dueLabel}
                           </span>
@@ -207,14 +207,14 @@ export default function CollectionsPage() {
 
           {!loading && !error && collections.length === 0 && (
             <div className="text-center py-16">
-              <Search className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-xl font-semibold text-gray-600 mb-2">
+              <Search className="h-16 w-16 mx-auto text-[#78716C] mb-4" />
+              <h3 className={`${collectionCardTitle} mb-2`}>
                 No collections yet
               </h3>
-              <p className="text-gray-500 mb-6">
+              <p className={`${collectionBodySmall} mb-6`}>
                 Be the first to start one for your group.
               </p>
-              <Button asChild className="rounded-3xl h-auto py-3">
+              <Button asChild className={collectionBtnPrimary}>
                 <Link href="/collections/create">Start a collection</Link>
               </Button>
             </div>

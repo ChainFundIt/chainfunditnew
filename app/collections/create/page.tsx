@@ -18,6 +18,17 @@ import {
   getCollectionCategory,
   type CollectionCategoryId,
 } from "@/lib/collections/categories";
+import {
+  collectionBody,
+  collectionBodySmall,
+  collectionBtnOutline,
+  collectionBtnOutlineSmall,
+  collectionBtnPrimary,
+  collectionLabel,
+  collectionPage,
+  collectionSectionTitle,
+  collectionValue,
+} from "@/lib/collections/ui";
 
 type Step = 1 | 2 | 3;
 
@@ -112,10 +123,10 @@ export default function CreateCollectionPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className={collectionPage}>
       <Navbar />
-      <main className="max-w-lg mx-auto px-4 pt-24 pb-16">
-        <Button asChild variant="ghost" className="mb-4 rounded-3xl -ml-2">
+      <main className="max-w-2xl mx-auto px-4 pt-24 pb-16">
+        <Button asChild variant="ghost" className={`${collectionBtnOutlineSmall} mb-4`}>
           <Link href="/collections">
             <ArrowLeft className="h-4 w-4" />
             Back
@@ -126,10 +137,10 @@ export default function CreateCollectionPage() {
 
         {step === 1 && (
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-3">
+            <h1 className={`${collectionSectionTitle} text-center mb-3`}>
               What are you collecting for?
             </h1>
-            <p className="text-center text-gray-600 text-sm sm:text-base mb-8 px-2">
+            <p className={`${collectionBody} text-center mb-8 px-2`}>
               Choose an occasion or activity. You can use ChainFundIt to collect
               contributions for almost anything.
             </p>
@@ -141,7 +152,7 @@ export default function CreateCollectionPage() {
 
             <Button
               type="button"
-              className="w-full mt-8 rounded-3xl h-auto py-3"
+              className={`${collectionBtnPrimary} w-full mt-8`}
               size="lg"
               disabled={!categoryId}
               onClick={goToDetails}
@@ -153,13 +164,13 @@ export default function CreateCollectionPage() {
 
         {step === 2 && (
           <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm">
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">
+            <h1 className="font-jakarta text-xl font-bold tracking-tight text-[#104109] md:text-2xl mb-1">
               Collection details
             </h1>
             {selectedCategory && (
-              <p className="text-sm text-gray-600 mb-6">
+              <p className={`${collectionBodySmall} mb-6`}>
                 For:{" "}
-                <span className="font-medium text-gray-900">
+                <span className={collectionValue}>
                   {selectedCategory.label}
                 </span>
               </p>
@@ -167,8 +178,9 @@ export default function CreateCollectionPage() {
 
             <form onSubmit={goToReview} className="space-y-5">
               <div>
-                <Label htmlFor="title">Title</Label>
+                <Label className={collectionLabel} htmlFor="title">Title</Label>
                 <Input
+                  className="h-12 rounded-full border-[#E7E5E4] text-base text-[#1C1917] placeholder:text-[#78716C]"
                   id="title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
@@ -176,8 +188,9 @@ export default function CreateCollectionPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="organiserName">Organiser name</Label>
+                <Label className={collectionLabel} htmlFor="organiserName">Organiser name</Label>
                 <Input
+                  className="h-12 rounded-full border-[#E7E5E4] text-base text-[#1C1917] placeholder:text-[#78716C]"
                   id="organiserName"
                   value={organiserName}
                   onChange={(e) => setOrganiserName(e.target.value)}
@@ -185,8 +198,9 @@ export default function CreateCollectionPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="description">Tell people more (optional)</Label>
+                <Label className={collectionLabel} htmlFor="description">Tell people more (optional)</Label>
                 <Textarea
+                  className="rounded-2xl border-[#E7E5E4] text-base text-[#1C1917] placeholder:text-[#78716C]"
                   id="description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -196,8 +210,9 @@ export default function CreateCollectionPage() {
               </div>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="targetAmount">Target (optional)</Label>
+                  <Label className={collectionLabel} htmlFor="targetAmount">Target (optional)</Label>
                   <Input
+                  className="h-12 rounded-full border-[#E7E5E4] text-base text-[#1C1917] placeholder:text-[#78716C]"
                     id="targetAmount"
                     type="number"
                     min="1"
@@ -206,8 +221,9 @@ export default function CreateCollectionPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="dueAt">Due by (optional)</Label>
+                  <Label className={collectionLabel} htmlFor="dueAt">Due by (optional)</Label>
                   <Input
+                  className="h-12 rounded-full border-[#E7E5E4] text-base text-[#1C1917] placeholder:text-[#78716C]"
                     id="dueAt"
                     type="date"
                     value={dueAt}
@@ -216,8 +232,9 @@ export default function CreateCollectionPage() {
                 </div>
               </div>
               <div>
-                <Label htmlFor="coverImage">Cover image URL (optional)</Label>
+                <Label className={collectionLabel} htmlFor="coverImage">Cover image URL (optional)</Label>
                 <Input
+                  className="h-12 rounded-full border-[#E7E5E4] text-base text-[#1C1917] placeholder:text-[#78716C]"
                   id="coverImage"
                   type="url"
                   value={coverImage}
@@ -230,14 +247,14 @@ export default function CreateCollectionPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="flex-1 rounded-3xl h-auto py-3"
+                  className={`${collectionBtnOutline} flex-1`}
                   onClick={() => setStep(1)}
                 >
                   Back
                 </Button>
                 <Button
                   type="submit"
-                  className="flex-1 rounded-3xl h-auto py-3"
+                  className={`${collectionBtnPrimary} flex-1`}
                 >
                   Review
                 </Button>
@@ -249,49 +266,49 @@ export default function CreateCollectionPage() {
         {step === 3 && (
           <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">
+              <h1 className="font-jakarta text-xl font-bold tracking-tight text-[#104109] md:text-2xl mb-1">
                 Review your collection
               </h1>
-              <p className="text-sm text-gray-600">
+              <p className={collectionBodySmall}>
                 Double-check before you publish your link.
               </p>
             </div>
 
-            <dl className="space-y-4 text-sm">
+            <dl className={`space-y-4 ${collectionBodySmall}`}>
               <div>
-                <dt className="text-gray-500">Occasion</dt>
-                <dd className="font-medium text-gray-900">
+                <dt>Occasion</dt>
+                <dd className={collectionValue}>
                   {selectedCategory?.label}
                 </dd>
               </div>
               <div>
-                <dt className="text-gray-500">Title</dt>
-                <dd className="font-medium text-gray-900">{title}</dd>
+                <dt>Title</dt>
+                <dd className={collectionValue}>{title}</dd>
               </div>
               {organiserName && (
                 <div>
-                  <dt className="text-gray-500">Organiser</dt>
-                  <dd className="font-medium text-gray-900">{organiserName}</dd>
+                  <dt>Organiser</dt>
+                  <dd className={collectionValue}>{organiserName}</dd>
                 </div>
               )}
               {description && (
                 <div>
-                  <dt className="text-gray-500">Description</dt>
-                  <dd className="text-gray-900">{description}</dd>
+                  <dt>Description</dt>
+                  <dd className="text-[#1C1917]">{description}</dd>
                 </div>
               )}
               {targetAmount && (
                 <div>
-                  <dt className="text-gray-500">Target</dt>
-                  <dd className="font-medium text-gray-900">
+                  <dt>Target</dt>
+                  <dd className={collectionValue}>
                     {locationInfo?.currency.code || "USD"} {targetAmount}
                   </dd>
                 </div>
               )}
               {dueAt && (
                 <div>
-                  <dt className="text-gray-500">Due by</dt>
-                  <dd className="font-medium text-gray-900">
+                  <dt>Due by</dt>
+                  <dd className={collectionValue}>
                     {new Date(dueAt).toLocaleDateString("en-GB", {
                       day: "numeric",
                       month: "long",
@@ -302,7 +319,7 @@ export default function CreateCollectionPage() {
               )}
             </dl>
 
-            <p className="text-xs text-gray-500">
+            <p className="text-sm leading-relaxed text-[#78716C]">
               You need to be signed in to publish. Contributors can pay without
               an account.
             </p>
@@ -311,14 +328,14 @@ export default function CreateCollectionPage() {
               <Button
                 type="button"
                 variant="outline"
-                className="flex-1 rounded-3xl h-auto py-3"
+                className={`${collectionBtnOutline} flex-1`}
                 onClick={() => setStep(2)}
               >
                 Back
               </Button>
               <Button
                 type="button"
-                className="flex-1 rounded-3xl h-auto py-3"
+                className={`${collectionBtnPrimary} flex-1`}
                 disabled={submitting}
                 onClick={handleCreate}
               >

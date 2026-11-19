@@ -14,6 +14,15 @@ import { CheckCircle, Download, Share2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
+import {
+  collectionBody,
+  collectionBodySmall,
+  collectionBtnOutline,
+  collectionBtnPrimary,
+  collectionPage,
+  collectionSectionTitle,
+  collectionValue,
+} from "@/lib/collections/ui";
 
 interface Contribution {
   id: string;
@@ -89,33 +98,33 @@ function PaymentSuccessContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12 px-4 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600" />
+      <div className={`${collectionPage} py-12 px-4 flex items-center justify-center`}>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#104109]" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 py-12 px-4">
+    <div className={`${collectionPage} py-12 px-4`}>
       <div className="max-w-2xl mx-auto">
-        <Card className="border-green-200 shadow-xl">
+        <Card className="border-[#E7E5E4] shadow-xl">
           <CardHeader className="text-center pb-8">
-            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <CheckCircle className="h-10 w-10 text-green-600" />
+            <div className="mx-auto w-16 h-16 bg-[#F3F8F2] rounded-full flex items-center justify-center mb-4">
+              <CheckCircle className="h-10 w-10 text-[#104109]" />
             </div>
-            <CardTitle className="text-3xl text-green-600">
+            <CardTitle className={collectionSectionTitle}>
               Thank you!
             </CardTitle>
-            <CardDescription className="text-lg mt-2">
+            <CardDescription className={`${collectionBody} mt-2 text-[#57534E]`}>
               Your contribution was processed successfully
             </CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-6">
-            <div className="bg-gray-50 rounded-lg p-6 space-y-4">
+            <div className="rounded-2xl border border-[#E7E5E4] bg-[#F3F8F2] p-6 space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Amount</span>
-                <span className="text-2xl font-bold text-green-600">
+                <span className={collectionBodySmall}>Amount</span>
+                <span className="text-2xl font-bold text-[#104109]">
                   {contribution?.currency === "NGN"
                     ? "₦"
                     : contribution?.currency === "GBP"
@@ -127,21 +136,21 @@ function PaymentSuccessContent() {
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Collection</span>
-                <span className="font-medium text-gray-900 text-right">
+                <span className={collectionBodySmall}>Collection</span>
+                <span className={`${collectionValue} text-right`}>
                   {collection?.title}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Reference</span>
-                <span className="font-mono text-sm text-gray-600">
+                <span className={collectionBodySmall}>Reference</span>
+                <span className="font-mono text-sm text-[#57534E]">
                   {contribution?.id.slice(0, 8)}...
                 </span>
               </div>
             </div>
 
             {contribution?.contributorEmail && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+              <div className="rounded-2xl border border-[#E7E5E4] bg-[#F3F8F2] p-4 text-sm font-medium text-[#104109]">
                 Confirmation sent to{" "}
                 <span className="font-medium">
                   {contribution.contributorEmail}
@@ -152,7 +161,7 @@ function PaymentSuccessContent() {
             <div className="grid grid-cols-2 gap-4">
               <Button
                 variant="outline"
-                className="w-full rounded-3xl h-auto py-3"
+                className={`${collectionBtnOutline} w-full`}
                 onClick={handleShare}
               >
                 <Share2 className="h-4 w-4" />
@@ -160,7 +169,7 @@ function PaymentSuccessContent() {
               </Button>
               <Button
                 variant="outline"
-                className="w-full rounded-3xl h-auto py-3"
+                className={`${collectionBtnOutline} w-full`}
                 onClick={() => window.print()}
               >
                 <Download className="h-4 w-4" />
@@ -171,7 +180,7 @@ function PaymentSuccessContent() {
             <div className="pt-4 space-y-3">
               <Button
                 asChild
-                className="w-full rounded-3xl h-auto py-3"
+                className={`${collectionBtnPrimary} w-full`}
                 size="lg"
               >
                 <Link href={`/collections/${collection?.slug || slug}`}>
@@ -180,8 +189,8 @@ function PaymentSuccessContent() {
               </Button>
               <Button
                 asChild
-                variant="ghost"
-                className="w-full rounded-3xl h-auto py-3"
+                variant="outline"
+                className={`${collectionBtnOutline} w-full`}
               >
                 <Link href="/collections">
                   <ArrowLeft className="h-4 w-4" />
