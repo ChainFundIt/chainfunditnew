@@ -12,7 +12,7 @@ const features = [
 
 const CollectionsHighlight = () => {
   return (
-    <div className="font-jakarta bg-[#59AD4A] py-12 px-2 flex justify-center items-center">
+    <div className="font-jakarta bg-[#59AD4A] py-12 px-6 flex justify-center items-center">
       <div className="flex flex-col md:flex-row gap-12 items-center w-full max-w-[80rem] justify-between">
         <div className="w-full md:w-[36rem] flex flex-col gap-6 px-4 md:px-0">
           <motion.div
