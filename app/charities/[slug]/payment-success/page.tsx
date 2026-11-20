@@ -195,9 +195,9 @@ function PaymentSuccessContent() {
                 </Link>
               </Button>
               <Button asChild variant="ghost" className="w-full">
-                <Link href="/virtual-giving-mall">
+                <Link href="/campaigns">
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Browse More Charities
+                  Browse campaigns
                 </Link>
               </Button>
             </div>

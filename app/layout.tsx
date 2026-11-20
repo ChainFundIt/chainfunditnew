@@ -6,7 +6,6 @@ import ClientToaster from "@/components/ui/client-toaster";
 import { GoogleAnalytics } from "@/components/layout/GoogleAnalytics";
 import { CookieBanner } from "@/components/layout/CookieBanner";
 import { AutoFavoriteHandler } from "@/components/auth/auto-favorite-handler";
-import  StartCampaignFab from "@/components/layout/StartCampaignFab";
 import PlatformReviewPrompt from "@/components/reviews/PlatformReviewPrompt";
 
 const geistSans = Geist({
@@ -109,7 +108,6 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${jakarta.variable}`}>
         <div className="app-root">
           {children}
-          <StartCampaignFab />
           <GoogleAnalytics />
           <PerformanceMonitor />
           <PlatformReviewPrompt />

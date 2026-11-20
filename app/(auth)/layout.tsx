@@ -137,7 +137,7 @@ function Carousel() {
 
 const layout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="h-screen bg-gray-100 flex flex-col">
+    <div className="font-jakarta h-screen bg-[var(--color-background)] flex flex-col text-[#1C1917]">
       <Navbar />
       <div className="flex items-center justify-center md:p-6 p-3 my-auto">
         <div className="flex w-full max-w-5xl h-[600px] rounded-3xl overflow-hidden shadow-2xl">

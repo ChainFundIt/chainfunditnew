@@ -1029,7 +1029,7 @@ export default function DonationsPage() {
                           <td className="px-6 py-4 whitespace-nowrap text-sm">
                             <Button asChild variant="ghost" size="sm">
                               <Link
-                                href={`/virtual-giving-mall/${donation.charity?.slug}`}
+                                href={`/charities/${donation.charity?.slug}`}
                               >
                                 <Eye className="h-4 w-4 mr-1" />
                                 View Charity

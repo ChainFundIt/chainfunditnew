@@ -18,13 +18,13 @@ export default function LoginPage() {
 
       {/* Main Heading */}
       <div className="mb-4 md:text-left text-center">
-        <h1 className="font-bold text-2xl md:text-3xl text-gray-900 mb-2">
+        <h1 className="font-jakarta font-extrabold text-2xl md:text-3xl leading-tight tracking-tight text-[#104109] mb-2">
           Create life-changing-<br></br>experiences on Chainfundit.
         </h1>
       </div>
 
       {/* Form Section */}
-      <Suspense fallback={<div className="w-full text-center py-4 text-gray-500 text-sm">Loading...</div>}>
+      <Suspense fallback={<div className="w-full text-center py-4 text-[#57534E] text-sm">Loading...</div>}>
         <LoginForm />
       </Suspense>
     </div>
