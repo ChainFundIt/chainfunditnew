@@ -37,7 +37,7 @@ const steps = [
 
 const CollectionsSteps = () => {
   return (
-    <div className="font-jakarta flex items-center justify-center bg-white py-20 px-4">
+    <div className="font-jakarta flex items-center justify-center bg-white py-20 px-8">
       <div className="flex flex-col gap-16 md:max-w-[80rem] w-full">
         <div className="flex flex-col items-center gap-4 text-center">
           <div className="px-3 py-1 bg-[#ECFDF5] rounded-full">

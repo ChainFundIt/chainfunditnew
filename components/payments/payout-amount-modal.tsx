@@ -34,6 +34,7 @@ interface PayoutAmountModalProps {
     accountVerified?: boolean;
     accountChangeRequested?: boolean;
   };
+  subjectLabel?: string;
   isProcessing?: boolean;
   onConfirmPayout: (
     campaignId: string,
@@ -48,6 +49,7 @@ export function PayoutAmountModal({
   onClose,
   campaign,
   userProfile,
+  subjectLabel = "Campaign",
   isProcessing = false,
   onConfirmPayout,
 }: PayoutAmountModalProps) {
@@ -219,7 +221,7 @@ export function PayoutAmountModal({
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-sm text-gray-600">
-              Campaign: <span className="font-semibold">{campaign.title}</span>
+              {subjectLabel}: <span className="font-semibold">{campaign.title}</span>
             </p>
             <p className="text-sm text-gray-600">
               Available:{" "}

@@ -51,7 +51,7 @@ const faqItems = [
 
 const CollectionsFaqs = () => {
   return (
-    <div className="font-jakarta bg-[#FAFAF9] py-24 px-4 flex justify-center items-center">
+    <div className="font-jakarta bg-[#FAFAF9] py-24 px-12 flex justify-center items-center">
       <div className="flex flex-col md:flex-row gap-16">
         <section className="w-full md:w-[24rem] flex flex-col gap-4">
           <div className="font-bold text-4xl leading-10 text-[#1C1917]">

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { donations } from "@/lib/schema/donations";
-import { campaignPayouts, commissionPayouts } from "@/lib/schema";
+import { campaignPayouts, collectionPayouts, commissionPayouts } from "@/lib/schema";
 import { charityDonations } from "@/lib/schema/charities";
 import { recurringDonationPayments, recurringDonations } from "@/lib/schema/recurring-donations";
 import { eq, and } from "drizzle-orm";
@@ -335,5 +335,19 @@ async function handlePayoutItemEvent(
         processedAt: status === "completed" ? new Date() : null,
       })
       .where(eq(commissionPayouts.id, payoutId));
+    return;
+  }
+
+  if (type === "collection") {
+    await db
+      .update(collectionPayouts)
+      .set({
+        status,
+        transactionId,
+        failureReason,
+        processedAt: status === "completed" ? new Date() : null,
+        updatedAt: new Date(),
+      })
+      .where(eq(collectionPayouts.id, payoutId));
   }
 }

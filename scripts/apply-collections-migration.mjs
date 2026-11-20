@@ -80,6 +80,18 @@ async function main() {
     await sql.query(stmt, []);
   }
 
+  const payoutsMigration = fs.readFileSync(
+    path.resolve(__dirname, "../lib/migrations/0044_collection_payouts.sql"),
+    "utf8"
+  );
+  const payoutStatements = payoutsMigration
+    .split("--> statement-breakpoint")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  for (const stmt of payoutStatements) {
+    await sql.query(stmt, []);
+  }
+
   console.log("Collections schema up to date.");
 }
 

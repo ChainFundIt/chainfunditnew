@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -60,12 +59,19 @@ export default function CreateCollectionPage() {
     );
   }, [categoryId, selectedCategory]);
 
-  const goToDetails = () => {
-    if (!categoryId) {
-      toast.error("Please choose an occasion or activity");
+  const selectCategory = (id: CollectionCategoryId) => {
+    setCategoryId(id);
+    setStep(2);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const goBack = () => {
+    if (step === 1) {
+      router.push("/collections");
       return;
     }
-    setStep(2);
+    setStep(step === 3 ? 2 : 1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const goToReview = (e: React.FormEvent) => {
@@ -125,12 +131,15 @@ export default function CreateCollectionPage() {
   return (
     <div className={collectionPage}>
       <Navbar />
-      <main className="max-w-2xl mx-auto px-4 pt-24 pb-16">
-        <Button asChild variant="ghost" className={`${collectionBtnOutlineSmall} mb-4`}>
-          <Link href="/collections">
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Link>
+      <main className="max-w-5xl mx-auto px-4 pt-24 pb-16">
+        <Button
+          type="button"
+          variant="ghost"
+          className={`${collectionBtnOutlineSmall} mb-4`}
+          onClick={goBack}
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
         </Button>
 
         <CollectionStepIndicator currentStep={step} />
@@ -147,18 +156,8 @@ export default function CreateCollectionPage() {
 
             <CollectionCategoryGrid
               selectedId={categoryId}
-              onSelect={setCategoryId}
+              onSelect={selectCategory}
             />
-
-            <Button
-              type="button"
-              className={`${collectionBtnPrimary} w-full mt-8`}
-              size="lg"
-              disabled={!categoryId}
-              onClick={goToDetails}
-            >
-              Continue
-            </Button>
           </div>
         )}
 

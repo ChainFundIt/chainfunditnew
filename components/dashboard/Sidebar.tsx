@@ -7,7 +7,7 @@ import { DonationsIcon } from "@/public/icons/DonationsIcon";
 import { PayoutsIcon } from "@/public/icons/PayoutsIcon";
 import { SettingsIcon } from "@/public/icons/SettingsIcon";
 import SignOut from "@/public/icons/SignOut";
-import { Share, PackageOpen, LogOut } from "lucide-react";
+import { Share, PackageOpen, LogOut, Wallet } from "lucide-react";
 
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -29,6 +29,7 @@ const sideBarButtons = [
   },
   { icon: CampaignsIcon, label: "Campaigns", url: "/dashboard/campaigns" },
   { icon: DonationsIcon, label: "Donations", url: "/dashboard/donations" },
+  { icon: Wallet, label: "Collections", url: "/dashboard/collections" },
   { icon: Share, label: "Ambassador", url: "/dashboard/ambassador" },
   { icon: PayoutsIcon, label: "Payouts", url: "/dashboard/payouts" },
   { icon: SettingsIcon, label: "Settings", url: "/dashboard/settings" },

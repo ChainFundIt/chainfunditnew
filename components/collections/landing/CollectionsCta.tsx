@@ -40,7 +40,7 @@ const CollectionsCta = () => {
 
   return (
     <motion.div
-      className="font-jakarta flex items-center justify-center bg-[#FFCF55] py-24 px-4"
+      className="font-jakarta flex items-center justify-center bg-[#FFCF55] py-24 px-8"
       initial={{ opacity: 0, y: 50 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7 }}

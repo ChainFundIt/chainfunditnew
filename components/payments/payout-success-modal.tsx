@@ -30,12 +30,14 @@ interface PayoutSuccessModalProps {
   isOpen: boolean;
   onClose: () => void;
   data?: PayoutSuccessData | null;
+  subjectLabel?: string;
 }
 
 export function PayoutSuccessModal({
   isOpen,
   onClose,
   data,
+  subjectLabel = "Campaign",
 }: PayoutSuccessModalProps) {
   const providerLabel = data?.provider
     ? data.provider.charAt(0).toUpperCase() + data.provider.slice(1)
@@ -71,7 +73,7 @@ export function PayoutSuccessModal({
         {data && (
           <div className="space-y-4">
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <p className="text-sm text-gray-600 mb-1">Campaign</p>
+              <p className="text-sm text-gray-600 mb-1">{subjectLabel}</p>
               <p className="font-medium text-gray-900">
                 {data.campaignTitle ?? "Campaign payout"}
               </p>
