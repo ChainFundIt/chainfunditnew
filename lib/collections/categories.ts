@@ -8,7 +8,9 @@ import {
   GraduationCap,
   Heart,
   HeartPulse,
+  Lightbulb,
   Plane,
+  Shapes,
   Trophy,
   Users,
 } from "lucide-react";
@@ -25,7 +27,9 @@ export type CollectionCategoryId =
   | "trip"
   | "hangout"
   | "sports"
-  | "charity";
+  | "charity"
+  | "personal-project"
+  | "anything-else";
 
 export interface CollectionCategoryOption {
   id: CollectionCategoryId;
@@ -106,6 +110,18 @@ export const COLLECTION_CATEGORIES: CollectionCategoryOption[] = [
     label: "A charity or community cause",
     icon: Heart,
     titlePlaceholder: "Community collection",
+  },
+  {
+    id: "personal-project",
+    label: "A personal project",
+    icon: Lightbulb,
+    titlePlaceholder: "Personal project fund",
+  },
+  {
+    id: "anything-else",
+    label: "Anything else",
+    icon: Shapes,
+    titlePlaceholder: "Collection",
   },
 ];
 

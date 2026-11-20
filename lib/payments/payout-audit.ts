@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { campaignPayouts } from '@/lib/schema';
+import { campaignPayouts, collectionPayouts } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 
 export interface PayoutAuditLog {
@@ -49,6 +49,31 @@ export async function logPayoutStatusChange(log: PayoutAuditLog) {
   } catch (error) {
     console.error('Error creating payout audit log:', error);
     // Don't throw - audit logging should not break the main flow
+  }
+}
+
+export async function logCollectionPayoutStatusChange(log: PayoutAuditLog) {
+  try {
+    const payout = await db.query.collectionPayouts.findFirst({
+      where: eq(collectionPayouts.id, log.payoutId),
+    });
+
+    if (!payout) {
+      console.error(`Collection payout ${log.payoutId} not found for audit log`);
+      return;
+    }
+
+    const auditLog = `\n[AUDIT ${new Date().toISOString()}] ${log.oldStatus} -> ${log.newStatus} by ${log.changedBy || 'system'}${log.reason ? ` - ${log.reason}` : ''}`;
+
+    await db
+      .update(collectionPayouts)
+      .set({
+        notes: `${payout.notes || ''}${auditLog}`,
+        updatedAt: new Date(),
+      })
+      .where(eq(collectionPayouts.id, log.payoutId));
+  } catch (error) {
+    console.error('Error creating collection payout audit log:', error);
   }
 }
 

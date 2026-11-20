@@ -1,10 +1,10 @@
 import { db } from '@/lib/db';
-import { campaignPayouts, commissionPayouts, users, campaigns } from '@/lib/schema';
+import { campaignPayouts, collectionPayouts, commissionPayouts, users, campaigns } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 import { initiatePaystackTransfer, createPaystackRecipient, verifyPaystackTransfer } from './paystack';
 import { getPayoutProvider } from './payout-config';
 import { sendPayoutApprovalEmail, sendPayoutCompletionEmail, sendPayoutFailureEmail } from './payout-email';
-import { logPayoutStatusChange } from './payout-audit';
+import { logCollectionPayoutStatusChange, logPayoutStatusChange } from './payout-audit';
 
 export interface PayoutProcessingResult {
   success: boolean;
@@ -175,6 +175,154 @@ export async function processCampaignCreatorPayout(
 }
 
 /**
+ * Process a collection organiser payout. Net amount equals the requested amount.
+ */
+export async function processCollectionPayout(
+  payoutId: string
+): Promise<PayoutProcessingResult> {
+  try {
+    const payout = await db.query.collectionPayouts.findFirst({
+      where: eq(collectionPayouts.id, payoutId),
+      with: {
+        user: true,
+        collection: true,
+      },
+    });
+
+    if (!payout) {
+      return {
+        success: false,
+        error: 'Payout not found',
+        status: 'failed',
+      };
+    }
+
+    if (payout.status !== 'approved') {
+      return {
+        success: false,
+        error: 'Payout is not approved',
+        status: 'failed',
+      };
+    }
+
+    const provider = (payout.payoutProvider as 'paystack' | 'paypal' | undefined)
+      || getPayoutProvider(payout.currency);
+    if (!provider || (provider !== 'paystack' && provider !== 'paypal')) {
+      await db
+        .update(collectionPayouts)
+        .set({
+          status: 'failed',
+          failureReason: `No payout provider available for currency ${payout.currency}`,
+          updatedAt: new Date(),
+        })
+        .where(eq(collectionPayouts.id, payoutId));
+      return {
+        success: false,
+        error: `No payout provider available for currency ${payout.currency}`,
+        status: 'failed',
+      };
+    }
+
+    await db
+      .update(collectionPayouts)
+      .set({
+        status: 'processing',
+        updatedAt: new Date(),
+      })
+      .where(eq(collectionPayouts.id, payoutId));
+
+    let result: PayoutProcessingResult;
+
+    if (provider === 'paystack') {
+      result = await processPaystackPayout(payout, 'collection');
+    } else {
+      result = await processPayPalPayout(payout, 'collection');
+    }
+
+    const oldStatus = payout.status;
+
+    if ((result.status === 'completed' || result.status === 'processing') && !result.transactionId) {
+      result.status = 'failed';
+      result.success = false;
+      result.error = result.error || 'Transfer initiated but no transaction ID returned';
+    }
+
+    await db
+      .update(collectionPayouts)
+      .set({
+        status: result.status,
+        transactionId: result.transactionId || null,
+        failureReason: result.error || null,
+        processedAt: (result.success && result.status === 'completed') ? new Date() : null,
+        updatedAt: new Date(),
+      })
+      .where(eq(collectionPayouts.id, payoutId));
+
+    await logCollectionPayoutStatusChange({
+      payoutId,
+      oldStatus,
+      newStatus: result.status,
+      changedBy: 'payout_processor',
+      reason: result.error || 'Payout processed',
+    });
+
+    if (result.success && result.status === 'completed' && result.transactionId) {
+      try {
+        await sendPayoutCompletionEmail({
+          userEmail: payout.user.email!,
+          userName: payout.user.fullName || payout.user.email!,
+          campaignTitle: payout.collection.title,
+          payoutAmount: parseFloat(payout.requestedAmount),
+          currency: payout.currency,
+          netAmount: parseFloat(payout.netAmount),
+          fees: parseFloat(payout.fees),
+          payoutProvider: payout.payoutProvider,
+          processingTime: '1-3 business days',
+          payoutId: payout.id,
+          bankDetails: payout.accountName ? {
+            accountName: payout.accountName,
+            accountNumber: payout.accountNumber || '',
+            bankName: payout.bankName || '',
+          } : undefined,
+          completionDate: new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+        });
+      } catch (emailError) {
+        console.error('Failed to send collection payout completion email:', emailError);
+      }
+    } else if (!result.success && result.status === 'failed') {
+      try {
+        await sendPayoutFailureEmail({
+          userEmail: payout.user.email!,
+          userName: payout.user.fullName || payout.user.email!,
+          campaignTitle: payout.collection.title,
+          payoutAmount: parseFloat(payout.requestedAmount),
+          currency: payout.currency,
+          failureReason: result.error || 'Payout processing failed',
+          payoutId: payout.id,
+        });
+      } catch (emailError) {
+        console.error('Failed to send collection payout failure email:', emailError);
+      }
+    }
+
+    return result;
+  } catch (error) {
+    console.error('Error processing collection payout:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      status: 'failed',
+    };
+  }
+}
+
+/**
  * Process an ambassador payout
  */
 export async function processAmbassadorPayout(
@@ -270,7 +418,7 @@ export async function processAmbassadorPayout(
  */
 async function processPayPalPayout(
   payout: any,
-  type: 'campaign' | 'ambassador'
+  type: 'campaign' | 'ambassador' | 'collection'
 ): Promise<PayoutProcessingResult> {
   try {
     const { createPayPalPayout } = await import('./paypal');
@@ -278,8 +426,8 @@ async function processPayPalPayout(
     const { users, chainers } = await import('@/lib/schema');
     const { eq } = await import('drizzle-orm');
 
-    const amount = parseFloat(type === 'campaign' ? payout.netAmount : payout.amount);
-    const currency = type === 'campaign' ? payout.currency : (payout.currency || 'USD');
+    const amount = parseFloat(type === 'ambassador' ? payout.amount : payout.netAmount);
+    const currency = type === 'ambassador' ? (payout.currency || 'USD') : payout.currency;
 
     if (isNaN(amount) || amount <= 0) {
       return {
@@ -292,7 +440,7 @@ async function processPayPalPayout(
     let receiverEmail: string | null = null;
     let recipientName = payout.user?.fullName || 'User';
 
-    if (type === 'campaign') {
+    if (type === 'campaign' || type === 'collection') {
       receiverEmail = payout.user?.email || null;
     } else {
       const [chainer] = await db
@@ -332,7 +480,7 @@ async function processPayPalPayout(
       };
     }
 
-    const senderItemId = `${type === 'campaign' ? 'campaign' : 'ambassador'}:${payout.id}`;
+    const senderItemId = `${type}:${payout.id}`;
     const paypalPayout = await createPayPalPayout({
       senderItemId,
       receiverEmail,
@@ -367,7 +515,7 @@ async function processPayPalPayout(
  */
 export async function processPaystackPayout(
   payout: any,
-  type: 'campaign' | 'ambassador'
+  type: 'campaign' | 'ambassador' | 'collection'
 ): Promise<PayoutProcessingResult> {
   try {
     if (!payout.accountNumber || !payout.bankCode) {
@@ -440,7 +588,7 @@ export async function processPaystackPayout(
     const transfer = await initiatePaystackTransfer(
       amount,
       recipientCode,
-      `Payout for ${type} - ${payout.campaign?.title || 'Commission'}`,
+      `Payout for ${type} - ${payout.collection?.title || payout.campaign?.title || 'Commission'}`,
       payout.currency,
       payout.reference || payout.id
     );
@@ -508,7 +656,7 @@ export async function processPaystackPayout(
  */
 export async function sendPayoutApprovalNotification(
   payoutId: string,
-  type: 'campaign' | 'ambassador'
+  type: 'campaign' | 'ambassador' | 'collection'
 ) {
   try {
     let payout: any;
@@ -527,6 +675,21 @@ export async function sendPayoutApprovalNotification(
       if (payout) {
         user = payout.user;
         campaign = payout.campaign;
+      }
+    } else if (type === 'collection') {
+      payout = await db.query.collectionPayouts.findFirst({
+        where: eq(collectionPayouts.id, payoutId),
+        with: {
+          user: true,
+          collection: true,
+        },
+      });
+
+      if (payout) {
+        user = payout.user;
+        campaign = payout.collection
+          ? { title: payout.collection.title }
+          : null;
       }
     } else {
       payout = await db.query.commissionPayouts.findFirst({

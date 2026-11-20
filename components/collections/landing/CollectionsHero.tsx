@@ -49,7 +49,7 @@ const CollectionsHero = () => {
   }, []);
 
   return (
-    <div className="font-jakarta flex items-center justify-center bg-[var(--color-background)] py-20 px-4">
+    <div className="font-jakarta flex items-center justify-center bg-[var(--color-background)] py-20 px-12">
       <div className="flex md:flex-row md:gap-20 flex-col gap-12">
         <div
           ref={leftRef}

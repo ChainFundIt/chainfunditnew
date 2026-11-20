@@ -59,12 +59,47 @@ export const collectionContributions = pgTable("collection_contributions", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const collectionPayouts = pgTable("collection_payouts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  collectionId: uuid("collection_id")
+    .notNull()
+    .references(() => collections.id, { onDelete: "cascade" }),
+  requestedAmount: decimal("requested_amount", { precision: 12, scale: 2 }).notNull(),
+  grossAmount: decimal("gross_amount", { precision: 12, scale: 2 }).notNull(),
+  fees: decimal("fees", { precision: 12, scale: 2 }).default("0").notNull(),
+  netAmount: decimal("net_amount", { precision: 12, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 3 }).notNull().default("USD"),
+  status: varchar("status", { length: 20 }).default("pending").notNull(),
+  payoutProvider: varchar("payout_provider", { length: 50 }).notNull(),
+  reference: varchar("reference", { length: 255 }),
+  bankName: varchar("bank_name", { length: 255 }),
+  accountNumber: varchar("account_number", { length: 100 }),
+  accountName: varchar("account_name", { length: 255 }),
+  bankCode: varchar("bank_code", { length: 10 }),
+  notes: text("notes"),
+  rejectionReason: text("rejection_reason"),
+  approvedBy: uuid("approved_by"),
+  approvedAt: timestamp("approved_at"),
+  transactionId: varchar("transaction_id", { length: 255 }),
+  failureReason: text("failure_reason"),
+  retryAttempts: decimal("retry_attempts", { precision: 2, scale: 0 })
+    .default("0")
+    .notNull(),
+  processedAt: timestamp("processed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const collectionsRelations = relations(collections, ({ one, many }) => ({
   creator: one(users, {
     fields: [collections.creatorId],
     references: [users.id],
   }),
   contributions: many(collectionContributions),
+  payouts: many(collectionPayouts),
 }));
 
 export const collectionContributionsRelations = relations(
@@ -77,9 +112,25 @@ export const collectionContributionsRelations = relations(
   })
 );
 
+export const collectionPayoutsRelations = relations(
+  collectionPayouts,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [collectionPayouts.userId],
+      references: [users.id],
+    }),
+    collection: one(collections, {
+      fields: [collectionPayouts.collectionId],
+      references: [collections.id],
+    }),
+  })
+);
+
 export type Collection = typeof collections.$inferSelect;
 export type NewCollection = typeof collections.$inferInsert;
 export type CollectionContribution =
   typeof collectionContributions.$inferSelect;
 export type NewCollectionContribution =
   typeof collectionContributions.$inferInsert;
+export type CollectionPayout = typeof collectionPayouts.$inferSelect;
+export type NewCollectionPayout = typeof collectionPayouts.$inferInsert;

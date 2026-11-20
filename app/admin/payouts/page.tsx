@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CollectionPayoutsTab } from "@/components/admin/collection-payouts-tab";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -660,7 +661,7 @@ export default function PayoutsPage() {
         </div>
 
         <Tabs defaultValue="campaign-creator-payouts" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid h-auto w-full grid-cols-2 lg:grid-cols-4">
             <TabsTrigger value="campaign-creator-payouts">
               Campaign Creator Payouts
             </TabsTrigger>
@@ -668,7 +669,14 @@ export default function PayoutsPage() {
               Ambassador Payouts
             </TabsTrigger>
             <TabsTrigger value="charity-payouts">Charity Payouts</TabsTrigger>
+            <TabsTrigger value="collection-payouts">
+              Collection Payouts
+            </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="collection-payouts" className="space-y-6">
+            <CollectionPayoutsTab />
+          </TabsContent>
 
           {/* Campaign Creator Payouts Tab */}
           <TabsContent value="campaign-creator-payouts" className="space-y-6">

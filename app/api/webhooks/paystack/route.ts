@@ -9,7 +9,7 @@ import { notifications } from '@/lib/schema/notifications';
 import { charityDonations, charities } from '@/lib/schema/charities';
 import { collectionContributions } from '@/lib/schema/collections';
 import { completeCollectionContribution } from '@/lib/payments/collection-contribution-processing';
-import { campaignPayouts, commissionPayouts } from '@/lib/schema';
+import { campaignPayouts, collectionPayouts, commissionPayouts } from '@/lib/schema';
 import { users } from '@/lib/schema/users';
 import { eq, sql, and, desc } from 'drizzle-orm';
 import { createPaystackPlan, createPaystackSubscription } from '@/lib/payments/paystack-subscriptions';
@@ -932,15 +932,17 @@ async function resolvePayoutTarget(data: {
   transferCode?: string;
   metadata?: {
     payoutId?: string;
-    type?: 'campaign' | 'commission';
+    type?: 'campaign' | 'commission' | 'collection';
   };
-}): Promise<{ payoutId: string; payoutType: 'campaign' | 'commission' } | null> {
+}): Promise<{ payoutId: string; payoutType: 'campaign' | 'commission' | 'collection' } | null> {
   const metadataPayoutId = data.metadata?.payoutId;
   const metadataPayoutType = data.metadata?.type;
 
   if (
     metadataPayoutId &&
-    (metadataPayoutType === 'campaign' || metadataPayoutType === 'commission')
+    (metadataPayoutType === 'campaign' ||
+      metadataPayoutType === 'commission' ||
+      metadataPayoutType === 'collection')
   ) {
     return {
       payoutId: metadataPayoutId,
@@ -968,6 +970,16 @@ async function resolvePayoutTarget(data: {
     if (commissionMatch) {
       return { payoutId: commissionMatch.id, payoutType: 'commission' };
     }
+
+    const [collectionMatch] = await db
+      .select({ id: collectionPayouts.id })
+      .from(collectionPayouts)
+      .where(eq(collectionPayouts.transactionId, data.transferCode))
+      .limit(1);
+
+    if (collectionMatch) {
+      return { payoutId: collectionMatch.id, payoutType: 'collection' };
+    }
   }
 
   if (data.reference) {
@@ -989,6 +1001,16 @@ async function resolvePayoutTarget(data: {
 
     if (commissionMatch) {
       return { payoutId: commissionMatch.id, payoutType: 'commission' };
+    }
+
+    const [collectionMatch] = await db
+      .select({ id: collectionPayouts.id })
+      .from(collectionPayouts)
+      .where(eq(collectionPayouts.reference, data.reference))
+      .limit(1);
+
+    if (collectionMatch) {
+      return { payoutId: collectionMatch.id, payoutType: 'collection' };
     }
   }
 
@@ -1045,6 +1067,18 @@ async function handleTransferSuccess(data: any) {
         .where(eq(commissionPayouts.id, payoutId));
 
       console.log(`✅ Commission payout ${payoutId} completed with transfer code: ${transferCode || reference}`);
+    } else if (payoutType === 'collection') {
+      await db
+        .update(collectionPayouts)
+        .set({
+          status: 'completed',
+          transactionId: transactionId,
+          processedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(collectionPayouts.id, payoutId));
+
+      console.log(`✅ Collection payout ${payoutId} completed with transfer code: ${transferCode || reference}`);
     }
   } catch (error) {
     console.error('💥 Error handling Paystack transfer success:', error);
@@ -1100,6 +1134,18 @@ async function handleTransferFailed(data: any) {
         .where(eq(commissionPayouts.id, payoutId));
 
       console.log(`❌ Commission payout ${payoutId} failed`);
+    } else if (payoutType === 'collection') {
+      await db
+        .update(collectionPayouts)
+        .set({
+          status: 'failed',
+          transactionId: transactionId,
+          failureReason,
+          updatedAt: new Date(),
+        })
+        .where(eq(collectionPayouts.id, payoutId));
+
+      console.log(`❌ Collection payout ${payoutId} failed: ${failureReason}`);
     }
 
     // TODO: Notify admin of failed payout
@@ -1156,6 +1202,18 @@ async function handleTransferReversed(data: any) {
         .where(eq(commissionPayouts.id, payoutId));
 
       console.log(`⚠️ Commission payout ${payoutId} reversed`);
+    } else if (payoutType === 'collection') {
+      await db
+        .update(collectionPayouts)
+        .set({
+          status: 'failed',
+          transactionId: transactionId,
+          failureReason: 'Transfer reversed',
+          updatedAt: new Date(),
+        })
+        .where(eq(collectionPayouts.id, payoutId));
+
+      console.log(`⚠️ Collection payout ${payoutId} reversed`);
     }
 
     // TODO: Credit back to charity pending amount if applicable

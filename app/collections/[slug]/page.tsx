@@ -418,7 +418,9 @@ export default function CollectionDetailPage() {
               <div className="grid md:grid-cols-2 gap-0">
                 <div className="p-6 md:p-8 flex flex-col justify-center">
                   <p className={`${collectionBodySmall} mb-2`}>
-                    {categoryLabel || "Active collection"}
+                    {collection.status === "active"
+                      ? categoryLabel || "Active collection"
+                      : "Closed collection"}
                   </p>
                   <h1 className={collectionSectionTitle}>
                     {collection.title}
@@ -545,6 +547,8 @@ export default function CollectionDetailPage() {
 
           <div className="lg:col-span-5 order-1 lg:order-2">
             <div className="bg-white rounded-3xl p-6 md:p-8 border border-[#e5ebe3] shadow-md lg:sticky lg:top-24">
+              {collection.status === "active" ? (
+              <>
               <h2 className="font-jakarta text-xl font-bold tracking-tight text-[#104109] md:text-2xl mb-6">
                 Contribute
               </h2>
@@ -733,6 +737,17 @@ export default function CollectionDetailPage() {
                   </Button>
                 )}
               </form>
+              </>
+              ) : (
+                <>
+                  <h2 className="font-jakarta text-xl font-bold tracking-tight text-[#104109] md:text-2xl mb-3">
+                    Collection closed
+                  </h2>
+                  <p className={collectionBody}>
+                    This collection is no longer accepting contributions.
+                  </p>
+                </>
+              )}
             </div>
           </div>
         </div>

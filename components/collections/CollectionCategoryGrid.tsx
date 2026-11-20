@@ -16,7 +16,7 @@ export function CollectionCategoryGrid({
   onSelect,
 }: CollectionCategoryGridProps) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:gap-4">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
       {COLLECTION_CATEGORIES.map((category) => {
         const Icon = category.icon;
         const isSelected = selectedId === category.id;
